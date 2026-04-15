@@ -56,6 +56,14 @@ export function LiveScout() {
                     }`} />
                     <span className="font-mono text-primary font-bold">#{action.playerNumber}</span>
                     <span className="text-muted-foreground">{SKILL_LABELS[action.skill]}</span>
+                    {action.attackCode && (
+                      <span className="text-red-300/70 text-[10px] font-mono font-bold">{action.attackCode}</span>
+                    )}
+                    {action.serveType && (
+                      <span className="text-blue-300/70 text-[10px] font-bold">
+                        {SERVE_TYPES.find(s => s.key === action.serveType)?.label || action.serveType}
+                      </span>
+                    )}
                     <span className={`font-bold ${
                       action.evaluation === '#' || action.evaluation === '+' ? 'text-accent' :
                       action.evaluation === '=' || action.evaluation === '/' ? 'text-destructive' :
