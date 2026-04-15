@@ -57,12 +57,17 @@ export function LiveScout() {
                     <span className="font-mono text-primary font-bold">#{action.playerNumber}</span>
                     <span className="text-muted-foreground">{SKILL_LABELS[action.skill]}</span>
                     <span className={`font-bold ${
-                      action.evaluation === '#' || action.evaluation === '+' ? 'text-green-400' :
-                      action.evaluation === '=' || action.evaluation === '/' ? 'text-red-400' :
-                      'text-yellow-400'
+                      action.evaluation === '#' || action.evaluation === '+' ? 'text-accent' :
+                      action.evaluation === '=' || action.evaluation === '/' ? 'text-destructive' :
+                      'text-warning'
                     }`}>
                       {action.evaluation}
                     </span>
+                    {(action.startZone || action.endZone) && (
+                      <span className="text-primary/60 text-[10px] font-mono">
+                        {action.startZone || '?'}→{action.endZone || '?'}
+                      </span>
+                    )}
                     <span className="text-muted-foreground/50 ml-auto text-[10px]">{action.timestamp}</span>
                   </div>
                 );
