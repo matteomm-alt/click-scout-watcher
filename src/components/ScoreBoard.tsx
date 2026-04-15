@@ -45,19 +45,17 @@ export function ScoreBoard() {
         </div>
       </div>
 
-      <div className="ml-4 text-center">
+      <div className="ml-4 px-3 py-1 rounded-lg bg-secondary text-center">
         <div className="text-xs text-muted-foreground">Set</div>
         <div className="text-2xl font-bold text-primary">{matchState.currentSet}</div>
       </div>
 
-      {matchState.servingTeam && (
-        <div className="ml-2">
-          <div className="text-xs text-muted-foreground">Battuta</div>
-          <div className="text-sm font-semibold text-primary">
-            {matchState.servingTeam === 'home' ? '←' : '→'}
-          </div>
+      <div className="px-3 py-1 rounded-lg bg-secondary text-center">
+        <div className="text-xs text-muted-foreground">Battuta</div>
+        <div className="text-sm font-semibold text-primary">
+          {matchState.servingTeam === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
         </div>
-      )}
+      </div>
     </div>
   );
 }
