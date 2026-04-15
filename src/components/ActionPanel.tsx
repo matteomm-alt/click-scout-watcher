@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import type { Skill, Evaluation, SkillType } from '@/types/volleyball';
-import { SKILL_LABELS } from '@/types/volleyball';
+import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
+import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
 import { Undo2, Download, ArrowLeftRight, SkipForward } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
 import { ZoneCourt } from '@/components/VolleyballCourt';
 
-type ScoutStep = 'team' | 'player' | 'skill' | 'evaluation' | 'startZone' | 'endZone';
+type ScoutStep = 'team' | 'player' | 'skill' | 'serveType' | 'attackCombo' | 'evaluation' | 'startZone' | 'endZone';
 
-// Skills that use trajectories (start + end zone)
 const TRAJECTORY_SKILLS: Skill[] = ['S', 'R', 'A', 'D'];
 
 export function ActionPanel() {
@@ -23,12 +22,15 @@ export function ActionPanel() {
   const [selectedTeam, setSelectedTeam] = useState<'home' | 'away' | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [selectedServeType, setSelectedServeType] = useState<ServeType | null>(null);
+  const [selectedAttackCombo, setSelectedAttackCombo] = useState<AttackCombo | null>(null);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   const [startZone, setStartZone] = useState<number | null>(null);
   const [endZone, setEndZone] = useState<number | null>(null);
   const [showSubstitution, setShowSubstitution] = useState(false);
   const [subTeam, setSubTeam] = useState<'home' | 'away'>('home');
   const [subOut, setSubOut] = useState<number | null>(null);
+  const [attackFilter, setAttackFilter] = useState<'all' | 'Q' | 'M' | 'T' | 'H' | 'O'>('all');
 
   const skills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
@@ -54,9 +56,12 @@ export function ActionPanel() {
     setSelectedTeam(null);
     setSelectedPlayer(null);
     setSelectedSkill(null);
+    setSelectedServeType(null);
+    setSelectedAttackCombo(null);
     setSelectedEvaluation(null);
     setStartZone(null);
     setEndZone(null);
+    setAttackFilter('all');
   };
 
   const getTeamLineup = (team: 'home' | 'away') => {
@@ -80,16 +85,30 @@ export function ActionPanel() {
 
   const handleSkillSelect = (skill: Skill) => {
     setSelectedSkill(skill);
+    if (skill === 'S') {
+      setStep('serveType');
+    } else if (skill === 'A') {
+      setStep('attackCombo');
+    } else {
+      setStep('evaluation');
+    }
+  };
+
+  const handleServeTypeSelect = (st: ServeType) => {
+    setSelectedServeType(st);
+    setStep('evaluation');
+  };
+
+  const handleAttackComboSelect = (combo: AttackCombo) => {
+    setSelectedAttackCombo(combo);
     setStep('evaluation');
   };
 
   const handleEvaluationSelect = (evaluation: Evaluation) => {
     setSelectedEvaluation(evaluation);
-    // If skill supports trajectories, ask for zones
     if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill)) {
       setStep('startZone');
     } else {
-      // Finalize without zones
       finalizeAction(evaluation, null, null);
     }
   };
@@ -112,18 +131,26 @@ export function ActionPanel() {
     }
   };
 
-  const finalizeAction = (evaluation: Evaluation, szOne: number | null, ezOne: number | null) => {
+  const finalizeAction = (evaluation: Evaluation, sz: number | null, ez: number | null) => {
     if (!selectedTeam || selectedPlayer === null || !selectedSkill) return;
 
     const now = new Date();
     const timestamp = `${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`;
 
-    const skillType: SkillType = 'H';
+    // Determine skill type from serve type, attack combo, or default
+    let skillType: SkillType = 'H';
+    if (selectedSkill === 'S' && selectedServeType) {
+      skillType = selectedServeType as SkillType;
+    } else if (selectedSkill === 'A' && selectedAttackCombo) {
+      skillType = selectedAttackCombo.tempo as SkillType;
+    }
+
     const teamPrefix = selectedTeam === 'home' ? '*' : 'a';
     const playerStr = String(selectedPlayer).padStart(2, '0');
-    const szStr = szOne ? String(szOne) : '~';
-    const ezStr = ezOne ? String(ezOne) : '~';
-    const code = `${teamPrefix}${playerStr}${selectedSkill}${skillType}${evaluation}~~~${szStr}${ezStr}`;
+    const attackCodeStr = selectedAttackCombo?.code || '~~';
+    const szStr = sz ? String(sz) : '~';
+    const ezStr = ez ? String(ez) : '~';
+    const code = `${teamPrefix}${playerStr}${selectedSkill}${skillType}${evaluation}${attackCodeStr}~${szStr}${ezStr}`;
 
     addAction({
       timestamp,
@@ -132,8 +159,10 @@ export function ActionPanel() {
       skill: selectedSkill,
       skillType,
       evaluation,
-      startZone: szOne ?? undefined,
-      endZone: ezOne ?? undefined,
+      startZone: sz ?? undefined,
+      endZone: ez ?? undefined,
+      attackCode: selectedAttackCombo?.code,
+      serveType: selectedServeType ?? undefined,
       code,
     });
 
@@ -184,22 +213,15 @@ export function ActionPanel() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground">Sostituzione</h3>
-          <button onClick={() => { setShowSubstitution(false); setSubOut(null); }} className="text-xs text-muted-foreground hover:text-foreground">
-            Annulla
-          </button>
+          <button onClick={() => { setShowSubstitution(false); setSubOut(null); }} className="text-xs text-muted-foreground hover:text-foreground">Annulla</button>
         </div>
         {!subOut ? (
           <>
             <p className="text-xs text-muted-foreground">Chi esce?</p>
             <div className="flex gap-2 flex-wrap">
               {(['home', 'away'] as const).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setSubTeam(t)}
-                  className={`px-3 py-1.5 rounded text-xs font-semibold ${
-                    subTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-                  }`}
-                >
+                <button key={t} onClick={() => setSubTeam(t)}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold ${subTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                   {t === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
                 </button>
               ))}
@@ -230,12 +252,36 @@ export function ActionPanel() {
     );
   }
 
+  // Filtered attack combos
+  const filteredCombos = attackFilter === 'all'
+    ? ATTACK_COMBOS
+    : ATTACK_COMBOS.filter(c => c.tempo === attackFilter);
+
+  const tempoLabels: Record<string, string> = {
+    all: 'Tutte',
+    Q: '1° Tempo',
+    M: '2° Tempo',
+    T: '3° Tempo',
+    H: 'Palla Alta',
+    O: 'Altro',
+  };
+
+  const tempoColors: Record<string, string> = {
+    Q: 'border-red-500/40 bg-red-500/10',
+    M: 'border-orange-500/40 bg-orange-500/10',
+    T: 'border-yellow-500/40 bg-yellow-500/10',
+    H: 'border-blue-500/40 bg-blue-500/10',
+    O: 'border-muted-foreground/30 bg-muted/30',
+    N: 'border-muted-foreground/30 bg-muted/30',
+    U: 'border-muted-foreground/30 bg-muted/30',
+  };
+
   return (
     <div className="space-y-3">
       {/* Breadcrumb */}
       {step !== 'team' && (
-        <div className="flex items-center gap-2 text-xs flex-wrap">
-          <button onClick={resetSelection} className="text-destructive hover:text-destructive/80 font-semibold">✕ Reset</button>
+        <div className="flex items-center gap-1.5 text-xs flex-wrap">
+          <button onClick={resetSelection} className="text-destructive hover:text-destructive/80 font-semibold">✕</button>
           {selectedTeam && (
             <span className="px-2 py-0.5 rounded bg-secondary text-primary font-semibold">
               {selectedTeam === 'home' ? homeTeam.name : awayTeam.name}
@@ -246,6 +292,16 @@ export function ActionPanel() {
           )}
           {selectedSkill && (
             <span className="px-2 py-0.5 rounded bg-secondary text-foreground font-semibold">{SKILL_LABELS[selectedSkill]}</span>
+          )}
+          {selectedServeType && (
+            <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">
+              {SERVE_TYPES.find(s => s.key === selectedServeType)?.label}
+            </span>
+          )}
+          {selectedAttackCombo && (
+            <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-semibold">
+              {selectedAttackCombo.code}
+            </span>
           )}
           {selectedEvaluation && (
             <span className="px-2 py-0.5 rounded bg-secondary text-foreground font-bold">{selectedEvaluation}</span>
@@ -297,6 +353,57 @@ export function ActionPanel() {
         </div>
       )}
 
+      {/* Step: Serve Type */}
+      {step === 'serveType' && (
+        <div className="space-y-2">
+          <span className="text-sm font-bold text-foreground">Tipo di Battuta</span>
+          <div className="grid grid-cols-3 gap-2">
+            {SERVE_TYPES.map(st => (
+              <button key={st.key} onClick={() => handleServeTypeSelect(st.key)}
+                className="p-3 rounded-xl bg-blue-900/30 border border-blue-700/30 hover:border-blue-500/50 text-foreground font-semibold transition-all touch-target">
+                <div className="text-lg font-bold text-blue-300">{st.label}</div>
+                <div className="text-[10px] text-muted-foreground">{st.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Step: Attack Combo */}
+      {step === 'attackCombo' && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">Combinazione Attacco</span>
+            <button onClick={() => { setSelectedAttackCombo(null); setStep('evaluation'); }}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <SkipForward className="w-3 h-3" /> Salta
+            </button>
+          </div>
+          {/* Tempo filter tabs */}
+          <div className="flex gap-1 flex-wrap">
+            {(['all', 'Q', 'M', 'T', 'H', 'O'] as const).map(f => (
+              <button key={f} onClick={() => setAttackFilter(f)}
+                className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                  attackFilter === f
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}>
+                {tempoLabels[f]}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-1.5 max-h-[200px] overflow-y-auto">
+            {filteredCombos.map(combo => (
+              <button key={combo.code} onClick={() => handleAttackComboSelect(combo)}
+                className={`p-2 rounded-lg border text-foreground font-semibold transition-all touch-target ${tempoColors[combo.tempo] || 'bg-secondary border-border'}`}>
+                <div className="text-sm font-bold">{combo.code}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight truncate">{combo.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Step: Evaluation */}
       {step === 'evaluation' && (
         <div className="grid grid-cols-3 gap-2">
@@ -318,12 +425,7 @@ export function ActionPanel() {
               <SkipForward className="w-3 h-3" /> Salta
             </button>
           </div>
-          <ZoneCourt
-            mode="select-start"
-            onZoneClick={handleStartZone}
-            highlightedZone={null}
-            side={selectedTeam || 'home'}
-          />
+          <ZoneCourt mode="select-start" onZoneClick={handleStartZone} side={selectedTeam || 'home'} />
         </div>
       )}
 
@@ -336,12 +438,7 @@ export function ActionPanel() {
               <SkipForward className="w-3 h-3" /> Salta
             </button>
           </div>
-          <ZoneCourt
-            mode="select-end"
-            onZoneClick={handleEndZone}
-            startZone={startZone}
-            side={selectedTeam || 'home'}
-          />
+          <ZoneCourt mode="select-end" onZoneClick={handleEndZone} startZone={startZone} side={selectedTeam || 'home'} />
         </div>
       )}
 
