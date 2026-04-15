@@ -51,6 +51,58 @@ export type Skill = 'S' | 'R' | 'A' | 'B' | 'D' | 'E' | 'F'; // Serve, Receive, 
 export type SkillType = 'H' | 'M' | 'Q' | 'T' | 'N' | 'O' | 'U'; // High, Medium, Quick, Tempo, Nil, Other, Unknown
 export type Evaluation = '#' | '+' | '!' | '-' | '/' | '='; // Kill/Perfect, Positive, OK, Negative, Poor, Error
 
+// Serve types (DVW convention: skill type letter)
+export type ServeType = 'M' | 'Q' | 'H' | 'T' | 'N';
+export const SERVE_TYPES: { key: ServeType; label: string; description: string }[] = [
+  { key: 'M', label: 'Jump Float', description: 'Salto float' },
+  { key: 'Q', label: 'Jump Spin', description: 'Salto spin' },
+  { key: 'H', label: 'Float', description: 'Float da fermo' },
+  { key: 'T', label: 'Spin', description: 'Spin da fermo' },
+  { key: 'N', label: 'Sky Ball', description: 'Sky ball' },
+];
+
+// Attack combinations (standard DVW codes)
+export interface AttackCombo {
+  code: string;
+  label: string;
+  description: string;
+  tempo: 'Q' | 'M' | 'T' | 'H' | 'O' | 'N' | 'U'; // Quick, Medium, Tempo(3rd), High, Other, Nil, Unknown
+  position: 'F' | 'C' | 'B' | 'P' | 'S' | '-'; // Front, Center, Back, Pipe, Setter, Other
+}
+
+export const ATTACK_COMBOS: AttackCombo[] = [
+  // Quick tempo (1° tempo)
+  { code: 'X1', label: 'X1', description: 'Veloce avanti', tempo: 'Q', position: 'C' },
+  { code: 'XM', label: 'XM', description: 'Veloce in 3', tempo: 'Q', position: 'C' },
+  { code: 'XF', label: 'XF', description: 'Veloce dietro', tempo: 'Q', position: 'C' },
+  { code: 'X2', label: 'X2', description: 'Veloce dietro bassa', tempo: 'Q', position: 'C' },
+  { code: 'XC', label: 'XC', description: 'Veloce lontana da palleggiatore', tempo: 'Q', position: 'C' },
+  { code: 'X7', label: 'X7', description: 'Veloce bassa avanti', tempo: 'Q', position: 'C' },
+  // Medium tempo (2° tempo)
+  { code: 'X5', label: 'X5', description: 'Mezza in 4', tempo: 'T', position: 'F' },
+  { code: 'X6', label: 'X6', description: 'Mezza in 2', tempo: 'T', position: 'B' },
+  { code: 'X3', label: 'X3', description: 'Mezza da posto 2', tempo: 'M', position: 'B' },
+  { code: 'XT', label: 'XT', description: 'Mezza da posto 4', tempo: 'M', position: 'F' },
+  // Pipe
+  { code: 'XP', label: 'XP', description: 'Pipe', tempo: 'M', position: 'P' },
+  { code: 'XB', label: 'XB', description: 'Pipe 6-1', tempo: 'M', position: 'P' },
+  { code: 'XR', label: 'XR', description: 'Pipe 6-5', tempo: 'M', position: 'P' },
+  // High ball (palla alta)
+  { code: 'V5', label: 'V5', description: 'Palla alta in 4', tempo: 'H', position: 'F' },
+  { code: 'V6', label: 'V6', description: 'Palla alta in 2', tempo: 'H', position: 'B' },
+  { code: 'V0', label: 'V0', description: 'Palla alta in 5', tempo: 'H', position: 'F' },
+  { code: 'V8', label: 'V8', description: 'Palla alta in 1', tempo: 'H', position: 'B' },
+  { code: 'VP', label: 'VP', description: 'Pipe alta', tempo: 'H', position: 'P' },
+  { code: 'V3', label: 'V3', description: 'Palla alta in 3', tempo: 'H', position: '-' },
+  // Slide
+  { code: 'CB', label: 'CB', description: 'Slide vicino palleggiatore', tempo: 'Q', position: 'C' },
+  { code: 'CF', label: 'CF', description: 'Slide corto', tempo: 'Q', position: 'C' },
+  { code: 'CD', label: 'CD', description: 'Slide lontano', tempo: 'Q', position: 'C' },
+  // Other
+  { code: 'PP', label: 'PP', description: 'Palleggiatore 2° tocco', tempo: 'O', position: 'S' },
+  { code: 'PR', label: 'PR', description: 'Attacco su freeball', tempo: 'O', position: '-' },
+];
+
 export const SKILL_LABELS: Record<Skill, string> = {
   S: 'Battuta',
   R: 'Ricezione',
@@ -99,6 +151,7 @@ export interface ScoutAction {
   startZone?: number;
   endZone?: number;
   attackCode?: string;
+  serveType?: ServeType;
   setNumber: number;
   homeScore: number;
   awayScore: number;

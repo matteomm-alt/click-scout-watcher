@@ -2,7 +2,7 @@ import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { useMatchStore } from '@/store/matchStore';
-import { SKILL_LABELS, EVALUATION_LABELS } from '@/types/volleyball';
+import { SKILL_LABELS, SERVE_TYPES } from '@/types/volleyball';
 
 export function LiveScout() {
   const { matchState, homeTeam, awayTeam } = useMatchStore();
@@ -56,6 +56,14 @@ export function LiveScout() {
                     }`} />
                     <span className="font-mono text-primary font-bold">#{action.playerNumber}</span>
                     <span className="text-muted-foreground">{SKILL_LABELS[action.skill]}</span>
+                    {action.attackCode && (
+                      <span className="text-red-300/70 text-[10px] font-mono font-bold">{action.attackCode}</span>
+                    )}
+                    {action.serveType && (
+                      <span className="text-blue-300/70 text-[10px] font-bold">
+                        {SERVE_TYPES.find(s => s.key === action.serveType)?.label || action.serveType}
+                      </span>
+                    )}
                     <span className={`font-bold ${
                       action.evaluation === '#' || action.evaluation === '+' ? 'text-accent' :
                       action.evaluation === '=' || action.evaluation === '/' ? 'text-destructive' :
