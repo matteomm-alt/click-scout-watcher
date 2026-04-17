@@ -2,10 +2,18 @@ import { useMatchStore } from '@/store/matchStore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Users, Trophy, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Trophy, ArrowRight, Zap } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function MatchSetup() {
-  const { matchInfo, setMatchInfo, setStep } = useMatchStore();
+  const { matchInfo, setMatchInfo, setStep, loadDemoMatch } = useMatchStore();
+
+  const handleDemo = () => {
+    loadDemoMatch();
+    toast.success('Partita demo caricata', {
+      description: 'Casa Volley vs Ospite Volley · Lineup pronti · Sei nello scout',
+    });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -17,6 +25,14 @@ export function MatchSetup() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Nuova Partita</h1>
           <p className="text-muted-foreground">Inserisci i dettagli della partita</p>
+
+          <button
+            type="button"
+            onClick={handleDemo}
+            className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 transition-colors"
+          >
+            <Zap className="w-3 h-3" /> Carica Partita Demo
+          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
