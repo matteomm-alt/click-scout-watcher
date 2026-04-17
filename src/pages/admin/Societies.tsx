@@ -38,13 +38,16 @@ const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 
 export default function AdminSocieties() {
-  const { user, isSuperAdmin, loading: authLoading } = useAuth();
+  const { user, isSuperAdmin, loading: authLoading, refreshRoles } = useAuth();
+  const { refresh: refreshActiveSociety } = useActiveSociety();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [societies, setSocieties] = useState<Society[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [myRoles, setMyRoles] = useState<MyRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
 
   // Dialog crea società
   const [createOpen, setCreateOpen] = useState(false);
@@ -64,22 +67,52 @@ export default function AdminSocieties() {
   }, [authLoading, isSuperAdmin, navigate]);
 
   const load = async () => {
+    if (!user) return;
     setLoading(true);
-    const [{ data: socs, error: sErr }, { data: invs, error: iErr }] = await Promise.all([
+    const [{ data: socs, error: sErr }, { data: invs, error: iErr }, { data: roles, error: rErr }] = await Promise.all([
       supabase.from('societies').select('id, name, slug, created_at').order('created_at', { ascending: false }),
       supabase.from('society_invitations').select('id, email, token, expires_at, accepted_at, society_id').order('created_at', { ascending: false }),
+      supabase.from('user_roles').select('society_id, role').eq('user_id', user.id),
     ]);
     if (sErr) toast({ title: 'Errore caricamento società', description: sErr.message, variant: 'destructive' });
     if (iErr) console.warn('inviti', iErr);
+    if (rErr) console.warn('ruoli', rErr);
     setSocieties((socs || []) as Society[]);
     setInvitations((invs || []) as Invitation[]);
+    setMyRoles(
+      ((roles || []) as { society_id: string | null; role: MyRole['role'] }[])
+        .filter((r) => r.society_id)
+        .map((r) => ({ society_id: r.society_id as string, role: r.role })),
+    );
     setLoading(false);
   };
 
   useEffect(() => {
     if (isSuperAdmin) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, user?.id]);
+
+  const isAdminOf = (societyId: string) =>
+    myRoles.some((r) => r.society_id === societyId && r.role === 'society_admin');
+
+  const claimSocietyAdmin = async (s: Society) => {
+    if (!user) return;
+    setClaimingId(s.id);
+    const { error } = await supabase.from('user_roles').insert({
+      user_id: user.id,
+      society_id: s.id,
+      role: 'society_admin',
+    });
+    setClaimingId(null);
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Sei ora admin di', description: s.name });
+    await refreshRoles();
+    await refreshActiveSociety();
+    load();
+  };
 
   const openCreate = () => {
     setNewName('');
