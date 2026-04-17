@@ -204,6 +204,112 @@ export function ActionPanel() {
     }
   };
 
+  // Libero in/out: swap libero with a back-row player (typically a middle).
+  // If libero is currently on court, brings the original player back.
+  const handleLiberoSwap = (playerNumber: number) => {
+    const team = liberoTeam;
+    const teamData = team === 'home' ? homeTeam : awayTeam;
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const lineupKey = team === 'home' ? 'homeLineup' : 'awayLineup';
+    const initialLineup = team === 'home' ? homeLineup : awayLineup;
+
+    const liberoId = initialLineup.libero1;
+    const liberoPlayer = teamData.players.find(p => p.id === liberoId);
+    if (!liberoPlayer) return;
+
+    const liberoIsOn = lineup.includes(liberoPlayer.number);
+    if (liberoIsOn) {
+      // Bring libero out, swap back the chosen back-row player (must be off court)
+      substitutePlayer(team, liberoPlayer.number, playerNumber);
+    } else {
+      // Bring libero in for the chosen back-row player
+      substitutePlayer(team, playerNumber, liberoPlayer.number);
+    }
+    setShowLibero(false);
+  };
+
+  // Libero modal
+  if (showLibero) {
+    const teamData = liberoTeam === 'home' ? homeTeam : awayTeam;
+    const lineup = liberoTeam === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const initialLineup = liberoTeam === 'home' ? homeLineup : awayLineup;
+    const liberoPlayer = teamData.players.find(p => p.id === initialLineup.libero1);
+    const liberoOnCourt = liberoPlayer ? lineup.includes(liberoPlayer.number) : false;
+    // Back row positions: P1, P5, P6 (indices 0, 4, 5 in the lineup array)
+    const backRowIndices = [0, 4, 5];
+    const backRowNumbers = backRowIndices
+      .map(i => lineup[i])
+      .filter((n): n is number => typeof n === 'number' && n > 0);
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Shield className="w-4 h-4 text-yellow-400" />
+            Libero {liberoOnCourt ? 'OUT' : 'IN'}
+          </h3>
+          <button onClick={() => setShowLibero(false)} className="text-xs text-muted-foreground hover:text-foreground">Annulla</button>
+        </div>
+
+        <div className="flex gap-2">
+          {(['home', 'away'] as const).map(t => {
+            const lp = (t === 'home' ? homeTeam : awayTeam).players.find(
+              p => p.id === (t === 'home' ? homeLineup : awayLineup).libero1
+            );
+            return (
+              <button key={t} onClick={() => setLiberoTeam(t)}
+                className={`px-3 py-1.5 rounded text-xs font-semibold ${liberoTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                {t === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
+                {lp && <span className="ml-1 text-[10px] opacity-70">L#{lp.number}</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {!liberoPlayer ? (
+          <p className="text-xs text-destructive">
+            Nessun libero designato per questa squadra. Configuralo nel lineup iniziale.
+          </p>
+        ) : liberoOnCourt ? (
+          <>
+            <p className="text-xs text-muted-foreground">
+              Libero <span className="text-yellow-400 font-bold">#{liberoPlayer.number} {liberoPlayer.lastName}</span> in
+              campo. Chi rientra al suo posto?
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {teamData.players
+                .filter(p => !p.isLibero && !lineup.includes(p.number))
+                .map(p => (
+                  <button key={p.number} onClick={() => handleLiberoSwap(p.number)}
+                    className="p-2 rounded-lg bg-secondary hover:bg-yellow-500/20 text-foreground text-sm font-semibold">
+                    {p.number} {p.lastName}
+                  </button>
+                ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground">
+              Libero <span className="text-yellow-400 font-bold">#{liberoPlayer.number} {liberoPlayer.lastName}</span> in panchina.
+              Per chi entra (seconda linea)?
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {backRowNumbers.map(num => {
+                const p = teamData.players.find(pp => pp.number === num);
+                return (
+                  <button key={num} onClick={() => handleLiberoSwap(num)}
+                    className="p-2 rounded-lg bg-secondary hover:bg-yellow-500/20 text-foreground text-sm font-semibold">
+                    {num} {p?.lastName || ''}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
   // Substitution UI
   if (showSubstitution) {
     const lineup = getTeamLineup(subTeam);
