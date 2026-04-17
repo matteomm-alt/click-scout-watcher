@@ -34,6 +34,19 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
     return 'idle';
   };
 
+  // Compute arrow positions in % coordinates inside the court grid (3 cols x 3 rows)
+  const zonePos = (zone: number) => {
+    const z = ZONES.find((zz) => zz.zone === zone);
+    if (!z) return null;
+    return {
+      x: (z.col + 0.5) * (100 / 3),
+      y: (z.row + 0.5) * (100 / 3),
+    };
+  };
+  const startPos = startZone ? zonePos(startZone) : null;
+  const endPos = endZone ? zonePos(endZone) : null;
+  const showArrow = startPos && endPos && startZone !== endZone;
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       {/* Net header */}
