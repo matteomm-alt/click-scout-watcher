@@ -1,591 +1,493 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  type DbAction, statsBySkill, statsByPlayer, zoneStats,
+  rotationStats, setsTimeline, SKILL_NAMES,
+} from '@/lib/scoutAnalysis';
+import { ArrowLeft, BarChart3 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
+import { ChartsTab } from '@/components/ChartsTab';
 
-type MainTab = 'analisi' | 'fondamentale' | 'avanzate' | 'giocatrice';
-
-const SKILL_LABELS: Record<string, string> = {
-  S: 'Servizio', R: 'Ricezione', E: 'Alzata', A: 'Attacco', B: 'Muro', D: 'Difesa',
-};
-
-const SKILL_COLORS: Record<string, string> = {
-  S: '#FCD34D', R: '#22D3EE', A: '#F87171',
-  B: '#A78BFA', D: '#34D399', E: '#818CF8',
-};
-
-function effBadge(pos: number, err: number, tot: number) {
-  if (!tot) return { value: 0, color: '#6B7280' };
-  const e = Math.round((pos / tot) * 100) - Math.round((err / tot) * 100);
-  return { value: e, color: e >= 0 ? '#16A34A' : '#DC2626' };
-}
-
-function rotColor(eff: number) {
-  if (eff >= 20) return { bg: '#052E16', border: '#16A34A', num: '#4ADE80', label: '#86EFAC' };
-  if (eff >= 0)  return { bg: '#1C1400', border: '#854D0E', num: '#FCD34D', label: '#FDE68A' };
-  return { bg: '#1A0000', border: '#991B1B', num: '#F87171', label: '#FCA5A5' };
-}
-
-interface DVWMatch {
+interface MatchRow {
   id: string;
-  file_name: string;
-  data: string;
-  avversario: string;
-  squadra_casa: string;
-  risultato: string;
-  set_scores: string[];
-  vinta: boolean;
-  team_stats: any;
-  player_stats: any;
-  rot_stats: any;
-  system_stats: any;
-  directional: any;
-  hit_eff: any;
+  match_date: string | null;
+  league: string | null;
+  venue: string | null;
+  home_sets_won: number;
+  away_sets_won: number;
+  set_results: any;
+  source_filename: string | null;
+  home_team: { id: string; name: string };
+  away_team: { id: string; name: string };
 }
 
-const pct = (n: number, d: number) => d ? Math.round((n / d) * 100) : 0;
+interface PlayerRow {
+  scout_team_id: string;
+  number: number;
+  last_name: string;
+  first_name: string | null;
+  role: string | null;
+}
+
+type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'compare' | 'charts';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'overview', label: 'Panoramica' },
+  { key: 'charts', label: 'Grafici' },
+  { key: 'heatmap', label: 'Heatmap' },
+  { key: 'players', label: 'Giocatori' },
+  { key: 'rotations', label: 'Rotazioni' },
+  { key: 'compare', label: 'Confronto' },
+];
 
 export default function MatchAnalysis() {
-  const [matches, setMatches] = useState<DVWMatch[]>([]);
+  const { id } = useParams<{ id: string }>();
+  const [match, setMatch] = useState<MatchRow | null>(null);
+  const [actions, setActions] = useState<DbAction[]>([]);
+  const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [tab, setTab] = useState<MainTab>('analisi');
-  const [selSkill, setSelSkill] = useState<string>('A');
-  const [selPlayer, setSelPlayer] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabKey>('overview');
+  const [teamFilter, setTeamFilter] = useState<'home' | 'away'>('home');
+  const [filters, setFilters] = useState<AnalysisFilters>(EMPTY_FILTERS);
 
-  useEffect(() => { loadMatches(); }, []);
+  useEffect(() => {
+    setFilters(f => ({ ...f, playerNumbers: [] }));
+  }, [teamFilter]);
 
-  const loadMatches = async () => {
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
-    const { data } = await supabase
-      .from('dvw_matches')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('data', { ascending: false });
-    const all = (data || []) as DVWMatch[];
-    setMatches(all);
-    if (all.length > 0) setSelectedIds(new Set(all.map(m => m.id)));
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      setLoading(true);
+      const { data: m } = await supabase
+        .from('scout_matches')
+        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename,
+                 home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
+        .eq('id', id).single();
+      if (m) setMatch(m as any);
 
-  const selected = matches.filter(m => selectedIds.has(m.id));
+      const all: DbAction[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from('scout_actions')
+          .select('*')
+          .eq('scout_match_id', id)
+          .order('set_number')
+          .order('rally_index')
+          .order('action_index')
+          .range(from, from + PAGE - 1);
+        if (error) { console.error(error); break; }
+        if (!data || data.length === 0) break;
+        all.push(...(data as any));
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      setActions(all);
 
-  const toggleMatch = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+      if (m) {
+        const teamIds = [(m as any).home_team.id, (m as any).away_team.id];
+        const { data: pl } = await supabase
+          .from('scout_players')
+          .select('scout_team_id, number, last_name, first_name, role')
+          .in('scout_team_id', teamIds);
+        setPlayers((pl as any) || []);
+      }
+      setLoading(false);
+    })();
+  }, [id]);
 
-  const aggTeamStats = () => {
-    const cum: Record<string, any> = {};
-    selected.forEach(m => {
-      if (!m.team_stats) return;
-      Object.entries(m.team_stats).forEach(([sk, v]: [string, any]) => {
-        if (!cum[sk]) cum[sk] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0, byZone: {}, bySet: {}, byTipo: {} };
-        cum[sk].tot += v.tot || 0;
-        cum[sk].pos += v.pos || 0;
-        cum[sk].perf += v.perf || 0;
-        cum[sk].err += v.err || 0;
-        cum[sk].neg += v.neg || 0;
-        if (v.byZone) Object.entries(v.byZone).forEach(([z, zv]: [string, any]) => {
-          if (!cum[sk].byZone[z]) cum[sk].byZone[z] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
-          cum[sk].byZone[z].tot += zv.tot || 0;
-          cum[sk].byZone[z].pos += zv.pos || 0;
-          cum[sk].byZone[z].perf += zv.perf || 0;
-          cum[sk].byZone[z].err += zv.err || 0;
-        });
-        if (v.bySet) Object.entries(v.bySet).forEach(([s, sv]: [string, any]) => {
-          if (!cum[sk].bySet[s]) cum[sk].bySet[s] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
-          cum[sk].bySet[s].tot += sv.tot || 0;
-          cum[sk].bySet[s].pos += sv.pos || 0;
-          cum[sk].bySet[s].perf += sv.perf || 0;
-          cum[sk].bySet[s].err += sv.err || 0;
-        });
-        if (v.byTipo) Object.entries(v.byTipo).forEach(([t, tv]: [string, any]) => {
-          if (!cum[sk].byTipo[t]) cum[sk].byTipo[t] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
-          cum[sk].byTipo[t].tot += tv.tot || 0;
-          cum[sk].byTipo[t].pos += tv.pos || 0;
-          cum[sk].byTipo[t].perf += tv.perf || 0;
-          cum[sk].byTipo[t].err += tv.err || 0;
-        });
-      });
-    });
-    return cum;
-  };
+  const teamId = teamFilter === 'home' ? match?.home_team.id : match?.away_team.id;
 
-  const aggPlayerStats = () => {
-    const cum: Record<string, Record<string, any>> = {};
-    selected.forEach(m => {
-      if (!m.player_stats) return;
-      Object.entries(m.player_stats).forEach(([nome, skMap]: [string, any]) => {
-        if (!cum[nome]) cum[nome] = {};
-        Object.entries(skMap).forEach(([sk, v]: [string, any]) => {
-          if (!cum[nome][sk]) cum[nome][sk] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
-          cum[nome][sk].tot += v.tot || 0;
-          cum[nome][sk].pos += v.pos || 0;
-          cum[nome][sk].perf += v.perf || 0;
-          cum[nome][sk].err += v.err || 0;
-          cum[nome][sk].neg += v.neg || 0;
-        });
-      });
-    });
-    return cum;
-  };
-
-  const aggRotStats = () => {
-    const cum: Record<number, any> = {};
-    for (let r = 1; r <= 6; r++) cum[r] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
-    selected.forEach(m => {
-      if (!m.rot_stats) return;
-      Object.entries(m.rot_stats).forEach(([r, v]: [string, any]) => {
-        const ri = parseInt(r);
-        if (!cum[ri]) return;
-        cum[ri].tot += v.tot || 0;
-        cum[ri].pos += v.pos || 0;
-        cum[ri].perf += v.perf || 0;
-        cum[ri].err += v.err || 0;
-        cum[ri].neg += v.neg || 0;
-      });
-    });
-    return cum;
-  };
-
-  const aggSystemStats = () => {
-    const cum = {
-      fbso: { att: 0, pts: 0 }, so: { att: 0, pts: 0 },
-      ps:   { att: 0, pts: 0 }, fbps: { att: 0, pts: 0 },
-    };
-    selected.forEach(m => {
-      if (!m.system_stats) return;
-      (['fbso', 'so', 'ps', 'fbps'] as const).forEach(k => {
-        cum[k].att += m.system_stats[k]?.att || 0;
-        cum[k].pts += m.system_stats[k]?.pts || 0;
-      });
-    });
-    return {
-      fbso: { ...cum.fbso, pct: pct(cum.fbso.pts, cum.fbso.att) },
-      so:   { ...cum.so,   pct: pct(cum.so.pts,   cum.so.att)   },
-      ps:   { ...cum.ps,   pct: pct(cum.ps.pts,   cum.ps.att)   },
-      fbps: { ...cum.fbps, pct: pct(cum.fbps.pts, cum.fbps.att) },
-    };
-  };
-
-  const aggDirectional = (skill: string) => {
-    const all: { z1: number; z2: number; ev: string }[] = [];
-    selected.forEach(m => {
-      if (!m.directional?.[skill]) return;
-      all.push(...m.directional[skill]);
-    });
-    return all;
-  };
-
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
+  const teamActionsRaw = useMemo(
+    () => actions.filter(a => a.scout_team_id === teamId),
+    [actions, teamId]
   );
 
-  if (matches.length === 0) return (
-    <div className="p-6 text-center text-muted-foreground">
-      <p className="text-lg font-medium">Nessuna partita importata</p>
-      <p className="text-sm mt-1">Vai su Importa DVW per caricare file .dvw</p>
-    </div>
-  );
+  const availableSets = useMemo(() => {
+    const s = new Set<number>();
+    for (const a of actions) s.add(a.set_number);
+    return [...s].sort((a, b) => a - b);
+  }, [actions]);
 
-  const teamStats = aggTeamStats();
-  const playerStats = aggPlayerStats();
+  const availableSkills = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of teamActionsRaw) s.add(a.skill);
+    return [...s].sort();
+  }, [teamActionsRaw]);
+
+  const playerOptions = useMemo<PlayerOption[]>(() => {
+    if (!teamId) return [];
+    const numbersWithActions = new Set(teamActionsRaw.map(a => a.player_number).filter((n): n is number => n !== null));
+    return players
+      .filter(p => p.scout_team_id === teamId && numbersWithActions.has(p.number))
+      .map(p => ({
+        number: p.number,
+        name: `${p.last_name}${p.first_name ? ' ' + p.first_name.charAt(0) + '.' : ''}`,
+        role: p.role,
+      }))
+      .sort((a, b) => a.number - b.number);
+  }, [players, teamActionsRaw, teamId]);
+
+  const playerNames = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const p of players) {
+      if (p.scout_team_id === teamId) {
+        m.set(p.number, `${p.last_name}${p.first_name ? ' ' + p.first_name.charAt(0) + '.' : ''}`);
+      }
+    }
+    return m;
+  }, [players, teamId]);
+
+  const filteredTeamActions = useMemo(() => {
+    return teamActionsRaw.filter(a => {
+      if (filters.setNumbers.length && !filters.setNumbers.includes(a.set_number)) return false;
+      if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
+      if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
+      if (filters.playerNumbers.length && (a.player_number === null || !filters.playerNumbers.includes(a.player_number))) return false;
+      return true;
+    });
+  }, [teamActionsRaw, filters]);
+
+  const filteredAllActions = useMemo(() => {
+    return actions.filter(a => {
+      if (filters.setNumbers.length && !filters.setNumbers.includes(a.set_number)) return false;
+      if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
+      if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
+      if (filters.playerNumbers.length) {
+        if (a.scout_team_id === teamId) {
+          if (a.player_number === null || !filters.playerNumbers.includes(a.player_number)) return false;
+        }
+      }
+      return true;
+    });
+  }, [actions, filters, teamId]);
+
+  if (loading || !match) {
+    return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-56 border-r border-border bg-secondary/20 flex flex-col">
-        <div className="p-3 border-b border-border">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Partite</p>
-          <div className="flex gap-1 mt-2">
-            <button onClick={() => setSelectedIds(new Set(matches.map(m => m.id)))}
-              className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20">Tutte</button>
-            <button onClick={() => setSelectedIds(new Set())}
-              className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground hover:text-foreground">Nessuna</button>
+    <div className="min-h-screen bg-background text-foreground font-body">
+      <header className="border-b border-border/60 sticky top-0 bg-background/95 backdrop-blur z-10">
+        <div className="container py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Link to="/" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></Link>
+            <BarChart3 className="w-5 h-5 text-primary" />
+            <h1 className="text-lg font-bold uppercase italic">Analisi Match</h1>
+          </div>
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+            <h2 className="text-3xl font-black italic uppercase tracking-tight">
+              {match.home_team.name} <span className="text-primary">{match.home_sets_won}-{match.away_sets_won}</span> {match.away_team.name}
+            </h2>
+            <span className="text-xs text-muted-foreground">
+              {match.match_date} · {match.league || ''} · {match.venue || ''}
+            </span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {matches.map(m => (
-            <button key={m.id} onClick={() => toggleMatch(m.id)}
-              className={`w-full text-left p-2 rounded-lg transition-colors ${
-                selectedIds.has(m.id) ? 'bg-primary/10 border border-primary/30' : 'bg-transparent border border-transparent hover:bg-secondary/40'
-              }`}>
-              <div className="flex items-center gap-1.5">
-                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${m.vinta ? 'bg-green-400' : 'bg-red-400'}`} />
-                <span className="text-xs font-semibold text-foreground truncate">{m.avversario}</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground mt-0.5 flex justify-between">
-                <span>{m.risultato}</span>
-                <span>{m.data ? new Date(m.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : ''}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-        <div className="p-2 border-t border-border text-[10px] text-muted-foreground text-center">
-          {selectedIds.size} / {matches.length} selezionate
-        </div>
-      </div>
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-border px-4 flex gap-1 py-2">
-          {(['analisi', 'fondamentale', 'avanzate', 'giocatrice'] as MainTab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors ${
-                tab === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}>
-              {t === 'analisi' ? 'Analisi' : t === 'fondamentale' ? 'Fondamentale' : t === 'avanzate' ? 'Avanzate' : 'Giocatrice'}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          {selected.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground">
-              <p>Seleziona almeno una partita dalla sidebar</p>
-            </div>
-          )}
-          {selected.length > 0 && tab === 'analisi' && <AnalisiView teamStats={teamStats} selected={selected} />}
-          {selected.length > 0 && tab === 'fondamentale' && <FondamentaleView teamStats={teamStats} selSkill={selSkill} setSelSkill={setSelSkill} />}
-          {selected.length > 0 && tab === 'avanzate' && <AvanzateView rotStats={aggRotStats()} systemStats={aggSystemStats()} directional={aggDirectional} selSkill={selSkill} setSelSkill={setSelSkill} />}
-          {selected.length > 0 && tab === 'giocatrice' && <GiocatriceView playerStats={playerStats} selPlayer={selPlayer} setSelPlayer={setSelPlayer} />}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AnalisiView({ teamStats, selected }: { teamStats: any; selected: DVWMatch[] }) {
-  const vinte = selected.filter(m => m.vinta).length;
-  const winPct = pct(vinte, selected.length);
-  return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="grid grid-cols-4 gap-4">
-        <KpiCard label="Partite" value={selected.length.toString()} color="#22D3EE" />
-        <KpiCard label="Vinte" value={vinte.toString()} color="#4ADE80" />
-        <KpiCard label="Perse" value={(selected.length - vinte).toString()} color="#F87171" />
-        <KpiCard label="Win%" value={`${winPct}%`} color="#22D3EE" big />
-      </div>
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Statistiche per Fondamentale</h3>
-        {Object.entries(SKILL_LABELS).map(([sk, label]) => {
-          const s = teamStats[sk];
-          if (!s || !s.tot) return null;
-          const { value: eff, color: effColor } = effBadge(s.pos, s.err, s.tot);
-          const percPos = pct(s.pos, s.tot);
-          const percPerf = pct(s.perf, s.tot);
-          const percErr = pct(s.err, s.tot);
-          return (
-            <div key={sk} className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm" style={{ color: SKILL_COLORS[sk] }}>{sk}</span>
-                  <span className="text-foreground font-semibold">{label}</span>
-                  <span className="text-muted-foreground text-xs">{s.tot} az.</span>
-                </div>
-                <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ background: effColor }}>
-                  {eff > 0 ? '+' : ''}{eff}%
-                </span>
-              </div>
-              <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
-                <div className="rounded-full" style={{ width: `${percPerf}%`, background: '#16A34A' }} />
-                <div className="rounded-full" style={{ width: `${Math.max(0, percPos - percPerf)}%`, background: '#86EFAC' }} />
-                <div className="rounded-full" style={{ width: `${100 - percPos - percErr}%`, background: '#4B5563' }} />
-                <div className="rounded-full" style={{ width: `${percErr}%`, background: '#DC2626' }} />
-              </div>
-              <div className="flex gap-4 text-xs text-muted-foreground">
-                <span><span className="text-green-400 font-bold">{percPerf}%</span> perf.</span>
-                <span><span className="text-emerald-400 font-bold">{percPos}%</span> pos.</span>
-                <span><span className="text-red-400 font-bold">{percErr}%</span> err.</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function FondamentaleView({ teamStats, selSkill, setSelSkill }: { teamStats: any; selSkill: string; setSelSkill: (s: string) => void }) {
-  const s = teamStats[selSkill];
-  return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex gap-2 flex-wrap">
-        {Object.entries(SKILL_LABELS).map(([sk, label]) => (
-          <button key={sk} onClick={() => setSelSkill(sk)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors border ${
-              selSkill === sk ? 'text-white border-transparent' : 'bg-transparent text-muted-foreground border-border hover:text-foreground'
-            }`}
-            style={selSkill === sk ? { background: SKILL_COLORS[sk] } : {}}>
-            {sk} — {label}
-          </button>
-        ))}
-      </div>
-      {!s || !s.tot ? (
-        <div className="text-muted-foreground text-sm py-8 text-center">Nessun dato per {SKILL_LABELS[selSkill]}</div>
-      ) : (
-        <div className="space-y-4">
-          {s.byZone && Object.keys(s.byZone).length > 0 && (
-            <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Heatmap Zone</h4>
-              <div className="grid grid-cols-3 gap-1 w-48 mx-auto">
-                {[4,3,2,5,6,1,7,8,9].map(z => {
-                  const zd = s.byZone[z];
-                  const intensity = zd ? pct(zd.tot, s.tot) : 0;
-                  return (
-                    <div key={z} className="aspect-square rounded flex items-center justify-center relative overflow-hidden"
-                      style={{ background: `rgba(34,211,238,${intensity / 100 * 0.8 + 0.05})` }}>
-                      <span className="text-white/80 text-[10px] font-bold">{z}</span>
-                      {zd && <span className="absolute bottom-0.5 right-0.5 text-[8px] text-white/60">{intensity}%</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {s.byTipo && Object.keys(s.byTipo).length > 0 && (
-            <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Per Tipo Tecnico</h4>
-              <div className="space-y-2">
-                {Object.entries(s.byTipo).sort((a: any, b: any) => b[1].tot - a[1].tot).map(([tipo, td]: [string, any]) => (
-                  <div key={tipo} className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-muted-foreground w-6">{tipo}</span>
-                    <div className="flex-1 h-2 rounded-full overflow-hidden flex gap-0.5">
-                      <div style={{ width: `${pct(td.perf, td.tot)}%`, background: '#16A34A' }} className="rounded-full" />
-                      <div style={{ width: `${Math.max(0, pct(td.pos, td.tot) - pct(td.perf, td.tot))}%`, background: '#86EFAC' }} className="rounded-full" />
-                      <div style={{ width: `${100 - pct(td.pos, td.tot) - pct(td.err, td.tot)}%`, background: '#4B5563' }} className="rounded-full" />
-                      <div style={{ width: `${pct(td.err, td.tot)}%`, background: '#DC2626' }} className="rounded-full" />
-                    </div>
-                    <span className="text-xs text-muted-foreground w-8 text-right">{td.tot}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {s.bySet && Object.keys(s.bySet).length > 0 && (
-            <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Per Set</h4>
-              <div className="flex gap-6">
-                {Object.entries(s.bySet).map(([setN, sd]: [string, any]) => {
-                  const { value: eff, color } = effBadge(sd.pos, sd.err, sd.tot);
-                  return (
-                    <div key={setN} className="text-center">
-                      <div className="text-xs text-muted-foreground">Set {setN}</div>
-                      <div className="text-2xl font-black" style={{ color }}>{eff > 0 ? '+' : ''}{eff}%</div>
-                      <div className="text-xs text-muted-foreground">{sd.tot} az.</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AvanzateView({ rotStats, systemStats, directional, selSkill, setSelSkill }: any) {
-  return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Analisi per Rotazione</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {[1,2,3,4,5,6].map(r => {
-            const v = rotStats[r];
-            if (!v || !v.tot) return (
-              <div key={r} className="p-3 rounded-lg border border-border bg-secondary/20 text-center">
-                <div className="text-xs text-muted-foreground">Rot {r}</div>
-                <div className="text-muted-foreground text-sm mt-1">—</div>
-              </div>
-            );
-            const effPct = pct(v.pos, v.tot) - pct(v.err, v.tot);
-            const colors = rotColor(effPct);
-            return (
-              <div key={r} className="p-3 rounded-lg border-l-4"
-                style={{ background: colors.bg, borderColor: colors.border }}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-bold" style={{ color: colors.label }}>Rot {r}</span>
-                  <span className="text-xs text-muted-foreground">{v.tot} az.</span>
-                </div>
-                <div className="text-2xl font-black" style={{ color: colors.num }}>
-                  {effPct > 0 ? '+' : ''}{effPct}%
-                </div>
-                <div className="text-xs mt-1" style={{ color: colors.label }}>
-                  {pct(v.perf, v.tot)}% perf · {pct(v.err, v.tot)}% err
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Sistema — FBSO / SO / PS / FBPS</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { k: 'fbso', label: 'FBSO', desc: '1° att. dopo ric.', color: '#22D3EE' },
-            { k: 'so',   label: 'SO',   desc: 'Side Out',          color: '#A78BFA' },
-            { k: 'ps',   label: 'PS',   desc: 'Point Score',       color: '#FCD34D' },
-            { k: 'fbps', label: 'FBPS', desc: '1° att. PS',        color: '#34D399' },
-          ].map(({ k, label, desc, color }) => {
-            const v = systemStats[k];
-            return (
-              <div key={k} className="text-center p-3 rounded-lg bg-secondary/40">
-                <div className="text-xs text-muted-foreground mb-1">{desc}</div>
-                <div className="text-3xl font-black" style={{ color }}>{v?.pct || 0}%</div>
-                <div className="font-bold text-sm mt-0.5" style={{ color }}>{label}</div>
-                <div className="text-xs text-muted-foreground mt-1">{v?.pts || 0}/{v?.att || 0}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Directional Lines</h3>
-          <div className="flex gap-1">
-            {['A','S','R'].map(sk => (
-              <button key={sk} onClick={() => setSelSkill(sk)}
-                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                  selSkill === sk ? 'text-white' : 'bg-secondary text-muted-foreground'
+        <div className="container">
+          <div className="flex gap-1 overflow-x-auto">
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`px-4 py-3 text-sm font-bold uppercase italic tracking-tight border-b-4 transition-colors ${
+                  tab === t.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
-                style={selSkill === sk ? { background: SKILL_COLORS[sk] } : {}}>
-                {sk}
-              </button>
+              >{t.label}</button>
             ))}
           </div>
         </div>
-        <DirectionalCourt actions={directional(selSkill)} />
+      </header>
+
+      <div className="container py-4 flex items-center gap-2">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground mr-2">Squadra:</span>
+        <button
+          onClick={() => setTeamFilter('home')}
+          className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${teamFilter === 'home' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+        >{match.home_team.name}</button>
+        <button
+          onClick={() => setTeamFilter('away')}
+          className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${teamFilter === 'away' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+        >{match.away_team.name}</button>
       </div>
+
+      <main className="container pb-12 grid lg:grid-cols-[280px_1fr] gap-6">
+        <aside className="lg:sticky lg:top-44 lg:self-start">
+          <MatchFilters
+            filters={filters}
+            onChange={setFilters}
+            availableSets={availableSets}
+            availableSkills={availableSkills}
+            players={playerOptions}
+          />
+          <p className="text-[11px] text-muted-foreground mt-2 px-1">
+            Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
+          </p>
+        </aside>
+
+        <section className="min-w-0">
+          {tab === 'overview' && <Overview actions={filteredTeamActions} setResults={match.set_results} />}
+          {tab === 'charts' && <ChartsTab actions={filteredTeamActions} playerNames={playerNames} />}
+          {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
+          {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} />}
+          {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
+          {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} />}
+        </section>
+      </main>
     </div>
   );
 }
 
-function DirectionalCourt({ actions }: { actions: { z1: number; z2: number; ev: string }[] }) {
-  const ZC: Record<number, [number, number]> = {
-    1: [225,200], 2: [225,70], 3: [150,70],
-    4: [75,70],   5: [75,200], 6: [150,200],
-    7: [50,250],  8: [150,250], 9: [250,250],
-  };
-  const grouped: Record<string, { count: number; pos: number }> = {};
-  actions.forEach(a => {
-    const key = `${a.z1}-${a.z2}`;
-    if (!grouped[key]) grouped[key] = { count: 0, pos: 0 };
-    grouped[key].count++;
-    if (a.ev === '#' || a.ev === '+') grouped[key].pos++;
-  });
-  const maxCount = Math.max(1, ...Object.values(grouped).map(g => g.count));
+function Overview({ actions, setResults }: { actions: DbAction[]; setResults: any }) {
+  const skills = statsBySkill(actions);
   return (
-    <svg viewBox="0 0 300 270" className="w-full max-w-xs mx-auto rounded-lg overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #172e4a 100%)' }}>
-      <rect x={30} y={10} width={240} height={250} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
-      <line x1={30} y1={135} x2={270} y2={135} stroke="white" strokeWidth={3} />
-      <line x1={30} y1={75}  x2={270} y2={75}  stroke="rgba(255,255,255,0.4)" strokeWidth={1} strokeDasharray="4,3" />
-      <line x1={30} y1={195} x2={270} y2={195} stroke="rgba(255,255,255,0.4)" strokeWidth={1} strokeDasharray="4,3" />
-      {[110,150,190].map(x => (
-        <line key={x} x1={x} y1={10} x2={x} y2={260} stroke="rgba(255,255,255,0.15)" strokeWidth={0.5} />
-      ))}
-      <text x={150} y={131} textAnchor="middle" fontSize={7} fill="rgba(255,255,255,0.4)">RETE</text>
-      {Object.entries(ZC).map(([z, [cx, cy]]) => (
-        <text key={z} x={cx} y={cy+3} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.2)" fontWeight="bold">{z}</text>
-      ))}
-      {Object.entries(grouped).map(([key, { count, pos }]) => {
-        const [z1s, z2s] = key.split('-');
-        const from = ZC[parseInt(z1s)];
-        const to = ZC[parseInt(z2s)];
-        if (!from || !to) return null;
-        const thickness = Math.max(1, (count / maxCount) * 5);
-        const posRatio = pos / count;
-        const col = posRatio >= 0.6 ? '#4ADE80' : posRatio >= 0.3 ? '#FCD34D' : '#F87171';
-        const dx = to[0]-from[0], dy = to[1]-from[1];
-        const len = Math.sqrt(dx*dx+dy*dy) || 1;
-        const nx = dx/len, ny = dy/len;
-        const ex = to[0]-nx*8, ey = to[1]-ny*8;
-        return (
-          <g key={key}>
-            <line x1={from[0]} y1={from[1]} x2={ex} y2={ey}
-              stroke={col} strokeWidth={thickness} strokeOpacity={0.7} strokeLinecap="round" />
-            <polygon points={`${to[0]},${to[1]} ${ex-ny*4},${ey+nx*4} ${ex+ny*4},${ey-nx*4}`}
-              fill={col} fillOpacity={0.8} />
-            {count > 1 && (
-              <text x={(from[0]+to[0])/2} y={(from[1]+to[1])/2} textAnchor="middle" fontSize={7} fill="white">{count}</text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-function GiocatriceView({ playerStats, selPlayer, setSelPlayer }: { playerStats: any; selPlayer: string | null; setSelPlayer: (p: string) => void }) {
-  const players = Object.keys(playerStats).sort();
-  useEffect(() => { if (!selPlayer && players.length > 0) setSelPlayer(players[0]); }, [players.length]);
-  const ps = selPlayer ? playerStats[selPlayer] : null;
-  return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex gap-2 flex-wrap">
-        {players.map(p => (
-          <button key={p} onClick={() => setSelPlayer(p)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-              selPlayer === p ? 'bg-primary text-primary-foreground border-primary' : 'bg-transparent text-muted-foreground border-border hover:text-foreground'
-            }`}>
-            {p}
-          </button>
-        ))}
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-3 gap-4">
+        <KpiCard label="Azioni totali" value={actions.length} />
+        <KpiCard label="Punti diretti (#)" value={actions.filter(a => a.evaluation === '#').length} />
+        <KpiCard label="Errori (= /)" value={actions.filter(a => a.evaluation === '=' || a.evaluation === '/').length} />
       </div>
-      {ps && (
-        <div className="space-y-3">
-          {Object.entries(SKILL_LABELS).map(([sk, label]) => {
-            const s = ps[sk];
-            if (!s || !s.tot) return null;
-            const { value: eff, color } = effBadge(s.pos, s.err, s.tot);
-            return (
-              <div key={sk} className="p-4 rounded-xl bg-secondary/30 border border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold" style={{ color: SKILL_COLORS[sk] }}>{sk}</span>
-                    <span className="text-foreground font-semibold text-sm">{label}</span>
-                    <span className="text-muted-foreground text-xs">{s.tot} az.</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ background: color }}>
-                    {eff > 0 ? '+' : ''}{eff}%
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2 text-center">
-                  {[
-                    { label: 'Perfetta', value: s.perf, color: '#4ADE80' },
-                    { label: 'Positive', value: s.pos,  color: '#86EFAC' },
-                    { label: 'Errori',   value: s.err,  color: '#F87171' },
-                    { label: 'Totale',   value: s.tot,  color: '#9CA3AF' },
-                  ].map(({ label: l, value, color: c }) => (
-                    <div key={l}>
-                      <div className="text-xl font-black" style={{ color: c }}>{value}</div>
-                      <div className="text-[10px] text-muted-foreground">{l}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Statistiche per skill</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+              <tr><th className="text-left py-2">Skill</th><th>Tot</th><th>Pos%</th><th>Err%</th><th>Eff%</th></tr>
+            </thead>
+            <tbody>
+              {skills.map(s => (
+                <tr key={s.skill} className="border-b border-border/40">
+                  <td className="py-2 font-semibold">{SKILL_NAMES[s.skill] || s.skill}</td>
+                  <td className="text-center">{s.total}</td>
+                  <td className="text-center text-success">{s.positivePct.toFixed(1)}</td>
+                  <td className="text-center text-destructive">{s.errorPct.toFixed(1)}</td>
+                  <td className="text-center font-bold">{s.efficiency.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </Card>
+      {Array.isArray(setResults) && setResults.length > 0 && (
+        <Card className="p-5">
+          <h3 className="text-sm font-bold uppercase italic mb-4">Andamento set</h3>
+          <div className="space-y-2">
+            {setResults.map((s: any, i: number) => (
+              <div key={i} className="flex items-center gap-4 text-sm">
+                <span className="font-bold w-12">Set {i + 1}</span>
+                <span className="font-mono text-muted-foreground">{s.intermediates?.join(' → ')}</span>
+                <span className="ml-auto text-xs text-muted-foreground">{s.duration} min</span>
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
     </div>
   );
 }
 
-function KpiCard({ label, value, color, big }: { label: string; value: string; color: string; big?: boolean }) {
+function KpiCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="p-4 rounded-xl bg-secondary/30 border border-border text-center">
-      <div className={`font-black leading-none ${big ? 'text-4xl' : 'text-3xl'}`} style={{ color }}>{value}</div>
-      <div className="text-xs text-muted-foreground mt-2 font-medium">{label}</div>
+    <Card className="p-5">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-4xl font-black italic">{value}</p>
+    </Card>
+  );
+}
+
+function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkills: string[] }) {
+  const initialSkill = forcedSkills.length === 1 ? forcedSkills[0] : 'A';
+  const [skill, setSkill] = useState<string>(initialSkill);
+  const [side, setSide] = useState<'start' | 'end'>('end');
+  const filtered = actions.filter(a => a.skill === skill);
+  const cells = zoneStats(filtered, side);
+  const maxTotal = Math.max(1, ...cells.map(c => c.total));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(SKILL_NAMES).map(([k, name]) => (
+          <button key={k} onClick={() => setSkill(k)}
+            className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${skill === k ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+          >{name}</button>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <button onClick={() => setSide('start')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'start' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona partenza</button>
+        <button onClick={() => setSide('end')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'end' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona arrivo</button>
+      </div>
+      <Card className="p-6">
+        <h3 className="text-sm font-bold uppercase italic mb-4">{SKILL_NAMES[skill]} — {side === 'start' ? 'partenza' : 'arrivo'}</h3>
+        <div className="grid grid-cols-3 gap-2 max-w-md">
+          {[4,3,2,7,8,9,5,6,1].map(z => {
+            const c = cells.find(x => x.zone === z)!;
+            const intensity = c.total / maxTotal;
+            return (
+              <div key={z}
+                className="aspect-square border border-border rounded flex flex-col items-center justify-center relative"
+                style={{ background: `hsl(var(--primary) / ${0.05 + intensity * 0.55})` }}
+              >
+                <span className="absolute top-1 left-2 text-xs text-muted-foreground">P{z}</span>
+                <span className="text-2xl font-black italic">{c.total}</span>
+                <span className="text-xs text-muted-foreground">eff {c.efficiency.toFixed(0)}%</span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground mt-4">Intensità del colore = volume azioni. Numero = totale, eff% = (perfette − errori) / totale.</p>
+      </Card>
+    </div>
+  );
+}
+
+function PlayersTab({ actions, playerNames }: { actions: DbAction[]; playerNames: Map<number, string> }) {
+  const players = statsByPlayer(actions);
+  return (
+    <Card className="p-5 overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+          <tr>
+            <th className="text-left py-2">Atleta</th>
+            <th>Tot</th>
+            {['S','R','A','B','D','E'].map(s => <th key={s}>{SKILL_NAMES[s]}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {players.map(p => (
+            <tr key={p.number} className="border-b border-border/40">
+              <td className="py-2 font-bold">
+                #{p.number} <span className="font-normal text-muted-foreground">{playerNames.get(p.number) || ''}</span>
+              </td>
+              <td className="text-center">{p.total}</td>
+              {['S','R','A','B','D','E'].map(s => {
+                const st = p.bySkill[s];
+                return (
+                  <td key={s} className="text-center">
+                    {st ? (
+                      <div className="text-xs">
+                        <div className="font-semibold">{st.total}</div>
+                        <div className="text-muted-foreground">eff {st.efficiency.toFixed(0)}%</div>
+                      </div>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
+function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
+  const stats = rotationStats(actions, teamId, { side });
+  return (
+    <div className="space-y-4">
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Side-out% e Point-win% per rotazione</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {stats.map(r => (
+            <div key={r.setterPos} className="p-4 border border-border rounded">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Rotazione {r.setterPos}</p>
+              <div className="mt-2 space-y-2">
+                <BarRow label="Side-out%" value={r.sideOutPct} sub={`${r.receptionWon}/${r.receptionRallies}`} />
+                <BarRow label="Point-win%" value={r.pointWinPct} sub={`${r.serveWon}/${r.serveRallies}`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function BarRow({ label, value, sub }: { label: string; value: number; sub: string }) {
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1">
+        <span>{label}</span>
+        <span className="font-bold">{value.toFixed(0)}% <span className="text-muted-foreground">({sub})</span></span>
+      </div>
+      <div className="h-2 bg-muted rounded overflow-hidden">
+        <div className="h-full bg-primary" style={{ width: `${Math.min(100, value)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function CompareTab({ actions, match }: { actions: DbAction[]; match: MatchRow }) {
+  const home = actions.filter(a => a.scout_team_id === match.home_team.id);
+  const away = actions.filter(a => a.scout_team_id === match.away_team.id);
+  const homeStats = statsBySkill(home);
+  const awayStats = statsBySkill(away);
+  const skills = ['S','R','A','B','D'];
+  const timelines = setsTimeline(actions);
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Confronto squadre</h3>
+        <table className="w-full text-sm">
+          <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+            <tr>
+              <th className="text-left">Skill</th>
+              <th>{match.home_team.name}</th>
+              <th></th>
+              <th>{match.away_team.name}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {skills.map(s => {
+              const h = homeStats.find(x => x.skill === s);
+              const a = awayStats.find(x => x.skill === s);
+              return (
+                <tr key={s} className="border-b border-border/40">
+                  <td className="py-2 font-semibold">{SKILL_NAMES[s]}</td>
+                  <td className="text-center">{h ? `${h.total} (eff ${h.efficiency.toFixed(0)}%)` : '—'}</td>
+                  <td className="text-center text-muted-foreground text-xs">vs</td>
+                  <td className="text-center">{a ? `${a.total} (eff ${a.efficiency.toFixed(0)}%)` : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Andamento punto-punto per set</h3>
+        <div className="space-y-6">
+          {timelines.map(t => {
+            const max = Math.max(...t.points.map(p => Math.abs(p.lead)), 5);
+            const w = 100;
+            return (
+              <div key={t.setNumber}>
+                <div className="flex items-baseline gap-3 mb-1">
+                  <span className="font-bold uppercase italic text-sm">Set {t.setNumber}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t.points[t.points.length - 1].home}-{t.points[t.points.length - 1].away}
+                  </span>
+                </div>
+                <svg viewBox={`0 0 ${w} 40`} className="w-full h-16 bg-muted/30 rounded">
+                  <line x1="0" x2={w} y1="20" y2="20" stroke="hsl(var(--border))" strokeWidth="0.3" />
+                  <polyline
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="0.6"
+                    points={t.points.map((p, i) => `${(i / (t.points.length - 1 || 1)) * w},${20 - (p.lead / max) * 18}`).join(' ')}
+                  />
+                </svg>
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span>{match.home_team.name} avanti ↑</span>
+                  <span>{match.away_team.name} avanti ↓</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }
