@@ -41,6 +41,9 @@ interface MatchStore {
 
   // Reset everything (new match)
   resetMatch: () => void;
+
+  // Load a fully-configured demo match (for quick testing/onboarding)
+  loadDemoMatch: () => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
