@@ -1262,32 +1262,41 @@ export type Database = {
       }
       technical_guidelines: {
         Row: {
+          age_group: string | null
           category: string | null
           content: string
           created_at: string
           created_by: string | null
+          fundamental: string | null
           id: string
           society_id: string
+          tags: string[]
           title: string
           updated_at: string
         }
         Insert: {
+          age_group?: string | null
           category?: string | null
           content: string
           created_at?: string
           created_by?: string | null
+          fundamental?: string | null
           id?: string
           society_id: string
+          tags?: string[]
           title: string
           updated_at?: string
         }
         Update: {
+          age_group?: string | null
           category?: string | null
           content?: string
           created_at?: string
           created_by?: string | null
+          fundamental?: string | null
           id?: string
           society_id?: string
+          tags?: string[]
           title?: string
           updated_at?: string
         }
