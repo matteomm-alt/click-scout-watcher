@@ -19,8 +19,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { FUNDAMENTALS } from '@/lib/volleyConstants';
+import { TagPicker } from '@/components/TagPicker';
 import {
-  Dumbbell, Plus, Pencil, Trash2, Search, Download, Upload, Loader2, Tag, Clock, Link as LinkIcon,
+  Dumbbell, Plus, Pencil, Trash2, Search, Download, Upload, Loader2, Tag, Clock, Link as LinkIcon, X,
 } from 'lucide-react';
 
 interface Exercise {
