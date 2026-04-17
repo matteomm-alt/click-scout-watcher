@@ -221,19 +221,20 @@ export function VolleyballCourt() {
     const teamData = team === 'home' ? homeTeam : awayTeam;
     const player = teamData.players.find((p) => p.number === num);
     return player
-      ? { number: num, name: player.lastName }
-      : { number: num, name: `#${num}` };
+      ? { number: num, name: player.lastName, role: player.role }
+      : { number: num, name: `#${num}`, role: undefined };
   };
 
   // Each half = 3x2 zone grid (front + back rows). Numbers mirror DVW per side.
+  // `pos` is the rotation position (P1-P6) corresponding to that physical zone.
   const HOME_ZONES = [
-    { z: 4, col: 0, row: 0 }, { z: 3, col: 1, row: 0 }, { z: 2, col: 2, row: 0 },
-    { z: 5, col: 0, row: 1 }, { z: 6, col: 1, row: 1 }, { z: 1, col: 2, row: 1 },
+    { z: 4, col: 0, row: 0, pos: 4 }, { z: 3, col: 1, row: 0, pos: 3 }, { z: 2, col: 2, row: 0, pos: 2 },
+    { z: 5, col: 0, row: 1, pos: 5 }, { z: 6, col: 1, row: 1, pos: 6 }, { z: 1, col: 2, row: 1, pos: 1 },
   ];
   // Away half is mirrored (viewed from opposite side)
   const AWAY_ZONES = [
-    { z: 2, col: 0, row: 0 }, { z: 3, col: 1, row: 0 }, { z: 4, col: 2, row: 0 },
-    { z: 1, col: 0, row: 1 }, { z: 6, col: 1, row: 1 }, { z: 5, col: 2, row: 1 },
+    { z: 2, col: 0, row: 0, pos: 2 }, { z: 3, col: 1, row: 0, pos: 3 }, { z: 4, col: 2, row: 0, pos: 4 },
+    { z: 1, col: 0, row: 1, pos: 1 }, { z: 6, col: 1, row: 1, pos: 6 }, { z: 5, col: 2, row: 1, pos: 5 },
   ];
 
   const Half = ({
@@ -241,15 +242,15 @@ export function VolleyballCourt() {
     teamLabel,
     teamColor,
     lineup,
+    setterPosition,
     side,
-    flipBorder,
   }: {
-    zones: { z: number; col: number; row: number }[];
+    zones: { z: number; col: number; row: number; pos: number }[];
     teamLabel: string;
     teamColor: 'home' | 'away';
     lineup: number[];
+    setterPosition: number;
     side: 'left' | 'right';
-    flipBorder: boolean;
   }) => (
     <div className="flex-1 relative grid grid-rows-2">
       {/* Team label */}
@@ -269,8 +270,10 @@ export function VolleyballCourt() {
           {zones
             .filter((z) => z.row === row)
             .map((z, idx) => {
-              const playerNum = lineup[z.z - 1];
+              const playerNum = lineup[z.pos - 1];
               const info = playerNum ? getPlayerInfo(playerNum, teamColor) : null;
+              const isSetter = z.pos === setterPosition;
+              const isLibero = info?.role === 'L';
               return (
                 <div
                   key={z.z}
@@ -278,9 +281,18 @@ export function VolleyballCourt() {
                     idx < 2 ? 'border-r border-white/15' : ''
                   } hover:bg-white/5 transition-colors`}
                 >
+                  {/* Position label P1-P6 */}
+                  <span
+                    className={`absolute top-1 ${side === 'left' ? 'left-1' : 'right-1'} text-[9px] font-bold tracking-wider ${
+                      isSetter ? 'text-warning' : 'text-white/40'
+                    }`}
+                  >
+                    P{z.pos}
+                  </span>
+
                   {/* Background zone number */}
                   <span
-                    className="absolute text-6xl font-black italic text-white/8 leading-none select-none"
+                    className="absolute text-6xl font-black italic leading-none select-none"
                     style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'rgba(255,255,255,0.07)' }}
                   >
                     {z.z}
@@ -289,14 +301,30 @@ export function VolleyballCourt() {
                   {/* Player */}
                   {info && (
                     <div className="relative z-10 flex flex-col items-center">
-                      <div
-                        className={`size-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
-                          teamColor === 'home'
-                            ? 'bg-blue-700 border-2 border-blue-400'
-                            : 'bg-red-700 border-2 border-red-400'
-                        }`}
-                      >
-                        {info.number}
+                      <div className="relative">
+                        <div
+                          className={`size-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+                            isSetter
+                              ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent'
+                              : ''
+                          } ${
+                            isLibero
+                              ? 'bg-yellow-700 border-2 border-yellow-400'
+                              : teamColor === 'home'
+                              ? 'bg-blue-700 border-2 border-blue-400'
+                              : 'bg-red-700 border-2 border-red-400'
+                          }`}
+                        >
+                          {info.number}
+                        </div>
+                        {isSetter && (
+                          <span
+                            className="absolute -top-1.5 -right-1.5 bg-warning text-background text-[8px] font-black px-1 rounded shadow"
+                            title="Setter / Palleggiatore"
+                          >
+                            S
+                          </span>
+                        )}
                       </div>
                       <span className="text-[9px] text-white/70 mt-1 font-medium">
                         {info.name.slice(0, 7)}
@@ -333,8 +361,8 @@ export function VolleyballCourt() {
           teamLabel={awayTeam.name || 'OSPITE'}
           teamColor="away"
           lineup={matchState.awayCurrentLineup}
+          setterPosition={matchState.awaySetterPosition}
           side="left"
-          flipBorder={false}
         />
 
         {/* Center / net line */}
@@ -345,8 +373,8 @@ export function VolleyballCourt() {
           teamLabel={homeTeam.name || 'CASA'}
           teamColor="home"
           lineup={matchState.homeCurrentLineup}
+          setterPosition={matchState.homeSetterPosition}
           side="right"
-          flipBorder={true}
         />
       </div>
     </div>
