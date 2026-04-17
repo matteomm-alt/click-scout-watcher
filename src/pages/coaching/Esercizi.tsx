@@ -146,7 +146,7 @@ export default function Esercizi() {
     setIntensity(NONE);
     setEquipment('');
     setVideoUrl('');
-    setTagsInput('');
+    setTags([]);
   };
 
   const openCreate = () => {
