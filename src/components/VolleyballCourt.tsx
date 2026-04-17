@@ -133,6 +133,68 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
             })}
           </div>
         ))}
+
+        {/* Animated trajectory arrow overlay */}
+        {showArrow && (
+          <svg
+            key={`${startZone}-${endZone}`}
+            className="pointer-events-none absolute inset-0 w-full h-full z-20"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="6"
+                markerHeight="6"
+                refX="4"
+                refY="3"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 L0,6 L6,3 z" fill="hsl(var(--accent))" />
+              </marker>
+            </defs>
+            {/* Glow line */}
+            <line
+              x1={startPos!.x}
+              y1={startPos!.y}
+              x2={endPos!.x}
+              y2={endPos!.y}
+              stroke="hsl(var(--accent) / 0.35)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              style={{ filter: 'blur(2px)' }}
+            />
+            {/* Main animated dashed line */}
+            <line
+              x1={startPos!.x}
+              y1={startPos!.y}
+              x2={endPos!.x}
+              y2={endPos!.y}
+              stroke="hsl(var(--accent))"
+              strokeWidth="0.6"
+              strokeLinecap="round"
+              strokeDasharray="3 2"
+              vectorEffect="non-scaling-stroke"
+              markerEnd="url(#arrowhead)"
+              style={{ animation: 'court-dash 0.8s linear infinite' }}
+            />
+            {/* Start dot */}
+            <circle
+              cx={startPos!.x}
+              cy={startPos!.y}
+              r="1.6"
+              fill="hsl(var(--primary))"
+              stroke="white"
+              strokeWidth="0.3"
+              vectorEffect="non-scaling-stroke"
+            >
+              <animate attributeName="r" values="1.6;2.4;1.6" dur="1.4s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+        )}
       </div>
 
       {/* Trajectory hint */}
