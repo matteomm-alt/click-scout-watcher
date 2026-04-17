@@ -1,6 +1,7 @@
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
+import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES } from '@/types/volleyball';
 
@@ -82,18 +83,22 @@ export function LiveScout() {
               })}
             </div>
 
-            {/* Set results */}
-            {matchState.setResults.length > 0 && (
-              <div className="border-t border-border mt-2 pt-2">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Set</div>
-                {matchState.setResults.map((sr, i) => (
-                  <div key={i} className="flex justify-between text-xs text-foreground">
-                    <span>Set {i + 1}</span>
-                    <span className="font-bold">{sr.homeScore} - {sr.awayScore}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Heatmap + Set results */}
+            <div className="border-t border-border mt-2 pt-2 space-y-3">
+              <AttackHeatmap team="all" />
+
+              {matchState.setResults.length > 0 && (
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Set</div>
+                  {matchState.setResults.map((sr, i) => (
+                    <div key={i} className="flex justify-between text-xs text-foreground">
+                      <span>Set {i + 1}</span>
+                      <span className="font-bold">{sr.homeScore} - {sr.awayScore}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
