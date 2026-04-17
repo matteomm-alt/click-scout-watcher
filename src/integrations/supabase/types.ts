@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      athlete_evaluations: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          evaluated_at: string
+          evaluator_id: string
+          fundamental: string
+          id: string
+          notes: string | null
+          score: number
+          society_id: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          evaluated_at?: string
+          evaluator_id: string
+          fundamental: string
+          id?: string
+          notes?: string | null
+          score: number
+          society_id: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          evaluated_at?: string
+          evaluator_id?: string
+          fundamental?: string
+          id?: string
+          notes?: string | null
+          score?: number
+          society_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_evaluations_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_evaluations_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      athlete_objectives: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          society_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          society_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          society_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_objectives_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_objectives_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athletes: {
         Row: {
           birth_date: string | null
@@ -63,6 +168,456 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "athletes_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendances: {
+        Row: {
+          athlete_id: string
+          event_id: string
+          id: string
+          note: string | null
+          recorded_at: string
+          recorded_by: string
+          society_id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+        }
+        Insert: {
+          athlete_id: string
+          event_id: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by: string
+          society_id: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+        }
+        Update: {
+          athlete_id?: string
+          event_id?: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string
+          society_id?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendances_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_reads: {
+        Row: {
+          communication_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          communication_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          communication_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_reads_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "communications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communications: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          pinned: boolean
+          priority: Database["public"]["Enums"]["communication_priority"]
+          society_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          pinned?: boolean
+          priority?: Database["public"]["Enums"]["communication_priority"]
+          society_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          pinned?: boolean
+          priority?: Database["public"]["Enums"]["communication_priority"]
+          society_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      convocation_players: {
+        Row: {
+          athlete_id: string
+          convocation_id: string
+          id: string
+          note: string | null
+          role: Database["public"]["Enums"]["convocation_role"]
+          shirt_number: number | null
+        }
+        Insert: {
+          athlete_id: string
+          convocation_id: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["convocation_role"]
+          shirt_number?: number | null
+        }
+        Update: {
+          athlete_id?: string
+          convocation_id?: string
+          id?: string
+          note?: string | null
+          role?: Database["public"]["Enums"]["convocation_role"]
+          shirt_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convocation_players_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "convocation_players_convocation_id_fkey"
+            columns: ["convocation_id"]
+            isOneToOne: false
+            referencedRelation: "convocations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      convocations: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_id: string | null
+          id: string
+          location: string | null
+          match_date: string | null
+          meeting_time: string | null
+          notes: string | null
+          society_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_id?: string | null
+          id?: string
+          location?: string | null
+          match_date?: string | null
+          meeting_time?: string | null
+          notes?: string | null
+          society_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_id?: string | null
+          id?: string
+          location?: string | null
+          match_date?: string | null
+          meeting_time?: string | null
+          notes?: string | null
+          society_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convocations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "convocations_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_at: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          location: string | null
+          society_id: string
+          start_at: string
+          team_label: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_at?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          location?: string | null
+          society_id: string
+          start_at: string
+          team_label?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_at?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          location?: string | null
+          society_id?: string
+          start_at?: string
+          team_label?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercises: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_min: number | null
+          equipment: string | null
+          fundamental: string | null
+          id: string
+          intensity: string | null
+          is_shared: boolean
+          name: string
+          society_id: string
+          tags: string[]
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_min?: number | null
+          equipment?: string | null
+          fundamental?: string | null
+          id?: string
+          intensity?: string | null
+          is_shared?: boolean
+          name: string
+          society_id: string
+          tags?: string[]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_min?: number | null
+          equipment?: string | null
+          fundamental?: string | null
+          id?: string
+          intensity?: string | null
+          is_shared?: boolean
+          name?: string
+          society_id?: string
+          tags?: string[]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercises_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_assignments: {
+        Row: {
+          assigned_at: string
+          athlete_id: string
+          id: string
+          item_id: string
+          notes: string | null
+          quantity: number
+          recorded_by: string
+          returned_at: string | null
+          society_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          athlete_id: string
+          id?: string
+          item_id: string
+          notes?: string | null
+          quantity?: number
+          recorded_by: string
+          returned_at?: string | null
+          society_id: string
+        }
+        Update: {
+          assigned_at?: string
+          athlete_id?: string
+          id?: string
+          item_id?: string
+          notes?: string | null
+          quantity?: number
+          recorded_by?: string
+          returned_at?: string | null
+          society_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_assignments_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_assignments_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_assignments_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          notes: string | null
+          quantity: number
+          size: string | null
+          society_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          notes?: string | null
+          quantity?: number
+          size?: string | null
+          society_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          quantity?: number
+          size?: string | null
+          society_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_society_id_fkey"
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
@@ -187,6 +742,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "matches_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      objectives: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          scope: string
+          society_id: string
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          scope?: string
+          society_id: string
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          scope?: string
+          society_id?: string
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objectives_society_id_fkey"
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
@@ -484,6 +1086,94 @@ export type Database = {
         }
         Relationships: []
       }
+      season_phases: {
+        Row: {
+          end_date: string | null
+          goals: string | null
+          id: string
+          load_level: string | null
+          name: string
+          order_index: number
+          plan_id: string
+          start_date: string | null
+        }
+        Insert: {
+          end_date?: string | null
+          goals?: string | null
+          id?: string
+          load_level?: string | null
+          name: string
+          order_index?: number
+          plan_id: string
+          start_date?: string | null
+        }
+        Update: {
+          end_date?: string | null
+          goals?: string | null
+          id?: string
+          load_level?: string | null
+          name?: string
+          order_index?: number
+          plan_id?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_phases_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "season_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      season_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          season: string
+          society_id: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          season: string
+          society_id: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          season?: string
+          society_id?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_plans_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       societies: {
         Row: {
           accent_color: string
@@ -611,6 +1301,215 @@ export type Database = {
           },
         ]
       }
+      training_blocks: {
+        Row: {
+          description: string | null
+          duration_min: number | null
+          exercise_id: string | null
+          id: string
+          intensity: string | null
+          order_index: number
+          reps: number | null
+          title: string
+          training_id: string
+        }
+        Insert: {
+          description?: string | null
+          duration_min?: number | null
+          exercise_id?: string | null
+          id?: string
+          intensity?: string | null
+          order_index?: number
+          reps?: number | null
+          title: string
+          training_id: string
+        }
+        Update: {
+          description?: string | null
+          duration_min?: number | null
+          exercise_id?: string | null
+          id?: string
+          intensity?: string | null
+          order_index?: number
+          reps?: number | null
+          title?: string
+          training_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_blocks_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_blocks_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_schemes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          fundamental: string | null
+          id: string
+          name: string
+          scheme_data: Json
+          society_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          fundamental?: string | null
+          id?: string
+          name: string
+          scheme_data?: Json
+          society_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          fundamental?: string | null
+          id?: string
+          name?: string
+          scheme_data?: Json
+          society_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_schemes_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_skeletons: {
+        Row: {
+          blocks: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          society_id: string
+          total_duration_min: number | null
+          updated_at: string
+        }
+        Insert: {
+          blocks?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          society_id: string
+          total_duration_min?: number | null
+          updated_at?: string
+        }
+        Update: {
+          blocks?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          society_id?: string
+          total_duration_min?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_skeletons_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trainings: {
+        Row: {
+          created_at: string
+          created_by: string
+          duration_min: number | null
+          event_id: string | null
+          goal: string | null
+          id: string
+          notes: string | null
+          scheduled_date: string | null
+          skeleton_id: string | null
+          society_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          duration_min?: number | null
+          event_id?: string | null
+          goal?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_date?: string | null
+          skeleton_id?: string | null
+          society_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          duration_min?: number | null
+          event_id?: string | null
+          goal?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_date?: string | null
+          skeleton_id?: string | null
+          society_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainings_skeleton_id_fkey"
+            columns: ["skeleton_id"]
+            isOneToOne: false
+            referencedRelation: "training_skeletons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainings_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -639,6 +1538,70 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volume_logs: {
+        Row: {
+          athlete_id: string | null
+          created_at: string
+          created_by: string
+          fundamental: string | null
+          id: string
+          intensity: string | null
+          log_date: string
+          notes: string | null
+          reps: number | null
+          society_id: string
+          training_id: string | null
+        }
+        Insert: {
+          athlete_id?: string | null
+          created_at?: string
+          created_by: string
+          fundamental?: string | null
+          id?: string
+          intensity?: string | null
+          log_date?: string
+          notes?: string | null
+          reps?: number | null
+          society_id: string
+          training_id?: string | null
+        }
+        Update: {
+          athlete_id?: string | null
+          created_at?: string
+          created_by?: string
+          fundamental?: string | null
+          id?: string
+          intensity?: string | null
+          log_date?: string
+          notes?: string | null
+          reps?: number | null
+          society_id?: string
+          training_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volume_logs_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volume_logs_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volume_logs_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
             referencedColumns: ["id"]
           },
         ]
@@ -673,6 +1636,10 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "society_admin" | "coach"
+      attendance_status: "presente" | "assente" | "giustificato" | "ritardo"
+      communication_priority: "bassa" | "normale" | "alta" | "urgente"
+      convocation_role: "titolare" | "riserva" | "libero" | "non_convocato"
+      event_type: "allenamento" | "partita" | "riunione" | "torneo" | "altro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -801,6 +1768,10 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "society_admin", "coach"],
+      attendance_status: ["presente", "assente", "giustificato", "ritardo"],
+      communication_priority: ["bassa", "normale", "alta", "urgente"],
+      convocation_role: ["titolare", "riserva", "libero", "non_convocato"],
+      event_type: ["allenamento", "partita", "riunione", "torneo", "altro"],
     },
   },
 } as const
