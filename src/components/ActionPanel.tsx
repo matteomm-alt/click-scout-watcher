@@ -568,6 +568,10 @@ export function ActionPanel() {
           className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs font-medium">
           <ArrowLeftRight className="w-3.5 h-3.5" /> Cambio
         </button>
+        <button onClick={() => setShowLibero(true)}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-xs font-semibold">
+          <Shield className="w-3.5 h-3.5" /> Libero
+        </button>
         <button onClick={endSet}
           className="px-3 py-2 rounded-lg bg-secondary text-warning hover:bg-warning/10 text-xs font-semibold">
           Fine Set
