@@ -1,13 +1,45 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { SKILL_COLORS, effBadge, rotColor } from '@/lib/dvwParser';
-import type { DVWMatch } from '@/lib/dvwTypes';
 
 type MainTab = 'analisi' | 'fondamentale' | 'avanzate' | 'giocatrice';
 
 const SKILL_LABELS: Record<string, string> = {
   S: 'Servizio', R: 'Ricezione', E: 'Alzata', A: 'Attacco', B: 'Muro', D: 'Difesa',
 };
+
+const SKILL_COLORS: Record<string, string> = {
+  S: '#FCD34D', R: '#22D3EE', A: '#F87171',
+  B: '#A78BFA', D: '#34D399', E: '#818CF8',
+};
+
+function effBadge(pos: number, err: number, tot: number) {
+  if (!tot) return { value: 0, color: '#6B7280' };
+  const e = Math.round((pos / tot) * 100) - Math.round((err / tot) * 100);
+  return { value: e, color: e >= 0 ? '#16A34A' : '#DC2626' };
+}
+
+function rotColor(eff: number) {
+  if (eff >= 20) return { bg: '#052E16', border: '#16A34A', num: '#4ADE80', label: '#86EFAC' };
+  if (eff >= 0)  return { bg: '#1C1400', border: '#854D0E', num: '#FCD34D', label: '#FDE68A' };
+  return { bg: '#1A0000', border: '#991B1B', num: '#F87171', label: '#FCA5A5' };
+}
+
+interface DVWMatch {
+  id: string;
+  file_name: string;
+  data: string;
+  avversario: string;
+  squadra_casa: string;
+  risultato: string;
+  set_scores: string[];
+  vinta: boolean;
+  team_stats: any;
+  player_stats: any;
+  rot_stats: any;
+  system_stats: any;
+  directional: any;
+  hit_eff: any;
+}
 
 const pct = (n: number, d: number) => d ? Math.round((n / d) * 100) : 0;
 
@@ -47,23 +79,44 @@ export default function MatchAnalysis() {
   };
 
   const aggTeamStats = () => {
-    const cum: Record<string, { tot: number; pos: number; perf: number; err: number; neg: number }> = {};
+    const cum: Record<string, any> = {};
     selected.forEach(m => {
       if (!m.team_stats) return;
       Object.entries(m.team_stats).forEach(([sk, v]: [string, any]) => {
-        if (!cum[sk]) cum[sk] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
+        if (!cum[sk]) cum[sk] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0, byZone: {}, bySet: {}, byTipo: {} };
         cum[sk].tot += v.tot || 0;
         cum[sk].pos += v.pos || 0;
         cum[sk].perf += v.perf || 0;
         cum[sk].err += v.err || 0;
         cum[sk].neg += v.neg || 0;
+        if (v.byZone) Object.entries(v.byZone).forEach(([z, zv]: [string, any]) => {
+          if (!cum[sk].byZone[z]) cum[sk].byZone[z] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
+          cum[sk].byZone[z].tot += zv.tot || 0;
+          cum[sk].byZone[z].pos += zv.pos || 0;
+          cum[sk].byZone[z].perf += zv.perf || 0;
+          cum[sk].byZone[z].err += zv.err || 0;
+        });
+        if (v.bySet) Object.entries(v.bySet).forEach(([s, sv]: [string, any]) => {
+          if (!cum[sk].bySet[s]) cum[sk].bySet[s] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
+          cum[sk].bySet[s].tot += sv.tot || 0;
+          cum[sk].bySet[s].pos += sv.pos || 0;
+          cum[sk].bySet[s].perf += sv.perf || 0;
+          cum[sk].bySet[s].err += sv.err || 0;
+        });
+        if (v.byTipo) Object.entries(v.byTipo).forEach(([t, tv]: [string, any]) => {
+          if (!cum[sk].byTipo[t]) cum[sk].byTipo[t] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
+          cum[sk].byTipo[t].tot += tv.tot || 0;
+          cum[sk].byTipo[t].pos += tv.pos || 0;
+          cum[sk].byTipo[t].perf += tv.perf || 0;
+          cum[sk].byTipo[t].err += tv.err || 0;
+        });
       });
     });
     return cum;
   };
 
   const aggPlayerStats = () => {
-    const cum: Record<string, Record<string, { tot: number; pos: number; perf: number; err: number; neg: number }>> = {};
+    const cum: Record<string, Record<string, any>> = {};
     selected.forEach(m => {
       if (!m.player_stats) return;
       Object.entries(m.player_stats).forEach(([nome, skMap]: [string, any]) => {
@@ -82,7 +135,7 @@ export default function MatchAnalysis() {
   };
 
   const aggRotStats = () => {
-    const cum: Record<number, { tot: number; pos: number; perf: number; err: number; neg: number }> = {};
+    const cum: Record<number, any> = {};
     for (let r = 1; r <= 6; r++) cum[r] = { tot: 0, pos: 0, perf: 0, err: 0, neg: 0 };
     selected.forEach(m => {
       if (!m.rot_stats) return;
@@ -152,22 +205,16 @@ export default function MatchAnalysis() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Partite</p>
           <div className="flex gap-1 mt-2">
             <button onClick={() => setSelectedIds(new Set(matches.map(m => m.id)))}
-              className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20">
-              Tutte
-            </button>
+              className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20">Tutte</button>
             <button onClick={() => setSelectedIds(new Set())}
-              className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground hover:text-foreground">
-              Nessuna
-            </button>
+              className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground hover:text-foreground">Nessuna</button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {matches.map(m => (
             <button key={m.id} onClick={() => toggleMatch(m.id)}
               className={`w-full text-left p-2 rounded-lg transition-colors ${
-                selectedIds.has(m.id)
-                  ? 'bg-primary/10 border border-primary/30'
-                  : 'bg-transparent border border-transparent hover:bg-secondary/40'
+                selectedIds.has(m.id) ? 'bg-primary/10 border border-primary/30' : 'bg-transparent border border-transparent hover:bg-secondary/40'
               }`}>
               <div className="flex items-center gap-1.5">
                 <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${m.vinta ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -423,13 +470,11 @@ function AvanzateView({ rotStats, systemStats, directional, selSkill, setSelSkil
 }
 
 function DirectionalCourt({ actions }: { actions: { z1: number; z2: number; ev: string }[] }) {
-  const W = 300, H = 270;
   const ZC: Record<number, [number, number]> = {
     1: [225,200], 2: [225,70], 3: [150,70],
     4: [75,70],   5: [75,200], 6: [150,200],
     7: [50,250],  8: [150,250], 9: [250,250],
   };
-
   const grouped: Record<string, { count: number; pos: number }> = {};
   actions.forEach(a => {
     const key = `${a.z1}-${a.z2}`;
@@ -438,9 +483,8 @@ function DirectionalCourt({ actions }: { actions: { z1: number; z2: number; ev: 
     if (a.ev === '#' || a.ev === '+') grouped[key].pos++;
   });
   const maxCount = Math.max(1, ...Object.values(grouped).map(g => g.count));
-
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xs mx-auto rounded-lg overflow-hidden"
+    <svg viewBox="0 0 300 270" className="w-full max-w-xs mx-auto rounded-lg overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #172e4a 100%)' }}>
       <rect x={30} y={10} width={240} height={250} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
       <line x1={30} y1={135} x2={270} y2={135} stroke="white" strokeWidth={3} />
@@ -469,8 +513,7 @@ function DirectionalCourt({ actions }: { actions: { z1: number; z2: number; ev: 
           <g key={key}>
             <line x1={from[0]} y1={from[1]} x2={ex} y2={ey}
               stroke={col} strokeWidth={thickness} strokeOpacity={0.7} strokeLinecap="round" />
-            <polygon
-              points={`${to[0]},${to[1]} ${ex-ny*4},${ey+nx*4} ${ex+ny*4},${ey-nx*4}`}
+            <polygon points={`${to[0]},${to[1]} ${ex-ny*4},${ey+nx*4} ${ex+ny*4},${ey-nx*4}`}
               fill={col} fillOpacity={0.8} />
             {count > 1 && (
               <text x={(from[0]+to[0])/2} y={(from[1]+to[1])/2} textAnchor="middle" fontSize={7} fill="white">{count}</text>
