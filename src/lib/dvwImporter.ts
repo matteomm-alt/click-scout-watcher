@@ -17,16 +17,38 @@ export interface DvwTeamHeader {
   assistants: string;
 }
 
+export type StandardRole = 'S' | 'O' | 'OP' | 'M' | 'L' | 'U';
+
 export interface DvwPlayer {
   side: DvwSide;
   number: number;
   externalId: string;
   lastName: string;
   firstName: string;
-  role: string; // numerico DVW
+  role: StandardRole;     // ruolo standard (S/O/OP/M/L/U)
+  rawRole: string;        // codice numerico DVW originale (per debug)
   isLibero: boolean;
   /** posizione iniziale (1..6) per ciascuno dei 5 set possibili; null se non gioca quel set */
   startPositions: (number | null)[];
+}
+
+/**
+ * Mappa il codice ruolo DVW (colonna 13 di [3PLAYERS-*]) al ruolo standard.
+ * Convenzione DVW (file italiani Lega Pallavolo):
+ *   1 = Libero, 2 = Centrale, 3 = Schiacciatore, 4 = Opposto, 5 = Palleggiatore
+ * Il flag isLibero (colonna 14) ha precedenza assoluta.
+ */
+export function mapDvwRole(rawRole: string, isLibero: boolean): StandardRole {
+  if (isLibero) return 'L';
+  const r = (rawRole || '').trim();
+  switch (r) {
+    case '1': return 'L';
+    case '2': return 'M';
+    case '3': return 'O';
+    case '4': return 'OP';
+    case '5': return 'S';
+    default:  return 'U';
+  }
 }
 
 export interface DvwSetResult {
