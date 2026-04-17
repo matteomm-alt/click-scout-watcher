@@ -102,9 +102,9 @@ function splitSection(content: string): Record<string, string[]> {
   const sections: Record<string, string[]> = {};
   let current = '';
   for (const line of lines) {
-    const m = line.match(/^\[(3[A-Z-]+)\]$/);
+    const m = line.match(/^\[3([A-Z-]+)\]$/);
     if (m) {
-      current = m[1];
+      current = m[1]; // senza il prefisso "3"
       sections[current] = [];
     } else if (current) {
       sections[current].push(line);
