@@ -137,6 +137,8 @@ export default function ImportDvw() {
         away_score: a.awayScore,
         home_rotation: a.homeRotation,
         away_rotation: a.awayRotation,
+        home_setter_pos: a.homeSetterPos,
+        away_setter_pos: a.awaySetterPos,
         serving_side: a.servingSide,
         raw_code: a.rawCode,
         timestamp_clock: a.timestampClock,

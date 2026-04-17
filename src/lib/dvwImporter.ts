@@ -437,6 +437,7 @@ function parseScout(sections: Record<string, string[]>): {
         setCombo,
         setNumber, homeScore, awayScore,
         homeRotation: homeRot, awayRotation: awayRot,
+        homeSetterPos, awaySetterPos,
         servingSide,
         rawCode: code,
         timestampClock,
