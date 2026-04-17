@@ -40,7 +40,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
     roles.some((r) => r.society_id === candidate && r.role === 'society_admin');
 
   const load = async () => {
-    if (!user || !candidate) {
+    if (!user) {
       setSocietyId(null);
       setSocietyName(null);
       setSeasonStart(null);
@@ -49,11 +49,25 @@ export function useActiveSociety(): ActiveSocietyInfo {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase
-      .from('societies')
-      .select('id, name, features')
-      .eq('id', candidate)
-      .maybeSingle();
+
+    let query = supabase.from('societies').select('id, name, features').limit(1);
+    if (candidate) {
+      query = query.eq('id', candidate);
+    } else if (!isSuperAdmin) {
+      // Coach senza società: niente da caricare
+      setSocietyId(null);
+      setSocietyName(null);
+      setSeasonStart(null);
+      setSeasonEnd(null);
+      setLoading(false);
+      return;
+    } else {
+      // Super admin senza ruolo di società: fallback alla prima società esistente
+      query = query.order('created_at', { ascending: true });
+    }
+
+    const { data: rows, error } = await query;
+    const data = rows?.[0];
 
     if (error) {
       console.error('useActiveSociety load error', error);
