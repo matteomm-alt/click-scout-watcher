@@ -208,12 +208,29 @@ export default function ImportDvw() {
               <Stat label="Sostituzioni" value={parsed.substitutions.length.toString()} />
             </div>
             {parsed.warnings.length > 0 && (
-              <div className="mt-4 p-3 rounded bg-warning/10 border border-warning/30 text-xs text-warning flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <div>
-                  <strong>{parsed.warnings.length} avvisi</strong> di codici non riconosciuti (le azioni standard sono comunque state importate).
+              <details className="mt-4 p-3 rounded bg-warning/10 border border-warning/30 text-xs text-warning">
+                <summary className="flex items-start gap-2 cursor-pointer">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div>
+                    <strong>{parsed.warnings.length} codici non riconosciuti</strong> — le azioni standard sono comunque state importate. Clicca per vedere l'elenco.
+                  </div>
+                </summary>
+                <div className="mt-3 pl-6 font-mono text-[11px] space-y-1 max-h-48 overflow-auto">
+                  {Object.entries(
+                    parsed.warnings.reduce<Record<string, number>>((acc, w) => {
+                      acc[w] = (acc[w] || 0) + 1;
+                      return acc;
+                    }, {})
+                  )
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([code, count]) => (
+                      <div key={code} className="flex justify-between gap-4">
+                        <span>{code}</span>
+                        <span className="opacity-60">×{count}</span>
+                      </div>
+                    ))}
                 </div>
-              </div>
+              </details>
             )}
           </Card>
 

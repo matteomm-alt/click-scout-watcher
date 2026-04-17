@@ -334,8 +334,20 @@ function parseScout(sections: Record<string, string[]>): {
       continue;
     }
 
-    // marker generici tipo *$$&H= / **4set ecc.
+    // marker generici (commenti scout): *$$&... / a$$&... / *$ / a$
     if (code.startsWith('*$') || code.startsWith('a$')) continue;
+
+    // timeout: *T / aT (alcuni scout usano anche *Tt per technical timeout)
+    if (/^[*a]T/.test(code)) continue;
+
+    // sanzioni e card: Y=yellow, R=red, B=expulsion, P=penalty (es: *Y07, aR12, *B, *P)
+    if (/^[*a][YRBP]/.test(code)) continue;
+
+    // marker di fine set/match: **Nset, **set, **match, **fine
+    if (/^\*\*/.test(code)) continue;
+
+    // win symbols / set call lines accidentali (raro): "[" o numerici puri
+    if (/^\[/.test(code) || /^\d+$/.test(code)) continue;
 
     // azione vera: [*|a]NN[SKILL][TYPE][EVAL]...
     const actMatch = code.match(/^([*a])(\d{2})([A-Z])([A-Z])([#+!\-/=])(.*)$/);
@@ -402,10 +414,10 @@ function parseScout(sections: Record<string, string[]>): {
       continue;
     }
 
-    warnings.push(`Codice non riconosciuto: ${code}`);
+    warnings.push(code);
   }
 
-  return { actions, substitutions, warnings: warnings.slice(0, 20) };
+  return { actions, substitutions, warnings: warnings.slice(0, 50) };
 }
 
 /* -------------------- entry point -------------------- */
