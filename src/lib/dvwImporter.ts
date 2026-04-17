@@ -91,6 +91,10 @@ export interface DvwAction {
   awayScore: number;
   homeRotation: number[]; // 6 numeri P1..P6
   awayRotation: number[];
+  /** posizione del setter casa (1..6) al momento dell'azione, derivata dai marker *P##>LUp */
+  homeSetterPos: number | null;
+  /** posizione del setter ospite (1..6) al momento dell'azione */
+  awaySetterPos: number | null;
   servingSide: DvwSide | null;
   rawCode: string;
   timestampClock: string | null;
@@ -276,6 +280,11 @@ function parseScout(sections: Record<string, string[]>): {
   let rallyIndex = 0;
   let actionIndexInRally = 0;
   let servingSide: DvwSide | null = null;
+  // posizione corrente del setter (1..6) per ciascun lato.
+  // Aggiornata dai marker *P##>LUp / aP##>LUp e dagli scambi rotatori (servizio guadagnato).
+  let homeSetterPos: number | null = null;
+  let awaySetterPos: number | null = null;
+  let lastServingSide: DvwSide | null = null; // per rilevare cambio servizio
 
   for (const line of lines) {
     const c = line.split(';');
@@ -292,24 +301,45 @@ function parseScout(sections: Record<string, string[]>): {
     const awayRot = [c[21], c[22], c[23], c[24], c[25], c[26]]
       .map(s => toInt(s, 0) ?? 0);
 
-    // marker fine set
+    // marker fine set: reset stato rotazione (verrà ridefinito dai prossimi *P##>LUp)
     if (code.startsWith('**')) {
       rallyIndex = 0;
       actionIndexInRally = 0;
+      homeSetterPos = null;
+      awaySetterPos = null;
+      lastServingSide = null;
       continue;
     }
 
-    // setter lineup *P17>LUp / aP06>LUp (definisce posizione setter, anche side servente)
-    const setterMatch = code.match(/^([*a])P(\d+)/);
+    // Snapshot lineup setter: *P##>LUp oppure aP##>LUp
+    // dove ## è la POSIZIONE (1..6) in cui si trova il setter all'inizio del rally.
+    const setterMatch = code.match(/^([*a])P(\d{1,2})(?:>|$)/);
     if (setterMatch) {
-      // info utile ma non un'azione: skip
+      const sideChar = setterMatch[1];
+      const pos = parseInt(setterMatch[2], 10);
+      if (pos >= 1 && pos <= 6) {
+        if (sideChar === '*') homeSetterPos = pos;
+        else awaySetterPos = pos;
+      }
       continue;
     }
 
-    // zona di servizio *z1 / az2
+    // zona di servizio *z1 / az2 — inizio rally
     const zoneMatch = code.match(/^([*a])z(\d)/);
     if (zoneMatch) {
-      servingSide = zoneMatch[1] === '*' ? 'home' : 'away';
+      const newServingSide: DvwSide = zoneMatch[1] === '*' ? 'home' : 'away';
+      // Cambio servizio = chi va a battere ora ha guadagnato il servizio
+      // → la sua squadra ruota di una posizione (P1→P6, P6→P5, ecc. = -1 mod 6, +1 in label)
+      // Convenzione DVW: rotazione setter "avanti" = pos diventa pos-1, con wrap 1→6.
+      if (lastServingSide && lastServingSide !== newServingSide) {
+        if (newServingSide === 'home' && homeSetterPos !== null) {
+          homeSetterPos = homeSetterPos === 1 ? 6 : homeSetterPos - 1;
+        } else if (newServingSide === 'away' && awaySetterPos !== null) {
+          awaySetterPos = awaySetterPos === 1 ? 6 : awaySetterPos - 1;
+        }
+      }
+      servingSide = newServingSide;
+      lastServingSide = newServingSide;
       rallyIndex++;
       actionIndexInRally = 0;
       continue;
@@ -407,6 +437,7 @@ function parseScout(sections: Record<string, string[]>): {
         setCombo,
         setNumber, homeScore, awayScore,
         homeRotation: homeRot, awayRotation: awayRot,
+        homeSetterPos, awaySetterPos,
         servingSide,
         rawCode: code,
         timestampClock,

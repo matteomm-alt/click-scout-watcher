@@ -1,11 +1,13 @@
 import { Check, X } from 'lucide-react';
-import { SKILL_NAMES, EVAL_NAMES } from '@/lib/scoutAnalysis';
+import { SKILL_NAMES, EVAL_NAMES, type Phase } from '@/lib/scoutAnalysis';
 
 export interface AnalysisFilters {
   setNumbers: number[];        // [] = tutti
   skills: string[];            // [] = tutte
   evaluations: string[];       // [] = tutte
   playerNumbers: number[];     // [] = tutti (riferiti alla squadra attiva)
+  rotations: number[];         // [] = tutte (1..6 = posizione setter squadra attiva)
+  phases: Phase[];             // [] = tutte (K1 = ricezione, K2 = battuta) per squadra attiva
 }
 
 export const EMPTY_FILTERS: AnalysisFilters = {
@@ -13,6 +15,8 @@ export const EMPTY_FILTERS: AnalysisFilters = {
   skills: [],
   evaluations: [],
   playerNumbers: [],
+  rotations: [],
+  phases: [],
 };
 
 export interface PlayerOption {
@@ -26,6 +30,7 @@ interface Props {
   onChange: (f: AnalysisFilters) => void;
   availableSets: number[];
   availableSkills: string[];
+  availableRotations: number[];
   players: PlayerOption[];
 }
 
@@ -33,9 +38,10 @@ function toggle<T>(arr: T[], v: T): T[] {
   return arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
 }
 
-export function MatchFilters({ filters, onChange, availableSets, availableSkills, players }: Props) {
+export function MatchFilters({ filters, onChange, availableSets, availableSkills, availableRotations, players }: Props) {
   const activeCount =
-    filters.setNumbers.length + filters.skills.length + filters.evaluations.length + filters.playerNumbers.length;
+    filters.setNumbers.length + filters.skills.length + filters.evaluations.length +
+    filters.playerNumbers.length + filters.rotations.length + filters.phases.length;
 
   return (
     <div className="border border-border rounded-lg bg-card p-4 space-y-4">
@@ -62,6 +68,34 @@ export function MatchFilters({ filters, onChange, availableSets, availableSkills
           />
         ))}
       </FilterGroup>
+
+      {/* FASE — riferita alla squadra attiva */}
+      <FilterGroup label="Fase (squadra attiva)">
+        <Chip
+          label="K1 · Cambio palla"
+          active={filters.phases.includes('K1')}
+          onClick={() => onChange({ ...filters, phases: toggle(filters.phases, 'K1' as Phase) })}
+        />
+        <Chip
+          label="K2 · Break point"
+          active={filters.phases.includes('K2')}
+          onClick={() => onChange({ ...filters, phases: toggle(filters.phases, 'K2' as Phase) })}
+        />
+      </FilterGroup>
+
+      {/* ROTAZIONE — posizione setter squadra attiva */}
+      {availableRotations.length > 0 && (
+        <FilterGroup label="Rotazione (P setter)">
+          {availableRotations.map(r => (
+            <Chip
+              key={r}
+              label={`R${r}`}
+              active={filters.rotations.includes(r)}
+              onClick={() => onChange({ ...filters, rotations: toggle(filters.rotations, r) })}
+            />
+          ))}
+        </FilterGroup>
+      )}
 
       {/* SKILL */}
       <FilterGroup label="Fondamentale">
