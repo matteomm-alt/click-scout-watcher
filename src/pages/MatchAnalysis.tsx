@@ -3,10 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
-  rotationStats, setsTimeline, SKILL_NAMES, EVAL_NAMES, EVAL_COLORS,
+  rotationStats, setsTimeline, SKILL_NAMES,
 } from '@/lib/scoutAnalysis';
 import { ArrowLeft, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
+import { ChartsTab } from '@/components/ChartsTab';
 
 interface MatchRow {
   id: string;
@@ -21,10 +23,19 @@ interface MatchRow {
   away_team: { id: string; name: string };
 }
 
-type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'compare';
+interface PlayerRow {
+  scout_team_id: string;
+  number: number;
+  last_name: string;
+  first_name: string | null;
+  role: string | null;
+}
+
+type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'compare' | 'charts';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Panoramica' },
+  { key: 'charts', label: 'Grafici' },
   { key: 'heatmap', label: 'Heatmap' },
   { key: 'players', label: 'Giocatori' },
   { key: 'rotations', label: 'Rotazioni' },
@@ -35,9 +46,16 @@ export default function MatchAnalysis() {
   const { id } = useParams<{ id: string }>();
   const [match, setMatch] = useState<MatchRow | null>(null);
   const [actions, setActions] = useState<DbAction[]>([]);
+  const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>('overview');
   const [teamFilter, setTeamFilter] = useState<'home' | 'away'>('home');
+  const [filters, setFilters] = useState<AnalysisFilters>(EMPTY_FILTERS);
+
+  // Reset filtri "atleta" quando cambio squadra (i numeri appartengono a una squadra specifica)
+  useEffect(() => {
+    setFilters(f => ({ ...f, playerNumbers: [] }));
+  }, [teamFilter]);
 
   useEffect(() => {
     if (!id) return;
@@ -70,12 +88,93 @@ export default function MatchAnalysis() {
         from += PAGE;
       }
       setActions(all);
+
+      // rosa di entrambe le squadre
+      if (m) {
+        const teamIds = [(m as any).home_team.id, (m as any).away_team.id];
+        const { data: pl } = await supabase
+          .from('scout_players')
+          .select('scout_team_id, number, last_name, first_name, role')
+          .in('scout_team_id', teamIds);
+        setPlayers((pl as any) || []);
+      }
       setLoading(false);
     })();
   }, [id]);
 
   const teamId = teamFilter === 'home' ? match?.home_team.id : match?.away_team.id;
-  const teamActions = useMemo(() => actions.filter(a => a.scout_team_id === teamId), [actions, teamId]);
+
+  // Azioni della squadra attiva (prima di applicare i filtri)
+  const teamActionsRaw = useMemo(
+    () => actions.filter(a => a.scout_team_id === teamId),
+    [actions, teamId]
+  );
+
+  // Set disponibili effettivamente nei dati
+  const availableSets = useMemo(() => {
+    const s = new Set<number>();
+    for (const a of actions) s.add(a.set_number);
+    return [...s].sort((a, b) => a - b);
+  }, [actions]);
+
+  // Skill effettivamente presenti
+  const availableSkills = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of teamActionsRaw) s.add(a.skill);
+    return [...s].sort();
+  }, [teamActionsRaw]);
+
+  // Opzioni atleta = giocatori della squadra attiva con almeno un'azione
+  const playerOptions = useMemo<PlayerOption[]>(() => {
+    if (!teamId) return [];
+    const numbersWithActions = new Set(teamActionsRaw.map(a => a.player_number).filter((n): n is number => n !== null));
+    return players
+      .filter(p => p.scout_team_id === teamId && numbersWithActions.has(p.number))
+      .map(p => ({
+        number: p.number,
+        name: `${p.last_name}${p.first_name ? ' ' + p.first_name.charAt(0) + '.' : ''}`,
+        role: p.role,
+      }))
+      .sort((a, b) => a.number - b.number);
+  }, [players, teamActionsRaw, teamId]);
+
+  // Mappa numero → nome per i grafici (entrambe le squadre)
+  const playerNames = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const p of players) {
+      if (p.scout_team_id === teamId) {
+        m.set(p.number, `${p.last_name}${p.first_name ? ' ' + p.first_name.charAt(0) + '.' : ''}`);
+      }
+    }
+    return m;
+  }, [players, teamId]);
+
+  // Applica filtri alla squadra attiva
+  const filteredTeamActions = useMemo(() => {
+    return teamActionsRaw.filter(a => {
+      if (filters.setNumbers.length && !filters.setNumbers.includes(a.set_number)) return false;
+      if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
+      if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
+      if (filters.playerNumbers.length && (a.player_number === null || !filters.playerNumbers.includes(a.player_number))) return false;
+      return true;
+    });
+  }, [teamActionsRaw, filters]);
+
+  // Per le tab che mostrano TUTTE e due le squadre (compare/rotations) applichiamo solo set/skill/evaluation
+  const filteredAllActions = useMemo(() => {
+    return actions.filter(a => {
+      if (filters.setNumbers.length && !filters.setNumbers.includes(a.set_number)) return false;
+      if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
+      if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
+      // playerNumbers riferito alla squadra attiva: filtra solo le sue azioni
+      if (filters.playerNumbers.length) {
+        if (a.scout_team_id === teamId) {
+          if (a.player_number === null || !filters.playerNumbers.includes(a.player_number)) return false;
+        }
+      }
+      return true;
+    });
+  }, [actions, filters, teamId]);
 
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
@@ -129,13 +228,29 @@ export default function MatchAnalysis() {
         >{match.away_team.name}</button>
       </div>
 
-      {/* CONTENT */}
-      <main className="container pb-12">
-        {tab === 'overview' && <Overview actions={teamActions} setResults={match.set_results} />}
-        {tab === 'heatmap' && <HeatmapTab actions={teamActions} />}
-        {tab === 'players' && <PlayersTab actions={teamActions} />}
-        {tab === 'rotations' && teamId && <RotationsTab actions={actions} teamId={teamId} side={teamFilter} />}
-        {tab === 'compare' && <CompareTab actions={actions} match={match} />}
+      {/* CONTENT con sidebar filtri */}
+      <main className="container pb-12 grid lg:grid-cols-[280px_1fr] gap-6">
+        <aside className="lg:sticky lg:top-44 lg:self-start">
+          <MatchFilters
+            filters={filters}
+            onChange={setFilters}
+            availableSets={availableSets}
+            availableSkills={availableSkills}
+            players={playerOptions}
+          />
+          <p className="text-[11px] text-muted-foreground mt-2 px-1">
+            Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
+          </p>
+        </aside>
+
+        <section className="min-w-0">
+          {tab === 'overview' && <Overview actions={filteredTeamActions} setResults={match.set_results} />}
+          {tab === 'charts' && <ChartsTab actions={filteredTeamActions} playerNames={playerNames} />}
+          {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
+          {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} />}
+          {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
+          {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} />}
+        </section>
       </main>
     </div>
   );
@@ -204,8 +319,10 @@ function KpiCard({ label, value }: { label: string; value: number | string }) {
 
 /* ----------------- TAB: HEATMAP ----------------- */
 
-function HeatmapTab({ actions }: { actions: DbAction[] }) {
-  const [skill, setSkill] = useState<string>('A');
+function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkills: string[] }) {
+  // Se l'utente ha già filtrato per una skill, evitiamo doppio filtro: usa la prima.
+  const initialSkill = forcedSkills.length === 1 ? forcedSkills[0] : 'A';
+  const [skill, setSkill] = useState<string>(initialSkill);
   const [side, setSide] = useState<'start' | 'end'>('end');
   const filtered = actions.filter(a => a.skill === skill);
   const cells = zoneStats(filtered, side);
@@ -230,7 +347,6 @@ function HeatmapTab({ actions }: { actions: DbAction[] }) {
       <Card className="p-6">
         <h3 className="text-sm font-bold uppercase italic mb-4">{SKILL_NAMES[skill]} — {side === 'start' ? 'partenza' : 'arrivo'}</h3>
         <div className="grid grid-cols-3 gap-2 max-w-md">
-          {/* Layout campo 3x3 secondo zone DVW: top row 4-3-2, mid 7-8-9, bottom 5-6-1 */}
           {[4,3,2,7,8,9,5,6,1].map(z => {
             const c = cells.find(x => x.zone === z)!;
             const intensity = c.total / maxTotal;
@@ -254,14 +370,14 @@ function HeatmapTab({ actions }: { actions: DbAction[] }) {
 
 /* ----------------- TAB: GIOCATORI ----------------- */
 
-function PlayersTab({ actions }: { actions: DbAction[] }) {
+function PlayersTab({ actions, playerNames }: { actions: DbAction[]; playerNames: Map<number, string> }) {
   const players = statsByPlayer(actions);
   return (
     <Card className="p-5 overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="text-xs uppercase text-muted-foreground border-b border-border">
           <tr>
-            <th className="text-left py-2">#</th>
+            <th className="text-left py-2">Atleta</th>
             <th>Tot</th>
             {['S','R','A','B','D','E'].map(s => <th key={s}>{SKILL_NAMES[s]}</th>)}
           </tr>
@@ -269,7 +385,9 @@ function PlayersTab({ actions }: { actions: DbAction[] }) {
         <tbody>
           {players.map(p => (
             <tr key={p.number} className="border-b border-border/40">
-              <td className="py-2 font-bold">#{p.number}</td>
+              <td className="py-2 font-bold">
+                #{p.number} <span className="font-normal text-muted-foreground">{playerNames.get(p.number) || ''}</span>
+              </td>
               <td className="text-center">{p.total}</td>
               {['S','R','A','B','D','E'].map(s => {
                 const st = p.bySkill[s];
