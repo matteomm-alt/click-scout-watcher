@@ -242,14 +242,17 @@ function parsePlayers(sections: Record<string, string[]>, key: 'PLAYERS-H' | 'PL
       const n = parseInt(t, 10);
       return Number.isNaN(n) ? null : n;
     });
+    const rawRole = c[13]?.trim() || '';
+    const isLibero = (c[14]?.trim().toLowerCase() === 'true');
     players.push({
       side,
       number,
       externalId: c[8]?.trim() || '',
       lastName: c[9]?.trim() || c[11]?.trim() || `#${number}`,
       firstName: c[10]?.trim() || '',
-      role: c[13]?.trim() || '',
-      isLibero: (c[14]?.trim().toLowerCase() === 'true'),
+      role: mapDvwRole(rawRole, isLibero),
+      rawRole,
+      isLibero,
       startPositions,
     });
   }
