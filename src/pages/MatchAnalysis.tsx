@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
-  rotationStats, setsTimeline, SKILL_NAMES,
+  rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
 } from '@/lib/scoutAnalysis';
 import { ArrowLeft, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
