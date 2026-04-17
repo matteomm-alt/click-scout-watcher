@@ -188,9 +188,9 @@ function parseSetResults(sections: Record<string, string[]>): { results: DvwSetR
     const played = c[0]?.trim().toLowerCase() === 'true';
     if (!played) continue;
     const intermediates = [c[1], c[2], c[3], c[4]].map(x => x?.trim()).filter(Boolean) as string[];
+    if (intermediates.length === 0) continue; // riga set "fantasma" senza punteggi
     const duration = toInt(c[5]);
     results.push({ played, intermediates, duration });
-    // ultima coppia di score = finale del set
     const last = intermediates[intermediates.length - 1];
     if (last) {
       const m = last.match(/^\s*(\d+)\s*-\s*(\d+)\s*$/);
