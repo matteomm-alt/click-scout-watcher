@@ -29,11 +29,15 @@ export function LiveScout() {
     <div className="h-screen flex flex-col p-3 gap-3 overflow-hidden">
       <ScoreBoard />
 
+      {/* Court — full width, prominent */}
+      <div className="flex-shrink-0">
+        <VolleyballCourt />
+      </div>
+
       <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
-        {/* Court + Quick Actions - left */}
-        <div className="col-span-4 min-h-0 overflow-hidden flex flex-col gap-3">
-          <VolleyballCourt />
-          <div className="glass rounded-xl p-3 flex-1 min-h-0 overflow-y-auto">
+        {/* Quick Actions - left */}
+        <div className="col-span-3 min-h-0 overflow-hidden">
+          <div className="glass rounded-xl p-3 h-full overflow-y-auto">
             <QuickActions />
           </div>
         </div>
