@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 
 type ZoneCell = { zone: number; col: number; row: number };
+type TeamFilter = 'home' | 'away' | 'all';
 
 // Half court only (front + back), DVW numbering
 const HEATMAP_ZONES: ZoneCell[] = [
@@ -14,11 +15,12 @@ const HEATMAP_ZONES: ZoneCell[] = [
 ];
 
 interface AttackHeatmapProps {
-  team?: 'home' | 'away' | 'all';
+  team?: TeamFilter;
 }
 
-export function AttackHeatmap({ team = 'all' }: AttackHeatmapProps) {
-  const { matchState } = useMatchStore();
+export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps) {
+  const { matchState, homeTeam, awayTeam } = useMatchStore();
+  const [team, setTeam] = useState<TeamFilter>(initialTeam);
 
   const { counts, max, total } = useMemo(() => {
     const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
@@ -34,15 +36,40 @@ export function AttackHeatmap({ team = 'all' }: AttackHeatmapProps) {
     return { counts, max, total };
   }, [matchState.actions, team]);
 
+  const filters: { key: TeamFilter; label: string; activeClass: string }[] = [
+    { key: 'home', label: (homeTeam.name || 'Casa').slice(0, 8), activeClass: 'bg-blue-600 text-white' },
+    { key: 'all', label: 'Tutte', activeClass: 'bg-primary text-primary-foreground' },
+    { key: 'away', label: (awayTeam.name || 'Ospite').slice(0, 8), activeClass: 'bg-red-600 text-white' },
+  ];
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
           Heatmap Attacchi
         </h4>
         <span className="text-[10px] font-mono text-muted-foreground">
           {total} att.
         </span>
+      </div>
+
+      {/* Team filter toggle */}
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-md bg-secondary/40 border border-border/50">
+        {filters.map((f) => {
+          const active = team === f.key;
+          return (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setTeam(f.key)}
+              className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${
+                active ? f.activeClass : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+              }`}
+            >
+              {f.label}
+            </button>
+          );
+        })}
       </div>
 
       <div
