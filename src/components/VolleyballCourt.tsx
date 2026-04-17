@@ -350,7 +350,7 @@ export function VolleyballCourt() {
       </div>
 
       <div
-        className="flex border border-foreground/20 shadow-2xl rounded-b-lg overflow-hidden aspect-[18/9] relative"
+        className="flex border border-foreground/20 shadow-2xl rounded-b-lg overflow-hidden aspect-[24/7] relative"
         style={{
           background: 'linear-gradient(180deg, hsl(215 70% 32%) 0%, hsl(215 70% 22%) 100%)',
           boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)',
