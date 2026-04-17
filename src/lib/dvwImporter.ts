@@ -414,10 +414,10 @@ function parseScout(sections: Record<string, string[]>): {
       continue;
     }
 
-    warnings.push(`Codice non riconosciuto: ${code}`);
+    warnings.push(code);
   }
 
-  return { actions, substitutions, warnings: warnings.slice(0, 20) };
+  return { actions, substitutions, warnings: warnings.slice(0, 50) };
 }
 
 /* -------------------- entry point -------------------- */
