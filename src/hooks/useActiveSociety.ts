@@ -83,7 +83,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, candidate]);
+  }, [user?.id, candidate, isSuperAdmin]);
 
   return {
     societyId,
