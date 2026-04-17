@@ -2,6 +2,7 @@ import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
+import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES } from '@/types/volleyball';
 
@@ -83,8 +84,9 @@ export function LiveScout() {
               })}
             </div>
 
-            {/* Heatmap + Set results */}
+            {/* Stats + Heatmap + Set results */}
             <div className="border-t border-border mt-2 pt-2 space-y-3">
+              <PlayerStatsPanel />
               <AttackHeatmap team="all" />
 
               {matchState.setResults.length > 0 && (
