@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound.tsx";
 
 // Gestionale
 import Calendario from "./pages/gestionale/Calendario.tsx";
+import CalendarioNuovo from "./pages/gestionale/CalendarioNuovo.tsx";
 import Presenze from "./pages/gestionale/Presenze.tsx";
 import Convocazioni from "./pages/gestionale/Convocazioni.tsx";
 import Comunicazioni from "./pages/gestionale/Comunicazioni.tsx";
@@ -67,6 +68,7 @@ const App = () => (
 
               {/* Gestionale */}
               <Route path="/calendario" element={<Calendario />} />
+              <Route path="/calendario/nuovo" element={<CalendarioNuovo />} />
               <Route path="/presenze" element={<Presenze />} />
               <Route path="/convocazioni" element={<Convocazioni />} />
               <Route path="/comunicazioni" element={<Comunicazioni />} />
