@@ -84,8 +84,9 @@ export function LiveScout() {
               })}
             </div>
 
-            {/* Heatmap + Set results */}
+            {/* Stats + Heatmap + Set results */}
             <div className="border-t border-border mt-2 pt-2 space-y-3">
+              <PlayerStatsPanel />
               <AttackHeatmap team="all" />
 
               {matchState.setResults.length > 0 && (
