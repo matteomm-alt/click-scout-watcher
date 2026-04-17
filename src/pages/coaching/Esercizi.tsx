@@ -114,6 +114,7 @@ export default function Esercizi() {
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
+    const tagFilters = fTags.map((t) => t.toLowerCase());
     return items.filter((it) => {
       if (s && !(
         it.name.toLowerCase().includes(s) ||
@@ -122,9 +123,19 @@ export default function Esercizi() {
       )) return false;
       if (fFund !== ALL && it.fundamental !== fFund) return false;
       if (fIntensity !== ALL && it.intensity !== fIntensity) return false;
+      if (tagFilters.length > 0) {
+        const lower = it.tags.map((t) => t.toLowerCase());
+        if (!tagFilters.every((t) => lower.includes(t))) return false;
+      }
       return true;
     });
-  }, [items, search, fFund, fIntensity]);
+  }, [items, search, fFund, fIntensity, fTags]);
+
+  // Tag già usati nella società (per autocomplete TagPicker)
+  const allUsedTags = useMemo(
+    () => Array.from(new Set(items.flatMap((i) => i.tags))),
+    [items]
+  );
 
   const resetForm = () => {
     setEditing(null);
