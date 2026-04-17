@@ -67,6 +67,7 @@ export default function Esercizi() {
   const [search, setSearch] = useState('');
   const [fFund, setFFund] = useState<string>(ALL);
   const [fIntensity, setFIntensity] = useState<string>(ALL);
+  const [fTags, setFTags] = useState<string[]>([]); // filtro multi-tag (AND)
 
   // Dialog form
   const [dlgOpen, setDlgOpen] = useState(false);
@@ -78,7 +79,7 @@ export default function Esercizi() {
   const [intensity, setIntensity] = useState<string>(NONE);
   const [equipment, setEquipment] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Delete
