@@ -10,7 +10,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, UserPlus, Loader2, Mail, Copy, ExternalLink } from 'lucide-react';
+import { Building2, Plus, UserPlus, Loader2, Mail, Copy, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 
 interface Society {
   id: string;
@@ -26,6 +27,11 @@ interface Invitation {
   expires_at: string;
   accepted_at: string | null;
   society_id: string;
+}
+
+interface MyRole {
+  society_id: string;
+  role: 'super_admin' | 'society_admin' | 'coach';
 }
 
 const slugify = (s: string) =>
