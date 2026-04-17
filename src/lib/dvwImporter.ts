@@ -317,26 +317,43 @@ function parseScout(sections: Record<string, string[]>): {
     if (actMatch) {
       const [, sideChar, numStr, skill, skillType, evaluation, tail] = actMatch;
       if (!SKILL_LETTERS.has(skill)) {
-        // skip skill non riconosciute (es. 'O' alzatori speciali)
         continue;
       }
-      // tail dopo evaluation: ~combo~zones~extra…  es: "X8~92~H1XR" → combo X8, zones "92" (start=9, end=2)
+      // Tail variabile per skill. Estrazione robusta:
+      // - Combo = primo token tipo "X8"/"V5"/"K7B" se presente all'inizio (Attack/Block/Set).
+      // - Zone = primo token "DD" (start, end) o "DDX" con subzone A/B/C/D.
+      // - SetCombo = lettere alfa nel token immediatamente successivo alle zone.
       const tailParts = tail.split('~');
-      const attackCombo = tailParts[1] || null;
-      const zoneStr = tailParts[2] || '';
-      const extra = tailParts[3] || '';
+      let attackCombo: string | null = null;
+      if (/^[A-Z][A-Z0-9]{1,2}$/.test(tailParts[0] || '')) {
+        attackCombo = tailParts[0];
+      }
       let startZone: number | null = null;
       let endZone: number | null = null;
       let endSubzone: string | null = null;
-      if (/^\d{2}$/.test(zoneStr)) {
-        startZone = parseInt(zoneStr[0], 10);
-        endZone = parseInt(zoneStr[1], 10);
-      } else if (/^\d$/.test(zoneStr)) {
-        startZone = parseInt(zoneStr, 10);
+      let zoneIdx = -1;
+      for (let i = 0; i < tailParts.length; i++) {
+        const part = tailParts[i];
+        const zm = part.match(/^(\d)(\d)([A-D])?$/);
+        if (zm) {
+          startZone = parseInt(zm[1], 10);
+          endZone = parseInt(zm[2], 10);
+          if (zm[3]) endSubzone = zm[3];
+          zoneIdx = i;
+          break;
+        }
       }
-      // extra può contenere "H1XR" → tipo trajectory + subzone? semplifichiamo
-      const subM = extra.match(/^[A-Z](\d)([A-Z])?/);
-      if (subM && subM[2]) endSubzone = subM[2];
+      if (startZone === null) {
+        for (const part of tailParts) {
+          const zm1 = part.match(/^(\d)$/);
+          if (zm1) { startZone = parseInt(zm1[1], 10); break; }
+        }
+      }
+      let setCombo: string | null = null;
+      if (zoneIdx >= 0 && tailParts[zoneIdx + 1]) {
+        const sm = tailParts[zoneIdx + 1].match(/[A-Z]\d?([A-Z]{1,3})/);
+        if (sm) setCombo = sm[1];
+      }
 
       actions.push({
         rallyIndex,
@@ -349,8 +366,8 @@ function parseScout(sections: Record<string, string[]>): {
         startZone,
         endZone,
         endSubzone,
-        attackCombo: attackCombo && /^[A-Z0-9]{2,3}$/.test(attackCombo) ? attackCombo : null,
-        setCombo: tailParts[4] || null,
+        attackCombo,
+        setCombo,
         setNumber, homeScore, awayScore,
         homeRotation: homeRot, awayRotation: awayRot,
         servingSide,
