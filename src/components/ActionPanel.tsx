@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
 import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
-import { Undo2, Download, ArrowLeftRight, SkipForward } from 'lucide-react';
+import { Undo2, Download, ArrowLeftRight, SkipForward, Shield } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
 import { ZoneCourt } from '@/components/VolleyballCourt';
 
