@@ -218,6 +218,272 @@ export type Database = {
         }
         Relationships: []
       }
+      scout_actions: {
+        Row: {
+          action_index: number
+          attack_combo: string | null
+          away_rotation: number[] | null
+          away_score: number
+          away_setter_pos: number | null
+          created_at: string
+          end_subzone: string | null
+          end_zone: number | null
+          evaluation: string
+          home_rotation: number[] | null
+          home_score: number
+          home_setter_pos: number | null
+          id: string
+          player_number: number | null
+          rally_index: number
+          raw_code: string
+          scout_match_id: string
+          scout_team_id: string
+          serving_side: string | null
+          set_combo: string | null
+          set_number: number
+          side: string
+          skill: string
+          skill_type: string | null
+          start_zone: number | null
+          timestamp_clock: string | null
+        }
+        Insert: {
+          action_index: number
+          attack_combo?: string | null
+          away_rotation?: number[] | null
+          away_score?: number
+          away_setter_pos?: number | null
+          created_at?: string
+          end_subzone?: string | null
+          end_zone?: number | null
+          evaluation: string
+          home_rotation?: number[] | null
+          home_score?: number
+          home_setter_pos?: number | null
+          id?: string
+          player_number?: number | null
+          rally_index: number
+          raw_code: string
+          scout_match_id: string
+          scout_team_id: string
+          serving_side?: string | null
+          set_combo?: string | null
+          set_number: number
+          side: string
+          skill: string
+          skill_type?: string | null
+          start_zone?: number | null
+          timestamp_clock?: string | null
+        }
+        Update: {
+          action_index?: number
+          attack_combo?: string | null
+          away_rotation?: number[] | null
+          away_score?: number
+          away_setter_pos?: number | null
+          created_at?: string
+          end_subzone?: string | null
+          end_zone?: number | null
+          evaluation?: string
+          home_rotation?: number[] | null
+          home_score?: number
+          home_setter_pos?: number | null
+          id?: string
+          player_number?: number | null
+          rally_index?: number
+          raw_code?: string
+          scout_match_id?: string
+          scout_team_id?: string
+          serving_side?: string | null
+          set_combo?: string | null
+          set_number?: number
+          side?: string
+          skill?: string
+          skill_type?: string | null
+          start_zone?: number | null
+          timestamp_clock?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_actions_scout_match_id_fkey"
+            columns: ["scout_match_id"]
+            isOneToOne: false
+            referencedRelation: "scout_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_actions_scout_team_id_fkey"
+            columns: ["scout_team_id"]
+            isOneToOne: false
+            referencedRelation: "scout_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_matches: {
+        Row: {
+          away_sets_won: number
+          away_team_id: string
+          city: string | null
+          coach_id: string
+          created_at: string
+          home_sets_won: number
+          home_team_id: string
+          id: string
+          league: string | null
+          match_date: string | null
+          match_time: string | null
+          phase: string | null
+          raw_header: Json | null
+          season: string | null
+          set_results: Json
+          source_filename: string | null
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          away_sets_won?: number
+          away_team_id: string
+          city?: string | null
+          coach_id: string
+          created_at?: string
+          home_sets_won?: number
+          home_team_id: string
+          id?: string
+          league?: string | null
+          match_date?: string | null
+          match_time?: string | null
+          phase?: string | null
+          raw_header?: Json | null
+          season?: string | null
+          set_results?: Json
+          source_filename?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          away_sets_won?: number
+          away_team_id?: string
+          city?: string | null
+          coach_id?: string
+          created_at?: string
+          home_sets_won?: number
+          home_team_id?: string
+          id?: string
+          league?: string | null
+          match_date?: string | null
+          match_time?: string | null
+          phase?: string | null
+          raw_header?: Json | null
+          season?: string | null
+          set_results?: Json
+          source_filename?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_matches_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "scout_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_matches_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "scout_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_players: {
+        Row: {
+          created_at: string
+          external_id: string | null
+          first_name: string | null
+          id: string
+          is_captain: boolean
+          is_libero: boolean
+          last_name: string
+          number: number
+          role: string | null
+          scout_team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          external_id?: string | null
+          first_name?: string | null
+          id?: string
+          is_captain?: boolean
+          is_libero?: boolean
+          last_name: string
+          number: number
+          role?: string | null
+          scout_team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string | null
+          first_name?: string | null
+          id?: string
+          is_captain?: boolean
+          is_libero?: boolean
+          last_name?: string
+          number?: number
+          role?: string | null
+          scout_team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_players_scout_team_id_fkey"
+            columns: ["scout_team_id"]
+            isOneToOne: false
+            referencedRelation: "scout_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_teams: {
+        Row: {
+          city: string | null
+          coach_id: string
+          created_at: string
+          id: string
+          is_own_team: boolean
+          name: string
+          notes: string | null
+          short_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          coach_id: string
+          created_at?: string
+          id?: string
+          is_own_team?: boolean
+          name: string
+          notes?: string | null
+          short_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          coach_id?: string
+          created_at?: string
+          id?: string
+          is_own_team?: boolean
+          name?: string
+          notes?: string | null
+          short_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       societies: {
         Row: {
           accent_color: string
