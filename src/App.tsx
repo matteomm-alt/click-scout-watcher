@@ -44,6 +44,9 @@ import Atleti from "./pages/atleta/Atleti.tsx";
 import Valutazioni from "./pages/atleta/Valutazioni.tsx";
 import Inventario from "./pages/atleta/Inventario.tsx";
 
+// Admin
+import AdminSocieties from "./pages/admin/Societies.tsx";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -94,6 +97,9 @@ const App = () => (
               <Route path="/atleti" element={<Atleti />} />
               <Route path="/valutazioni" element={<Valutazioni />} />
               <Route path="/inventario" element={<Inventario />} />
+
+              {/* Admin */}
+              <Route path="/admin" element={<AdminSocieties />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
