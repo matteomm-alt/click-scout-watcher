@@ -37,3 +37,42 @@ export const FUNDAMENTAL_COLOR: Record<string, string> = {
   Bagher: 'bg-cyan-500/15 text-cyan-500 border-cyan-500/30',
   Alzata: 'bg-pink-500/15 text-pink-500 border-pink-500/30',
 };
+
+// Tag predefiniti raggruppati per categoria — usati da TagPicker.
+// I coach possono comunque aggiungere tag liberi.
+export const PREDEFINED_TAG_GROUPS: { category: string; tags: string[] }[] = [
+  {
+    category: 'Metodologia',
+    tags: ['Analitico', 'Sintetico', 'Globale', 'Situazionale', 'Propedeutico', 'Gara'],
+  },
+  {
+    category: 'Tipologia palla',
+    tags: ['Palla corta', 'Palla lunga', 'Palla tesa', 'Palla alta', 'Pallonetto', 'Free ball'],
+  },
+  {
+    category: 'Fase di gioco',
+    tags: ['Side-out', 'Break point', 'Cambio palla', 'Contrattacco', 'Transizione', 'Difesa-attacco'],
+  },
+  {
+    category: 'Zona campo',
+    tags: ['Zona 1', 'Zona 2', 'Zona 3', 'Zona 4', 'Zona 5', 'Zona 6', 'Seconda linea', 'Pipe'],
+  },
+  {
+    category: 'Obiettivo',
+    tags: ['Riscaldamento', 'Tecnica', 'Tattica', 'Fisico', 'Mentale', 'Defaticamento'],
+  },
+  {
+    category: 'Numero atleti',
+    tags: ['1 vs 1', '2 vs 2', '3 vs 3', '4 vs 4', '6 vs 6', 'Individuale', 'A coppie'],
+  },
+];
+
+// Lista flat di tutti i tag predefiniti (per autocomplete rapido)
+export const ALL_PREDEFINED_TAGS: string[] = PREDEFINED_TAG_GROUPS.flatMap((g) => g.tags);
+
+// Normalizza un tag (trim + capitalizzazione iniziale) — per evitare duplicati "palla corta" vs "Palla Corta"
+export function normalizeTag(raw: string): string {
+  const t = raw.trim().replace(/\s+/g, ' ');
+  if (!t) return '';
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}

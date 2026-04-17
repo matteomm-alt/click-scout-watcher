@@ -19,8 +19,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { FUNDAMENTALS } from '@/lib/volleyConstants';
+import { TagPicker } from '@/components/TagPicker';
 import {
-  Dumbbell, Plus, Pencil, Trash2, Search, Download, Upload, Loader2, Tag, Clock, Link as LinkIcon,
+  Dumbbell, Plus, Pencil, Trash2, Search, Download, Upload, Loader2, Tag, Clock, Link as LinkIcon, X,
 } from 'lucide-react';
 
 interface Exercise {
@@ -66,6 +67,7 @@ export default function Esercizi() {
   const [search, setSearch] = useState('');
   const [fFund, setFFund] = useState<string>(ALL);
   const [fIntensity, setFIntensity] = useState<string>(ALL);
+  const [fTags, setFTags] = useState<string[]>([]); // filtro multi-tag (AND)
 
   // Dialog form
   const [dlgOpen, setDlgOpen] = useState(false);
@@ -77,7 +79,7 @@ export default function Esercizi() {
   const [intensity, setIntensity] = useState<string>(NONE);
   const [equipment, setEquipment] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Delete
@@ -112,6 +114,7 @@ export default function Esercizi() {
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
+    const tagFilters = fTags.map((t) => t.toLowerCase());
     return items.filter((it) => {
       if (s && !(
         it.name.toLowerCase().includes(s) ||
@@ -120,9 +123,19 @@ export default function Esercizi() {
       )) return false;
       if (fFund !== ALL && it.fundamental !== fFund) return false;
       if (fIntensity !== ALL && it.intensity !== fIntensity) return false;
+      if (tagFilters.length > 0) {
+        const lower = it.tags.map((t) => t.toLowerCase());
+        if (!tagFilters.every((t) => lower.includes(t))) return false;
+      }
       return true;
     });
-  }, [items, search, fFund, fIntensity]);
+  }, [items, search, fFund, fIntensity, fTags]);
+
+  // Tag già usati nella società (per autocomplete TagPicker)
+  const allUsedTags = useMemo(
+    () => Array.from(new Set(items.flatMap((i) => i.tags))),
+    [items]
+  );
 
   const resetForm = () => {
     setEditing(null);
@@ -133,7 +146,7 @@ export default function Esercizi() {
     setIntensity(NONE);
     setEquipment('');
     setVideoUrl('');
-    setTagsInput('');
+    setTags([]);
   };
 
   const openCreate = () => {
@@ -150,7 +163,7 @@ export default function Esercizi() {
     setIntensity(ex.intensity || NONE);
     setEquipment(ex.equipment || '');
     setVideoUrl(ex.video_url || '');
-    setTagsInput(ex.tags.join(', '));
+    setTags(ex.tags || []);
     setDlgOpen(true);
   };
 
@@ -169,7 +182,7 @@ export default function Esercizi() {
       intensity: intensity === NONE ? null : intensity,
       equipment: equipment.trim() || null,
       video_url: videoUrl.trim() || null,
-      tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
+      tags: tags.map((t) => t.trim()).filter(Boolean),
     };
     const { error } = editing
       ? await supabase.from('exercises').update(payload).eq('id', editing.id)
@@ -358,6 +371,31 @@ export default function Esercizi() {
         </Select>
       </div>
 
+      {/* Filtro per tag */}
+      <div className="rounded-lg border border-border bg-card/50 p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+            Filtra per tag {fTags.length > 0 && <span className="text-primary">({fTags.length} attivi)</span>}
+          </Label>
+          {fTags.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFTags([])}
+              className="h-7 text-xs gap-1"
+            >
+              <X className="w-3 h-3" /> Pulisci
+            </Button>
+          )}
+        </div>
+        <TagPicker
+          value={fTags}
+          onChange={setFTags}
+          suggestions={allUsedTags}
+          placeholder="Aggiungi tag per filtrare (AND)…"
+        />
+      </div>
+
       {/* Lista */}
       {loading ? (
         <div className="text-muted-foreground flex items-center gap-2">
@@ -514,8 +552,16 @@ export default function Esercizi() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="ex-tags">Tag (separati da virgola)</Label>
-              <Input id="ex-tags" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="riscaldamento, situazionale" />
+              <Label>Tag</Label>
+              <p className="text-xs text-muted-foreground">
+                Un esercizio può appartenere a più categorie (es. <em>analitico</em> + <em>palla corta</em>). Scegli dai predefiniti o scrivi tag liberi.
+              </p>
+              <TagPicker
+                value={tags}
+                onChange={setTags}
+                suggestions={allUsedTags}
+                placeholder="Scrivi un tag e premi Invio…"
+              />
             </div>
           </div>
           <DialogFooter>
