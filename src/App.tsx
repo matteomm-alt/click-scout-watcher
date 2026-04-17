@@ -58,15 +58,14 @@ const App = () => (
         <AuthProvider>
           <ClaimSuperAdminBadge />
           <Routes>
-            {/* Pubbliche / fuori layout */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
 
-            {/* Tutte le pagine app sotto il layout con sidebar */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Home />} />
               <Route path="/import" element={<ImportDvw />} />
               <Route path="/match/:id" element={<MatchAnalysis />} />
+              <Route path="/match-analysis" element={<MatchAnalysis />} />
               <Route path="/archive" element={<Archive />} />
               <Route path="/scout" element={<Index />} />
 
@@ -93,7 +92,7 @@ const App = () => (
               <Route path="/report-stagione" element={<ReportStagione />} />
               <Route path="/profilo-avversario" element={<ProfiloAvversario />} />
 
-              {/* Atleta + Magazzino */}
+              {/* Atleta */}
               <Route path="/atleti" element={<Atleti />} />
               <Route path="/valutazioni" element={<Valutazioni />} />
               <Route path="/inventario" element={<Inventario />} />
@@ -102,7 +101,6 @@ const App = () => (
               <Route path="/admin" element={<AdminSocieties />} />
             </Route>
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
