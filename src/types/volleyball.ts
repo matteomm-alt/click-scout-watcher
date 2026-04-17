@@ -168,6 +168,28 @@ export interface SetResult {
   duration: number; // minutes
 }
 
+export type SanctionType = 'yellow' | 'red' | 'expulsion' | 'disqualification';
+
+export interface Sanction {
+  id: string;
+  team: 'home' | 'away';
+  type: SanctionType;
+  // Player number; null for team/staff sanction
+  playerNumber: number | null;
+  setNumber: number;
+  timestamp: string;
+  note?: string;
+}
+
+export interface TimeoutRecord {
+  id: string;
+  team: 'home' | 'away';
+  setNumber: number;
+  homeScore: number;
+  awayScore: number;
+  timestamp: string;
+}
+
 export interface MatchState {
   currentSet: number;
   homeScore: number;
@@ -183,6 +205,11 @@ export interface MatchState {
   isMatchStarted: boolean;
   isMatchEnded: boolean;
   actions: ScoutAction[];
+  // Time-outs used in the CURRENT set per team (max 2)
+  homeTimeoutsUsed: number;
+  awayTimeoutsUsed: number;
+  timeouts: TimeoutRecord[];
+  sanctions: Sanction[];
 }
 
 export type AppStep = 'setup' | 'roster' | 'lineup' | 'scout';
