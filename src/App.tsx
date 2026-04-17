@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ClaimSuperAdminBadge } from "@/components/ClaimSuperAdminBadge";
+import AppLayout from "@/components/AppLayout";
 import Home from "./pages/Home.tsx";
 import Index from "./pages/Index.tsx";
 import ImportDvw from "./pages/ImportDvw.tsx";
@@ -14,6 +15,32 @@ import Archive from "./pages/Archive.tsx";
 import Auth from "./pages/Auth.tsx";
 import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
 import NotFound from "./pages/NotFound.tsx";
+
+// Gestionale
+import Calendario from "./pages/gestionale/Calendario.tsx";
+import Presenze from "./pages/gestionale/Presenze.tsx";
+import Convocazioni from "./pages/gestionale/Convocazioni.tsx";
+import Comunicazioni from "./pages/gestionale/Comunicazioni.tsx";
+import Magazzino from "./pages/gestionale/Magazzino.tsx";
+
+// Coaching
+import Esercizi from "./pages/coaching/Esercizi.tsx";
+import Allenamenti from "./pages/coaching/Allenamenti.tsx";
+import Scheletri from "./pages/coaching/Scheletri.tsx";
+import Schemi from "./pages/coaching/Schemi.tsx";
+import Volume from "./pages/coaching/Volume.tsx";
+import Pianificazione from "./pages/coaching/Pianificazione.tsx";
+import Periodizzazione from "./pages/coaching/Periodizzazione.tsx";
+import Obiettivi from "./pages/coaching/Obiettivi.tsx";
+
+// Analisi
+import ReportStagione from "./pages/analisi/ReportStagione.tsx";
+import ProfiloAvversario from "./pages/analisi/ProfiloAvversario.tsx";
+
+// Atleta
+import Atleti from "./pages/atleta/Atleti.tsx";
+import Valutazioni from "./pages/atleta/Valutazioni.tsx";
+import Inventario from "./pages/atleta/Inventario.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,13 +53,45 @@ const App = () => (
         <AuthProvider>
           <ClaimSuperAdminBadge />
           <Routes>
+            {/* Pubbliche / fuori layout */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/import" element={<ProtectedRoute><ImportDvw /></ProtectedRoute>} />
-            <Route path="/match/:id" element={<ProtectedRoute><MatchAnalysis /></ProtectedRoute>} />
-            <Route path="/archive" element={<ProtectedRoute><Archive /></ProtectedRoute>} />
-            <Route path="/scout" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+
+            {/* Tutte le pagine app sotto il layout con sidebar */}
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Home />} />
+              <Route path="/import" element={<ImportDvw />} />
+              <Route path="/match/:id" element={<MatchAnalysis />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/scout" element={<Index />} />
+
+              {/* Gestionale */}
+              <Route path="/calendario" element={<Calendario />} />
+              <Route path="/presenze" element={<Presenze />} />
+              <Route path="/convocazioni" element={<Convocazioni />} />
+              <Route path="/comunicazioni" element={<Comunicazioni />} />
+              <Route path="/magazzino" element={<Magazzino />} />
+
+              {/* Coaching */}
+              <Route path="/esercizi" element={<Esercizi />} />
+              <Route path="/allenamenti" element={<Allenamenti />} />
+              <Route path="/scheletri" element={<Scheletri />} />
+              <Route path="/schemi" element={<Schemi />} />
+              <Route path="/volume" element={<Volume />} />
+              <Route path="/pianificazione" element={<Pianificazione />} />
+              <Route path="/periodizzazione" element={<Periodizzazione />} />
+              <Route path="/obiettivi" element={<Obiettivi />} />
+
+              {/* Analisi */}
+              <Route path="/report-stagione" element={<ReportStagione />} />
+              <Route path="/profilo-avversario" element={<ProfiloAvversario />} />
+
+              {/* Atleta + Magazzino */}
+              <Route path="/atleti" element={<Atleti />} />
+              <Route path="/valutazioni" element={<Valutazioni />} />
+              <Route path="/inventario" element={<Inventario />} />
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
