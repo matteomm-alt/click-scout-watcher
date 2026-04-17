@@ -371,6 +371,31 @@ export default function Esercizi() {
         </Select>
       </div>
 
+      {/* Filtro per tag */}
+      <div className="rounded-lg border border-border bg-card/50 p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+            Filtra per tag {fTags.length > 0 && <span className="text-primary">({fTags.length} attivi)</span>}
+          </Label>
+          {fTags.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFTags([])}
+              className="h-7 text-xs gap-1"
+            >
+              <X className="w-3 h-3" /> Pulisci
+            </Button>
+          )}
+        </div>
+        <TagPicker
+          value={fTags}
+          onChange={setFTags}
+          suggestions={allUsedTags}
+          placeholder="Aggiungi tag per filtrare (AND)…"
+        />
+      </div>
+
       {/* Lista */}
       {loading ? (
         <div className="text-muted-foreground flex items-center gap-2">
