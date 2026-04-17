@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ClaimSuperAdminBadge } from "@/components/ClaimSuperAdminBadge";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
@@ -19,6 +20,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ClaimSuperAdminBadge />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route
