@@ -40,7 +40,7 @@ const NONE = '__NONE__';
 
 export default function GuidaTecnica() {
   const { user } = useAuth();
-  const { society, isAdmin, loading: socLoading } = useActiveSociety();
+  const { societyId, isAdmin, loading: socLoading } = useActiveSociety();
   const { toast } = useToast();
 
   const [items, setItems] = useState<Guideline[]>([]);
@@ -65,12 +65,12 @@ export default function GuidaTecnica() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const load = async () => {
-    if (!society) return;
+    if (!societyId) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('technical_guidelines')
       .select('*')
-      .eq('society_id', society.id)
+      .eq('society_id', societyId)
       .order('updated_at', { ascending: false });
     if (error) {
       toast({ title: 'Errore caricamento', description: error.message, variant: 'destructive' });
@@ -81,9 +81,9 @@ export default function GuidaTecnica() {
   };
 
   useEffect(() => {
-    if (society) load();
+    if (societyId) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [society?.id]);
+  }, [societyId]);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -118,14 +118,14 @@ export default function GuidaTecnica() {
   };
 
   const submit = async () => {
-    if (!society || !user) return;
+    if (!societyId || !user) return;
     if (!form.title.trim() || !form.content.trim()) {
       toast({ title: 'Compila titolo e contenuto', variant: 'destructive' });
       return;
     }
     setSaving(true);
     const payload = {
-      society_id: society.id,
+      society_id: societyId,
       title: form.title.trim(),
       content: form.content.trim(),
       category: form.category.trim() || null,
@@ -166,7 +166,7 @@ export default function GuidaTecnica() {
   if (socLoading) {
     return <div className="container py-10 text-muted-foreground">Caricamento società…</div>;
   }
-  if (!society) {
+  if (!societyId) {
     return (
       <div className="container py-10">
         <p className="text-muted-foreground">Nessuna società attiva trovata per l'utente.</p>
