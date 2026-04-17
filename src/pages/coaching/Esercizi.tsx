@@ -527,8 +527,16 @@ export default function Esercizi() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="ex-tags">Tag (separati da virgola)</Label>
-              <Input id="ex-tags" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="riscaldamento, situazionale" />
+              <Label>Tag</Label>
+              <p className="text-xs text-muted-foreground">
+                Un esercizio può appartenere a più categorie (es. <em>analitico</em> + <em>palla corta</em>). Scegli dai predefiniti o scrivi tag liberi.
+              </p>
+              <TagPicker
+                value={tags}
+                onChange={setTags}
+                suggestions={allUsedTags}
+                placeholder="Scrivi un tag e premi Invio…"
+              />
             </div>
           </div>
           <DialogFooter>
