@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 import {
   Home, FileUp, Activity, Library,
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
@@ -70,6 +71,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { user, isSuperAdmin, signOut } = useAuth();
+  const { societyName } = useActiveSociety();
 
   const renderItems = (items: NavItem[]) =>
     items.map((item) => (
@@ -98,6 +100,13 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="min-w-0">
               <p className="text-sm font-bold uppercase italic tracking-tight truncate">VolleyScout</p>
+              {societyName ? (
+                <p className="text-[11px] font-semibold text-primary truncate" title={societyName}>
+                  {societyName}
+                </p>
+              ) : (
+                <p className="text-[10px] text-muted-foreground truncate">Nessuna società</p>
+              )}
               <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
             </div>
           )}
