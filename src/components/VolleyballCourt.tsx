@@ -66,7 +66,7 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
 
       {/* Court — taraflex with gradient */}
       <div
-        className="grid grid-rows-3 gap-0 border border-foreground/20 shadow-2xl overflow-hidden rounded-b-lg aspect-[3/2.2]"
+        className="relative grid grid-rows-3 gap-0 border border-foreground/20 shadow-2xl overflow-hidden rounded-b-lg aspect-[3/2.2]"
         style={{
           background: 'linear-gradient(180deg, hsl(215 70% 32%) 0%, hsl(215 70% 22%) 100%)',
           boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)',
