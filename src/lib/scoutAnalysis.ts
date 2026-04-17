@@ -23,7 +23,34 @@ export interface DbAction {
   away_score: number;
   home_rotation: number[] | null;
   away_rotation: number[] | null;
+  home_setter_pos: number | null;
+  away_setter_pos: number | null;
   serving_side: 'home' | 'away' | null;
+}
+
+/**
+ * Restituisce la "rotazione" (1..6) della squadra `side` al momento dell'azione.
+ * Per convenzione usiamo la posizione del setter come identificatore di rotazione:
+ *   R1 = setter in P1, R2 = setter in P2, ... R6 = setter in P6.
+ * Fallback: se setter_pos non disponibile, usa rotation[0] (P1) come proxy.
+ */
+export function rotationOf(a: DbAction, side: 'home' | 'away'): number | null {
+  const pos = side === 'home' ? a.home_setter_pos : a.away_setter_pos;
+  if (pos && pos >= 1 && pos <= 6) return pos;
+  const rot = side === 'home' ? a.home_rotation : a.away_rotation;
+  if (rot && rot.length === 6 && rot[0]) return ((rot[0] - 1) % 6) + 1;
+  return null;
+}
+
+/**
+ * Fase di gioco rispetto a una squadra:
+ *   K1 (sideout / cambio palla) = la squadra è in ricezione (l'avversario serve)
+ *   K2 (break point)            = la squadra è in battuta
+ */
+export type Phase = 'K1' | 'K2';
+export function phaseOf(a: DbAction, side: 'home' | 'away'): Phase | null {
+  if (!a.serving_side) return null;
+  return a.serving_side === side ? 'K2' : 'K1';
 }
 
 export const SKILL_NAMES: Record<string, string> = {
@@ -188,34 +215,24 @@ export function rotationStats(actions: DbAction[], teamId: string, opts: { side:
 
   for (const [, rally] of rallies) {
     if (rally.length === 0) continue;
-    // determina setter pos di QUESTA squadra all'inizio del rally
     const myActions = rally.filter(a => a.scout_team_id === teamId);
     if (myActions.length === 0) continue;
     const first = myActions[0];
-    const rotation = opts.side === 'home' ? first.home_rotation : first.away_rotation;
-    if (!rotation || rotation.length !== 6) continue;
-    // troviamo la posizione del setter — ASSUNZIONE semplificata:
-    // per ora usiamo la posizione 1 come "rotazione corrente" (setter pos = chi sta in P1).
-    // In assenza del lineup setter dal DVW, usiamo come proxy "chi sta in posto 1" come marker rotazione.
-    const setterMarker = 1; // identificatore di rotazione: posto 1
-    void setterMarker;
 
-    // determiniamo lato che inizia in battuta (servingSide del rally) e chi ha vinto il rally
+    // Rotazione = posizione del setter di QUESTA squadra in questo rally.
+    const bucket = rotationOf(first, opts.side);
+    if (!bucket) continue;
+
     const servingSide = first.serving_side;
     if (!servingSide) continue;
-    const last = rally[rally.length - 1];
-    const homeBefore = last.home_score;
-    const awayBefore = last.away_score;
-    // chi ha vinto il rally? lo deduciamo dal punteggio successivo confrontando con la prima azione del rally seguente.
-    // Soluzione semplice: ricostruiamo dal max degli score nelle azioni successive — qui prendiamo l'ultima azione = serve a indicare evolved score
-    // Approccio robusto: chi ha l'evaluation '=' (errore) ha perso, '#' attack/serve/block ha vinto.
+
+    // Determina vincitore del rally
     let winner: 'home' | 'away' | null = null;
     for (let i = rally.length - 1; i >= 0; i--) {
       const a = rally[i];
       if (a.evaluation === '#') {
-        // azione vincente: il proprio side ha vinto il punto
         if (a.skill === 'A' || a.skill === 'B' || a.skill === 'S') winner = a.side;
-        else if (a.skill === 'E' && (a.skill_type === 'T' || a.skill_type === 'H')) winner = a.side; // muro
+        else if (a.skill === 'E' && (a.skill_type === 'T' || a.skill_type === 'H')) winner = a.side;
         if (winner) break;
       }
       if (a.evaluation === '=' || a.evaluation === '/') {
@@ -224,13 +241,10 @@ export function rotationStats(actions: DbAction[], teamId: string, opts: { side:
       }
     }
     if (!winner) {
-      winner = homeBefore > awayBefore ? 'home' : 'away';
+      const last = rally[rally.length - 1];
+      winner = last.home_score > last.away_score ? 'home' : 'away';
     }
 
-    // Non avendo la posizione setter in modo affidabile, usiamo come "rotazione" l'indice della
-    // prima posizione P1 della squadra: rotation[0]. La aggreghiamo come marker di rotazione (non setter).
-    // Per restituire 6 rotazioni distinte, usiamo (rotation[0] % 6) + 1 come bucket.
-    const bucket = ((rotation[0] - 1) % 6) + 1;
     const rs = map.get(bucket)!;
     rs.rallies++;
     const won = winner === opts.side;

@@ -1,11 +1,13 @@
 import { Check, X } from 'lucide-react';
-import { SKILL_NAMES, EVAL_NAMES } from '@/lib/scoutAnalysis';
+import { SKILL_NAMES, EVAL_NAMES, type Phase } from '@/lib/scoutAnalysis';
 
 export interface AnalysisFilters {
   setNumbers: number[];        // [] = tutti
   skills: string[];            // [] = tutte
   evaluations: string[];       // [] = tutte
   playerNumbers: number[];     // [] = tutti (riferiti alla squadra attiva)
+  rotations: number[];         // [] = tutte (1..6 = posizione setter squadra attiva)
+  phases: Phase[];             // [] = tutte (K1 = ricezione, K2 = battuta) per squadra attiva
 }
 
 export const EMPTY_FILTERS: AnalysisFilters = {
@@ -13,6 +15,8 @@ export const EMPTY_FILTERS: AnalysisFilters = {
   skills: [],
   evaluations: [],
   playerNumbers: [],
+  rotations: [],
+  phases: [],
 };
 
 export interface PlayerOption {
@@ -26,6 +30,7 @@ interface Props {
   onChange: (f: AnalysisFilters) => void;
   availableSets: number[];
   availableSkills: string[];
+  availableRotations: number[];
   players: PlayerOption[];
 }
 
