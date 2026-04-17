@@ -1,6 +1,7 @@
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
+import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES } from '@/types/volleyball';
 
