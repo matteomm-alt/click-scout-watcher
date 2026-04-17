@@ -268,24 +268,45 @@ export default function AdminSocieties() {
                   </div>
                 )}
 
-                <footer className="flex gap-2 mt-auto pt-2 border-t border-border/50">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5 flex-1"
-                    onClick={() => setInviteFor(s)}
-                  >
-                    <UserPlus className="w-3.5 h-3.5" /> Invita admin
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5"
-                    onClick={() => navigate(`/societa/${s.slug}`)}
-                    title="Apri pagina società"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </Button>
+                <footer className="flex flex-col gap-2 mt-auto pt-2 border-t border-border/50">
+                  {isAdminOf(s.id) ? (
+                    <div className="flex items-center gap-1.5 text-xs text-primary font-semibold px-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Sei admin di questa società
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="gap-1.5 w-full"
+                      onClick={() => claimSocietyAdmin(s)}
+                      disabled={claimingId === s.id}
+                    >
+                      {claimingId === s.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Promozione…</>
+                      ) : (
+                        <><ShieldCheck className="w-3.5 h-3.5" /> Diventa admin</>
+                      )}
+                    </Button>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 flex-1"
+                      onClick={() => setInviteFor(s)}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" /> Invita admin
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="gap-1.5"
+                      onClick={() => navigate(`/societa/${s.slug}`)}
+                      title="Apri pagina società"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </footer>
               </article>
             );
