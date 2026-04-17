@@ -34,6 +34,19 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
     return 'idle';
   };
 
+  // Compute arrow positions in % coordinates inside the court grid (3 cols x 3 rows)
+  const zonePos = (zone: number) => {
+    const z = ZONES.find((zz) => zz.zone === zone);
+    if (!z) return null;
+    return {
+      x: (z.col + 0.5) * (100 / 3),
+      y: (z.row + 0.5) * (100 / 3),
+    };
+  };
+  const startPos = startZone ? zonePos(startZone) : null;
+  const endPos = endZone ? zonePos(endZone) : null;
+  const showArrow = startPos && endPos && startZone !== endZone;
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       {/* Net header */}
@@ -53,7 +66,7 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
 
       {/* Court — taraflex with gradient */}
       <div
-        className="grid grid-rows-3 gap-0 border border-foreground/20 shadow-2xl overflow-hidden rounded-b-lg aspect-[3/2.2]"
+        className="relative grid grid-rows-3 gap-0 border border-foreground/20 shadow-2xl overflow-hidden rounded-b-lg aspect-[3/2.2]"
         style={{
           background: 'linear-gradient(180deg, hsl(215 70% 32%) 0%, hsl(215 70% 22%) 100%)',
           boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)',
@@ -120,6 +133,68 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
             })}
           </div>
         ))}
+
+        {/* Animated trajectory arrow overlay */}
+        {showArrow && (
+          <svg
+            key={`${startZone}-${endZone}`}
+            className="pointer-events-none absolute inset-0 w-full h-full z-20"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="6"
+                markerHeight="6"
+                refX="4"
+                refY="3"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 L0,6 L6,3 z" fill="hsl(var(--accent))" />
+              </marker>
+            </defs>
+            {/* Glow line */}
+            <line
+              x1={startPos!.x}
+              y1={startPos!.y}
+              x2={endPos!.x}
+              y2={endPos!.y}
+              stroke="hsl(var(--accent) / 0.35)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              style={{ filter: 'blur(2px)' }}
+            />
+            {/* Main animated dashed line */}
+            <line
+              x1={startPos!.x}
+              y1={startPos!.y}
+              x2={endPos!.x}
+              y2={endPos!.y}
+              stroke="hsl(var(--accent))"
+              strokeWidth="0.6"
+              strokeLinecap="round"
+              strokeDasharray="3 2"
+              vectorEffect="non-scaling-stroke"
+              markerEnd="url(#arrowhead)"
+              style={{ animation: 'court-dash 0.8s linear infinite' }}
+            />
+            {/* Start dot */}
+            <circle
+              cx={startPos!.x}
+              cy={startPos!.y}
+              r="1.6"
+              fill="hsl(var(--primary))"
+              stroke="white"
+              strokeWidth="0.3"
+              vectorEffect="non-scaling-stroke"
+            >
+              <animate attributeName="r" values="1.6;2.4;1.6" dur="1.4s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+        )}
       </div>
 
       {/* Trajectory hint */}
