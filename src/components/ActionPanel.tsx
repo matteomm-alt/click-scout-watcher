@@ -31,6 +31,8 @@ export function ActionPanel() {
   const [subTeam, setSubTeam] = useState<'home' | 'away'>('home');
   const [subOut, setSubOut] = useState<number | null>(null);
   const [attackFilter, setAttackFilter] = useState<'all' | 'Q' | 'M' | 'T' | 'H' | 'O'>('all');
+  const [showLibero, setShowLibero] = useState(false);
+  const [liberoTeam, setLiberoTeam] = useState<'home' | 'away'>('home');
 
   const skills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
