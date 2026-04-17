@@ -65,7 +65,6 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/import" element={<ImportDvw />} />
               <Route path="/match/:id" element={<MatchAnalysis />} />
-              <Route path="/match-analysis" element={<MatchAnalysis />} />
               <Route path="/archive" element={<Archive />} />
               <Route path="/scout" element={<Index />} />
 
