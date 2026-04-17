@@ -182,7 +182,7 @@ export default function Esercizi() {
       intensity: intensity === NONE ? null : intensity,
       equipment: equipment.trim() || null,
       video_url: videoUrl.trim() || null,
-      tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
+      tags: tags.map((t) => t.trim()).filter(Boolean),
     };
     const { error } = editing
       ? await supabase.from('exercises').update(payload).eq('id', editing.id)
