@@ -52,9 +52,9 @@ export default function MatchAnalysis() {
   const [teamFilter, setTeamFilter] = useState<'home' | 'away'>('home');
   const [filters, setFilters] = useState<AnalysisFilters>(EMPTY_FILTERS);
 
-  // Reset filtri "atleta" quando cambio squadra (i numeri appartengono a una squadra specifica)
+  // Reset filtri "atleta", "rotazione" e "fase" quando cambio squadra (sono relativi alla squadra attiva)
   useEffect(() => {
-    setFilters(f => ({ ...f, playerNumbers: [] }));
+    setFilters(f => ({ ...f, playerNumbers: [], rotations: [], phases: [] }));
   }, [teamFilter]);
 
   useEffect(() => {
@@ -124,6 +124,16 @@ export default function MatchAnalysis() {
     return [...s].sort();
   }, [teamActionsRaw]);
 
+  // Rotazioni (1..6) effettivamente presenti per la squadra attiva
+  const availableRotations = useMemo(() => {
+    const s = new Set<number>();
+    for (const a of teamActionsRaw) {
+      const r = rotationOf(a, teamFilter);
+      if (r) s.add(r);
+    }
+    return [...s].sort((a, b) => a - b);
+  }, [teamActionsRaw, teamFilter]);
+
   // Opzioni atleta = giocatori della squadra attiva con almeno un'azione
   const playerOptions = useMemo<PlayerOption[]>(() => {
     if (!teamId) return [];
@@ -156,25 +166,39 @@ export default function MatchAnalysis() {
       if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
       if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
       if (filters.playerNumbers.length && (a.player_number === null || !filters.playerNumbers.includes(a.player_number))) return false;
+      if (filters.rotations.length) {
+        const r = rotationOf(a, teamFilter);
+        if (!r || !filters.rotations.includes(r)) return false;
+      }
+      if (filters.phases.length) {
+        const p = phaseOf(a, teamFilter);
+        if (!p || !filters.phases.includes(p)) return false;
+      }
       return true;
     });
-  }, [teamActionsRaw, filters]);
+  }, [teamActionsRaw, filters, teamFilter]);
 
-  // Per le tab che mostrano TUTTE e due le squadre (compare/rotations) applichiamo solo set/skill/evaluation
+  // Per le tab che mostrano TUTTE e due le squadre (compare/rotations).
+  // Set/skill/evaluation sono globali; player/rotazione/fase si applicano solo alle azioni della squadra attiva.
   const filteredAllActions = useMemo(() => {
     return actions.filter(a => {
       if (filters.setNumbers.length && !filters.setNumbers.includes(a.set_number)) return false;
       if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
       if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
-      // playerNumbers riferito alla squadra attiva: filtra solo le sue azioni
-      if (filters.playerNumbers.length) {
-        if (a.scout_team_id === teamId) {
-          if (a.player_number === null || !filters.playerNumbers.includes(a.player_number)) return false;
+      if (a.scout_team_id === teamId) {
+        if (filters.playerNumbers.length && (a.player_number === null || !filters.playerNumbers.includes(a.player_number))) return false;
+        if (filters.rotations.length) {
+          const r = rotationOf(a, teamFilter);
+          if (!r || !filters.rotations.includes(r)) return false;
+        }
+        if (filters.phases.length) {
+          const p = phaseOf(a, teamFilter);
+          if (!p || !filters.phases.includes(p)) return false;
         }
       }
       return true;
     });
-  }, [actions, filters, teamId]);
+  }, [actions, filters, teamId, teamFilter]);
 
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
@@ -236,6 +260,7 @@ export default function MatchAnalysis() {
             onChange={setFilters}
             availableSets={availableSets}
             availableSkills={availableSkills}
+            availableRotations={availableRotations}
             players={playerOptions}
           />
           <p className="text-[11px] text-muted-foreground mt-2 px-1">
