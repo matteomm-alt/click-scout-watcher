@@ -168,8 +168,10 @@ export default function GuidaTecnica() {
   }
   if (!societyId) {
     return (
-      <div className="container py-10">
-        <p className="text-muted-foreground">Nessuna società attiva trovata per l'utente.</p>
+      <div className="container py-10 space-y-3">
+        <p className="text-muted-foreground">
+          Nessuna società attiva trovata. Crea prima una società dall'area admin.
+        </p>
       </div>
     );
   }
