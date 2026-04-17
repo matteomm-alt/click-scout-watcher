@@ -41,6 +41,9 @@ interface MatchStore {
 
   // Reset everything (new match)
   resetMatch: () => void;
+
+  // Load a fully-configured demo match (for quick testing/onboarding)
+  loadDemoMatch: () => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
@@ -339,6 +342,87 @@ export const useMatchStore = create<MatchStore>()(
         awayLineup: { ...defaultLineup },
         matchState: { ...defaultMatchState },
       }),
+
+      loadDemoMatch: () => {
+        const mkPlayer = (n: number, last: string, first: string, role: Player['role'], isLibero = false, isCaptain = false): Player => ({
+          id: `${last.toLowerCase()}-${n}`,
+          number: n,
+          lastName: last,
+          firstName: first,
+          role,
+          isLibero,
+          isCaptain,
+        });
+
+        const homePlayers: Player[] = [
+          mkPlayer(1, 'Rossi',     'Marco',    'S', false, true),
+          mkPlayer(4, 'Bianchi',   'Luca',     'OP'),
+          mkPlayer(7, 'Verdi',     'Andrea',   'O'),
+          mkPlayer(9, 'Neri',      'Paolo',    'O'),
+          mkPlayer(11,'Galli',     'Davide',   'M'),
+          mkPlayer(14,'Costa',     'Giorgio',  'M'),
+          mkPlayer(2, 'Marini',    'Stefano',  'L', true),
+          mkPlayer(8, 'Conti',     'Federico', 'O'),
+        ];
+        const awayPlayers: Player[] = [
+          mkPlayer(3, 'Ferrari',   'Alessio',  'S', false, true),
+          mkPlayer(5, 'Esposito',  'Matteo',   'OP'),
+          mkPlayer(6, 'Romano',    'Luigi',    'O'),
+          mkPlayer(10,'Greco',     'Riccardo', 'O'),
+          mkPlayer(12,'Bruno',     'Tommaso',  'M'),
+          mkPlayer(15,'Gallo',     'Simone',   'M'),
+          mkPlayer(13,'Lombardi',  'Fabio',    'L', true),
+          mkPlayer(17,'Moretti',   'Nicola',   'O'),
+        ];
+
+        const homeTeam: Team = {
+          id: 'home', code: 'CAS', name: 'Casa Volley',
+          coach: 'Coach Casa', assistantCoach: '', players: homePlayers, color: '#3b82f6',
+        };
+        const awayTeam: Team = {
+          id: 'away', code: 'OSP', name: 'Ospite Volley',
+          coach: 'Coach Ospite', assistantCoach: '', players: awayPlayers, color: '#ef4444',
+        };
+
+        // Lineup: P1..P6 with setter at P1 for both
+        const homeLineup: Lineup = {
+          p1: 'rossi-1', p2: 'bianchi-4', p3: 'galli-11',
+          p4: 'verdi-7', p5: 'costa-14',  p6: 'neri-9',
+          libero1: 'marini-2', libero2: null, setter: 'rossi-1',
+        };
+        const awayLineup: Lineup = {
+          p1: 'ferrari-3', p2: 'esposito-5', p3: 'bruno-12',
+          p4: 'romano-6',  p5: 'gallo-15',   p6: 'greco-10',
+          libero1: 'lombardi-13', libero2: null, setter: 'ferrari-3',
+        };
+
+        set({
+          step: 'scout',
+          matchInfo: {
+            ...defaultMatchInfo,
+            league: 'Serie A',
+            venue: 'PalaDemo',
+            city: 'Roma',
+            referee1: 'Arbitro 1',
+            referee2: 'Arbitro 2',
+            scorer: 'Demo Scout',
+            totalSets: 5,
+          },
+          homeTeam,
+          awayTeam,
+          homeLineup,
+          awayLineup,
+          matchState: {
+            ...defaultMatchState,
+            isMatchStarted: true,
+            homeCurrentLineup: [1, 4, 11, 7, 14, 9],
+            awayCurrentLineup: [3, 5, 12, 6, 15, 10],
+            homeSetterPosition: 1,
+            awaySetterPosition: 1,
+            servingTeam: 'home',
+          },
+        });
+      },
     }),
     {
       name: 'volley-scout-storage-v1',
