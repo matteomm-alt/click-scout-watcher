@@ -1,327 +1,255 @@
-import { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useCallback } from 'react';
+import { Upload, FileText, CheckCircle, AlertCircle, Trash2, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { parseDvw, type DvwParsed } from '@/lib/dvwImporter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { ArrowLeft, FileUp, AlertTriangle, Check, Loader2 } from 'lucide-react';
+import { parseDVW, readFileAsText, normalizeDate } from '@/lib/dvwParser';
+import { useNavigate } from 'react-router-dom';
 
-interface KnownTeam { id: string; name: string; is_own_team: boolean; }
-
-type Stage = 'upload' | 'review' | 'saving';
+interface ImportResult {
+  fileName: string;
+  status: 'ok' | 'error' | 'duplicate';
+  message?: string;
+  awayTeam?: string;
+  homeTeam?: string;
+  result?: string;
+  won?: boolean;
+}
 
 export default function ImportDvw() {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [results, setResults] = useState<ImportResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+  const [activeTab, setActiveTab] = useState<'import' | 'archivio'>('import');
 
-  const [stage, setStage] = useState<Stage>('upload');
-  const [parsed, setParsed] = useState<DvwParsed | null>(null);
-  const [filename, setFilename] = useState('');
-  const [knownTeams, setKnownTeams] = useState<KnownTeam[]>([]);
-  const [homeChoice, setHomeChoice] = useState<{ mode: 'existing' | 'new'; id: string; newName: string; isOwn: boolean }>({ mode: 'new', id: '', newName: '', isOwn: false });
-  const [awayChoice, setAwayChoice] = useState<{ mode: 'existing' | 'new'; id: string; newName: string; isOwn: boolean }>({ mode: 'new', id: '', newName: '', isOwn: false });
+  const processFiles = async (files: FileList | File[]) => {
+    const fileArr = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.dvw'));
+    if (!fileArr.length) return;
 
-  async function loadKnownTeams() {
-    const { data } = await supabase
-      .from('scout_teams')
-      .select('id,name,is_own_team')
-      .order('name');
-    setKnownTeams(data || []);
-  }
+    setLoading(true);
+    const newResults: ImportResult[] = [];
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
 
-  function readFile(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      // .dvw è solitamente latin-1 (windows-1252)
-      reader.readAsText(file, 'windows-1252');
-    });
-  }
+    for (const file of fileArr) {
+      try {
+        const text = await readFileAsText(file);
+        const { raw, stats } = parseDVW(text);
+        const rawDate = raw.match?.date || '';
+        const dataNormalized = rawDate ? normalizeDate(rawDate) : null;
 
-  async function handleFile(file: File) {
-    try {
-      const content = await readFile(file);
-      const result = parseDvw(content);
-      setParsed(result);
-      setFilename(file.name);
-      setHomeChoice(c => ({ ...c, newName: result.teams.home.name }));
-      setAwayChoice(c => ({ ...c, newName: result.teams.away.name }));
-      await loadKnownTeams();
-      setStage('review');
-    } catch (e: any) {
-      toast.error('Errore parsing DVW: ' + (e?.message || 'sconosciuto'));
-    }
-  }
+        const { data: existing } = await supabase
+          .from('dvw_matches')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('file_name', file.name)
+          .maybeSingle();
 
-  async function resolveTeam(choice: typeof homeChoice, fallbackName: string): Promise<string> {
-    if (choice.mode === 'existing' && choice.id) return choice.id;
-    const name = (choice.newName || fallbackName).trim();
-    if (!name) throw new Error('Nome squadra mancante');
-    // upsert per evitare duplicati case-insensitive (sfrutta indice unique)
-    const { data: existing } = await supabase
-      .from('scout_teams')
-      .select('id')
-      .ilike('name', name)
-      .maybeSingle();
-    if (existing) return existing.id;
-    const { data, error } = await supabase
-      .from('scout_teams')
-      .insert({ coach_id: user!.id, name, is_own_team: choice.isOwn })
-      .select('id')
-      .single();
-    if (error) throw error;
-    return data.id;
-  }
+        if (existing) {
+          newResults.push({ fileName: file.name, status: 'duplicate', message: 'Già importata' });
+          continue;
+        }
 
-  async function handleSave() {
-    if (!parsed || !user) return;
-    setStage('saving');
-    try {
-      const homeTeamId = await resolveTeam(homeChoice, parsed.teams.home.name);
-      const awayTeamId = await resolveTeam(awayChoice, parsed.teams.away.name);
+        const { error } = await supabase.from('dvw_matches').insert({
+          user_id: user.id,
+          file_name: file.name,
+          data: dataNormalized,
+          avversario: stats.awayTeam,
+          squadra_casa: stats.homeTeam,
+          risultato: stats.result,
+          set_scores: stats.setScores,
+          vinta: stats.won,
+          team_stats: stats.teamStats as any,
+          player_stats: stats.playerStats as any,
+          setter_name: stats.setterName,
+          rot_stats: stats.rotStats as any,
+          system_stats: stats.systemStats as any,
+          hit_eff: stats.hitEff as any,
+          directional: stats.directional as any,
+        });
 
-      // sync rosa
-      const homePlayers = parsed.players.home.map(p => ({
-        scout_team_id: homeTeamId, number: p.number, last_name: p.lastName,
-        first_name: p.firstName, role: p.role, is_libero: p.isLibero, external_id: p.externalId,
-      }));
-      const awayPlayers = parsed.players.away.map(p => ({
-        scout_team_id: awayTeamId, number: p.number, last_name: p.lastName,
-        first_name: p.firstName, role: p.role, is_libero: p.isLibero, external_id: p.externalId,
-      }));
-      // upsert by (scout_team_id, number) — gestiamo come delete+insert per semplicità
-      await supabase.from('scout_players').upsert([...homePlayers, ...awayPlayers], { onConflict: 'scout_team_id,number', ignoreDuplicates: true });
-
-      // crea match
-      const { data: match, error: matchErr } = await supabase
-        .from('scout_matches')
-        .insert({
-          coach_id: user.id,
-          home_team_id: homeTeamId, away_team_id: awayTeamId,
-          match_date: parsed.header.date, match_time: parsed.header.time,
-          season: parsed.header.season, league: parsed.header.league,
-          phase: parsed.header.phase, venue: parsed.header.venue, city: parsed.header.city,
-          home_sets_won: parsed.setsWon.home, away_sets_won: parsed.setsWon.away,
-          set_results: parsed.setResults as any,
-          source_filename: filename,
-          raw_header: parsed.header as any,
-        })
-        .select('id')
-        .single();
-      if (matchErr) throw matchErr;
-
-      // inserisci azioni a batch (evita payload mostro)
-      const allActions = parsed.actions.map(a => ({
-        scout_match_id: match.id,
-        scout_team_id: a.side === 'home' ? homeTeamId : awayTeamId,
-        side: a.side,
-        set_number: a.setNumber,
-        rally_index: a.rallyIndex,
-        action_index: a.actionIndex,
-        player_number: a.playerNumber,
-        skill: a.skill,
-        skill_type: a.skillType,
-        evaluation: a.evaluation,
-        start_zone: a.startZone,
-        end_zone: a.endZone,
-        end_subzone: a.endSubzone,
-        attack_combo: a.attackCombo,
-        set_combo: a.setCombo,
-        home_score: a.homeScore,
-        away_score: a.awayScore,
-        home_rotation: a.homeRotation,
-        away_rotation: a.awayRotation,
-        home_setter_pos: a.homeSetterPos,
-        away_setter_pos: a.awaySetterPos,
-        serving_side: a.servingSide,
-        raw_code: a.rawCode,
-        timestamp_clock: a.timestampClock,
-      }));
-      const BATCH = 500;
-      for (let i = 0; i < allActions.length; i += BATCH) {
-        const slice = allActions.slice(i, i + BATCH);
-        const { error } = await supabase.from('scout_actions').insert(slice);
         if (error) throw error;
+        newResults.push({
+          fileName: file.name, status: 'ok',
+          homeTeam: stats.homeTeam, awayTeam: stats.awayTeam,
+          result: stats.result, won: stats.won,
+        });
+      } catch (e: any) {
+        newResults.push({ fileName: file.name, status: 'error', message: e.message });
       }
-
-      toast.success('Match importato con successo');
-      navigate(`/match/${match.id}`);
-    } catch (e: any) {
-      console.error(e);
-      toast.error('Errore salvataggio: ' + (e?.message || 'sconosciuto'));
-      setStage('review');
     }
-  }
+
+    setResults(prev => [...newResults, ...prev]);
+    setLoading(false);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processFiles(e.dataTransfer.files);
+  }, []);
+
+  const loadArchivio = async () => {
+    setLoadingMatches(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoadingMatches(false); return; }
+    const { data } = await supabase
+      .from('dvw_matches')
+      .select('id, file_name, data, avversario, squadra_casa, risultato, set_scores, vinta')
+      .eq('user_id', user.id)
+      .order('data', { ascending: false });
+    setMatches(data || []);
+    setLoadingMatches(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Eliminare questa partita?')) return;
+    await supabase.from('dvw_matches').delete().eq('id', id);
+    setMatches(prev => prev.filter(m => m.id !== id));
+  };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-body">
-      <header className="border-b border-border/60">
-        <div className="container py-4 flex items-center gap-3">
-          <Link to="/" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></Link>
-          <h1 className="text-xl font-bold uppercase italic tracking-tight">Importa DVW</h1>
-        </div>
-      </header>
-
-      {stage === 'upload' && (
-        <div className="container py-12 max-w-2xl">
-          <div
-            onClick={() => fileInput.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }}
-            className="border-2 border-dashed border-border rounded-xl p-16 text-center cursor-pointer hover:border-primary transition-colors bg-card"
-          >
-            <FileUp className="w-12 h-12 mx-auto mb-4 text-primary" />
-            <p className="font-bold text-lg uppercase italic">Trascina qui un file .dvw</p>
-            <p className="text-sm text-muted-foreground mt-2">o clicca per scegliere</p>
-            <input
-              ref={fileInput}
-              type="file"
-              accept=".dvw"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-            />
-          </div>
-        </div>
-      )}
-
-      {stage !== 'upload' && parsed && (
-        <div className="container py-8 max-w-4xl space-y-6">
-          {/* Riepilogo parsing */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">File analizzato</p>
-                <h2 className="text-2xl font-black italic uppercase">{filename}</h2>
-              </div>
-              <span className="text-xs px-2 py-1 rounded bg-success/10 text-success font-semibold flex items-center gap-1">
-                <Check className="w-3 h-3" /> Parsing OK
-              </span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <Stat label="Data" value={parsed.header.date || '—'} />
-              <Stat label="Set" value={`${parsed.setsWon.home} - ${parsed.setsWon.away}`} />
-              <Stat label="Azioni" value={parsed.actions.length.toString()} />
-              <Stat label="Sostituzioni" value={parsed.substitutions.length.toString()} />
-            </div>
-            {parsed.warnings.length > 0 && (
-              <details className="mt-4 p-3 rounded bg-warning/10 border border-warning/30 text-xs text-warning">
-                <summary className="flex items-start gap-2 cursor-pointer">
-                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong>{parsed.warnings.length} codici non riconosciuti</strong> — le azioni standard sono comunque state importate. Clicca per vedere l'elenco.
-                  </div>
-                </summary>
-                <div className="mt-3 pl-6 font-mono text-[11px] space-y-1 max-h-48 overflow-auto">
-                  {Object.entries(
-                    parsed.warnings.reduce<Record<string, number>>((acc, w) => {
-                      acc[w] = (acc[w] || 0) + 1;
-                      return acc;
-                    }, {})
-                  )
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([code, count]) => (
-                      <div key={code} className="flex justify-between gap-4">
-                        <span>{code}</span>
-                        <span className="opacity-60">×{count}</span>
-                      </div>
-                    ))}
-                </div>
-              </details>
-            )}
-          </Card>
-
-          {/* Mapping squadre */}
-          <Card className="p-6">
-            <h3 className="font-bold uppercase italic mb-4 text-lg">Squadre</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <TeamPicker
-                title={`Squadra Home: ${parsed.teams.home.name}`}
-                choice={homeChoice} onChange={setHomeChoice}
-                knownTeams={knownTeams}
-              />
-              <TeamPicker
-                title={`Squadra Away: ${parsed.teams.away.name}`}
-                choice={awayChoice} onChange={setAwayChoice}
-                knownTeams={knownTeams}
-              />
-            </div>
-          </Card>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => { setStage('upload'); setParsed(null); }}>Annulla</Button>
-            <Button onClick={handleSave} disabled={stage === 'saving'} className="font-bold uppercase">
-              {stage === 'saving' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Salvataggio…</> : 'Salva e Analizza'}
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function TeamPicker({
-  title, choice, onChange, knownTeams,
-}: {
-  title: string;
-  choice: { mode: 'existing' | 'new'; id: string; newName: string; isOwn: boolean };
-  onChange: (c: typeof choice) => void;
-  knownTeams: KnownTeam[];
-}) {
-  return (
-    <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
-      <p className="text-sm font-semibold">{title}</p>
-
-      <div className="flex gap-2 text-xs">
-        <button
-          type="button"
-          onClick={() => onChange({ ...choice, mode: 'new' })}
-          className={`px-3 py-1.5 rounded font-semibold uppercase ${choice.mode === 'new' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-        >Crea nuova</button>
-        <button
-          type="button"
-          onClick={() => onChange({ ...choice, mode: 'existing' })}
-          className={`px-3 py-1.5 rounded font-semibold uppercase ${choice.mode === 'existing' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-        >Collega esistente</button>
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Importa DVW</h1>
+        <p className="text-muted-foreground text-sm mt-1">Carica file DataVolley (.dvw) per analizzare le partite</p>
       </div>
 
-      {choice.mode === 'new' && (
-        <>
-          <div>
-            <Label className="text-xs">Nome</Label>
-            <Input value={choice.newName} onChange={e => onChange({ ...choice, newName: e.target.value })} />
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-lg bg-secondary/40 border border-border w-fit">
+        {(['import', 'archivio'] as const).map(tab => (
+          <button key={tab}
+            onClick={() => { setActiveTab(tab); if (tab === 'archivio') loadArchivio(); }}
+            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+              activeTab === tab ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab === 'import' ? 'Importa' : 'Archivio'}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'import' && (
+        <div className="space-y-6">
+          <div
+            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${
+              isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-secondary/20'
+            }`}
+          >
+            <input type="file" accept=".dvw,.DVW" multiple
+              onChange={e => { if (e.target.files) processFiles(e.target.files); e.target.value=''; }}
+              className="absolute inset-0 opacity-0 cursor-pointer" />
+            <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+            <p className="text-foreground font-semibold text-lg">
+              {isDragging ? 'Rilascia i file DVW' : 'Trascina file DVW qui'}
+            </p>
+            <p className="text-muted-foreground text-sm mt-1">oppure clicca per selezionarli</p>
+            <p className="text-muted-foreground/60 text-xs mt-3">Supporta più file contemporaneamente</p>
           </div>
-          <label className="flex items-center gap-2 text-xs">
-            <input type="checkbox" checked={choice.isOwn} onChange={e => onChange({ ...choice, isOwn: e.target.checked })} />
-            È la mia squadra
-          </label>
-        </>
+
+          {loading && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/40 border border-border">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Importazione in corso...</span>
+            </div>
+          )}
+
+          {results.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Risultati ({results.length})
+              </h3>
+              {results.map((r, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
+                  {r.status === 'ok'
+                    ? <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    : <AlertCircle className={`w-4 h-4 flex-shrink-0 ${r.status === 'duplicate' ? 'text-yellow-400' : 'text-red-400'}`} />
+                  }
+                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{r.fileName}</p>
+                    {r.status === 'ok' && (
+                      <p className="text-xs text-muted-foreground">
+                        {r.homeTeam} vs {r.awayTeam} — {r.result} {r.won ? '✅' : '❌'}
+                      </p>
+                    )}
+                    {r.message && (
+                      <p className={`text-xs ${r.status === 'error' ? 'text-red-400' : 'text-yellow-400'}`}>
+                        {r.message}
+                      </p>
+                    )}
+                  </div>
+                  {r.status === 'ok' && (
+                    <button onClick={() => navigate('/match-analysis')}
+                      className="flex items-center gap-1 px-3 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold">
+                      <BarChart3 className="w-3 h-3" /> Analizza
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
-      {choice.mode === 'existing' && (
-        <select
-          value={choice.id}
-          onChange={e => onChange({ ...choice, id: e.target.value })}
-          className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-        >
-          <option value="">— Seleziona —</option>
-          {knownTeams.map(t => (
-            <option key={t.id} value={t.id}>{t.name}{t.is_own_team ? ' (mia)' : ''}</option>
-          ))}
-        </select>
+
+      {activeTab === 'archivio' && (
+        <div className="space-y-3">
+          {loadingMatches ? (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/40 border border-border">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Caricamento...</span>
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">Nessuna partita importata</p>
+              <p className="text-sm">Importa file DVW per iniziare</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">{matches.length} partite archiviate</p>
+                <button onClick={() => navigate('/match-analysis')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
+                  <BarChart3 className="w-3 h-3" /> Vai all'Analisi
+                </button>
+              </div>
+              {matches.map(m => (
+                <div key={m.id} className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/30 transition-colors">
+                  <div className={`w-2 h-10 rounded-full flex-shrink-0 ${m.vinta ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground">{m.squadra_casa}</span>
+                      <span className="text-muted-foreground text-sm">vs</span>
+                      <span className="font-bold text-foreground">{m.avversario}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className={`text-sm font-bold ${m.vinta ? 'text-green-400' : 'text-red-400'}`}>
+                        {m.risultato}
+                      </span>
+                      {m.set_scores && (
+                        <span className="text-xs text-muted-foreground">({m.set_scores.join(' | ')})</span>
+                      )}
+                      {m.data && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {new Date(m.data).toLocaleDateString('it-IT')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(m.id)}
+                    className="p-2 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
       )}
     </div>
   );
