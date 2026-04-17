@@ -163,7 +163,7 @@ export default function Esercizi() {
     setIntensity(ex.intensity || NONE);
     setEquipment(ex.equipment || '');
     setVideoUrl(ex.video_url || '');
-    setTagsInput(ex.tags.join(', '));
+    setTags(ex.tags || []);
     setDlgOpen(true);
   };
 
