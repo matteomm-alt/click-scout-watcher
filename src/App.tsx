@@ -33,6 +33,7 @@ import Volume from "./pages/coaching/Volume.tsx";
 import Pianificazione from "./pages/coaching/Pianificazione.tsx";
 import Periodizzazione from "./pages/coaching/Periodizzazione.tsx";
 import Obiettivi from "./pages/coaching/Obiettivi.tsx";
+import GuidaTecnica from "./pages/coaching/GuidaTecnica.tsx";
 
 // Analisi
 import ReportStagione from "./pages/analisi/ReportStagione.tsx";
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="/pianificazione" element={<Pianificazione />} />
               <Route path="/periodizzazione" element={<Periodizzazione />} />
               <Route path="/obiettivi" element={<Obiettivi />} />
+              <Route path="/guida-tecnica" element={<GuidaTecnica />} />
 
               {/* Analisi */}
               <Route path="/report-stagione" element={<ReportStagione />} />

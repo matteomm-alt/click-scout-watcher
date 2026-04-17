@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Home, FileUp, Activity, Library,
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
-  Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange,
+  Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
   PieChart, UserCircle, Star,
   LogOut, Shield, Boxes,
 } from 'lucide-react';
@@ -52,6 +52,7 @@ const COACHING: NavItem[] = [
   { title: 'Pianificazione', url: '/pianificazione', icon: CalendarRange },
   { title: 'Periodizzazione', url: '/periodizzazione', icon: Workflow },
   { title: 'Obiettivi', url: '/obiettivi', icon: Target },
+  { title: 'Guida Tecnica', url: '/guida-tecnica', icon: BookOpen },
 ];
 
 const ANALISI: NavItem[] = [
