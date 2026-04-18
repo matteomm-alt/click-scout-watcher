@@ -31,7 +31,7 @@ interface PlayerRow {
   role: string | null;
 }
 
-type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'compare' | 'charts';
+type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'compare' | 'charts' | 'advanced';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Panoramica' },
@@ -40,6 +40,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'players', label: 'Giocatori' },
   { key: 'rotations', label: 'Rotazioni' },
   { key: 'compare', label: 'Confronto' },
+  { key: 'advanced', label: 'Avanzate' },
 ];
 
 export default function MatchAnalysis() {
@@ -259,6 +260,7 @@ export default function MatchAnalysis() {
           {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} />}
           {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
           {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} />}
+          {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
         </section>
       </main>
     </div>
@@ -272,7 +274,7 @@ function Overview({ actions, setResults }: { actions: DbAction[]; setResults: an
       <div className="grid md:grid-cols-3 gap-4">
         <KpiCard label="Azioni totali" value={actions.length} />
         <KpiCard label="Punti diretti (#)" value={actions.filter(a => a.evaluation === '#').length} />
-        <KpiCard label="Errori (= /)" value={actions.filter(a => a.evaluation === '=' || a.evaluation === '/').length} />
+        <KpiCard label="Errori diretti (=)" value={actions.filter(a => a.evaluation === '=').length} />
       </div>
       <Card className="p-5">
         <h3 className="text-sm font-bold uppercase italic mb-4">Statistiche per skill</h3>
@@ -514,6 +516,170 @@ function CompareTab({ actions, match }: { actions: DbAction[]; match: MatchRow }
             );
           })}
         </div>
+      </Card>
+    </div>
+  );
+}
+
+function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[]; allActions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
+  const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
+
+  const rallies = new Map<number, DbAction[]>();
+  allActions.forEach(a => {
+    if (!rallies.has(a.rally_index)) rallies.set(a.rally_index, []);
+    rallies.get(a.rally_index)!.push(a);
+  });
+
+  let fbso_att = 0, fbso_pts = 0, so_att = 0, so_pts = 0;
+  let ps_att = 0, ps_pts = 0, fbps_att = 0, fbps_pts = 0;
+
+  rallies.forEach(rally => {
+    const home = rally.filter(a => a.scout_team_id === teamId);
+    const away = rally.filter(a => a.scout_team_id !== teamId);
+    const homeRec = home.findIndex(a => a.skill === 'R');
+    if (homeRec >= 0) {
+      const atts = home.slice(homeRec).filter(a => a.skill === 'A');
+      if (atts.length) {
+        so_att++; if (atts.some(a => a.evaluation === '#')) so_pts++;
+        fbso_att++; if (atts[0].evaluation === '#') fbso_pts++;
+      }
+    }
+    const awayRec = away.findIndex(a => a.skill === 'R');
+    if (awayRec >= 0 && homeRec < 0) {
+      const atts = home.filter(a => a.skill === 'A');
+      if (atts.length) {
+        ps_att++; if (atts.some(a => a.evaluation === '#')) ps_pts++;
+        fbps_att++; if (atts[0].evaluation === '#') fbps_pts++;
+      }
+    }
+  });
+
+  const systemStats = [
+    { label: 'FBSO', desc: '1° att. dopo ric.', att: fbso_att, pts: fbso_pts, pct: pct(fbso_pts, fbso_att) },
+    { label: 'SO',   desc: 'Side Out',           att: so_att,   pts: so_pts,   pct: pct(so_pts, so_att) },
+    { label: 'PS',   desc: 'Point Score',         att: ps_att,   pts: ps_pts,   pct: pct(ps_pts, ps_att) },
+    { label: 'FBPS', desc: '1° att. in PS',       att: fbps_att, pts: fbps_pts, pct: pct(fbps_pts, fbps_att) },
+  ];
+
+  const attActs = actions.filter(a => a.skill === 'A');
+  const kills = attActs.filter(a => a.evaluation === '#').length;
+  const attErr = attActs.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+  const hitEff = attActs.length ? ((kills - attErr) / attActs.length * 100).toFixed(1) : '—';
+
+  const [dirSkill, setDirSkill] = useState<string>('A');
+  const dirActs = actions.filter(a => a.skill === dirSkill && a.start_zone && a.end_zone);
+
+  const ZC: Record<number, [number, number]> = {
+    1: [225,200], 2: [225,70], 3: [150,70],
+    4: [75,70],   5: [75,200], 6: [150,200],
+    7: [50,250],  8: [150,250], 9: [250,250],
+  };
+
+  const grouped: Record<string, { count: number; pts: number }> = {};
+  dirActs.forEach(a => {
+    const key = `${a.start_zone}-${a.end_zone}`;
+    if (!grouped[key]) grouped[key] = { count: 0, pts: 0 };
+    grouped[key].count++;
+    if (a.evaluation === '#' || a.evaluation === '+') grouped[key].pts++;
+  });
+  const maxCount = Math.max(1, ...Object.values(grouped).map(g => g.count));
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Sistema — FBSO / SO / PS / FBPS</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {systemStats.map(s => (
+            <div key={s.label} className="text-center p-3 rounded-lg bg-muted/30 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">{s.desc}</p>
+              <p className="text-3xl font-black italic text-primary">{s.pct}%</p>
+              <p className="text-xs font-bold text-muted-foreground mt-1">{s.label}</p>
+              <p className="text-xs text-muted-foreground">{s.pts}/{s.att}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          FBSO = 1° attacco dopo ricezione → punto · SO = side out · PS = point score · FBPS = 1° attacco in PS
+        </p>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Hitting Efficiency Attacco</h3>
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-4xl font-black italic text-primary">{hitEff}{attActs.length ? '%' : ''}</p>
+            <p className="text-xs text-muted-foreground mt-1">Eff = (Kills − Err) / Att</p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-black italic text-success">{kills}</p>
+              <p className="text-xs text-muted-foreground">Kills (#)</p>
+            </div>
+            <div>
+              <p className="text-2xl font-black italic text-destructive">{attErr}</p>
+              <p className="text-xs text-muted-foreground">Errori (= /)</p>
+            </div>
+            <div>
+              <p className="text-2xl font-black italic">{attActs.length}</p>
+              <p className="text-xs text-muted-foreground">Tentativi</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold uppercase italic">Directional Lines</h3>
+          <div className="flex gap-1">
+            {['A', 'S', 'R'].map(sk => (
+              <button key={sk} onClick={() => setDirSkill(sk)}
+                className={`px-3 py-1 rounded text-xs font-bold uppercase transition-colors ${dirSkill === sk ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                {SKILL_NAMES[sk] || sk}
+              </button>
+            ))}
+          </div>
+        </div>
+        <svg viewBox="0 0 300 270" className="w-full max-w-xs mx-auto rounded-lg overflow-hidden"
+          style={{ background: 'linear-gradient(180deg, hsl(var(--muted)) 0%, hsl(var(--card)) 100%)' }}>
+          <rect x={30} y={10} width={240} height={250} fill="none" stroke="hsl(var(--border))" strokeWidth={1} />
+          <line x1={30} y1={135} x2={270} y2={135} stroke="hsl(var(--foreground))" strokeWidth={2} strokeOpacity={0.5} />
+          <line x1={30} y1={75} x2={270} y2={75} stroke="hsl(var(--border))" strokeWidth={1} strokeDasharray="4,3" />
+          <line x1={30} y1={195} x2={270} y2={195} stroke="hsl(var(--border))" strokeWidth={1} strokeDasharray="4,3" />
+          {[110,150,190].map(x => (
+            <line key={x} x1={x} y1={10} x2={x} y2={260} stroke="hsl(var(--border))" strokeWidth={0.5} />
+          ))}
+          <text x={150} y={131} textAnchor="middle" fontSize={7} fill="hsl(var(--muted-foreground))">RETE</text>
+          {Object.entries(ZC).map(([z, [cx, cy]]) => (
+            <text key={z} x={cx} y={cy+3} textAnchor="middle" fontSize={8} fill="hsl(var(--muted-foreground))" opacity={0.4} fontWeight="bold">{z}</text>
+          ))}
+          {Object.entries(grouped).map(([key, { count, pts }]) => {
+            const [z1s, z2s] = key.split('-');
+            const from = ZC[parseInt(z1s)];
+            const to = ZC[parseInt(z2s)];
+            if (!from || !to) return null;
+            const thickness = Math.max(1, (count / maxCount) * 5);
+            const posRatio = pts / count;
+            const col = posRatio >= 0.6 ? 'hsl(var(--success))' : posRatio >= 0.3 ? 'hsl(var(--warning))' : 'hsl(var(--destructive))';
+            const dx = to[0]-from[0], dy = to[1]-from[1];
+            const len = Math.sqrt(dx*dx+dy*dy) || 1;
+            const nx = dx/len, ny = dy/len;
+            const ex = to[0]-nx*8, ey = to[1]-ny*8;
+            return (
+              <g key={key}>
+                <line x1={from[0]} y1={from[1]} x2={ex} y2={ey}
+                  stroke={col} strokeWidth={thickness} strokeOpacity={0.7} strokeLinecap="round" />
+                <polygon points={`${to[0]},${to[1]} ${ex-ny*4},${ey+nx*4} ${ex+ny*4},${ey-nx*4}`}
+                  fill={col} fillOpacity={0.8} />
+                {count > 1 && (
+                  <text x={(from[0]+to[0])/2} y={(from[1]+to[1])/2} textAnchor="middle" fontSize={7} fill="hsl(var(--foreground))">{count}</text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+        <p className="text-xs text-muted-foreground mt-3 text-center">
+          Verde = positivo · Giallo = neutro · Rosso = errore · Spessore = volume
+        </p>
       </Card>
     </div>
   );
