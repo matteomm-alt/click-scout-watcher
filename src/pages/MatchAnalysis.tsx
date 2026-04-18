@@ -9,6 +9,7 @@ import { ArrowLeft, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
 import { ChartsTab } from '@/components/ChartsTab';
+import { MatchSelector } from '@/components/MatchSelector';
 
 interface MatchRow {
   id: string;
@@ -52,10 +53,45 @@ export default function MatchAnalysis() {
   const [tab, setTab] = useState<TabKey>('overview');
   const [teamFilter, setTeamFilter] = useState<'home' | 'away'>('home');
   const [filters, setFilters] = useState<AnalysisFilters>(EMPTY_FILTERS);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(id ? [id] : []));
+  const [multiActions, setMultiActions] = useState<DbAction[]>([]);
+  const [loadingMulti, setLoadingMulti] = useState(false);
 
   useEffect(() => {
     setFilters(f => ({ ...f, playerNumbers: [] }));
   }, [teamFilter]);
+
+  // Carica azioni per tutte le gare selezionate
+  useEffect(() => {
+    if (selectedIds.size === 0) { setMultiActions([]); return; }
+    if (selectedIds.size === 1 && selectedIds.has(id || '')) {
+      setMultiActions(actions);
+      return;
+    }
+    setLoadingMulti(true);
+    (async () => {
+      const ids = [...selectedIds];
+      const all: DbAction[] = [];
+      for (const matchId of ids) {
+        let from = 0;
+        const PAGE = 1000;
+        while (true) {
+          const { data, error } = await supabase
+            .from('scout_actions')
+            .select('*')
+            .eq('scout_match_id', matchId)
+            .order('set_number').order('rally_index').order('action_index')
+            .range(from, from + PAGE - 1);
+          if (error || !data || data.length === 0) break;
+          all.push(...(data as any));
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
+      }
+      setMultiActions(all);
+      setLoadingMulti(false);
+    })();
+  }, [selectedIds, actions, id]);
 
   useEffect(() => {
     if (!id) return;
@@ -102,16 +138,19 @@ export default function MatchAnalysis() {
 
   const teamId = teamFilter === 'home' ? match?.home_team.id : match?.away_team.id;
 
+  // Azioni aggregate su tutte le gare selezionate
+  const aggregatedActions = selectedIds.size <= 1 ? actions : multiActions;
+
   const teamActionsRaw = useMemo(
-    () => actions.filter(a => a.scout_team_id === teamId),
-    [actions, teamId]
+    () => aggregatedActions.filter(a => a.scout_team_id === teamId),
+    [aggregatedActions, teamId]
   );
 
   const availableSets = useMemo(() => {
     const s = new Set<number>();
-    for (const a of actions) s.add(a.set_number);
+    for (const a of aggregatedActions) s.add(a.set_number);
     return [...s].sort((a, b) => a - b);
-  }, [actions]);
+  }, [aggregatedActions]);
 
   const availableSkills = useMemo(() => {
     const s = new Set<string>();
@@ -170,7 +209,7 @@ export default function MatchAnalysis() {
   }, [teamActionsRaw, filters, teamFilter]);
 
   const filteredAllActions = useMemo(() => {
-    return actions.filter(a => {
+    return aggregatedActions.filter(a => {
       if (filters.setNumbers.length && !filters.setNumbers.includes(a.set_number)) return false;
       if (filters.skills.length && !filters.skills.includes(a.skill)) return false;
       if (filters.evaluations.length && !filters.evaluations.includes(a.evaluation)) return false;
@@ -189,7 +228,7 @@ export default function MatchAnalysis() {
       }
       return true;
     });
-  }, [actions, filters, teamId, teamFilter]);
+  }, [aggregatedActions, filters, teamId, teamFilter]);
 
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
@@ -227,6 +266,22 @@ export default function MatchAnalysis() {
           </div>
         </div>
       </header>
+
+      {/* Selettore gare */}
+      <div className="container py-3 border-b border-border/40">
+        <div className="flex items-center gap-3">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground whitespace-nowrap">Gare:</span>
+          <div className="flex-1 max-w-lg">
+            <MatchSelector
+              currentMatchId={id}
+              selectedIds={selectedIds}
+              onChange={setSelectedIds}
+            />
+          </div>
+          {loadingMulti && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin flex-shrink-0" />}
+          <span className="text-xs text-muted-foreground whitespace-nowrap">{(selectedIds.size <= 1 ? actions : multiActions).length} azioni</span>
+        </div>
+      </div>
 
       <div className="container py-4 flex items-center gap-2">
         <span className="text-xs uppercase tracking-widest text-muted-foreground mr-2">Squadra:</span>
