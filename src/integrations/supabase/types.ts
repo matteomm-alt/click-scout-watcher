@@ -405,6 +405,66 @@ export type Database = {
           },
         ]
       }
+      dvw_matches: {
+        Row: {
+          avversario: string | null
+          data: string | null
+          directional: Json | null
+          file_name: string
+          hit_eff: Json | null
+          id: string
+          imported_at: string | null
+          player_stats: Json | null
+          risultato: string | null
+          rot_stats: Json | null
+          set_scores: string[] | null
+          setter_name: string | null
+          squadra_casa: string | null
+          system_stats: Json | null
+          team_stats: Json | null
+          user_id: string
+          vinta: boolean | null
+        }
+        Insert: {
+          avversario?: string | null
+          data?: string | null
+          directional?: Json | null
+          file_name: string
+          hit_eff?: Json | null
+          id?: string
+          imported_at?: string | null
+          player_stats?: Json | null
+          risultato?: string | null
+          rot_stats?: Json | null
+          set_scores?: string[] | null
+          setter_name?: string | null
+          squadra_casa?: string | null
+          system_stats?: Json | null
+          team_stats?: Json | null
+          user_id: string
+          vinta?: boolean | null
+        }
+        Update: {
+          avversario?: string | null
+          data?: string | null
+          directional?: Json | null
+          file_name?: string
+          hit_eff?: Json | null
+          id?: string
+          imported_at?: string | null
+          player_stats?: Json | null
+          risultato?: string | null
+          rot_stats?: Json | null
+          set_scores?: string[] | null
+          setter_name?: string | null
+          squadra_casa?: string | null
+          system_stats?: Json | null
+          team_stats?: Json | null
+          user_id?: string
+          vinta?: boolean | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           color: string | null
