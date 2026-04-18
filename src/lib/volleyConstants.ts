@@ -13,6 +13,18 @@ export const FUNDAMENTALS = [
 
 export type Fundamental = typeof FUNDAMENTALS[number];
 
+// Ruoli pallavolo (per filtro target negli allenamenti)
+export const VOLLEY_ROLES = [
+  'Palleggiatore',
+  'Opposto',
+  'Schiacciatore',
+  'Centrale',
+  'Libero',
+  'Universale',
+] as const;
+
+export type VolleyRole = typeof VOLLEY_ROLES[number];
+
 export const AGE_GROUPS = [
   'U12',
   'U13',
