@@ -44,6 +44,8 @@ interface TrainingRow {
   scheduled_date: string | null;
   duration_min: number | null;
   title: string;
+  status: string;
+  is_template: boolean;
 }
 interface BlockRow {
   id: string;
@@ -90,7 +92,14 @@ export default function Volume() {
     setLoading(true);
     const [exRes, trRes] = await Promise.all([
       supabase.from('exercises').select('id, name, fundamental, tags').eq('society_id', societyId),
-      supabase.from('trainings').select('id, scheduled_date, duration_min, title').eq('society_id', societyId).order('scheduled_date', { ascending: false }).limit(500),
+      supabase
+        .from('trainings')
+        .select('id, scheduled_date, duration_min, title, status, is_template')
+        .eq('society_id', societyId)
+        .eq('is_template', false)
+        .eq('status', 'completato')
+        .order('scheduled_date', { ascending: false })
+        .limit(500),
     ]);
     if (exRes.error) toast({ title: 'Errore esercizi', description: exRes.error.message, variant: 'destructive' });
     if (trRes.error) toast({ title: 'Errore allenamenti', description: trRes.error.message, variant: 'destructive' });
@@ -308,8 +317,8 @@ export default function Volume() {
             Volume di lavoro
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">
-            Minuti di lavoro calcolati automaticamente dagli allenamenti di{' '}
-            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag vengono ereditati dagli esercizi assegnati ai blocchi.
+            Minuti calcolati automaticamente dagli <strong className="text-foreground">allenamenti completati</strong> di{' '}
+            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag ereditati dagli esercizi nei blocchi.
           </p>
         </div>
       </div>
