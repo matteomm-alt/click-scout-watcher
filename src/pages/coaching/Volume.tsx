@@ -317,8 +317,8 @@ export default function Volume() {
             Volume di lavoro
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">
-            Minuti di lavoro calcolati automaticamente dagli allenamenti di{' '}
-            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag vengono ereditati dagli esercizi assegnati ai blocchi.
+            Minuti calcolati automaticamente dagli <strong className="text-foreground">allenamenti completati</strong> di{' '}
+            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag ereditati dagli esercizi nei blocchi.
           </p>
         </div>
       </div>
