@@ -133,6 +133,7 @@ export type Database = {
           number: number | null
           role: string | null
           society_id: string
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -148,6 +149,7 @@ export type Database = {
           number?: number | null
           role?: string | null
           society_id: string
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -163,6 +165,7 @@ export type Database = {
           number?: number | null
           role?: string | null
           society_id?: string
+          team_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -171,6 +174,13 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athletes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -1320,6 +1330,53 @@ export type Database = {
           },
         ]
       }
+      teams: {
+        Row: {
+          age_group: string | null
+          category: string | null
+          coach_id: string
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          season: string | null
+          society_id: string
+          updated_at: string
+        }
+        Insert: {
+          age_group?: string | null
+          category?: string | null
+          coach_id: string
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          season?: string | null
+          society_id: string
+          updated_at?: string
+        }
+        Update: {
+          age_group?: string | null
+          category?: string | null
+          coach_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          season?: string | null
+          society_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technical_guidelines: {
         Row: {
           age_group: string | null
@@ -1378,7 +1435,9 @@ export type Database = {
           id: string
           intensity: string | null
           order_index: number
+          players_count: number | null
           reps: number | null
+          roles: string[]
           title: string
           training_id: string
         }
@@ -1389,7 +1448,9 @@ export type Database = {
           id?: string
           intensity?: string | null
           order_index?: number
+          players_count?: number | null
           reps?: number | null
+          roles?: string[]
           title: string
           training_id: string
         }
@@ -1400,7 +1461,9 @@ export type Database = {
           id?: string
           intensity?: string | null
           order_index?: number
+          players_count?: number | null
           reps?: number | null
+          roles?: string[]
           title?: string
           training_id?: string
         }
@@ -1471,33 +1534,45 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          goals: string | null
           id: string
           name: string
+          schedule: Json
           society_id: string
+          team_id: string | null
           total_duration_min: number | null
           updated_at: string
+          weeks_count: number
         }
         Insert: {
           blocks?: Json
           created_at?: string
           created_by: string
           description?: string | null
+          goals?: string | null
           id?: string
           name: string
+          schedule?: Json
           society_id: string
+          team_id?: string | null
           total_duration_min?: number | null
           updated_at?: string
+          weeks_count?: number
         }
         Update: {
           blocks?: Json
           created_at?: string
           created_by?: string
           description?: string | null
+          goals?: string | null
           id?: string
           name?: string
+          schedule?: Json
           society_id?: string
+          team_id?: string | null
           total_duration_min?: number | null
           updated_at?: string
+          weeks_count?: number
         }
         Relationships: [
           {
@@ -1505,6 +1580,13 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_skeletons_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -1517,11 +1599,17 @@ export type Database = {
           event_id: string | null
           goal: string | null
           id: string
+          is_template: boolean
           notes: string | null
+          participating_athlete_ids: string[]
+          players_count: number | null
+          roles: string[]
           scheduled_date: string | null
           skeleton_id: string | null
           society_id: string
           status: string
+          team_id: string | null
+          template_name: string | null
           title: string
           updated_at: string
         }
@@ -1532,11 +1620,17 @@ export type Database = {
           event_id?: string | null
           goal?: string | null
           id?: string
+          is_template?: boolean
           notes?: string | null
+          participating_athlete_ids?: string[]
+          players_count?: number | null
+          roles?: string[]
           scheduled_date?: string | null
           skeleton_id?: string | null
           society_id: string
           status?: string
+          team_id?: string | null
+          template_name?: string | null
           title: string
           updated_at?: string
         }
@@ -1547,11 +1641,17 @@ export type Database = {
           event_id?: string | null
           goal?: string | null
           id?: string
+          is_template?: boolean
           notes?: string | null
+          participating_athlete_ids?: string[]
+          players_count?: number | null
+          roles?: string[]
           scheduled_date?: string | null
           skeleton_id?: string | null
           society_id?: string
           status?: string
+          team_id?: string | null
+          template_name?: string | null
           title?: string
           updated_at?: string
         }
@@ -1575,6 +1675,13 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
