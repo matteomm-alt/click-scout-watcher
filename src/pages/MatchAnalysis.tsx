@@ -10,6 +10,10 @@ import { Card } from '@/components/ui/card';
 import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
 import { ChartsTab } from '@/components/ChartsTab';
 import { MatchSelector } from '@/components/MatchSelector';
+import { SetProgressTab } from '@/components/SetProgressTab';
+import { TechTypesTab } from '@/components/TechTypesTab';
+import { RotationsDetailTab } from '@/components/RotationsDetailTab';
+import { SetDistributionTab } from '@/components/SetDistributionTab';
 
 interface MatchRow {
   id: string;
@@ -61,7 +65,6 @@ export default function MatchAnalysis() {
     setFilters(f => ({ ...f, playerNumbers: [] }));
   }, [teamFilter]);
 
-  // Carica azioni per tutte le gare selezionate
   useEffect(() => {
     if (selectedIds.size === 0) { setMultiActions([]); return; }
     if (selectedIds.size === 1 && selectedIds.has(id || '')) {
@@ -138,7 +141,6 @@ export default function MatchAnalysis() {
 
   const teamId = teamFilter === 'home' ? match?.home_team.id : match?.away_team.id;
 
-  // Azioni aggregate su tutte le gare selezionate
   const aggregatedActions = selectedIds.size <= 1 ? actions : multiActions;
 
   const teamActionsRaw = useMemo(
@@ -267,7 +269,6 @@ export default function MatchAnalysis() {
         </div>
       </header>
 
-      {/* Selettore gare */}
       <div className="container py-3 border-b border-border/40">
         <div className="flex items-center gap-3">
           <span className="text-xs uppercase tracking-widest text-muted-foreground whitespace-nowrap">Gare:</span>
@@ -641,6 +642,11 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
 
   return (
     <div className="space-y-6">
+      <SetProgressTab actions={actions} />
+      <TechTypesTab actions={actions} />
+      <RotationsDetailTab actions={actions} side={side} />
+      <SetDistributionTab actions={actions} />
+
       <Card className="p-5">
         <h3 className="text-sm font-bold uppercase italic mb-4">Sistema — FBSO / SO / PS / FBPS</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
