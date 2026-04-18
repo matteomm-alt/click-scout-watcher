@@ -1,24 +1,37 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { TagPicker } from '@/components/TagPicker';
 import { FUNDAMENTALS } from '@/lib/volleyConstants';
 import {
-  BarChart3, Plus, Loader2, Trash2, Tag as TagIcon, Calendar as CalendarIcon, X,
+  BarChart3, Loader2, Tag as TagIcon, Clock, Calendar as CalendarIcon, X, TrendingUp,
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
+} from 'recharts';
+import {
+  startOfWeek, endOfWeek, startOfMonth, endOfMonth, format, parseISO,
+  isWithinInterval, addDays, addWeeks, addMonths,
+} from 'date-fns';
+import { it } from 'date-fns/locale';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODELLO
+//  - I MINUTI vengono ereditati dagli ALLENAMENTI (trainings + training_blocks)
+//  - Ogni training_block può avere un exercise_id → fondamentale + tags
+//  - Se il block ha duration_min lo usiamo, altrimenti distribuiamo proporzionalmente
+//    la training.duration_min sui blocchi senza durata
+//  - Aggregazioni: per fondamentale, per tag, per periodo (settimana/mese/stagione)
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface Exercise {
   id: string;
@@ -26,220 +39,249 @@ interface Exercise {
   fundamental: string | null;
   tags: string[];
 }
-
-interface Athlete {
+interface TrainingRow {
   id: string;
-  first_name: string | null;
-  last_name: string;
+  scheduled_date: string | null;
+  duration_min: number | null;
+  title: string;
+}
+interface BlockRow {
+  id: string;
+  training_id: string;
+  exercise_id: string | null;
+  duration_min: number | null;
+  title: string;
 }
 
-interface VolumeLog {
-  id: string;
-  log_date: string;
+/** Una "unità di volume" calcolata: minuti spesi su un fondamentale/tags in una data */
+interface VolumeUnit {
+  date: string;            // YYYY-MM-DD
+  minutes: number;
   fundamental: string | null;
-  reps: number | null;
-  intensity: string | null;
-  notes: string | null;
-  athlete_id: string | null;
-  training_id: string | null;
-  // Campi non in DB: derivati da training_blocks → exercises (per ora teniamo l'esercizio in notes/tagging client-side via map)
+  tags: string[];
+  source: 'block' | 'training-only';
+  trainingTitle: string;
+  exerciseName?: string;
 }
-
-/**
- * VolumeLog estesa lato client con tag derivati dall'esercizio scelto.
- * I tag NON sono salvati su volume_logs (per scelta progettuale): vengono ereditati
- * dal `fundamental` del log e — quando il log è collegato a un esercizio — dai tag dell'esercizio.
- * Per ora l'esercizio è collegato indirettamente: l'utente lo seleziona al momento del log,
- * salviamo `fundamental` (denormalizzato) e mostriamo il nome esercizio nelle note.
- *
- * Per filtrare/aggregare per tag manteniamo una mappa local: notes pattern "[ex:<id>] <testo>".
- */
 
 const ALL = '__ALL__';
-const NONE = '__NONE__';
-const INTENSITIES = ['Bassa', 'Media', 'Alta', 'Massimale'] as const;
-
-const EX_TAG_PREFIX = '[ex:';
-const EX_TAG_END = ']';
-
-function extractExerciseId(notes: string | null): string | null {
-  if (!notes) return null;
-  const m = notes.match(/^\[ex:([0-9a-f-]{36})\]/i);
-  return m?.[1] ?? null;
-}
-function stripExerciseTag(notes: string | null): string {
-  if (!notes) return '';
-  return notes.replace(/^\[ex:[0-9a-f-]{36}\]\s*/i, '');
-}
 
 export default function Volume() {
-  const { user } = useAuth();
-  const { societyId, societyName, loading: socLoading } = useActiveSociety();
+  const { societyId, societyName, seasonStart, seasonEnd, loading: socLoading } = useActiveSociety();
   const { toast } = useToast();
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [logs, setLogs] = useState<VolumeLog[]>([]);
+  const [trainings, setTrainings] = useState<TrainingRow[]>([]);
+  const [blocks, setBlocks] = useState<BlockRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filtri
   const [fFund, setFFund] = useState<string>(ALL);
-  const [fAthlete, setFAthlete] = useState<string>(ALL);
   const [fTags, setFTags] = useState<string[]>([]);
   const [fFrom, setFFrom] = useState<string>('');
   const [fTo, setFTo] = useState<string>('');
-
-  // Form
-  const [dlgOpen, setDlgOpen] = useState(false);
-  const [logDate, setLogDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [exerciseId, setExerciseId] = useState<string>(NONE);
-  const [fundamental, setFundamental] = useState<string>(NONE);
-  const [reps, setReps] = useState<string>('');
-  const [intensity, setIntensity] = useState<string>(NONE);
-  const [athleteId, setAthleteId] = useState<string>(NONE);
-  const [notesText, setNotesText] = useState<string>('');
-  const [submitting, setSubmitting] = useState(false);
+  const [view, setView] = useState<'week' | 'month' | 'season'>('week');
 
   const load = async () => {
     if (!societyId) {
-      setExercises([]); setAthletes([]); setLogs([]); setLoading(false);
+      setExercises([]); setTrainings([]); setBlocks([]); setLoading(false);
       return;
     }
     setLoading(true);
-    const [exRes, athRes, logRes] = await Promise.all([
-      supabase.from('exercises').select('id, name, fundamental, tags').eq('society_id', societyId).order('name'),
-      supabase.from('athletes').select('id, first_name, last_name').eq('society_id', societyId).order('last_name'),
-      supabase.from('volume_logs').select('*').eq('society_id', societyId).order('log_date', { ascending: false }).limit(500),
+    const [exRes, trRes] = await Promise.all([
+      supabase.from('exercises').select('id, name, fundamental, tags').eq('society_id', societyId),
+      supabase.from('trainings').select('id, scheduled_date, duration_min, title').eq('society_id', societyId).order('scheduled_date', { ascending: false }).limit(500),
     ]);
     if (exRes.error) toast({ title: 'Errore esercizi', description: exRes.error.message, variant: 'destructive' });
-    if (athRes.error) toast({ title: 'Errore atleti', description: athRes.error.message, variant: 'destructive' });
-    if (logRes.error) toast({ title: 'Errore log', description: logRes.error.message, variant: 'destructive' });
+    if (trRes.error) toast({ title: 'Errore allenamenti', description: trRes.error.message, variant: 'destructive' });
+
+    const trainingsList = (trRes.data || []) as TrainingRow[];
+    let blocksList: BlockRow[] = [];
+    if (trainingsList.length > 0) {
+      const ids = trainingsList.map((t) => t.id);
+      const blRes = await supabase
+        .from('training_blocks')
+        .select('id, training_id, exercise_id, duration_min, title')
+        .in('training_id', ids);
+      if (blRes.error) toast({ title: 'Errore blocchi', description: blRes.error.message, variant: 'destructive' });
+      blocksList = (blRes.data || []) as BlockRow[];
+    }
+
     setExercises((exRes.data || []) as Exercise[]);
-    setAthletes((athRes.data || []) as Athlete[]);
-    setLogs((logRes.data || []) as VolumeLog[]);
+    setTrainings(trainingsList);
+    setBlocks(blocksList);
     setLoading(false);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [societyId]);
 
   const exerciseMap = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
-  const athleteMap = useMemo(() => new Map(athletes.map((a) => [a.id, a])), [athletes]);
 
-  // Quando l'utente sceglie un esercizio, prepopola fundamental
-  const onPickExercise = (id: string) => {
-    setExerciseId(id);
-    if (id !== NONE) {
-      const ex = exerciseMap.get(id);
-      if (ex?.fundamental) setFundamental(ex.fundamental);
+  // ── Calcolo unità di volume in MINUTI ──────────────────────────────────────
+  const units = useMemo<VolumeUnit[]>(() => {
+    const out: VolumeUnit[] = [];
+    for (const t of trainings) {
+      if (!t.scheduled_date) continue;
+      const tBlocks = blocks.filter((b) => b.training_id === t.id);
+      if (tBlocks.length === 0) {
+        // Allenamento senza blocchi → conta come minuti generici se ha durata
+        if (t.duration_min) {
+          out.push({
+            date: t.scheduled_date,
+            minutes: t.duration_min,
+            fundamental: null,
+            tags: [],
+            source: 'training-only',
+            trainingTitle: t.title,
+          });
+        }
+        continue;
+      }
+      // Distribuzione minuti: blocchi con duration_min usano la propria; quelli senza
+      // si dividono proporzionalmente la durata residua dell'allenamento.
+      const known = tBlocks.reduce((s, b) => s + (b.duration_min || 0), 0);
+      const unknown = tBlocks.filter((b) => !b.duration_min);
+      const remaining = Math.max(0, (t.duration_min || 0) - known);
+      const perUnknown = unknown.length > 0 ? remaining / unknown.length : 0;
+
+      for (const b of tBlocks) {
+        const minutes = b.duration_min ?? perUnknown;
+        if (minutes <= 0) continue;
+        const ex = b.exercise_id ? exerciseMap.get(b.exercise_id) : null;
+        out.push({
+          date: t.scheduled_date,
+          minutes,
+          fundamental: ex?.fundamental ?? null,
+          tags: ex?.tags ?? [],
+          source: 'block',
+          trainingTitle: t.title,
+          exerciseName: ex?.name,
+        });
+      }
     }
-  };
+    return out;
+  }, [trainings, blocks, exerciseMap]);
 
-  // Tag ereditati per ogni log (dall'esercizio collegato)
-  const tagsForLog = (l: VolumeLog): string[] => {
-    const exId = extractExerciseId(l.notes);
-    if (!exId) return [];
-    return exerciseMap.get(exId)?.tags || [];
-  };
-
-  // Tutti i tag in uso (per autocomplete filtro)
   const allUsedTags = useMemo(
-    () => Array.from(new Set(exercises.flatMap((e) => e.tags))),
+    () => Array.from(new Set(exercises.flatMap((e) => e.tags))).sort(),
     [exercises]
   );
 
-  // Filtri applicati
-  const filteredLogs = useMemo(() => {
+  // ── Filtri ─────────────────────────────────────────────────────────────────
+  const filteredUnits = useMemo(() => {
     const tagFilters = fTags.map((t) => t.toLowerCase());
-    return logs.filter((l) => {
-      if (fFund !== ALL && l.fundamental !== fFund) return false;
-      if (fAthlete !== ALL) {
-        if (fAthlete === NONE && l.athlete_id) return false;
-        if (fAthlete !== NONE && l.athlete_id !== fAthlete) return false;
-      }
-      if (fFrom && l.log_date < fFrom) return false;
-      if (fTo && l.log_date > fTo) return false;
+    return units.filter((u) => {
+      if (fFund !== ALL && u.fundamental !== fFund) return false;
+      if (fFrom && u.date < fFrom) return false;
+      if (fTo && u.date > fTo) return false;
       if (tagFilters.length > 0) {
-        const lower = tagsForLog(l).map((t) => t.toLowerCase());
+        const lower = u.tags.map((t) => t.toLowerCase());
         if (!tagFilters.every((t) => lower.includes(t))) return false;
       }
       return true;
     });
-  }, [logs, fFund, fAthlete, fTags, fFrom, fTo, exerciseMap]);
+  }, [units, fFund, fTags, fFrom, fTo]);
 
-  // Aggregazioni
-  const totalReps = filteredLogs.reduce((s, l) => s + (l.reps || 0), 0);
+  // ── Aggregazioni KPI ───────────────────────────────────────────────────────
+  const totalMinutes = filteredUnits.reduce((s, u) => s + u.minutes, 0);
+  const totalSessions = useMemo(
+    () => new Set(filteredUnits.map((u) => `${u.date}|${u.trainingTitle}`)).size,
+    [filteredUnits]
+  );
+
   const byFundamental = useMemo(() => {
     const m = new Map<string, number>();
-    filteredLogs.forEach((l) => {
-      const k = l.fundamental || '—';
-      m.set(k, (m.get(k) || 0) + (l.reps || 0));
+    filteredUnits.forEach((u) => {
+      const k = u.fundamental || 'Generico';
+      m.set(k, (m.get(k) || 0) + u.minutes);
     });
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
-  }, [filteredLogs]);
+    return Array.from(m.entries())
+      .map(([name, minutes]) => ({ name, minutes: Math.round(minutes) }))
+      .sort((a, b) => b.minutes - a.minutes);
+  }, [filteredUnits]);
 
   const byTag = useMemo(() => {
     const m = new Map<string, number>();
-    filteredLogs.forEach((l) => {
-      tagsForLog(l).forEach((t) => {
-        m.set(t, (m.get(t) || 0) + (l.reps || 0));
-      });
+    filteredUnits.forEach((u) => {
+      u.tags.forEach((t) => m.set(t, (m.get(t) || 0) + u.minutes));
     });
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
-  }, [filteredLogs, exerciseMap]);
+    return Array.from(m.entries())
+      .map(([name, minutes]) => ({ name, minutes: Math.round(minutes) }))
+      .sort((a, b) => b.minutes - a.minutes);
+  }, [filteredUnits]);
 
-  const resetForm = () => {
-    setLogDate(new Date().toISOString().slice(0, 10));
-    setExerciseId(NONE);
-    setFundamental(NONE);
-    setReps('');
-    setIntensity(NONE);
-    setAthleteId(NONE);
-    setNotesText('');
-  };
+  // ── Serie temporale (settimana / mese / stagione) ──────────────────────────
+  const timeSeries = useMemo(() => {
+    if (filteredUnits.length === 0) return [];
 
-  const submit = async () => {
-    if (!user || !societyId) return;
-    if (fundamental === NONE && exerciseId === NONE) {
-      toast({ title: 'Specifica almeno fondamentale o esercizio', variant: 'destructive' });
-      return;
+    // Determina range
+    const dates = filteredUnits.map((u) => u.date).sort();
+    const minDate = parseISO(dates[0]);
+    const maxDate = parseISO(dates[dates.length - 1]);
+
+    if (view === 'week') {
+      // Bucket = giorno, span = ultime 8 settimane (o range filtrato)
+      const start = fFrom ? parseISO(fFrom) : addDays(maxDate, -55);
+      const end = fTo ? parseISO(fTo) : maxDate;
+      const buckets: { label: string; key: string; minutes: number }[] = [];
+      for (let d = start; d <= end; d = addDays(d, 1)) {
+        const key = format(d, 'yyyy-MM-dd');
+        buckets.push({ label: format(d, 'dd/MM'), key, minutes: 0 });
+      }
+      filteredUnits.forEach((u) => {
+        const b = buckets.find((x) => x.key === u.date);
+        if (b) b.minutes += u.minutes;
+      });
+      return buckets.map((b) => ({ ...b, minutes: Math.round(b.minutes) }));
     }
-    setSubmitting(true);
-    const ex = exerciseId !== NONE ? exerciseMap.get(exerciseId) : null;
-    const finalNotes = [
-      ex ? `${EX_TAG_PREFIX}${ex.id}${EX_TAG_END}` : null,
-      notesText.trim() || (ex ? ex.name : null),
-    ].filter(Boolean).join(' ');
-    const payload = {
-      society_id: societyId,
-      created_by: user.id,
-      log_date: logDate,
-      fundamental: fundamental === NONE ? (ex?.fundamental ?? null) : fundamental,
-      reps: reps ? parseInt(reps, 10) : null,
-      intensity: intensity === NONE ? null : intensity,
-      athlete_id: athleteId === NONE ? null : athleteId,
-      notes: finalNotes || null,
-    };
-    const { error } = await supabase.from('volume_logs').insert(payload);
-    setSubmitting(false);
-    if (error) {
-      toast({ title: 'Errore salvataggio', description: error.message, variant: 'destructive' });
-      return;
+
+    if (view === 'month') {
+      // Bucket = settimana ISO, span = ultime 12 settimane
+      const start = startOfWeek(fFrom ? parseISO(fFrom) : addWeeks(maxDate, -11), { weekStartsOn: 1 });
+      const end = endOfWeek(fTo ? parseISO(fTo) : maxDate, { weekStartsOn: 1 });
+      const buckets: { label: string; start: Date; end: Date; minutes: number }[] = [];
+      for (let d = start; d <= end; d = addWeeks(d, 1)) {
+        const ws = startOfWeek(d, { weekStartsOn: 1 });
+        const we = endOfWeek(d, { weekStartsOn: 1 });
+        buckets.push({ label: `S${format(ws, 'w')} ${format(ws, 'dd/MM')}`, start: ws, end: we, minutes: 0 });
+      }
+      filteredUnits.forEach((u) => {
+        const dt = parseISO(u.date);
+        const b = buckets.find((x) => isWithinInterval(dt, { start: x.start, end: x.end }));
+        if (b) b.minutes += u.minutes;
+      });
+      return buckets.map((b) => ({ label: b.label, key: b.label, minutes: Math.round(b.minutes) }));
     }
-    toast({ title: 'Volume registrato' });
-    setDlgOpen(false);
-    resetForm();
-    load();
-  };
 
-  const deleteLog = async (id: string) => {
-    const { error } = await supabase.from('volume_logs').delete().eq('id', id);
-    if (error) toast({ title: 'Errore', description: error.message, variant: 'destructive' });
-    else { toast({ title: 'Log eliminato' }); load(); }
-  };
+    // season → bucket = mese
+    const seasonStartDate = seasonStart ? parseISO(seasonStart) : startOfMonth(minDate);
+    const seasonEndDate = seasonEnd ? parseISO(seasonEnd) : endOfMonth(maxDate);
+    const start = startOfMonth(fFrom ? parseISO(fFrom) : seasonStartDate);
+    const end = endOfMonth(fTo ? parseISO(fTo) : seasonEndDate);
+    const buckets: { label: string; start: Date; end: Date; minutes: number }[] = [];
+    for (let d = start; d <= end; d = addMonths(d, 1)) {
+      buckets.push({
+        label: format(d, 'MMM yy', { locale: it }),
+        start: startOfMonth(d),
+        end: endOfMonth(d),
+        minutes: 0,
+      });
+    }
+    filteredUnits.forEach((u) => {
+      const dt = parseISO(u.date);
+      const b = buckets.find((x) => isWithinInterval(dt, { start: x.start, end: x.end }));
+      if (b) b.minutes += u.minutes;
+    });
+    return buckets.map((b) => ({ label: b.label, key: b.label, minutes: Math.round(b.minutes) }));
+  }, [filteredUnits, view, fFrom, fTo, seasonStart, seasonEnd]);
 
-  // ---- Render ----
+  // ── Render ─────────────────────────────────────────────────────────────────
   if (socLoading) {
-    return <div className="container py-10 flex items-center gap-2 text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Caricamento…</div>;
+    return (
+      <div className="container py-10 flex items-center gap-2 text-muted-foreground">
+        <Loader2 className="w-4 h-4 animate-spin" /> Caricamento…
+      </div>
+    );
   }
   if (!societyId) {
     return (
@@ -252,6 +294,9 @@ export default function Volume() {
     );
   }
 
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = Math.round(totalMinutes % 60);
+
   return (
     <div className="container py-8 space-y-6">
       {/* Header */}
@@ -263,12 +308,10 @@ export default function Volume() {
             Volume di lavoro
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">
-            Registra le ripetizioni eseguite dagli atleti di <strong className="text-foreground">{societyName}</strong>. I tag dell'esercizio collegato vengono ereditati per filtrare e aggregare il carico.
+            Minuti di lavoro calcolati automaticamente dagli allenamenti di{' '}
+            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag vengono ereditati dagli esercizi assegnati ai blocchi.
           </p>
         </div>
-        <Button onClick={() => { resetForm(); setDlgOpen(true); }} className="gap-2">
-          <Plus className="w-4 h-4" /> Nuovo log
-        </Button>
       </div>
 
       {/* Filtri */}
@@ -279,259 +322,217 @@ export default function Volume() {
             <SelectContent>
               <SelectItem value={ALL}>Tutti i fondamentali</SelectItem>
               {FUNDAMENTALS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={fAthlete} onValueChange={setFAthlete}>
-            <SelectTrigger><SelectValue placeholder="Atleta" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Tutti gli atleti</SelectItem>
-              <SelectItem value={NONE}>Solo team (senza atleta)</SelectItem>
-              {athletes.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.last_name}{a.first_name ? ` ${a.first_name}` : ''}
-                </SelectItem>
-              ))}
+              <SelectItem value="Generico">Generico (senza esercizio)</SelectItem>
             </SelectContent>
           </Select>
           <div>
-            <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} placeholder="Da" />
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Da</Label>
+            <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} />
           </div>
           <div>
-            <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} placeholder="A" />
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">A</Label>
+            <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} />
           </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-              Filtra per tag {fTags.length > 0 && <span className="text-primary">({fTags.length})</span>}
-            </Label>
-            {fTags.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setFTags([])} className="h-7 text-xs gap-1">
-                <X className="w-3 h-3" /> Pulisci
+          <div className="flex items-end">
+            {(fFrom || fTo || fFund !== ALL || fTags.length > 0) && (
+              <Button variant="outline" size="sm" onClick={() => { setFFrom(''); setFTo(''); setFFund(ALL); setFTags([]); }} className="gap-1 w-full">
+                <X className="w-3 h-3" /> Reset filtri
               </Button>
             )}
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+            Filtra per tag {fTags.length > 0 && <span className="text-primary">({fTags.length})</span>}
+          </Label>
           <TagPicker value={fTags} onChange={setFTags} suggestions={allUsedTags} placeholder="Filtra per tag (AND)…" />
         </div>
       </div>
 
-      {/* Aggregati */}
+      {/* KPI */}
       {loading ? (
         <div className="text-muted-foreground flex items-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin" /> Caricamento volume…
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Totale ripetizioni</p>
-            <p className="text-5xl font-black italic mt-2">{totalReps.toLocaleString('it-IT')}</p>
-            <p className="text-xs text-muted-foreground mt-1">{filteredLogs.length} log</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Per fondamentale</p>
-            {byFundamental.length === 0 ? (
-              <p className="text-sm text-muted-foreground">—</p>
-            ) : (
-              <ul className="space-y-1.5">
-                {byFundamental.slice(0, 6).map(([k, v]) => (
-                  <li key={k} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="truncate">{k}</span>
-                    <span className="font-bold tabular-nums">{v.toLocaleString('it-IT')}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Per tag (top 8)</p>
-            {byTag.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nessun tag (collega un esercizio per ereditarli)</p>
-            ) : (
-              <ul className="space-y-1.5">
-                {byTag.slice(0, 8).map(([k, v]) => (
-                  <li key={k} className="flex items-center justify-between gap-2 text-sm">
-                    <Badge variant="secondary" className="gap-1 truncate"><TagIcon className="w-3 h-3" />{k}</Badge>
-                    <span className="font-bold tabular-nums">{v.toLocaleString('it-IT')}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Lista log */}
-      {!loading && (
-        filteredLogs.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
-            <BarChart3 className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <h3 className="text-lg font-bold uppercase italic tracking-tight mb-1">
-              {logs.length === 0 ? 'Nessun log' : 'Nessun risultato'}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {logs.length === 0 ? 'Registra il primo volume di lavoro.' : 'Modifica i filtri.'}
-            </p>
-            {logs.length === 0 && (
-              <Button onClick={() => { resetForm(); setDlgOpen(true); }} className="gap-2">
-                <Plus className="w-4 h-4" /> Nuovo log
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="text-left p-3 font-semibold">Data</th>
-                  <th className="text-left p-3 font-semibold">Fondamentale</th>
-                  <th className="text-left p-3 font-semibold">Esercizio / Note</th>
-                  <th className="text-left p-3 font-semibold">Atleta</th>
-                  <th className="text-right p-3 font-semibold">Reps</th>
-                  <th className="text-left p-3 font-semibold">Intensità</th>
-                  <th className="text-left p-3 font-semibold">Tag ereditati</th>
-                  <th className="w-10"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLogs.map((l) => {
-                  const exId = extractExerciseId(l.notes);
-                  const ex = exId ? exerciseMap.get(exId) : null;
-                  const noteText = stripExerciseTag(l.notes);
-                  const ath = l.athlete_id ? athleteMap.get(l.athlete_id) : null;
-                  const tags = ex?.tags || [];
-                  return (
-                    <tr key={l.id} className="border-t border-border hover:bg-muted/20">
-                      <td className="p-3 tabular-nums whitespace-nowrap">{l.log_date}</td>
-                      <td className="p-3">{l.fundamental || '—'}</td>
-                      <td className="p-3">
-                        {ex ? <span className="font-semibold">{ex.name}</span> : <span className="text-muted-foreground">{noteText || '—'}</span>}
-                        {ex && noteText && <div className="text-xs text-muted-foreground">{noteText}</div>}
-                      </td>
-                      <td className="p-3 whitespace-nowrap">{ath ? `${ath.last_name}${ath.first_name ? ' ' + ath.first_name : ''}` : <span className="text-muted-foreground">Team</span>}</td>
-                      <td className="p-3 text-right tabular-nums font-bold">{l.reps ?? '—'}</td>
-                      <td className="p-3 whitespace-nowrap">{l.intensity || '—'}</td>
-                      <td className="p-3">
-                        {tags.length === 0 ? <span className="text-muted-foreground text-xs">—</span> : (
-                          <div className="flex flex-wrap gap-1">
-                            {tags.map((t) => (
-                              <Badge key={t} variant="secondary" className="text-xs gap-1"><TagIcon className="w-2.5 h-2.5" />{t}</Badge>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteLog(l.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )
-      )}
-
-      {/* Dialog nuovo log */}
-      <Dialog open={dlgOpen} onOpenChange={(o) => { if (!o) resetForm(); setDlgOpen(o); }}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="font-black italic uppercase tracking-tight">Nuovo log volume</DialogTitle>
-            <DialogDescription>
-              Collegalo a un esercizio per ereditare automaticamente fondamentale e tag.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-2">
-                <Label htmlFor="vl-date" className="flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> Data</Label>
-                <Input id="vl-date" type="date" value={logDate} onChange={(e) => setLogDate(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <Label>Atleta</Label>
-                <Select value={athleteId} onValueChange={setAthleteId}>
-                  <SelectTrigger><SelectValue placeholder="Team (nessun atleta)" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>Team (nessun atleta)</SelectItem>
-                    {athletes.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.last_name}{a.first_name ? ` ${a.first_name}` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5" /> Minuti totali
+              </p>
+              <p className="text-5xl font-black italic mt-2 tabular-nums">
+                {Math.round(totalMinutes).toLocaleString('it-IT')}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                ≈ {hours}h {mins}m · {totalSessions} sedute
+              </p>
             </div>
-
-            <div className="grid gap-2">
-              <Label>Esercizio (opzionale, eredita fondamentale + tag)</Label>
-              <Select value={exerciseId} onValueChange={onPickExercise}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>—</SelectItem>
-                  {exercises.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.name}{e.fundamental ? ` · ${e.fundamental}` : ''}
-                    </SelectItem>
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Per fondamentale</p>
+              {byFundamental.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nessun dato — assegna esercizi ai blocchi degli allenamenti.</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {byFundamental.slice(0, 6).map((f) => (
+                    <li key={f.name} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate">{f.name}</span>
+                      <span className="font-bold tabular-nums">{f.minutes.toLocaleString('it-IT')}m</span>
+                    </li>
                   ))}
-                </SelectContent>
-              </Select>
-              {exerciseId !== NONE && (() => {
-                const ex = exerciseMap.get(exerciseId);
-                if (!ex) return null;
-                return (
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {ex.tags.length === 0
-                      ? <span className="text-xs text-muted-foreground">Nessun tag su questo esercizio</span>
-                      : ex.tags.map((t) => (
-                        <Badge key={t} variant="secondary" className="text-xs gap-1"><TagIcon className="w-2.5 h-2.5" />{t}</Badge>
-                      ))}
-                  </div>
-                );
-              })()}
+                </ul>
+              )}
             </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="grid gap-2">
-                <Label>Fondamentale</Label>
-                <Select value={fundamental} onValueChange={setFundamental}>
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>—</SelectItem>
-                    {FUNDAMENTALS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="vl-reps">Ripetizioni</Label>
-                <Input id="vl-reps" type="number" min="0" value={reps} onChange={(e) => setReps(e.target.value)} placeholder="50" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Intensità</Label>
-                <Select value={intensity} onValueChange={setIntensity}>
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>—</SelectItem>
-                    {INTENSITIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="vl-notes">Note</Label>
-              <Textarea id="vl-notes" rows={2} value={notesText} onChange={(e) => setNotesText(e.target.value)} placeholder="Note libere…" />
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Per tag (top 8)</p>
+              {byTag.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nessun tag (gli esercizi devono avere tag).</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {byTag.slice(0, 8).map((t) => (
+                    <li key={t.name} className="flex items-center justify-between gap-2 text-sm">
+                      <Badge variant="secondary" className="gap-1 truncate"><TagIcon className="w-3 h-3" />{t.name}</Badge>
+                      <span className="font-bold tabular-nums">{t.minutes.toLocaleString('it-IT')}m</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDlgOpen(false)} disabled={submitting}>Annulla</Button>
-            <Button onClick={submit} disabled={submitting}>
-              {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Salvataggio…</> : 'Registra'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {/* GRAFICO TEMPORALE */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+              <h3 className="text-sm font-bold uppercase italic tracking-wider flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                Andamento minuti
+              </h3>
+              <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
+                <TabsList>
+                  <TabsTrigger value="week">Settimanale</TabsTrigger>
+                  <TabsTrigger value="month">Mensile</TabsTrigger>
+                  <TabsTrigger value="season">Stagionale</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            {timeSeries.length === 0 || timeSeries.every((b) => b.minutes === 0) ? (
+              <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
+                Nessun dato nel periodo selezionato.
+              </div>
+            ) : (
+              <div className="h-72">
+                <ResponsiveContainer>
+                  <BarChart data={timeSeries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} interval="preserveStartEnd" />
+                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'min', angle: -90, position: 'insideLeft', fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Tooltip
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
+                      formatter={(v: number) => [`${v} min`, 'Volume']}
+                    />
+                    <Bar dataKey="minutes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          {/* GRAFICO PER FONDAMENTALE */}
+          {byFundamental.length > 0 && (
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h3 className="text-sm font-bold uppercase italic tracking-wider mb-4">Distribuzione minuti per fondamentale</h3>
+              <div className="h-64">
+                <ResponsiveContainer>
+                  <BarChart data={byFundamental} layout="vertical" margin={{ left: 80 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Tooltip
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
+                      formatter={(v: number) => [`${v} min`, 'Minuti']}
+                    />
+                    <Bar dataKey="minutes" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* DETTAGLIO SEDUTE */}
+          {filteredUnits.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+              <CalendarIcon className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+              <h3 className="text-lg font-bold uppercase italic tracking-tight mb-1">
+                {trainings.length === 0 ? 'Nessun allenamento programmato' : 'Nessun dato per i filtri'}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {trainings.length === 0
+                  ? 'Crea allenamenti dalla sezione "Allenamenti" per iniziare a misurare il volume.'
+                  : 'Modifica i filtri per visualizzare le sedute.'}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-4 py-3 border-b border-border bg-muted/40">
+                <h3 className="text-sm font-bold uppercase italic tracking-wider">Dettaglio sedute</h3>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-muted/20 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="text-left p-3 font-semibold">Data</th>
+                    <th className="text-left p-3 font-semibold">Allenamento</th>
+                    <th className="text-left p-3 font-semibold">Esercizio</th>
+                    <th className="text-left p-3 font-semibold">Fondamentale</th>
+                    <th className="text-left p-3 font-semibold">Tag</th>
+                    <th className="text-right p-3 font-semibold">Minuti</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUnits
+                    .slice()
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .slice(0, 100)
+                    .map((u, i) => (
+                      <tr key={i} className="border-t border-border hover:bg-muted/20">
+                        <td className="p-3 tabular-nums whitespace-nowrap">
+                          {format(parseISO(u.date), 'dd MMM yy', { locale: it })}
+                        </td>
+                        <td className="p-3 font-medium">{u.trainingTitle}</td>
+                        <td className="p-3">
+                          {u.exerciseName ?? <span className="text-muted-foreground italic">—</span>}
+                        </td>
+                        <td className="p-3">
+                          {u.fundamental ?? <span className="text-muted-foreground">Generico</span>}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex flex-wrap gap-1">
+                            {u.tags.length === 0 ? (
+                              <span className="text-muted-foreground text-xs">—</span>
+                            ) : (
+                              u.tags.slice(0, 4).map((t) => (
+                                <Badge key={t} variant="outline" className="text-xs gap-1">
+                                  <TagIcon className="w-2.5 h-2.5" />{t}
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right font-bold tabular-nums">
+                          {Math.round(u.minutes)}m
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              {filteredUnits.length > 100 && (
+                <div className="p-3 text-xs text-muted-foreground text-center border-t border-border">
+                  Mostrate 100 di {filteredUnits.length} righe — restringi i filtri per vedere il resto.
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
