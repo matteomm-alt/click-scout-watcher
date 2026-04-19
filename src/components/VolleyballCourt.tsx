@@ -290,21 +290,10 @@ export function VolleyballCourt() {
               return (
                 <div
                   key={z.z}
-                  className={`relative flex items-center justify-center overflow-hidden ${
-                    idx < 2 ? 'border-r border-white/15' : ''
+                  className={`relative flex items-center justify-center ${
+                    idx < 2 ? 'border-r border-dashed border-white/40' : ''
                   } hover:bg-white/5 transition-colors`}
                 >
-                  {/* 3x3 dashed subzone grid (DVW reference) */}
-                  <svg
-                    className="pointer-events-none absolute inset-0 w-full h-full"
-                    viewBox="0 0 90 90"
-                    preserveAspectRatio="none"
-                  >
-                    <line x1="30" y1="0" x2="30" y2="90" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-                    <line x1="60" y1="0" x2="60" y2="90" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-                    <line x1="0" y1="30" x2="90" y2="30" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-                    <line x1="0" y1="60" x2="90" y2="60" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-                  </svg>
                   {/* Position label P1-P6 */}
                   <span
                     className={`absolute top-1 ${side === 'left' ? 'left-1' : 'right-1'} text-[9px] font-bold tracking-wider ${
