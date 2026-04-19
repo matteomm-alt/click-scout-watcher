@@ -76,13 +76,14 @@ export function ConvocazioniView() {
       await supabase.from('convocation_players').delete().eq('id', existing.id);
       setPlayers(prev => prev.filter(p => p.id !== existing.id));
     } else {
-      const { data } = await supabase.from('convocation_players').insert({ convocation_id: selectedId, athlete_id: athleteId, role_in_match: 'Titolare' }).select().single();
-      if (data) setPlayers(prev => [...prev, data as any]);
+      const { data } = await supabase.from('convocation_players').insert({ convocation_id: selectedId, athlete_id: athleteId, role: 'titolare' }).select().single();
+      if (data) setPlayers(prev => [...prev, { ...(data as any), role_in_match: (data as any).role }]);
     }
   };
 
   const updateRole = async (playerId: string, role: string) => {
-    await supabase.from('convocation_players').update({ role_in_match: role }).eq('id', playerId);
+    const dbRole = role.toLowerCase() as 'titolare' | 'riserva' | 'libero' | 'non_convocato';
+    await supabase.from('convocation_players').update({ role: dbRole }).eq('id', playerId);
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, role_in_match: role } : p));
   };
 
