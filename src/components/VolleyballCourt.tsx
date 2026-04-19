@@ -116,15 +116,18 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
                   }`}
                 >
                   {/* 3x3 dashed subzone grid (visual only, DVW reference) */}
-                  <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                      backgroundImage:
-                        'linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)',
-                      backgroundSize: 'calc(100%/3) calc(100%/3)',
-                      backgroundPosition: '0 0',
-                    }}
-                  />
+                  <svg
+                    className="pointer-events-none absolute inset-0 w-full h-full"
+                    viewBox="0 0 90 90"
+                    preserveAspectRatio="none"
+                  >
+                    {/* vertical lines at 1/3 and 2/3 */}
+                    <line x1="30" y1="0" x2="30" y2="90" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+                    <line x1="60" y1="0" x2="60" y2="90" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+                    {/* horizontal lines at 1/3 and 2/3 */}
+                    <line x1="0" y1="30" x2="90" y2="30" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+                    <line x1="0" y1="60" x2="90" y2="60" stroke="rgba(255,255,255,0.55)" strokeWidth="0.6" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
+                  </svg>
                   <span
                     className={`relative text-5xl md:text-6xl lg:text-7xl font-black italic ${numberColor} transition-colors leading-none`}
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
