@@ -48,9 +48,9 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
   const showArrow = startPos && endPos && startZone !== endZone;
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full">
       {/* Net header */}
-      <div className="relative h-10 flex items-center justify-center mb-1 overflow-hidden rounded-t-lg bg-zinc-900/80 border-x border-t border-border">
+      <div className="relative h-8 flex items-center justify-center mb-1 overflow-hidden rounded-t-lg bg-zinc-900/80 border-x border-t border-border">
         <div
           className="absolute inset-0 opacity-40"
           style={{
@@ -64,9 +64,9 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
         </span>
       </div>
 
-      {/* Court — taraflex with gradient */}
+      {/* Court — taraflex with gradient, wide horizontal like Click & Scout */}
       <div
-        className="relative grid grid-rows-3 gap-0 border border-foreground/20 shadow-2xl overflow-hidden rounded-b-lg aspect-[3/2.2]"
+        className="relative grid grid-rows-3 gap-0 border border-foreground/20 shadow-2xl overflow-hidden rounded-b-lg w-full aspect-[16/7]"
         style={{
           background: 'linear-gradient(180deg, hsl(215 70% 32%) 0%, hsl(215 70% 22%) 100%)',
           boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)',
@@ -109,14 +109,24 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
                   key={z.zone}
                   onClick={() => isSelectable && onZoneClick?.(z.zone)}
                   disabled={!isSelectable}
-                  className={`relative flex items-center justify-center transition-colors ${
+                  className={`relative flex items-center justify-center transition-colors overflow-hidden ${
                     idx < 2 ? (row === 2 ? 'border-r-2 border-white/10' : 'border-r-2 border-white/40') : ''
                   } ${fill} ${ring} ${
                     isSelectable ? 'cursor-pointer hover:bg-white/10' : 'cursor-default'
                   }`}
                 >
+                  {/* 3x3 dashed subzone grid (visual only, DVW reference) */}
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px)',
+                      backgroundSize: 'calc(100%/3) calc(100%/3)',
+                      backgroundPosition: '0 0',
+                    }}
+                  />
                   <span
-                    className={`text-7xl md:text-8xl font-black italic ${numberColor} transition-colors leading-none`}
+                    className={`relative text-5xl md:text-6xl lg:text-7xl font-black italic ${numberColor} transition-colors leading-none`}
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     {z.zone}
