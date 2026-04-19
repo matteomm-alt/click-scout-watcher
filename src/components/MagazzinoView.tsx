@@ -70,7 +70,7 @@ export function MagazzinoView() {
 
   const assignItem = async () => {
     if (!selectedItem || !assignAthlete || !user) return;
-    const { data, error } = await supabase.from('inventory_assignments').insert({ item_id: selectedItem.id, athlete_id: assignAthlete, quantity: assignQty, assigned_by: user.id }).select('*, athletes(last_name, first_name, number)').single();
+    const { data, error } = await supabase.from('inventory_assignments').insert({ item_id: selectedItem.id, athlete_id: assignAthlete, quantity: assignQty, recorded_by: user.id, society_id: selectedItem.society_id }).select('*, athletes(last_name, first_name, number)').single();
     if (error) { toast.error('Errore assegnazione'); return; }
     setAssignments(prev => [...prev, data as any]);
     setAssignAthlete('');

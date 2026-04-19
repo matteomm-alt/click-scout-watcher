@@ -13,14 +13,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
 
+type Priority = 'bassa' | 'normale' | 'alta' | 'urgente';
+
 interface Communication {
   id: string; title: string; content: string;
-  priority: 'urgente' | 'normale' | 'info';
+  priority: Priority;
   pinned: boolean; expires_at: string | null; created_at: string;
 }
 
-const PRIORITY_VARIANT: Record<string, 'destructive' | 'default' | 'secondary'> = {
-  urgente: 'destructive', normale: 'default', info: 'secondary',
+const PRIORITY_VARIANT: Record<Priority, 'destructive' | 'default' | 'secondary' | 'outline'> = {
+  urgente: 'destructive', alta: 'default', normale: 'secondary', bassa: 'outline',
 };
 
 export function ComunicazioniView() {
@@ -29,7 +31,7 @@ export function ComunicazioniView() {
   const [comms, setComms] = useState<Communication[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ title: '', content: '', priority: 'normale', pinned: false });
+  const [form, setForm] = useState<{ title: string; content: string; priority: Priority; pinned: boolean }>({ title: '', content: '', priority: 'normale', pinned: false });
 
   const load = async () => {
     if (!societyId) return;
@@ -121,7 +123,7 @@ export function ComunicazioniView() {
             <div><Label>Titolo</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Titolo comunicazione" /></div>
             <div><Label>Contenuto</Label><Textarea value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} placeholder="Scrivi qui..." rows={4} /></div>
             <div><Label>Priorità</Label>
-              <Select value={form.priority} onValueChange={v => setForm(f => ({ ...f, priority: v }))}>
+              <Select value={form.priority} onValueChange={v => setForm(f => ({ ...f, priority: v as Priority }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="urgente">Urgente</SelectItem>
