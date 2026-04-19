@@ -7,6 +7,7 @@ import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
 import { QuickActions } from '@/components/QuickActions';
 import { TeamComparison } from '@/components/TeamComparison';
 import { SetDistribution } from '@/components/SetDistribution';
+import { FullscreenToggle } from '@/components/FullscreenToggle';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES } from '@/types/volleyball';
 
@@ -27,6 +28,7 @@ export function LiveScout() {
 
   return (
     <div className="h-screen flex flex-col p-3 gap-3 overflow-hidden">
+      <FullscreenToggle />
       <ScoreBoard />
 
       {/* Court — full width, prominent */}
