@@ -150,7 +150,7 @@ export function StrutturaSettimanaleView() {
       description: desc || null,
       society_id: societyId,
       created_by: user.id,
-      blocks,
+      blocks: blocks as any,
       total_duration_min: totalMinuti(blocks) || null,
     };
     const { error } = editing
