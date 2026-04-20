@@ -2,7 +2,9 @@ import { useMatchStore } from '@/store/matchStore';
 import type { Player, Team, Lineup } from '@/types/volleyball';
 import { ROLE_LABELS } from '@/types/volleyball';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Wand2 } from 'lucide-react';
+import { autoLineup51 } from '@/lib/lineup51';
+import { toast } from 'sonner';
 
 const POSITION_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
 const POSITION_KEYS: (keyof Lineup)[] = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
@@ -61,12 +63,34 @@ function TeamLineup({
     setLineup(updates);
   };
 
+  const handleAuto51 = () => {
+    const auto = autoLineup51(team.players);
+    if (!auto) {
+      toast.error('Roster incompleto', {
+        description: 'Servono almeno: 1 Palleggiatore, 1 Opposto, 2 Centrali, 2 Schiacciatori.',
+      });
+      return;
+    }
+    setLineup(auto);
+    toast.success('Formazione 5-1 applicata', {
+      description: 'Palleggiatore in P1 · Opposto in P4 · Centrali e schiacciatori opposti in diagonale.',
+    });
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-bold text-foreground text-center">
-        {team.name || (side === 'home' ? 'Casa' : 'Ospite')}
-      </h3>
-
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-lg font-bold text-foreground">
+          {team.name || (side === 'home' ? 'Casa' : 'Ospite')}
+        </h3>
+        <button
+          type="button"
+          onClick={handleAuto51}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 transition-colors"
+        >
+          <Wand2 className="w-3 h-3" /> Auto 5-1
+        </button>
+      </div>
       {/* Court visual */}
       <div className="court-gradient rounded-xl p-4 border border-court-line/30">
         <div className="text-center text-xs text-court-line mb-2 font-medium tracking-wider">RETE</div>

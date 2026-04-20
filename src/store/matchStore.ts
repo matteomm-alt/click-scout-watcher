@@ -384,15 +384,27 @@ export const useMatchStore = create<MatchStore>()(
           coach: 'Coach Ospite', assistantCoach: '', players: awayPlayers, color: '#ef4444',
         };
 
-        // Lineup: P1..P6 with setter at P1 for both
+        // Lineup 5-1 classico, rotazione P1:
+        //   P1=P (Setter)  P2=C1 (Middle1)  P3=S2 (Outside2)
+        //   P4=O (Opposite) P5=C2 (Middle2) P6=S1 (Outside1)
+        // Home: S=#1 Rossi, OP=#4 Bianchi, M=#11 Galli/#14 Costa, O=#7 Verdi/#9 Neri
         const homeLineup: Lineup = {
-          p1: 'rossi-1', p2: 'bianchi-4', p3: 'galli-11',
-          p4: 'verdi-7', p5: 'costa-14',  p6: 'neri-9',
+          p1: 'rossi-1',    // Setter
+          p2: 'galli-11',   // C1 (Middle 1)
+          p3: 'neri-9',     // S2 (Outside 2)
+          p4: 'bianchi-4',  // Opposite
+          p5: 'costa-14',   // C2 (Middle 2) — sostituito dal libero in seconda linea
+          p6: 'verdi-7',    // S1 (Outside 1)
           libero1: 'marini-2', libero2: null, setter: 'rossi-1',
         };
+        // Away: S=#3 Ferrari, OP=#5 Esposito, M=#12 Bruno/#15 Gallo, O=#6 Romano/#10 Greco
         const awayLineup: Lineup = {
-          p1: 'ferrari-3', p2: 'esposito-5', p3: 'bruno-12',
-          p4: 'romano-6',  p5: 'gallo-15',   p6: 'greco-10',
+          p1: 'ferrari-3',  // Setter
+          p2: 'bruno-12',   // C1
+          p3: 'greco-10',   // S2
+          p4: 'esposito-5', // Opposite
+          p5: 'gallo-15',   // C2
+          p6: 'romano-6',   // S1
           libero1: 'lombardi-13', libero2: null, setter: 'ferrari-3',
         };
 
@@ -415,8 +427,9 @@ export const useMatchStore = create<MatchStore>()(
           matchState: {
             ...defaultMatchState,
             isMatchStarted: true,
-            homeCurrentLineup: [1, 4, 11, 7, 14, 9],
-            awayCurrentLineup: [3, 5, 12, 6, 15, 10],
+            // Indici array = posizioni P1..P6 in ordine
+            homeCurrentLineup: [1, 11, 9, 4, 14, 7],
+            awayCurrentLineup: [3, 12, 10, 5, 15, 6],
             homeSetterPosition: 1,
             awaySetterPosition: 1,
             servingTeam: 'home',
