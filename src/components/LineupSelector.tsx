@@ -2,7 +2,9 @@ import { useMatchStore } from '@/store/matchStore';
 import type { Player, Team, Lineup } from '@/types/volleyball';
 import { ROLE_LABELS } from '@/types/volleyball';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Wand2 } from 'lucide-react';
+import { autoLineup51 } from '@/lib/lineup51';
+import { toast } from 'sonner';
 
 const POSITION_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
 const POSITION_KEYS: (keyof Lineup)[] = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
