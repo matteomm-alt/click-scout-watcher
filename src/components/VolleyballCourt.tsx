@@ -226,7 +226,8 @@ export function ZoneCourt({ onZoneClick, highlightedZone, startZone, endZone, mo
   );
 }
 
-// Full court (both halves) for the main scoreboard view — landscape
+// Full court — proporzioni reali (24m × 9m totali: 3m servizio + 9m + 9m + 3m servizio)
+// Ogni metà = 9m × 9m divisa in 9 zone DVW (3×3) + striscia servizio 3m × 9m dietro fondo
 export function VolleyballCourt() {
   const { matchState, homeTeam, awayTeam } = useMatchStore();
 
@@ -238,123 +239,133 @@ export function VolleyballCourt() {
       : { number: num, name: `#${num}`, role: undefined };
   };
 
-  // Each half = 3x2 zone grid (front + back rows). Numbers mirror DVW per side.
-  // `pos` is the rotation position (P1-P6) corresponding to that physical zone.
-  const HOME_ZONES = [
-    { z: 4, col: 0, row: 0, pos: 4 }, { z: 3, col: 1, row: 0, pos: 3 }, { z: 2, col: 2, row: 0, pos: 2 },
-    { z: 5, col: 0, row: 1, pos: 5 }, { z: 6, col: 1, row: 1, pos: 6 }, { z: 1, col: 2, row: 1, pos: 1 },
+  // Vista landscape: net verticale al centro.
+  // Per ogni metà: 3 colonne (front→back, allontanandosi dalla rete) × 3 righe (alto→basso, da sinistra a destra del campo visto dal sideline).
+  // HOME (a destra, net a sinistra):
+  //   col0 = front: zona 4 (top), 3 (mid), 2 (bottom)
+  //   col1 = back:  zona 5 (top), 6 (mid), 1 (bottom)
+  //   col2 = (zona giocata posteriore — usata per movimenti, niente P)
+  // Le posizioni P1-P6 ricalcano: P4=z4, P3=z3, P2=z2, P5=z5, P6=z6, P1=z1.
+  // Le zone 7-8-9 stanno sulla STRISCIA SERVIZIO dietro la linea di fondo.
+
+  type Cell = { z: number; pos: number | null; sub?: 'front' | 'back' | 'service' };
+
+  // HOME: 3 fasce verticali da sinistra (vicino rete) a destra (fondo + servizio)
+  // Fascia front (3m vicino rete) – zone 4,3,2
+  // Fascia back (3m successivi) – zone 5,6,1
+  // Linea di fondo, poi striscia servizio (3m) – zone 7,8,9
+  const HOME_FRONT: Cell[] = [
+    { z: 4, pos: 4 }, { z: 3, pos: 3 }, { z: 2, pos: 2 },
   ];
-  // Away half is mirrored (viewed from opposite side)
-  const AWAY_ZONES = [
-    { z: 2, col: 0, row: 0, pos: 2 }, { z: 3, col: 1, row: 0, pos: 3 }, { z: 4, col: 2, row: 0, pos: 4 },
-    { z: 1, col: 0, row: 1, pos: 1 }, { z: 6, col: 1, row: 1, pos: 6 }, { z: 5, col: 2, row: 1, pos: 5 },
+  const HOME_BACK: Cell[] = [
+    { z: 5, pos: 5 }, { z: 6, pos: 6 }, { z: 1, pos: 1 },
+  ];
+  const HOME_SERVICE: Cell[] = [
+    { z: 7, pos: null }, { z: 8, pos: null }, { z: 9, pos: null },
   ];
 
-  const Half = ({
-    zones,
-    teamLabel,
-    teamColor,
-    lineup,
-    setterPosition,
-    side,
-  }: {
-    zones: { z: number; col: number; row: number; pos: number }[];
-    teamLabel: string;
-    teamColor: 'home' | 'away';
-    lineup: number[];
-    setterPosition: number;
-    side: 'left' | 'right';
-  }) => (
-    <div className="flex-1 relative grid grid-rows-2">
-      {/* Team label */}
-      <div
-        className={`absolute top-2 ${side === 'left' ? 'left-3' : 'right-3'} z-10 text-[10px] font-bold uppercase tracking-widest ${
-          teamColor === 'home' ? 'text-blue-300/80' : 'text-red-300/80'
-        }`}
-      >
-        {teamLabel}
-      </div>
+  // AWAY: specchiato → fronte vicino rete (a destra del lato away), poi back, poi servizio a sinistra
+  const AWAY_FRONT: Cell[] = [
+    { z: 2, pos: 2 }, { z: 3, pos: 3 }, { z: 4, pos: 4 },
+  ];
+  const AWAY_BACK: Cell[] = [
+    { z: 1, pos: 1 }, { z: 6, pos: 6 }, { z: 5, pos: 5 },
+  ];
+  const AWAY_SERVICE: Cell[] = [
+    { z: 9, pos: null }, { z: 8, pos: null }, { z: 7, pos: null },
+  ];
 
-      {[0, 1].map((row) => (
-        <div
-          key={row}
-          className={`grid grid-cols-3 relative ${row === 0 ? 'border-b-2 border-dashed border-white/40' : ''}`}
-        >
-          {zones
-            .filter((z) => z.row === row)
-            .map((z, idx) => {
-              const playerNum = lineup[z.pos - 1];
-              const info = playerNum ? getPlayerInfo(playerNum, teamColor) : null;
-              const isSetter = z.pos === setterPosition;
-              const isLibero = info?.role === 'L';
-              return (
-                <div
-                  key={z.z}
-                  className={`relative flex items-center justify-center ${
-                    idx < 2 ? 'border-r border-dashed border-white/40' : ''
-                  } hover:bg-white/5 transition-colors`}
-                >
-                  {/* Position label P1-P6 */}
-                  <span
-                    className={`absolute top-1 ${side === 'left' ? 'left-1' : 'right-1'} text-[9px] font-bold tracking-wider ${
-                      isSetter ? 'text-warning' : 'text-white/40'
+  // Colori taraflex VNL: front orange/red (intensità), back blu, servizio blu scuro
+  const FRONT_BG = 'linear-gradient(180deg, hsl(15 80% 45%) 0%, hsl(12 85% 38%) 100%)';
+  const BACK_BG = 'linear-gradient(180deg, hsl(212 75% 32%) 0%, hsl(212 75% 24%) 100%)';
+  const SERVICE_BG = 'linear-gradient(180deg, hsl(215 60% 16%) 0%, hsl(218 65% 11%) 100%)';
+
+  const renderBand = (
+    cells: Cell[],
+    bg: string,
+    teamColor: 'home' | 'away',
+    lineup: number[],
+    setterPosition: number,
+    isService: boolean,
+  ) => (
+    <div
+      className="relative grid grid-rows-3 h-full"
+      style={{ background: bg }}
+    >
+      {cells.map((cell) => {
+        const playerNum = cell.pos !== null ? lineup[cell.pos - 1] : null;
+        const info = playerNum ? getPlayerInfo(playerNum, teamColor) : null;
+        const isSetter = cell.pos !== null && cell.pos === setterPosition;
+        const isLibero = info?.role === 'L';
+
+        return (
+          <div
+            key={cell.z}
+            className="relative flex items-center justify-center border border-white/25"
+          >
+            {/* Numero zona DVW di sfondo */}
+            <span
+              className="absolute text-3xl md:text-4xl lg:text-5xl font-black italic leading-none select-none pointer-events-none"
+              style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                color: isService ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.14)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.4)',
+              }}
+            >
+              {cell.z}
+            </span>
+
+            {/* Posizione P1-P6 */}
+            {cell.pos !== null && (
+              <span
+                className={`absolute top-1 left-1 text-[8px] md:text-[9px] font-bold tracking-wider z-10 ${
+                  isSetter ? 'text-warning' : 'text-white/55'
+                }`}
+              >
+                P{cell.pos}
+              </span>
+            )}
+
+            {/* Giocatore */}
+            {info && (
+              <div className="relative z-20 flex flex-col items-center">
+                <div className="relative">
+                  <div
+                    className={`size-9 md:size-10 lg:size-11 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base shadow-lg ${
+                      isSetter ? 'ring-2 ring-warning ring-offset-1 ring-offset-transparent' : ''
+                    } ${
+                      isLibero
+                        ? 'bg-yellow-700 border-2 border-yellow-400'
+                        : teamColor === 'home'
+                        ? 'bg-blue-700 border-2 border-blue-300'
+                        : 'bg-red-700 border-2 border-red-300'
                     }`}
                   >
-                    P{z.pos}
-                  </span>
-
-                  {/* Background zone number */}
-                  <span
-                    className="absolute text-6xl font-black italic leading-none select-none"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'rgba(255,255,255,0.07)' }}
-                  >
-                    {z.z}
-                  </span>
-
-                  {/* Player */}
-                  {info && (
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="relative">
-                        <div
-                          className={`size-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
-                            isSetter
-                              ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent'
-                              : ''
-                          } ${
-                            isLibero
-                              ? 'bg-yellow-700 border-2 border-yellow-400'
-                              : teamColor === 'home'
-                              ? 'bg-blue-700 border-2 border-blue-400'
-                              : 'bg-red-700 border-2 border-red-400'
-                          }`}
-                        >
-                          {info.number}
-                        </div>
-                        {isSetter && (
-                          <span
-                            className="absolute -top-1.5 -right-1.5 bg-warning text-background text-[8px] font-black px-1 rounded shadow"
-                            title="Setter / Palleggiatore"
-                          >
-                            S
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[9px] text-white/70 mt-1 font-medium">
-                        {info.name.slice(0, 7)}
-                      </span>
-                    </div>
+                    {info.number}
+                  </div>
+                  {isSetter && (
+                    <span
+                      className="absolute -top-1.5 -right-1.5 bg-warning text-background text-[8px] font-black px-1 rounded shadow"
+                      title="Setter"
+                    >
+                      S
+                    </span>
                   )}
                 </div>
-              );
-            })}
-        </div>
-      ))}
+                <span className="text-[9px] text-white/85 mt-0.5 font-medium drop-shadow">
+                  {info.name.slice(0, 7)}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 
   return (
     <div className="w-full">
-      {/* Net top label */}
+      {/* Net header */}
       <div className="relative h-8 flex items-center justify-center mb-1 overflow-hidden rounded-t-lg bg-zinc-900/80 border-x border-t border-border">
         <div className="absolute top-0 w-full h-0.5 bg-foreground/20" />
         <span className="relative z-10 text-[10px] font-bold tracking-[0.5em] text-muted-foreground uppercase">
@@ -362,33 +373,48 @@ export function VolleyballCourt() {
         </span>
       </div>
 
+      {/* Campo intero — proporzione reale 24:9
+          Layout colonne: [3 servizio away][3 back away][3 front away][NET][3 front home][3 back home][3 servizio home] */}
       <div
-        className="flex border border-foreground/20 shadow-2xl rounded-b-lg overflow-hidden aspect-[24/7] relative"
+        className="grid border border-foreground/20 shadow-2xl rounded-b-lg overflow-hidden relative"
         style={{
-          background: 'linear-gradient(180deg, hsl(215 70% 32%) 0%, hsl(215 70% 22%) 100%)',
-          boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4)',
+          aspectRatio: '24 / 9',
+          gridTemplateColumns: '3fr 3fr 3fr 0fr 3fr 3fr 3fr',
+          boxShadow: 'inset 0 0 80px rgba(0,0,0,0.5)',
         }}
       >
-        <Half
-          zones={AWAY_ZONES}
-          teamLabel={awayTeam.name || 'OSPITE'}
-          teamColor="away"
-          lineup={matchState.awayCurrentLineup}
-          setterPosition={matchState.awaySetterPosition}
-          side="left"
-        />
+        {/* Etichette squadre */}
+        <div className="absolute top-2 left-3 z-30 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/50 backdrop-blur text-red-200">
+          {awayTeam.name || 'OSPITE'}
+        </div>
+        <div className="absolute top-2 right-3 z-30 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/50 backdrop-blur text-blue-200">
+          {homeTeam.name || 'CASA'}
+        </div>
+        <div className="absolute bottom-1 left-2 z-20 text-[8px] font-bold uppercase tracking-widest text-white/40">
+          ◀ Servizio
+        </div>
+        <div className="absolute bottom-1 right-2 z-20 text-[8px] font-bold uppercase tracking-widest text-white/40">
+          Servizio ▶
+        </div>
 
-        {/* Center / net line */}
-        <div className="w-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+        {/* AWAY: servizio | back | front */}
+        {renderBand(AWAY_SERVICE, SERVICE_BG, 'away', matchState.awayCurrentLineup, matchState.awaySetterPosition, true)}
+        {renderBand(AWAY_BACK, BACK_BG, 'away', matchState.awayCurrentLineup, matchState.awaySetterPosition, false)}
+        {renderBand(AWAY_FRONT, FRONT_BG, 'away', matchState.awayCurrentLineup, matchState.awaySetterPosition, false)}
 
-        <Half
-          zones={HOME_ZONES}
-          teamLabel={homeTeam.name || 'CASA'}
-          teamColor="home"
-          lineup={matchState.homeCurrentLineup}
-          setterPosition={matchState.homeSetterPosition}
-          side="right"
-        />
+        {/* NET line (1px ma con shadow) */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white shadow-[0_0_12px_rgba(255,255,255,0.7)] z-10" />
+        </div>
+
+        {/* HOME: front | back | servizio */}
+        {renderBand(HOME_FRONT, FRONT_BG, 'home', matchState.homeCurrentLineup, matchState.homeSetterPosition, false)}
+        {renderBand(HOME_BACK, BACK_BG, 'home', matchState.homeCurrentLineup, matchState.homeSetterPosition, false)}
+        {renderBand(HOME_SERVICE, SERVICE_BG, 'home', matchState.homeCurrentLineup, matchState.homeSetterPosition, true)}
+
+        {/* Linee di fondo (separano back da servizio) */}
+        <div className="absolute inset-y-0 left-[25%] w-0.5 bg-white shadow-[0_0_4px_rgba(255,255,255,0.5)] pointer-events-none z-10" />
+        <div className="absolute inset-y-0 right-[25%] w-0.5 bg-white shadow-[0_0_4px_rgba(255,255,255,0.5)] pointer-events-none z-10" />
       </div>
     </div>
   );
