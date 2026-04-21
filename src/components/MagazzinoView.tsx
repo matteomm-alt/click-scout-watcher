@@ -79,7 +79,7 @@ export function MagazzinoView() {
   // Crea articoli default se magazzino vuoto
   const initDefault = async () => {
     if (!societyId || !user) return;
-    const inserts = ARTICOLI_DEFAULT.map(a => ({ ...a, size: null, notes: null, society_id: societyId, created_by: user.id }));
+    const inserts = ARTICOLI_DEFAULT.map(a => ({ name: a.name, category: a.category, quantity: 1, size: null, notes: null, society_id: societyId, created_by: user.id }));
     const { error } = await supabase.from('inventory_items').insert(inserts);
     if (error) { toast.error('Errore init'); return; }
     toast.success('Articoli default aggiunti');
