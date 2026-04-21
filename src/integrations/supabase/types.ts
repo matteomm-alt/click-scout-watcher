@@ -24,6 +24,7 @@ export type Database = {
           id: string
           notes: string | null
           score: number
+          season_phase: string | null
           society_id: string
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           id?: string
           notes?: string | null
           score: number
+          season_phase?: string | null
           society_id: string
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           id?: string
           notes?: string | null
           score?: number
+          season_phase?: string | null
           society_id?: string
         }
         Relationships: [
@@ -609,6 +612,7 @@ export type Database = {
           quantity: number
           recorded_by: string
           returned_at: string | null
+          size: string | null
           society_id: string
         }
         Insert: {
@@ -620,6 +624,7 @@ export type Database = {
           quantity?: number
           recorded_by: string
           returned_at?: string | null
+          size?: string | null
           society_id: string
         }
         Update: {
@@ -631,6 +636,7 @@ export type Database = {
           quantity?: number
           recorded_by?: string
           returned_at?: string | null
+          size?: string | null
           society_id?: string
         }
         Relationships: [
@@ -667,6 +673,7 @@ export type Database = {
           notes: string | null
           quantity: number
           size: string | null
+          size_distribution: Json
           society_id: string
           updated_at: string
         }
@@ -679,6 +686,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           size?: string | null
+          size_distribution?: Json
           society_id: string
           updated_at?: string
         }
@@ -691,6 +699,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           size?: string | null
+          size_distribution?: Json
           society_id?: string
           updated_at?: string
         }
