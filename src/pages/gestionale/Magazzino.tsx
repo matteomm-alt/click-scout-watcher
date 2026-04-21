@@ -1,13 +1,5 @@
-import { Package } from 'lucide-react';
-import PlaceholderPage from '@/components/PlaceholderPage';
+import { MagazzinoView } from '@/components/MagazzinoView';
 
 export default function Magazzino() {
-  return (
-    <PlaceholderPage
-      block="gestionale"
-      icon={Package}
-      title="Magazzino"
-      description="Materiale società: divise, palloni, attrezzatura. Assegnazioni ad atleti, restituzioni, taglie."
-    />
-  );
+  return <MagazzinoView />;
 }
