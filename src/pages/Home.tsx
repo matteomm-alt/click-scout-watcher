@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { FileUp, Activity, BarChart3, Library, LogOut } from 'lucide-react';
+import { HomeDashboard } from '@/components/home/HomeDashboard';
 
 /**
  * Home dell'app: due entry point principali — Importa DVW e Scout Live —
@@ -116,6 +117,9 @@ export default function Home() {
           <span className="text-primary font-bold">→</span>
         </Link>
       </section>
+
+      {/* DASHBOARD OPERATIVA */}
+      <HomeDashboard />
     </div>
   );
 }
