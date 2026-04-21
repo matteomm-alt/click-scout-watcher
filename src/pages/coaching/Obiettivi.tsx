@@ -192,7 +192,7 @@ export default function Obiettivi() {
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">In corso</p>
-          <p className="text-3xl font-black text-amber-400">{totals.inProgress}</p>
+          <p className="text-3xl font-black text-accent">{totals.inProgress}</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Completati</p>
