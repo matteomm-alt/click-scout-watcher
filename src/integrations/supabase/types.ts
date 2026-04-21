@@ -124,6 +124,7 @@ export type Database = {
           birth_date: string | null
           coach_id: string
           created_at: string
+          email: string | null
           first_name: string | null
           id: string
           is_captain: boolean
@@ -131,15 +132,18 @@ export type Database = {
           last_name: string
           notes: string | null
           number: number | null
+          phone: string | null
           role: string | null
           society_id: string
           team_id: string | null
+          teams: string[]
           updated_at: string
         }
         Insert: {
           birth_date?: string | null
           coach_id: string
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id?: string
           is_captain?: boolean
@@ -147,15 +151,18 @@ export type Database = {
           last_name: string
           notes?: string | null
           number?: number | null
+          phone?: string | null
           role?: string | null
           society_id: string
           team_id?: string | null
+          teams?: string[]
           updated_at?: string
         }
         Update: {
           birth_date?: string | null
           coach_id?: string
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id?: string
           is_captain?: boolean
@@ -163,9 +170,11 @@ export type Database = {
           last_name?: string
           notes?: string | null
           number?: number | null
+          phone?: string | null
           role?: string | null
           society_id?: string
           team_id?: string | null
+          teams?: string[]
           updated_at?: string
         }
         Relationships: [
