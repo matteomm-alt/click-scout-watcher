@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserCircle, Plus, Pencil, Trash2 } from 'lucide-react';
+import { UserCircle, Plus, Pencil, Trash2, Phone, Mail } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,16 +23,18 @@ interface Athlete {
   is_libero: boolean;
   is_captain: boolean;
   birth_date: string | null;
+  phone: string | null;
+  email: string | null;
   notes: string | null;
 }
 
-const ROLES = ['Palleggiatrice', 'Opposto', 'Schiaccitatrice', 'Centrale', 'Libero', 'Universale'];
+const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Libero', 'Universale'];
 
-const ROLE_ABBR: Record<string, string> = {
-  Palleggiatrice: 'P', Opposto: 'O', Schiaccitatrice: 'S', Centrale: 'C', Libero: 'L', Universale: 'U',
+const emptyForm = {
+  number: '', last_name: '', first_name: '', role: '',
+  is_libero: false, is_captain: false, birth_date: '',
+  phone: '', email: '', notes: '',
 };
-
-const emptyForm = { number: '', last_name: '', first_name: '', role: '', is_libero: false, is_captain: false, birth_date: '', notes: '' };
 
 export function AtletiView() {
   const { user } = useAuth();
@@ -72,6 +74,8 @@ export function AtletiView() {
       is_libero: a.is_libero,
       is_captain: a.is_captain,
       birth_date: a.birth_date || '',
+      phone: a.phone || '',
+      email: a.email || '',
       notes: a.notes || '',
     });
     setDialogOpen(true);
@@ -87,6 +91,8 @@ export function AtletiView() {
       is_libero: form.is_libero,
       is_captain: form.is_captain,
       birth_date: form.birth_date || null,
+      phone: form.phone || null,
+      email: form.email || null,
       notes: form.notes || null,
     };
     if (editing) {
@@ -109,6 +115,13 @@ export function AtletiView() {
     toast.success('Atleta rimosso');
     setDeleteId(null);
     load();
+  };
+
+  // Formatta numero per WhatsApp — rimuove spazi e aggiunge +39 se italiano
+  const waLink = (phone: string) => {
+    const clean = phone.replace(/\s+/g, '');
+    const num = clean.startsWith('+') ? clean : `+39${clean}`;
+    return `https://wa.me/${num.replace('+', '')}`;
   };
 
   const byRole = ROLES.map(r => ({ role: r, athletes: athletes.filter(a => a.role === r) })).filter(g => g.athletes.length > 0);
@@ -170,9 +183,24 @@ export function AtletiView() {
                         {a.is_captain && <Badge variant="default" className="text-[10px] px-1.5 py-0">C</Badge>}
                         {a.is_libero && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">L</Badge>}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
                         {a.birth_date && <span className="text-xs text-muted-foreground">· {new Date(a.birth_date).getFullYear()}</span>}
+                        {/* Contatti cliccabili */}
+                        {a.phone && (
+                          <a href={waLink(a.phone)} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-0.5 text-xs text-green-400 hover:text-green-300 transition-colors"
+                            onClick={e => e.stopPropagation()}>
+                            <Phone className="w-3 h-3" /> WA
+                          </a>
+                        )}
+                        {a.email && (
+                          <a href={`mailto:${a.email}`}
+                            className="flex items-center gap-0.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                            onClick={e => e.stopPropagation()}>
+                            <Mail className="w-3 h-3" /> Mail
+                          </a>
+                        )}
                       </div>
                     </div>
                     {/* Azioni */}
@@ -212,6 +240,10 @@ export function AtletiView() {
                 <SelectTrigger><SelectValue placeholder="Seleziona ruolo..." /></SelectTrigger>
                 <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><Label>Telefono (WhatsApp)</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="es. 3331234567" /></div>
+              <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="atleta@email.it" /></div>
             </div>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 cursor-pointer text-sm">
