@@ -1,13 +1,5 @@
-import { PieChart } from 'lucide-react';
-import PlaceholderPage from '@/components/PlaceholderPage';
+import { ReportStagioneView } from '@/components/ReportStagioneView';
 
 export default function ReportStagione() {
-  return (
-    <PlaceholderPage
-      block="analisi"
-      icon={PieChart}
-      title="Report stagione"
-      description="Aggregazione cross-match della tua squadra: trend, KPI per atleta e per fondamentale lungo la stagione."
-    />
-  );
+  return <ReportStagioneView />;
 }
