@@ -27,6 +27,7 @@ interface Society {
   name: string;
   slug: string;
   created_at: string;
+  features: FeaturesMap;
 }
 
 interface Invitation {
@@ -84,6 +85,10 @@ export default function AdminSocieties() {
   const [removeCoach, setRemoveCoach] = useState<CoachRow | null>(null);
   const [removing, setRemoving] = useState(false);
 
+  // Toggle moduli inline (id società → in saving)
+  const [savingFeatures, setSavingFeatures] = useState<string | null>(null);
+  const [expandedFeatures, setExpandedFeatures] = useState<string | null>(null);
+
   useEffect(() => {
     if (!authLoading && !isSuperAdmin) {
       navigate('/', { replace: true });
@@ -99,7 +104,7 @@ export default function AdminSocieties() {
       { data: roles, error: rErr },
       { data: coachRoles, error: cErr },
     ] = await Promise.all([
-      supabase.from('societies').select('id, name, slug, created_at').order('created_at', { ascending: false }),
+      supabase.from('societies').select('id, name, slug, created_at, features').order('created_at', { ascending: false }),
       supabase.from('society_invitations').select('id, email, token, expires_at, accepted_at, society_id, role').order('created_at', { ascending: false }),
       supabase.from('user_roles').select('society_id, role').eq('user_id', user.id),
       supabase.from('user_roles').select('id, user_id, society_id, role').eq('role', 'coach'),
@@ -138,7 +143,10 @@ export default function AdminSocieties() {
         email: acceptedInvitesByUser.get(c.user_id) ?? null,
       }));
 
-    setSocieties((socs || []) as Society[]);
+    setSocieties(((socs || []) as { id: string; name: string; slug: string; created_at: string; features: unknown }[]).map((s) => ({
+      ...s,
+      features: (s.features ?? {}) as FeaturesMap,
+    })));
     setInvitations((invs || []) as Invitation[]);
     setMyRoles(
       ((roles || []) as { society_id: string | null; role: MyRole['role'] }[])
