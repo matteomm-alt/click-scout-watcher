@@ -46,6 +46,7 @@ import Inventario from "./pages/atleta/Inventario.tsx";
 
 // Admin
 import AdminSocieties from "./pages/admin/Societies.tsx";
+import SocietyFeatures from "./pages/admin/SocietyFeatures.tsx";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,7 @@ const App = () => (
 
               {/* Admin */}
               <Route path="/admin" element={<AdminSocieties />} />
+              <Route path="/admin/societa/:id/moduli" element={<SocietyFeatures />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
