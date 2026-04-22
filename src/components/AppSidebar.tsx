@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { isFeatureEnabled, type FeatureKey } from '@/lib/societyFeatures';
 import {
   Home, FileUp, Activity, Library,
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
@@ -27,51 +28,56 @@ interface NavItem {
   title: string;
   url: string;
   icon: typeof Home;
+  /** Se presente, la voce è visibile solo se la feature è attiva (default: sempre visibile). */
+  feature?: FeatureKey;
 }
 
 const MAIN: NavItem[] = [
   { title: 'Home', url: '/', icon: Home },
-  { title: 'Importa DVW', url: '/import', icon: FileUp },
-  { title: 'Scout Live', url: '/scout', icon: Activity },
-  { title: 'Archivio', url: '/archive', icon: Library },
+  { title: 'Importa DVW', url: '/import', icon: FileUp, feature: 'advanced_stats' },
+  { title: 'Scout Live', url: '/scout', icon: Activity, feature: 'live_scout' },
+  { title: 'Archivio', url: '/archive', icon: Library, feature: 'advanced_stats' },
 ];
 
 const GESTIONALE: NavItem[] = [
   { title: 'Calendario', url: '/calendario', icon: Calendar },
   { title: 'Presenze', url: '/presenze', icon: ClipboardCheck },
   { title: 'Convocazioni', url: '/convocazioni', icon: ListChecks },
-  { title: 'Comunicazioni', url: '/comunicazioni', icon: Megaphone },
-  { title: 'Magazzino', url: '/magazzino', icon: Package },
+  { title: 'Comunicazioni', url: '/comunicazioni', icon: Megaphone, feature: 'communications' },
+  { title: 'Magazzino', url: '/magazzino', icon: Package, feature: 'athletes' },
 ];
 
 const COACHING: NavItem[] = [
-  { title: 'Esercizi', url: '/esercizi', icon: Dumbbell },
-  { title: 'Allenamenti', url: '/allenamenti', icon: ClipboardList },
-  { title: 'Scheletri', url: '/scheletri', icon: LayoutTemplate },
-  { title: 'Schemi', url: '/schemi', icon: GitBranch },
-  { title: 'Volume', url: '/volume', icon: BarChart3 },
-  { title: 'Pianificazione', url: '/pianificazione', icon: CalendarRange },
-  { title: 'Periodizzazione', url: '/periodizzazione', icon: Workflow },
+  { title: 'Esercizi', url: '/esercizi', icon: Dumbbell, feature: 'exercises' },
+  { title: 'Allenamenti', url: '/allenamenti', icon: ClipboardList, feature: 'exercises' },
+  { title: 'Scheletri', url: '/scheletri', icon: LayoutTemplate, feature: 'training_calendar' },
+  { title: 'Schemi', url: '/schemi', icon: GitBranch, feature: 'training_calendar' },
+  { title: 'Volume', url: '/volume', icon: BarChart3, feature: 'training_calendar' },
+  { title: 'Pianificazione', url: '/pianificazione', icon: CalendarRange, feature: 'training_calendar' },
+  { title: 'Periodizzazione', url: '/periodizzazione', icon: Workflow, feature: 'training_calendar' },
   { title: 'Obiettivi', url: '/obiettivi', icon: Target },
-  { title: 'Guida Tecnica', url: '/guida-tecnica', icon: BookOpen },
+  { title: 'Guida Tecnica', url: '/guida-tecnica', icon: BookOpen, feature: 'guidelines' },
 ];
 
 const ANALISI: NavItem[] = [
-  { title: 'Report Stagione', url: '/report-stagione', icon: PieChart },
-  { title: 'Profilo Avversario', url: '/profilo-avversario', icon: Shield },
+  { title: 'Report Stagione', url: '/report-stagione', icon: PieChart, feature: 'advanced_stats' },
+  { title: 'Profilo Avversario', url: '/profilo-avversario', icon: Shield, feature: 'advanced_stats' },
 ];
 
 const ATLETA: NavItem[] = [
-  { title: 'Atleti', url: '/atleti', icon: UserCircle },
-  { title: 'Valutazioni', url: '/valutazioni', icon: Star },
-  { title: 'Inventario', url: '/inventario', icon: Boxes },
+  { title: 'Atleti', url: '/atleti', icon: UserCircle, feature: 'athletes' },
+  { title: 'Valutazioni', url: '/valutazioni', icon: Star, feature: 'athletes' },
+  { title: 'Inventario', url: '/inventario', icon: Boxes, feature: 'athletes' },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { user, isSuperAdmin, signOut } = useAuth();
-  const { societyName } = useActiveSociety();
+  const { societyName, features } = useActiveSociety();
+
+  const visible = (items: NavItem[]) =>
+    items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
 
   const renderItems = (items: NavItem[]) =>
     items.map((item) => (
@@ -89,6 +95,12 @@ export function AppSidebar() {
         </SidebarMenuButton>
       </SidebarMenuItem>
     ));
+
+  const mainItems = visible(MAIN);
+  const gestionaleItems = visible(GESTIONALE);
+  const coachingItems = visible(COACHING);
+  const analisiItems = visible(ANALISI);
+  const atletaItems = visible(ATLETA);
 
   return (
     <Sidebar collapsible="icon">
@@ -114,40 +126,50 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Principale</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(MAIN)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {mainItems.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Principale</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItems(mainItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Gestionale</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(GESTIONALE)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {gestionaleItems.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Gestionale</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItems(gestionaleItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Coaching</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(COACHING)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {coachingItems.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Coaching</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItems(coachingItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Analisi</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(ANALISI)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {analisiItems.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Analisi</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItems(analisiItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Atleta & Magazzino</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(ATLETA)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {atletaItems.length > 0 && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Atleta & Magazzino</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{renderItems(atletaItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border/60">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import type { FeaturesMap } from '@/lib/societyFeatures';
 
 export interface ActiveSocietyInfo {
   societyId: string | null;
@@ -10,6 +11,8 @@ export interface ActiveSocietyInfo {
   /** Date stagione (ISO yyyy-mm-dd) salvate in features JSONB */
   seasonStart: string | null;
   seasonEnd: string | null;
+  /** Oggetto features completo (jsonb) della società. {} se non disponibile. */
+  features: FeaturesMap;
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -31,6 +34,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
   const [societyName, setSocietyName] = useState<string | null>(null);
   const [seasonStart, setSeasonStart] = useState<string | null>(null);
   const [seasonEnd, setSeasonEnd] = useState<string | null>(null);
+  const [features, setFeatures] = useState<FeaturesMap>({});
   const [loading, setLoading] = useState(true);
 
   // La prima società tra i ruoli che hanno society_id
@@ -45,6 +49,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
       setSocietyName(null);
       setSeasonStart(null);
       setSeasonEnd(null);
+      setFeatures({});
       setLoading(false);
       return;
     }
@@ -59,6 +64,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
       setSocietyName(null);
       setSeasonStart(null);
       setSeasonEnd(null);
+      setFeatures({});
       setLoading(false);
       return;
     } else {
@@ -77,6 +83,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
     const feats = (data?.features ?? {}) as SocietyFeatures;
     setSeasonStart(feats.season_start ?? null);
     setSeasonEnd(feats.season_end ?? null);
+    setFeatures(feats as FeaturesMap);
     setLoading(false);
   };
 
@@ -91,6 +98,7 @@ export function useActiveSociety(): ActiveSocietyInfo {
     isAdmin: isAdminForSociety,
     seasonStart,
     seasonEnd,
+    features,
     loading,
     refresh: load,
   };
