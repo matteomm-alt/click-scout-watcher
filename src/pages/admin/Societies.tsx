@@ -9,8 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, UserPlus, Loader2, Mail, Copy, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import {
+  Building2, Plus, UserPlus, Loader2, Mail, Copy, ExternalLink,
+  ShieldCheck, CheckCircle2, Users, Trash2, UserCog,
+} from 'lucide-react';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 
 interface Society {
@@ -27,11 +34,20 @@ interface Invitation {
   expires_at: string;
   accepted_at: string | null;
   society_id: string;
+  role: 'super_admin' | 'society_admin' | 'coach';
 }
 
 interface MyRole {
   society_id: string;
   role: 'super_admin' | 'society_admin' | 'coach';
+}
+
+interface CoachRow {
+  role_id: string;
+  user_id: string;
+  society_id: string;
+  full_name: string | null;
+  email: string | null;
 }
 
 const slugify = (s: string) =>
@@ -46,6 +62,7 @@ export default function AdminSocieties() {
   const [societies, setSocieties] = useState<Society[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [myRoles, setMyRoles] = useState<MyRole[]>([]);
+  const [coaches, setCoaches] = useState<CoachRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
@@ -55,10 +72,15 @@ export default function AdminSocieties() {
   const [newSlug, setNewSlug] = useState('');
   const [creating, setCreating] = useState(false);
 
-  // Dialog invita admin
+  // Dialog invita admin / coach
   const [inviteFor, setInviteFor] = useState<Society | null>(null);
+  const [inviteRole, setInviteRole] = useState<'society_admin' | 'coach'>('society_admin');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
+
+  // Conferma rimozione coach
+  const [removeCoach, setRemoveCoach] = useState<CoachRow | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isSuperAdmin) {
@@ -69,14 +91,51 @@ export default function AdminSocieties() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [{ data: socs, error: sErr }, { data: invs, error: iErr }, { data: roles, error: rErr }] = await Promise.all([
+    const [
+      { data: socs, error: sErr },
+      { data: invs, error: iErr },
+      { data: roles, error: rErr },
+      { data: coachRoles, error: cErr },
+    ] = await Promise.all([
       supabase.from('societies').select('id, name, slug, created_at').order('created_at', { ascending: false }),
-      supabase.from('society_invitations').select('id, email, token, expires_at, accepted_at, society_id').order('created_at', { ascending: false }),
+      supabase.from('society_invitations').select('id, email, token, expires_at, accepted_at, society_id, role').order('created_at', { ascending: false }),
       supabase.from('user_roles').select('society_id, role').eq('user_id', user.id),
+      supabase.from('user_roles').select('id, user_id, society_id, role').eq('role', 'coach'),
     ]);
     if (sErr) toast({ title: 'Errore caricamento società', description: sErr.message, variant: 'destructive' });
     if (iErr) console.warn('inviti', iErr);
     if (rErr) console.warn('ruoli', rErr);
+    if (cErr) console.warn('coach', cErr);
+
+    const coachRolesArr = (coachRoles || []) as { id: string; user_id: string; society_id: string | null; role: string }[];
+    const coachUserIds = Array.from(new Set(coachRolesArr.map((c) => c.user_id)));
+    let profilesMap = new Map<string, { full_name: string | null }>();
+    if (coachUserIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', coachUserIds);
+      (profs || []).forEach((p) => profilesMap.set(p.id, { full_name: p.full_name }));
+    }
+
+    // Per email: usiamo gli inviti accettati per recuperare l'email originale del coach
+    const acceptedInvitesByUser = new Map<string, string>();
+    (invs || []).forEach((inv) => {
+      if (inv.accepted_at && inv.role === 'coach') {
+        // non abbiamo direttamente user_id sull'invito, ma possiamo correlare per email/profilo
+      }
+    });
+
+    const coachesData: CoachRow[] = coachRolesArr
+      .filter((c) => c.society_id)
+      .map((c) => ({
+        role_id: c.id,
+        user_id: c.user_id,
+        society_id: c.society_id as string,
+        full_name: profilesMap.get(c.user_id)?.full_name ?? null,
+        email: acceptedInvitesByUser.get(c.user_id) ?? null,
+      }));
+
     setSocieties((socs || []) as Society[]);
     setInvitations((invs || []) as Invitation[]);
     setMyRoles(
@@ -84,6 +143,7 @@ export default function AdminSocieties() {
         .filter((r) => r.society_id)
         .map((r) => ({ society_id: r.society_id as string, role: r.role })),
     );
+    setCoaches(coachesData);
     setLoading(false);
   };
 
@@ -122,7 +182,6 @@ export default function AdminSocieties() {
 
   const handleNameChange = (v: string) => {
     setNewName(v);
-    // auto-slug se l'utente non l'ha toccato manualmente
     setNewSlug((prev) => (prev === '' || prev === slugify(newName) ? slugify(v) : prev));
   };
 
@@ -135,7 +194,7 @@ export default function AdminSocieties() {
       return;
     }
     setCreating(true);
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('societies')
       .insert({ name, slug, created_by: user.id })
       .select('id')
@@ -150,6 +209,12 @@ export default function AdminSocieties() {
     load();
   };
 
+  const openInvite = (s: Society, role: 'society_admin' | 'coach') => {
+    setInviteFor(s);
+    setInviteRole(role);
+    setInviteEmail('');
+  };
+
   const submitInvite = async () => {
     if (!inviteFor || !user) return;
     const email = inviteEmail.trim().toLowerCase();
@@ -161,7 +226,7 @@ export default function AdminSocieties() {
     const { error } = await supabase.from('society_invitations').insert({
       society_id: inviteFor.id,
       email,
-      role: 'society_admin',
+      role: inviteRole,
       invited_by: user.id,
     });
     setInviting(false);
@@ -175,6 +240,23 @@ export default function AdminSocieties() {
     });
     setInviteEmail('');
     setInviteFor(null);
+    load();
+  };
+
+  const confirmRemoveCoach = async () => {
+    if (!removeCoach) return;
+    setRemoving(true);
+    const { error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('id', removeCoach.role_id);
+    setRemoving(false);
+    if (error) {
+      toast({ title: 'Errore rimozione', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Coach rimosso' });
+    setRemoveCoach(null);
     load();
   };
 
@@ -205,7 +287,7 @@ export default function AdminSocieties() {
             Società
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">
-            Crea nuove società e invita i loro admin. Ogni società sarà poi gestita autonomamente dal proprio admin.
+            Crea nuove società, invita admin e coach. Ogni società sarà poi gestita autonomamente dal proprio admin.
           </p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -231,7 +313,9 @@ export default function AdminSocieties() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {societies.map((s) => {
             const socInvites = invitations.filter((i) => i.society_id === s.id);
-            const pending = socInvites.filter((i) => !i.accepted_at);
+            const pendingAdmin = socInvites.filter((i) => !i.accepted_at && i.role === 'society_admin');
+            const pendingCoach = socInvites.filter((i) => !i.accepted_at && i.role === 'coach');
+            const socCoaches = coaches.filter((c) => c.society_id === s.id);
             return (
               <article
                 key={s.id}
@@ -242,19 +326,68 @@ export default function AdminSocieties() {
                     <h3 className="font-black italic uppercase tracking-tight leading-tight truncate">{s.name}</h3>
                     <p className="text-xs text-muted-foreground font-mono">{s.slug}</p>
                   </div>
-                  <Badge variant="outline" className="border-primary/30 text-primary shrink-0">
-                    {pending.length} invito{pending.length === 1 ? '' : 'i'}
-                  </Badge>
+                  <div className="flex flex-col gap-1 items-end shrink-0">
+                    <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+                      {socCoaches.length} coach
+                    </Badge>
+                    {(pendingAdmin.length + pendingCoach.length) > 0 && (
+                      <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px]">
+                        {pendingAdmin.length + pendingCoach.length} invito{(pendingAdmin.length + pendingCoach.length) === 1 ? '' : 'i'}
+                      </Badge>
+                    )}
+                  </div>
                 </header>
 
-                {pending.length > 0 && (
+                {/* Lista coach attivi */}
+                {socCoaches.length > 0 && (
                   <div className="space-y-1.5">
-                    {pending.map((inv) => (
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                      <Users className="w-3 h-3" /> Coach attivi
+                    </p>
+                    {socCoaches.map((c) => (
+                      <div
+                        key={c.role_id}
+                        className="flex items-center gap-2 text-xs bg-muted/40 border border-border rounded px-2 py-1.5"
+                      >
+                        <UserCog className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span className="truncate flex-1" title={c.full_name || c.user_id}>
+                          {c.full_name || <span className="font-mono text-muted-foreground">{c.user_id.slice(0, 8)}…</span>}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setRemoveCoach(c)}
+                          className="text-destructive hover:underline inline-flex items-center gap-1 shrink-0"
+                          title="Rimuovi coach"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Inviti pendenti */}
+                {(pendingAdmin.length + pendingCoach.length) > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Inviti in attesa
+                    </p>
+                    {[...pendingAdmin, ...pendingCoach].map((inv) => (
                       <div
                         key={inv.id}
                         className="flex items-center gap-2 text-xs bg-muted/40 border border-border rounded px-2 py-1.5"
                       >
                         <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <Badge
+                          variant="outline"
+                          className={`text-[9px] px-1 py-0 shrink-0 ${
+                            inv.role === 'society_admin'
+                              ? 'border-primary/40 text-primary'
+                              : 'border-muted-foreground/30 text-muted-foreground'
+                          }`}
+                        >
+                          {inv.role === 'society_admin' ? 'admin' : 'coach'}
+                        </Badge>
                         <span className="truncate flex-1" title={inv.email}>{inv.email}</span>
                         <button
                           type="button"
@@ -288,25 +421,32 @@ export default function AdminSocieties() {
                       )}
                     </Button>
                   )}
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="gap-1.5 flex-1"
-                      onClick={() => setInviteFor(s)}
+                      className="gap-1.5"
+                      onClick={() => openInvite(s, 'society_admin')}
                     >
-                      <UserPlus className="w-3.5 h-3.5" /> Invita admin
+                      <UserPlus className="w-3.5 h-3.5" /> Admin
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
                       className="gap-1.5"
-                      onClick={() => navigate(`/societa/${s.slug}`)}
-                      title="Apri pagina società"
+                      onClick={() => openInvite(s, 'coach')}
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <UserPlus className="w-3.5 h-3.5" /> Coach
                     </Button>
                   </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1.5 w-full"
+                    onClick={() => navigate(`/societa/${s.slug}`)}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> Apri pagina società
+                  </Button>
                 </footer>
               </article>
             );
@@ -355,26 +495,29 @@ export default function AdminSocieties() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog invito admin */}
+      {/* Dialog invito admin / coach */}
       <Dialog open={!!inviteFor} onOpenChange={(o) => !o && setInviteFor(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-black italic uppercase tracking-tight">
-              Invita admin
+              Invita {inviteRole === 'society_admin' ? 'admin' : 'coach'}
             </DialogTitle>
             <DialogDescription>
-              Invita un admin per <strong>{inviteFor?.name}</strong>. Riceverà accesso completo alla società.
+              Invita un {inviteRole === 'society_admin' ? 'admin' : 'coach'} per <strong>{inviteFor?.name}</strong>.{' '}
+              {inviteRole === 'society_admin'
+                ? 'Riceverà accesso completo alla società.'
+                : 'Potrà gestire atleti, allenamenti e analisi della società.'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email admin *</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="admin@esempio.it"
+                placeholder={inviteRole === 'society_admin' ? 'admin@esempio.it' : 'coach@esempio.it'}
               />
               <p className="text-xs text-muted-foreground">
                 L'invito è valido 7 giorni. Dopo la creazione potrai copiare il link e condividerlo.
@@ -389,6 +532,29 @@ export default function AdminSocieties() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Conferma rimozione coach */}
+      <AlertDialog open={!!removeCoach} onOpenChange={(o) => !o && setRemoveCoach(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rimuovere il coach?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Il coach <strong>{removeCoach?.full_name || removeCoach?.user_id?.slice(0, 8)}</strong> perderà
+              l'accesso a questa società. L'azione non cancella l'account utente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removing}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmRemoveCoach(); }}
+              disabled={removing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Rimozione…</> : 'Rimuovi'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
