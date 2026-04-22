@@ -278,6 +278,25 @@ export default function AdminSocieties() {
     toast({ title: 'Link copiato' });
   };
 
+  const toggleFeature = async (s: Society, key: FeatureKey, val: boolean) => {
+    setSavingFeatures(s.id);
+    const next: FeaturesMap = { ...s.features, [key]: val };
+    // optimistic update
+    setSocieties((prev) => prev.map((x) => (x.id === s.id ? { ...x, features: next } : x)));
+    const { error } = await supabase
+      .from('societies')
+      .update({ features: next as never })
+      .eq('id', s.id);
+    setSavingFeatures(null);
+    if (error) {
+      toast({ title: 'Errore aggiornamento moduli', description: error.message, variant: 'destructive' });
+      // rollback
+      setSocieties((prev) => prev.map((x) => (x.id === s.id ? { ...x, features: s.features } : x)));
+      return;
+    }
+    await refreshActiveSociety();
+  };
+
   if (authLoading || !isSuperAdmin) {
     return (
       <div className="container py-10 flex items-center gap-2 text-muted-foreground">
@@ -431,7 +450,7 @@ export default function AdminSocieties() {
                       )}
                     </Button>
                   )}
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -449,6 +468,59 @@ export default function AdminSocieties() {
                       <UserPlus className="w-3.5 h-3.5" /> Coach
                     </Button>
                   </div>
+
+                  {/* Sezione espandibile: moduli attivi */}
+                  <div className="border border-border/60 rounded bg-muted/20">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedFeatures((prev) => (prev === s.id ? null : s.id))
+                      }
+                      className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <ToggleRight className="w-3.5 h-3.5" /> Moduli attivi
+                      </span>
+                      <span className="text-[10px] font-mono">
+                        {expandedFeatures === s.id ? '−' : '+'}
+                      </span>
+                    </button>
+                    {expandedFeatures === s.id && (
+                      <div className="border-t border-border/60 p-2 space-y-1.5">
+                        {FEATURE_DEFINITIONS.map((f) => {
+                          const active = isFeatureEnabled(s.features, f.key);
+                          return (
+                            <div
+                              key={f.key}
+                              className="flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-muted/40"
+                              title={f.description}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold truncate">{f.label}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono truncate">
+                                  {f.key}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={active}
+                                disabled={savingFeatures === s.id}
+                                onCheckedChange={(v) => toggleFeature(s, f.key, v)}
+                              />
+                            </div>
+                          );
+                        })}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full gap-1.5 mt-1"
+                          onClick={() => navigate(`/admin/societa/${s.id}/moduli`)}
+                        >
+                          <Settings2 className="w-3.5 h-3.5" /> Apri pagina moduli
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
                   <Button
                     size="sm"
                     variant="ghost"
