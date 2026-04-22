@@ -73,7 +73,7 @@ export default function SocietyFeatures() {
     setSaving(true);
     const { error } = await supabase
       .from('societies')
-      .update({ features: features as unknown as Record<string, unknown> })
+      .update({ features: features as never })
       .eq('id', id);
     setSaving(false);
     if (error) {

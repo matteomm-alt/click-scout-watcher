@@ -16,9 +16,11 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   Building2, Plus, UserPlus, Loader2, Mail, Copy, ExternalLink,
-  ShieldCheck, CheckCircle2, Users, Trash2, UserCog,
+  ShieldCheck, CheckCircle2, Users, Trash2, UserCog, ToggleRight, Settings2,
 } from 'lucide-react';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { Switch } from '@/components/ui/switch';
+import { FEATURE_DEFINITIONS, isFeatureEnabled, type FeaturesMap, type FeatureKey } from '@/lib/societyFeatures';
 
 interface Society {
   id: string;
