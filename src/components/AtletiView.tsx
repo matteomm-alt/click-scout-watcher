@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserCircle, Plus, Pencil, Trash2, Phone, Mail } from 'lucide-react';
+import { UserCircle, Plus, Pencil, Trash2, Phone, Mail, HeartPulse } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { isFeatureEnabled } from '@/lib/societyFeatures';
+import { AthleteInjuriesDialog } from '@/components/injuries/AthleteInjuriesDialog';
 import { toast } from 'sonner';
 
 interface Athlete {
@@ -38,21 +40,29 @@ const emptyForm = {
 
 export function AtletiView() {
   const { user } = useAuth();
-  const { societyId } = useActiveSociety();
+  const { societyId, features } = useActiveSociety();
+  const injuriesEnabled = isFeatureEnabled(features, 'injuries');
   const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [activeInjuries, setActiveInjuries] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Athlete | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [injuriesAthlete, setInjuriesAthlete] = useState<Athlete | null>(null);
 
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
-    const { data } = await supabase.from('athletes')
-      .select('*').eq('society_id', societyId)
-      .order('number', { ascending: true, nullsFirst: false });
-    setAthletes((data as any) || []);
+    const [aRes, iRes] = await Promise.all([
+      supabase.from('athletes').select('*').eq('society_id', societyId)
+        .order('number', { ascending: true, nullsFirst: false }),
+      injuriesEnabled
+        ? supabase.from('athlete_injuries').select('athlete_id').eq('society_id', societyId).eq('status', 'attivo')
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    setAthletes((aRes.data as any) || []);
+    setActiveInjuries(new Set(((iRes.data as any) || []).map((r: { athlete_id: string }) => r.athlete_id)));
     setLoading(false);
   };
 
