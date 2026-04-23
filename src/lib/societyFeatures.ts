@@ -14,7 +14,8 @@ export type FeatureKey =
   | 'live_scout'
   | 'guidelines'
   | 'dvw_export'
-  | 'video_analysis';
+  | 'video_analysis'
+  | 'injuries';
 
 export interface FeatureDefinition {
   key: FeatureKey;
@@ -77,6 +78,12 @@ export const FEATURE_DEFINITIONS: FeatureDefinition[] = [
     label: 'Comunicazioni',
     description: 'Bacheca comunicazioni interne con priorità e lettura.',
     group: 'Gestionale',
+  },
+  {
+    key: 'injuries',
+    label: 'Gestione Infortuni',
+    description: 'Storico infortuni atleti, recupero, integrazione con presenze.',
+    group: 'Atleti',
   },
 ];
 
