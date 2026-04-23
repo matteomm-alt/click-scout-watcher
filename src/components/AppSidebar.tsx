@@ -21,7 +21,7 @@ import {
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
   PieChart, UserCircle, Star,
-  LogOut, Shield, Boxes,
+  LogOut, Shield, Boxes, Settings,
 } from 'lucide-react';
 
 interface NavItem {
@@ -74,7 +74,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { user, isSuperAdmin, signOut } = useAuth();
-  const { societyName, features } = useActiveSociety();
+  const { societyName, features, isAdmin } = useActiveSociety();
 
   const visible = (items: NavItem[]) =>
     items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
