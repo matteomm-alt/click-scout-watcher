@@ -303,6 +303,21 @@ export function AtletiView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Storico infortuni atleta */}
+      {injuriesAthlete && (
+        <AthleteInjuriesDialog
+          open={!!injuriesAthlete}
+          onOpenChange={(o) => {
+            if (!o) {
+              setInjuriesAthlete(null);
+              load();
+            }
+          }}
+          athleteId={injuriesAthlete.id}
+          athleteLabel={`#${injuriesAthlete.number ?? '—'} ${injuriesAthlete.last_name}${injuriesAthlete.first_name ? ` ${injuriesAthlete.first_name}` : ''}`}
+        />
+      )}
     </div>
   );
 }
