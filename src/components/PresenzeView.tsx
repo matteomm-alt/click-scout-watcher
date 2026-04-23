@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ClipboardCheck, Check, X, AlertCircle } from 'lucide-react';
+import { ClipboardCheck, Check, X, AlertCircle, HeartPulse } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { isFeatureEnabled } from '@/lib/societyFeatures';
 import { toast } from 'sonner';
 
 interface Event { id: string; title: string; start_at: string; event_type: string; }
@@ -19,11 +20,13 @@ const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'secondary' | '
 
 export function PresenzeView() {
   const { user } = useAuth();
-  const { societyId } = useActiveSociety();
+  const { societyId, features } = useActiveSociety();
+  const injuriesEnabled = isFeatureEnabled(features, 'injuries');
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [attendances, setAttendances] = useState<Record<string, Attendance>>({});
+  const [injuredIds, setInjuredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
 
