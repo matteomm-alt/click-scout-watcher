@@ -47,8 +47,16 @@ export function PresenzeView() {
       const { data } = await supabase.from('athletes').select('id, last_name, first_name, number, role')
         .eq('society_id', societyId).order('last_name');
       setAthletes((data as any) || []);
+      if (injuriesEnabled) {
+        const { data: inj } = await supabase
+          .from('athlete_injuries')
+          .select('athlete_id')
+          .eq('society_id', societyId)
+          .eq('status', 'attivo');
+        setInjuredIds(new Set(((inj as any) || []).map((r: { athlete_id: string }) => r.athlete_id)));
+      }
     })();
-  }, [societyId]);
+  }, [societyId, injuriesEnabled]);
 
   useEffect(() => {
     if (!selectedEventId) return;
