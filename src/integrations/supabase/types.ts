@@ -68,6 +68,60 @@ export type Database = {
           },
         ]
       }
+      athlete_injuries: {
+        Row: {
+          actual_return_date: string | null
+          athlete_id: string
+          body_part: string
+          created_at: string
+          doctor_notes: string | null
+          expected_return_date: string | null
+          id: string
+          injury_type: string | null
+          notes: string | null
+          recorded_by: string
+          severity: Database["public"]["Enums"]["injury_severity"]
+          society_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["injury_status"]
+          updated_at: string
+        }
+        Insert: {
+          actual_return_date?: string | null
+          athlete_id: string
+          body_part: string
+          created_at?: string
+          doctor_notes?: string | null
+          expected_return_date?: string | null
+          id?: string
+          injury_type?: string | null
+          notes?: string | null
+          recorded_by: string
+          severity?: Database["public"]["Enums"]["injury_severity"]
+          society_id: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["injury_status"]
+          updated_at?: string
+        }
+        Update: {
+          actual_return_date?: string | null
+          athlete_id?: string
+          body_part?: string
+          created_at?: string
+          doctor_notes?: string | null
+          expected_return_date?: string | null
+          id?: string
+          injury_type?: string | null
+          notes?: string | null
+          recorded_by?: string
+          severity?: Database["public"]["Enums"]["injury_severity"]
+          society_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["injury_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       athlete_objectives: {
         Row: {
           athlete_id: string
@@ -1834,6 +1888,8 @@ export type Database = {
       communication_priority: "bassa" | "normale" | "alta" | "urgente"
       convocation_role: "titolare" | "riserva" | "libero" | "non_convocato"
       event_type: "allenamento" | "partita" | "riunione" | "torneo" | "altro"
+      injury_severity: "lieve" | "media" | "grave"
+      injury_status: "attivo" | "in_recupero" | "risolto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1966,6 +2022,8 @@ export const Constants = {
       communication_priority: ["bassa", "normale", "alta", "urgente"],
       convocation_role: ["titolare", "riserva", "libero", "non_convocato"],
       event_type: ["allenamento", "partita", "riunione", "torneo", "altro"],
+      injury_severity: ["lieve", "media", "grave"],
+      injury_status: ["attivo", "in_recupero", "risolto"],
     },
   },
 } as const
