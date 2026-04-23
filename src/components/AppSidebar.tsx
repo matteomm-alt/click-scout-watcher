@@ -20,7 +20,7 @@ import {
   Home, FileUp, Activity, Library,
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
-  PieChart, UserCircle, Star,
+  PieChart, UserCircle, Star, HeartPulse,
   LogOut, Shield, Boxes, Settings,
 } from 'lucide-react';
 
@@ -67,6 +67,7 @@ const ANALISI: NavItem[] = [
 const ATLETA: NavItem[] = [
   { title: 'Atleti', url: '/atleti', icon: UserCircle, feature: 'athletes' },
   { title: 'Valutazioni', url: '/valutazioni', icon: Star, feature: 'athletes' },
+  { title: 'Infortuni', url: '/infortuni', icon: HeartPulse, feature: 'injuries' },
   { title: 'Inventario', url: '/inventario', icon: Boxes, feature: 'athletes' },
 ];
 

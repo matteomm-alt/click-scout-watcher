@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ClipboardCheck, Check, X, AlertCircle } from 'lucide-react';
+import { ClipboardCheck, Check, X, AlertCircle, HeartPulse } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { isFeatureEnabled } from '@/lib/societyFeatures';
 import { toast } from 'sonner';
 
 interface Event { id: string; title: string; start_at: string; event_type: string; }
@@ -19,11 +20,13 @@ const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'secondary' | '
 
 export function PresenzeView() {
   const { user } = useAuth();
-  const { societyId } = useActiveSociety();
+  const { societyId, features } = useActiveSociety();
+  const injuriesEnabled = isFeatureEnabled(features, 'injuries');
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [attendances, setAttendances] = useState<Record<string, Attendance>>({});
+  const [injuredIds, setInjuredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -44,8 +47,16 @@ export function PresenzeView() {
       const { data } = await supabase.from('athletes').select('id, last_name, first_name, number, role')
         .eq('society_id', societyId).order('last_name');
       setAthletes((data as any) || []);
+      if (injuriesEnabled) {
+        const { data: inj } = await supabase
+          .from('athlete_injuries')
+          .select('athlete_id')
+          .eq('society_id', societyId)
+          .eq('status', 'attivo');
+        setInjuredIds(new Set(((inj as any) || []).map((r: { athlete_id: string }) => r.athlete_id)));
+      }
     })();
-  }, [societyId]);
+  }, [societyId, injuriesEnabled]);
 
   useEffect(() => {
     if (!selectedEventId) return;
@@ -123,15 +134,21 @@ export function PresenzeView() {
               <tbody>
                 {athletes.map(a => {
                   const status = attendances[a.id]?.status;
+                  const injured = injuredIds.has(a.id);
                   return (
                     <tr key={a.id} className="border-b border-border/40">
                       <td className="p-4">
                         <span className="font-bold">#{a.number || '—'}</span>
                         <span className="ml-2">{a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''}</span>
                         {a.role && <span className="ml-2 text-xs text-muted-foreground">{a.role}</span>}
+                        {injured && (
+                          <Badge variant="destructive" className="ml-2 text-[10px] px-1.5 py-0 gap-1">
+                            <HeartPulse className="w-2.5 h-2.5" /> Infortunato
+                          </Badge>
+                        )}
                       </td>
                       <td className="p-4 text-center">
-                        {status ? <Badge variant={STATUS_VARIANT[status]}>{status}</Badge> : <span className="text-muted-foreground">—</span>}
+                        {status ? <Badge variant={STATUS_VARIANT[status]}>{status}</Badge> : injured ? <span className="text-xs text-muted-foreground italic">suggerito: assente</span> : <span className="text-muted-foreground">—</span>}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">

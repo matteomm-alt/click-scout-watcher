@@ -43,6 +43,7 @@ import ProfiloAvversario from "./pages/analisi/ProfiloAvversario.tsx";
 import Atleti from "./pages/atleta/Atleti.tsx";
 import Valutazioni from "./pages/atleta/Valutazioni.tsx";
 import Inventario from "./pages/atleta/Inventario.tsx";
+import Infortuni from "./pages/atleta/Infortuni.tsx";
 
 // Admin
 import AdminSocieties from "./pages/admin/Societies.tsx";
@@ -97,6 +98,7 @@ const App = () => (
               <Route path="/atleti" element={<Atleti />} />
               <Route path="/valutazioni" element={<Valutazioni />} />
               <Route path="/inventario" element={<Inventario />} />
+              <Route path="/infortuni" element={<Infortuni />} />
 
               {/* Impostazioni società (society_admin) */}
               <Route path="/impostazioni" element={<SocietySettings />} />
