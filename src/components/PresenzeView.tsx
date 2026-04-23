@@ -134,15 +134,21 @@ export function PresenzeView() {
               <tbody>
                 {athletes.map(a => {
                   const status = attendances[a.id]?.status;
+                  const injured = injuredIds.has(a.id);
                   return (
                     <tr key={a.id} className="border-b border-border/40">
                       <td className="p-4">
                         <span className="font-bold">#{a.number || '—'}</span>
                         <span className="ml-2">{a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''}</span>
                         {a.role && <span className="ml-2 text-xs text-muted-foreground">{a.role}</span>}
+                        {injured && (
+                          <Badge variant="destructive" className="ml-2 text-[10px] px-1.5 py-0 gap-1">
+                            <HeartPulse className="w-2.5 h-2.5" /> Infortunato
+                          </Badge>
+                        )}
                       </td>
                       <td className="p-4 text-center">
-                        {status ? <Badge variant={STATUS_VARIANT[status]}>{status}</Badge> : <span className="text-muted-foreground">—</span>}
+                        {status ? <Badge variant={STATUS_VARIANT[status]}>{status}</Badge> : injured ? <span className="text-xs text-muted-foreground italic">suggerito: assente</span> : <span className="text-muted-foreground">—</span>}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">
