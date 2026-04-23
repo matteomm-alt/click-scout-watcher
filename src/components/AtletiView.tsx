@@ -192,6 +192,11 @@ export function AtletiView() {
                         <span className="font-bold">{a.last_name}{a.first_name ? ` ${a.first_name}` : ''}</span>
                         {a.is_captain && <Badge variant="default" className="text-[10px] px-1.5 py-0">C</Badge>}
                         {a.is_libero && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">L</Badge>}
+                        {injuriesEnabled && activeInjuries.has(a.id) && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 gap-1">
+                            <HeartPulse className="w-2.5 h-2.5" /> Infortunato
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
@@ -215,6 +220,17 @@ export function AtletiView() {
                     </div>
                     {/* Azioni */}
                     <div className="flex gap-1 flex-shrink-0">
+                      {injuriesEnabled && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className={`h-8 w-8 ${activeInjuries.has(a.id) ? 'text-destructive' : 'text-muted-foreground hover:text-primary'}`}
+                          title="Storico infortuni"
+                          onClick={() => setInjuriesAthlete(a)}
+                        >
+                          <HeartPulse className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
