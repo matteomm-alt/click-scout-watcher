@@ -2,26 +2,36 @@
 <html lang="it" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>VolleyScout Pro</title>
     <meta name="description" content="App di scouting live per pallavolo con export DVW">
     <meta name="author" content="Lovable" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
     <meta property="og:type" content="website" />
-    
+    <meta property="og:title" content="VolleyScout Pro">
+    <meta property="og:description" content="App di scouting live per pallavolo con export DVW">
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
-    
-    <meta property="og:title" content="VolleyScout Pro">
-  <meta name="twitter:title" content="VolleyScout Pro">
-  <meta property="og:description" content="App di scouting live per pallavolo con export DVW">
-  <meta name="twitter:description" content="App di scouting live per pallavolo con export DVW">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-</head>
+    <meta name="twitter:title" content="VolleyScout Pro">
+    <meta name="twitter:description" content="App di scouting live per pallavolo con export DVW">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+    <!-- PWA: installabilità (manifest + icone, senza service worker) -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="application-name" content="VolleyScout">
+
+    <!-- iOS / Safari add-to-home-screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VolleyScout">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  </head>
 
   <body>
     <div id="root"></div>
