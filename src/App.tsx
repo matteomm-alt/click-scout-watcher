@@ -47,6 +47,7 @@ import Inventario from "./pages/atleta/Inventario.tsx";
 // Admin
 import AdminSocieties from "./pages/admin/Societies.tsx";
 import SocietyFeatures from "./pages/admin/SocietyFeatures.tsx";
+import SocietySettings from "./pages/SocietySettings.tsx";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,9 @@ const App = () => (
               <Route path="/atleti" element={<Atleti />} />
               <Route path="/valutazioni" element={<Valutazioni />} />
               <Route path="/inventario" element={<Inventario />} />
+
+              {/* Impostazioni società (society_admin) */}
+              <Route path="/impostazioni" element={<SocietySettings />} />
 
               {/* Admin */}
               <Route path="/admin" element={<AdminSocieties />} />

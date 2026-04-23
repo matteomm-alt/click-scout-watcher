@@ -21,7 +21,7 @@ import {
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
   PieChart, UserCircle, Star,
-  LogOut, Shield, Boxes,
+  LogOut, Shield, Boxes, Settings,
 } from 'lucide-react';
 
 interface NavItem {
@@ -74,7 +74,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { user, isSuperAdmin, signOut } = useAuth();
-  const { societyName, features } = useActiveSociety();
+  const { societyName, features, isAdmin } = useActiveSociety();
 
   const visible = (items: NavItem[]) =>
     items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
@@ -167,6 +167,28 @@ export function AppSidebar() {
             {!collapsed && <SidebarGroupLabel>Atleta & Magazzino</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>{renderItems(atletaItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {isAdmin && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Amministrazione</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/impostazioni"
+                      className="hover:bg-muted/50"
+                      activeClassName="bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                    >
+                      <Settings className="h-4 w-4" />
+                      {!collapsed && <span>Impostazioni</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
