@@ -5,12 +5,9 @@ import {
   startOfWeek, endOfWeek,
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +16,8 @@ import { EVENT_TYPES, type EventType } from '@/lib/eventTypes';
 import { WeekView } from '@/components/calendario/WeekView';
 import { MonthView } from '@/components/calendario/MonthView';
 import { SeasonView } from '@/components/calendario/SeasonView';
+import { CalendarFilters } from '@/components/calendario/CalendarFilters';
+import { ExcelImportDialog, type ExcelEventPreview } from '@/components/calendario/ExcelImportDialog';
 import type { CalendarEvent } from '@/components/calendario/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -31,9 +30,12 @@ export default function Calendario() {
     useActiveSociety();
   const [view, setView] = useState<ViewMode>('week');
   const [anchor, setAnchor] = useState<Date>(new Date());
-  const [typeFilter, setTypeFilter] = useState<EventType | 'all'>('all');
+  const [selectedEventTypes, setSelectedEventTypes] = useState<EventType[]>([]);
+  const [teamFilter, setTeamFilter] = useState('all');
+  const [teams, setTeams] = useState<string[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Range di caricamento in base alla vista
   const range = useMemo(() => {
@@ -59,6 +61,35 @@ export default function Calendario() {
     };
   }, [view, anchor, seasonStart, seasonEnd]);
 
+  useEffect(() => {
+    if (!societyId || !user) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('athletes')
+        .select('teams, team_id, teams:teams(name)')
+        .eq('society_id', societyId);
+
+      if (cancelled) return;
+      if (error) {
+        console.error('teams load error', error);
+        setTeams([]);
+        return;
+      }
+
+      const labels = new Set<string>();
+      (data ?? []).forEach((athlete) => {
+        athlete.teams?.forEach((team) => team && labels.add(team));
+        const linkedTeam = athlete.teams && !Array.isArray(athlete.teams) ? athlete.teams.name : null;
+        if (linkedTeam) labels.add(linkedTeam);
+      });
+      setTeams(Array.from(labels).sort((a, b) => a.localeCompare(b, 'it')));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [societyId, user]);
+
   // Carica eventi
   useEffect(() => {
     if (!societyId || !user) return;
@@ -77,8 +108,11 @@ export default function Calendario() {
       if (!isAdmin) {
         query = query.eq('created_by', user.id);
       }
-      if (typeFilter !== 'all') {
-        query = query.eq('event_type', typeFilter);
+      if (selectedEventTypes.length > 0) {
+        query = query.in('event_type', selectedEventTypes);
+      }
+      if (teamFilter !== 'all') {
+        query = query.eq('team_label', teamFilter);
       }
 
       const { data, error } = await query;
@@ -112,7 +146,31 @@ export default function Calendario() {
     return () => {
       cancelled = true;
     };
-  }, [societyId, user, range.start, range.end, isAdmin, typeFilter]);
+  }, [societyId, user, range.start, range.end, isAdmin, selectedEventTypes, teamFilter, refreshKey]);
+
+  const importExcelRows = async (rows: ExcelEventPreview[]) => {
+    if (!societyId || !user) return;
+
+    const { error } = await supabase.from('events').insert(
+      rows.map((row) => ({
+        society_id: societyId,
+        created_by: user.id,
+        start_at: row.start_at,
+        event_type: row.event_type,
+        title: row.title,
+        location: row.location,
+      })),
+    );
+
+    if (error) {
+      console.error('excel import error', error);
+      toast.error('Errore durante import Excel');
+      throw error;
+    }
+
+    toast.success(`${rows.length} eventi importati`);
+    setRefreshKey((value) => value + 1);
+  };
 
   const goPrev = () => {
     if (view === 'week') setAnchor(addDays(anchor, -7));
