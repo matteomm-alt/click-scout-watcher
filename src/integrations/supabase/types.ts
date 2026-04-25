@@ -1859,6 +1859,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_society_invitation: {
+        Args: { _token: string }
+        Returns: {
+          role: Database["public"]["Enums"]["app_role"]
+          society_id: string
+          society_name: string
+        }[]
+      }
+      get_invitation_by_token: {
+        Args: { _token: string }
+        Returns: {
+          accepted_at: string
+          email: string
+          expires_at: string
+          id: string
+          is_accepted: boolean
+          is_expired: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          society_id: string
+          society_name: string
+        }[]
+      }
       get_user_societies: {
         Args: { _user_id: string }
         Returns: {
