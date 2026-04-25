@@ -240,6 +240,7 @@ export default function Calendario() {
             <Plus className="w-4 h-4" /> Nuovo evento
           </Button>
         </Link>
+        <ExcelImportDialog onConfirm={importExcelRows} disabled={!societyId || !user} />
       </div>
 
       {/* Toolbar */}
@@ -282,26 +283,15 @@ export default function Calendario() {
 
         <div className="text-base font-bold uppercase italic">{headerLabel}</div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as EventType | 'all')}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tutti i tipi</SelectItem>
-              {EVENT_TYPES.map((t) => (
-                <SelectItem key={t.value} value={t.value}>
-                  <span className="flex items-center gap-2">
-                    <span className={cn('w-2 h-2 rounded-full', t.dotClass)} />
-                    {t.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </Card>
+
+      <CalendarFilters
+        selectedTypes={selectedEventTypes}
+        onTypesChange={setSelectedEventTypes}
+        teams={teams}
+        selectedTeam={teamFilter}
+        onTeamChange={setTeamFilter}
+      />
 
       {/* Vista */}
       {loading ? (
