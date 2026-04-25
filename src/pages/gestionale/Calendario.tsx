@@ -65,24 +65,24 @@ export default function Calendario() {
     if (!societyId || !user) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from('athletes')
-        .select('teams, team_id, teams:teams(name)')
-        .eq('society_id', societyId);
+      const [{ data: athletesData, error: athletesError }, { data: teamsData, error: teamsError }] =
+        await Promise.all([
+          supabase.from('athletes').select('teams').eq('society_id', societyId),
+          supabase.from('teams').select('name').eq('society_id', societyId),
+        ]);
 
       if (cancelled) return;
-      if (error) {
-        console.error('teams load error', error);
+      if (athletesError || teamsError) {
+        console.error('teams load error', athletesError || teamsError);
         setTeams([]);
         return;
       }
 
       const labels = new Set<string>();
-      (data ?? []).forEach((athlete) => {
+      (athletesData ?? []).forEach((athlete) => {
         athlete.teams?.forEach((team) => team && labels.add(team));
-        const linkedTeam = athlete.teams && !Array.isArray(athlete.teams) ? athlete.teams.name : null;
-        if (linkedTeam) labels.add(linkedTeam);
       });
+      (teamsData ?? []).forEach((team) => team.name && labels.add(team.name));
       setTeams(Array.from(labels).sort((a, b) => a.localeCompare(b, 'it')));
     })();
     return () => {
