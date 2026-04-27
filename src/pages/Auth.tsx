@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,13 +43,17 @@ export default function Auth() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
   const [inviteAccepted, setInviteAccepted] = useState(false);
+  const acceptingInviteRef = useRef(false);
 
   const from = (location.state as { from?: string })?.from ?? '/';
   const inviteToken = new URLSearchParams(location.search).get('invite');
 
   const acceptInvite = async (token: string) => {
+    if (acceptingInviteRef.current || inviteAccepted) return false;
+    acceptingInviteRef.current = true;
     setAcceptingInvite(true);
     const { data, error } = await (supabase as any).rpc('accept_society_invitation', { _token: token });
+    acceptingInviteRef.current = false;
     setAcceptingInvite(false);
 
     if (error) {
@@ -71,6 +75,7 @@ export default function Auth() {
     let cancelled = false;
     setInviteLoading(true);
     setInviteError(null);
+    setInviteAccepted(false);
 
     (supabase as any)
       .rpc('get_invitation_by_token', { _token: inviteToken })
@@ -114,12 +119,12 @@ export default function Auth() {
       navigate(from, { replace: true });
       return;
     }
-    if (!inviteError && !acceptingInvite) {
+    if (!inviteLoading && inviteInfo && !inviteError && !acceptingInvite && !acceptingInviteRef.current) {
       acceptInvite(inviteToken).then((ok) => {
         if (ok) navigate(from, { replace: true });
       });
     }
-  }, [user, authLoading, inviteToken, inviteAccepted, inviteError, acceptingInvite, navigate, from]);
+  }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,8 +145,7 @@ export default function Auth() {
         });
         if (error) throw error;
         if (inviteToken && data.session) {
-          const accepted = await acceptInvite(inviteToken);
-          if (accepted) navigate(from, { replace: true });
+          toast.success('Account creato. Accettazione invito in corso…');
         } else if (inviteToken) {
           toast.success('Account creato! Conferma l’email per completare l’ingresso nella società.');
         } else {
@@ -151,8 +155,7 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (inviteToken) {
-          const accepted = await acceptInvite(inviteToken);
-          if (accepted) navigate(from, { replace: true });
+          toast.success('Accesso effettuato. Accettazione invito in corso…');
         } else {
           toast.success('Login effettuato');
         }
@@ -197,6 +200,7 @@ export default function Auth() {
                   Sei stato invitato a unirti a <span className="font-medium text-foreground">{inviteInfo.society_name}</span> come{' '}
                   <span className="font-medium text-foreground">{roleLabels[inviteInfo.role]}</span>.
                 </p>
+                {acceptingInvite && <p className="text-primary">Accettazione invito in corso…</p>}
               </div>
             ) : null}
           </div>
