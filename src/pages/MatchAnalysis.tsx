@@ -5,8 +5,11 @@ import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
   rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
 } from '@/lib/scoutAnalysis';
-import { ArrowLeft, BarChart3 } from 'lucide-react';
+import { ArrowLeft, BarChart3, Download, SlidersHorizontal } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
 import { ChartsTab } from '@/components/ChartsTab';
 import { MatchSelector } from '@/components/MatchSelector';
@@ -14,6 +17,10 @@ import { SetProgressTab } from '@/components/SetProgressTab';
 import { TechTypesTab } from '@/components/TechTypesTab';
 import { RotationsDetailTab } from '@/components/RotationsDetailTab';
 import { SetDistributionTab } from '@/components/SetDistributionTab';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
+} from 'recharts';
 
 interface MatchRow {
   id: string;
@@ -60,6 +67,7 @@ export default function MatchAnalysis() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(id ? [id] : []));
   const [multiActions, setMultiActions] = useState<DbAction[]>([]);
   const [loadingMulti, setLoadingMulti] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     setFilters(f => ({ ...f, playerNumbers: [] }));
@@ -232,6 +240,44 @@ export default function MatchAnalysis() {
     });
   }, [aggregatedActions, filters, teamId, teamFilter]);
 
+  const filtersPanel = (
+    <>
+      <MatchFilters
+        filters={filters}
+        onChange={setFilters}
+        availableSets={availableSets}
+        availableSkills={availableSkills}
+        availableRotations={availableRotations}
+        players={playerOptions}
+      />
+      <p className="text-[11px] text-muted-foreground mt-2 px-1">
+        Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
+      </p>
+    </>
+  );
+
+  const exportCsv = () => {
+    const headers = ['set', 'skill', 'player', 'evaluation', 'start_zone', 'end_zone', 'rotation'];
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const rows = filteredTeamActions.map(a => [
+      a.set_number,
+      a.skill,
+      a.player_number ?? '',
+      a.evaluation,
+      a.start_zone ?? '',
+      a.end_zone ?? '',
+      rotationOf(a, teamFilter) ?? '',
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `match-analysis-${match.id}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
   }
@@ -255,7 +301,8 @@ export default function MatchAnalysis() {
           </div>
         </div>
         <div className="container">
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex gap-1 overflow-x-auto">
             {TABS.map(t => (
               <button
                 key={t.key}
@@ -265,6 +312,11 @@ export default function MatchAnalysis() {
                 }`}
               >{t.label}</button>
             ))}
+            </div>
+            <Button onClick={exportCsv} variant="outline" size="sm" className="shrink-0">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Esporta CSV</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -294,19 +346,26 @@ export default function MatchAnalysis() {
         >{match.away_team.name}</button>
       </div>
 
+      <div className="container pb-4 lg:hidden">
+        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full justify-center">
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtri
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Filtri analisi</SheetTitle>
+            </SheetHeader>
+            {filtersPanel}
+          </SheetContent>
+        </Sheet>
+      </div>
+
       <main className="container pb-12 grid lg:grid-cols-[280px_1fr] gap-6">
-        <aside className="lg:sticky lg:top-44 lg:self-start">
-          <MatchFilters
-            filters={filters}
-            onChange={setFilters}
-            availableSets={availableSets}
-            availableSkills={availableSkills}
-            availableRotations={availableRotations}
-            players={playerOptions}
-          />
-          <p className="text-[11px] text-muted-foreground mt-2 px-1">
-            Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
-          </p>
+        <aside className="hidden lg:block lg:sticky lg:top-44 lg:self-start">
+          {filtersPanel}
         </aside>
 
         <section className="min-w-0">
@@ -315,7 +374,7 @@ export default function MatchAnalysis() {
           {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
           {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} />}
           {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
-          {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} />}
+          {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
           {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
         </section>
       </main>
@@ -504,13 +563,74 @@ function BarRow({ label, value, sub }: { label: string; value: number; sub: stri
   );
 }
 
-function CompareTab({ actions, match }: { actions: DbAction[]; match: MatchRow }) {
-  const home = actions.filter(a => a.scout_team_id === match.home_team.id);
-  const away = actions.filter(a => a.scout_team_id === match.away_team.id);
+function CompareTab({ actions, match, currentTeamId }: { actions: DbAction[]; match: MatchRow; currentTeamId: string }) {
+  const [matches, setMatches] = useState<MatchRow[]>([]);
+  const [secondMatchId, setSecondMatchId] = useState<string>('');
+  const [secondActions, setSecondActions] = useState<DbAction[]>([]);
+  const [loadingSecond, setLoadingSecond] = useState(false);
+  const home = actions.filter(a => a.scout_match_id === match.id && a.scout_team_id === match.home_team.id);
+  const away = actions.filter(a => a.scout_match_id === match.id && a.scout_team_id === match.away_team.id);
   const homeStats = statsBySkill(home);
   const awayStats = statsBySkill(away);
-  const skills = ['S','R','A','B','D'];
-  const timelines = setsTimeline(actions);
+  const skills = ['R','A','S','B','D'];
+  const timelines = setsTimeline(actions.filter(a => a.scout_match_id === match.id));
+  const currentTeamActions = actions.filter(a => a.scout_match_id === match.id && a.scout_team_id === currentTeamId);
+  const opponentActions = actions.filter(a => a.scout_match_id === match.id && a.scout_team_id !== currentTeamId);
+  const selectedSecond = matches.find(m => m.id === secondMatchId);
+  const secondTeamId = selectedSecond
+    ? (currentTeamId === match.away_team.id ? selectedSecond.away_team.id : selectedSecond.home_team.id)
+    : '';
+  const secondTeamActions = secondActions.filter(a => a.scout_team_id === secondTeamId);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('scout_matches')
+        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename,
+                 home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
+        .neq('id', match.id)
+        .order('match_date', { ascending: false });
+      setMatches((data as any) || []);
+    })();
+  }, [match.id]);
+
+  useEffect(() => {
+    if (!secondMatchId) { setSecondActions([]); return; }
+    setLoadingSecond(true);
+    (async () => {
+      const all: DbAction[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from('scout_actions')
+          .select('*')
+          .eq('scout_match_id', secondMatchId)
+          .order('set_number').order('rally_index').order('action_index')
+          .range(from, from + PAGE - 1);
+        if (error || !data || data.length === 0) break;
+        all.push(...(data as any));
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      setSecondActions(all);
+      setLoadingSecond(false);
+    })();
+  }, [secondMatchId]);
+
+  const matchCompareData = skills.map(skill => {
+    const a = statsBySkill(currentTeamActions).find(x => x.skill === skill);
+    const b = statsBySkill(secondTeamActions).find(x => x.skill === skill);
+    const effA = a?.efficiency ?? 0;
+    const effB = b?.efficiency ?? 0;
+    return { skill: SKILL_NAMES[skill] || skill, effA, effB, delta: effB - effA, totalA: a?.total ?? 0, totalB: b?.total ?? 0 };
+  });
+
+  const benchmarkData = skills.map(skill => {
+    const ours = statsBySkill(currentTeamActions).find(x => x.skill === skill);
+    const opp = statsBySkill(opponentActions).find(x => x.skill === skill);
+    return { skill: SKILL_NAMES[skill] || skill, nostra: ours?.efficiency ?? 0, avversario: opp?.efficiency ?? 0 };
+  });
 
   return (
     <div className="space-y-6">
@@ -540,6 +660,71 @@ function CompareTab({ actions, match }: { actions: DbAction[]; match: MatchRow }
             })}
           </tbody>
         </table>
+      </Card>
+      <Card className="p-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <h3 className="text-sm font-bold uppercase italic">Confronto tra due partite</h3>
+          <Select value={secondMatchId} onValueChange={setSecondMatchId}>
+            <SelectTrigger className="w-full md:w-80"><SelectValue placeholder="Seleziona seconda gara" /></SelectTrigger>
+            <SelectContent>
+              {matches.map(m => (
+                <SelectItem key={m.id} value={m.id}>{m.home_team.name} vs {m.away_team.name} · {m.match_date || '—'}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {secondMatchId ? (
+          <div className="space-y-5">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+                  <tr><th className="text-left py-2">Fondamentale</th><th>Eff% Gara A</th><th>Eff% Gara B</th><th>Delta</th></tr>
+                </thead>
+                <tbody>
+                  {matchCompareData.map(row => (
+                    <tr key={row.skill} className="border-b border-border/40">
+                      <td className="py-2 font-semibold">{row.skill}</td>
+                      <td className="text-center">{row.effA.toFixed(1)}% <span className="text-xs text-muted-foreground">({row.totalA})</span></td>
+                      <td className="text-center">{row.effB.toFixed(1)}% <span className="text-xs text-muted-foreground">({row.totalB})</span></td>
+                      <td className={`text-center font-bold ${row.delta >= 0 ? 'text-success' : 'text-destructive'}`}>{row.delta > 0 ? '+' : ''}{row.delta.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="h-72">
+              {loadingSecond ? <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Caricamento confronto…</div> : (
+                <ResponsiveContainer>
+                  <BarChart data={matchCompareData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="skill" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                    <Legend />
+                    <Bar dataKey="effA" name="Gara A" fill="hsl(var(--primary))" />
+                    <Bar dataKey="effB" name="Gara B" fill="hsl(var(--accent))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        ) : <p className="text-sm text-muted-foreground">Seleziona una seconda gara per confrontare le Eff% della squadra.</p>}
+      </Card>
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Benchmark avversario</h3>
+        <div className="h-80">
+          <ResponsiveContainer>
+            <RadarChart data={benchmarkData}>
+              <PolarGrid stroke="hsl(var(--border))" />
+              <PolarAngleAxis dataKey="skill" stroke="hsl(var(--muted-foreground))" />
+              <PolarRadiusAxis stroke="hsl(var(--muted-foreground))" />
+              <Radar name="Nostra squadra" dataKey="nostra" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.18} />
+              <Radar name="Avversario" dataKey="avversario" stroke="hsl(var(--opponent))" fill="hsl(var(--opponent))" fillOpacity={0.12} />
+              <Legend />
+              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
       <Card className="p-5">
         <h3 className="text-sm font-bold uppercase italic mb-4">Andamento punto-punto per set</h3>

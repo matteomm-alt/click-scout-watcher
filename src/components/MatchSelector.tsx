@@ -10,6 +10,7 @@ export interface MatchListItem {
   away_sets_won: number;
   home_team: { name: string };
   away_team: { name: string };
+  action_count?: number;
 }
 
 interface Props {
@@ -29,8 +30,18 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
         .select(`id, match_date, league, home_sets_won, away_sets_won,
                  home_team:home_team_id(name), away_team:away_team_id(name)`)
         .order('match_date', { ascending: false });
-      const list = (data as any) || [];
-      setMatches(list);
+      const list = ((data as any) || []) as MatchListItem[];
+      const counts = await Promise.all(
+        list.map(async (m) => {
+          const { count } = await supabase
+            .from('scout_actions')
+            .select('id', { count: 'exact', head: true })
+            .eq('scout_match_id', m.id);
+          return [m.id, count || 0] as const;
+        })
+      );
+      const countMap = new Map(counts);
+      setMatches(list.map(m => ({ ...m, action_count: countMap.get(m.id) || 0 })));
       // Prima volta: preseleziona la partita corrente
       if (currentMatchId && selectedIds.size === 0) {
         onChange(new Set([currentMatchId]));
@@ -94,6 +105,7 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">
                       {m.home_team.name} <span className="text-primary">{m.home_sets_won}-{m.away_sets_won}</span> {m.away_team.name}
+                      <span className="ml-1 text-[10px] text-muted-foreground">· {m.action_count ?? 0} az.</span>
                       {isCurrent && <span className="ml-1 text-[10px] text-primary opacity-60">(corrente)</span>}
                     </p>
                     <p className="text-[10px] text-muted-foreground">{m.match_date || '—'} · {m.league || ''}</p>
