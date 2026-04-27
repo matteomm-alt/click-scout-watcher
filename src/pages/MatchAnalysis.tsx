@@ -240,6 +240,44 @@ export default function MatchAnalysis() {
     });
   }, [aggregatedActions, filters, teamId, teamFilter]);
 
+  const filtersPanel = (
+    <>
+      <MatchFilters
+        filters={filters}
+        onChange={setFilters}
+        availableSets={availableSets}
+        availableSkills={availableSkills}
+        availableRotations={availableRotations}
+        players={playerOptions}
+      />
+      <p className="text-[11px] text-muted-foreground mt-2 px-1">
+        Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
+      </p>
+    </>
+  );
+
+  const exportCsv = () => {
+    const headers = ['set', 'skill', 'player', 'evaluation', 'start_zone', 'end_zone', 'rotation'];
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const rows = filteredTeamActions.map(a => [
+      a.set_number,
+      a.skill,
+      a.player_number ?? '',
+      a.evaluation,
+      a.start_zone ?? '',
+      a.end_zone ?? '',
+      rotationOf(a, teamFilter) ?? '',
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `match-analysis-${match.id}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
   }
@@ -263,7 +301,8 @@ export default function MatchAnalysis() {
           </div>
         </div>
         <div className="container">
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex gap-1 overflow-x-auto">
             {TABS.map(t => (
               <button
                 key={t.key}
@@ -273,6 +312,11 @@ export default function MatchAnalysis() {
                 }`}
               >{t.label}</button>
             ))}
+            </div>
+            <Button onClick={exportCsv} variant="outline" size="sm" className="shrink-0">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Esporta CSV</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -302,19 +346,26 @@ export default function MatchAnalysis() {
         >{match.away_team.name}</button>
       </div>
 
+      <div className="container pb-4 lg:hidden">
+        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full justify-center">
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtri
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Filtri analisi</SheetTitle>
+            </SheetHeader>
+            {filtersPanel}
+          </SheetContent>
+        </Sheet>
+      </div>
+
       <main className="container pb-12 grid lg:grid-cols-[280px_1fr] gap-6">
-        <aside className="lg:sticky lg:top-44 lg:self-start">
-          <MatchFilters
-            filters={filters}
-            onChange={setFilters}
-            availableSets={availableSets}
-            availableSkills={availableSkills}
-            availableRotations={availableRotations}
-            players={playerOptions}
-          />
-          <p className="text-[11px] text-muted-foreground mt-2 px-1">
-            Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
-          </p>
+        <aside className="hidden lg:block lg:sticky lg:top-44 lg:self-start">
+          {filtersPanel}
         </aside>
 
         <section className="min-w-0">
@@ -323,7 +374,7 @@ export default function MatchAnalysis() {
           {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
           {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} />}
           {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
-          {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} />}
+          {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
           {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
         </section>
       </main>
