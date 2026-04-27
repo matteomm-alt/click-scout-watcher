@@ -5,8 +5,11 @@ import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
   rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
 } from '@/lib/scoutAnalysis';
-import { ArrowLeft, BarChart3 } from 'lucide-react';
+import { ArrowLeft, BarChart3, Download, SlidersHorizontal } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
 import { ChartsTab } from '@/components/ChartsTab';
 import { MatchSelector } from '@/components/MatchSelector';
@@ -14,6 +17,10 @@ import { SetProgressTab } from '@/components/SetProgressTab';
 import { TechTypesTab } from '@/components/TechTypesTab';
 import { RotationsDetailTab } from '@/components/RotationsDetailTab';
 import { SetDistributionTab } from '@/components/SetDistributionTab';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
+} from 'recharts';
 
 interface MatchRow {
   id: string;
@@ -60,6 +67,7 @@ export default function MatchAnalysis() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(id ? [id] : []));
   const [multiActions, setMultiActions] = useState<DbAction[]>([]);
   const [loadingMulti, setLoadingMulti] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     setFilters(f => ({ ...f, playerNumbers: [] }));
