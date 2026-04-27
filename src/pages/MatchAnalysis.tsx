@@ -719,7 +719,7 @@ function CompareTab({ actions, match, currentTeamId }: { actions: DbAction[]; ma
               <PolarAngleAxis dataKey="skill" stroke="hsl(var(--muted-foreground))" />
               <PolarRadiusAxis stroke="hsl(var(--muted-foreground))" />
               <Radar name="Nostra squadra" dataKey="nostra" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.18} />
-              <Radar name="Avversario" dataKey="avversario" stroke="hsl(217 91% 60%)" fill="hsl(217 91% 60%)" fillOpacity={0.12} />
+              <Radar name="Avversario" dataKey="avversario" stroke="hsl(var(--opponent))" fill="hsl(var(--opponent))" fillOpacity={0.12} />
               <Legend />
               <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
             </RadarChart>
