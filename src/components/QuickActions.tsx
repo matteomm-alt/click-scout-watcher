@@ -88,7 +88,7 @@ export function QuickActions() {
                 key={k}
                 type="button"
                 onClick={() => { setTeam(k); setPendingPlayer(null); }}
-                className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-colors ${
+                className={`min-h-14 px-6 rounded text-sm font-bold uppercase tracking-wider transition-colors active:scale-95 transition-transform duration-75 ${
                   active
                     ? k === 'home' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'
                     : 'text-muted-foreground hover:text-foreground'
@@ -110,11 +110,11 @@ export function QuickActions() {
                 key={cfg.key}
                 type="button"
                 onClick={() => handleClick(cfg)}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-md text-white font-bold transition-all active:scale-95 ${cfg.bg}`}
+                className={`flex min-h-20 flex-col items-center justify-center gap-1 py-5 rounded-md text-white font-bold transition-all duration-75 active:scale-95 ${cfg.bg}`}
                 title={cfg.label}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="text-[9px] tracking-wider">{cfg.short}</span>
+                <Icon className="w-6 h-6" />
+                <span className="text-sm font-bold tracking-wider">{cfg.short}</span>
               </button>
             );
           })}
@@ -128,12 +128,12 @@ export function QuickActions() {
             <button
               type="button"
               onClick={() => setPendingPlayer(null)}
-              className="text-muted-foreground hover:text-destructive"
+              className="min-h-10 min-w-10 rounded bg-secondary text-muted-foreground hover:text-destructive transition-transform duration-75 active:scale-95"
             >
-              <X className="w-3 h-3" />
+              <X className="mx-auto w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-6 gap-1">
+          <div className="grid grid-cols-4 gap-1">
             {lineup.filter((n) => n > 0).map((num) => {
               const player = teamData.players.find((p) => p.number === num);
               return (
@@ -141,7 +141,7 @@ export function QuickActions() {
                   key={num}
                   type="button"
                   onClick={() => fire(pendingPlayer, num)}
-                  className="aspect-square rounded-md bg-primary/20 hover:bg-primary text-foreground hover:text-primary-foreground font-mono font-bold text-sm transition-all active:scale-95 flex flex-col items-center justify-center"
+                  className="min-h-16 rounded-md bg-primary/20 hover:bg-primary text-foreground hover:text-primary-foreground font-mono text-xl font-black transition-all duration-75 active:scale-95 flex flex-col items-center justify-center"
                   title={player?.lastName}
                 >
                   {num}
