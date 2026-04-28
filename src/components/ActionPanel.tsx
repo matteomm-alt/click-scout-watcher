@@ -36,7 +36,7 @@ export function ActionPanel() {
   const [liberoTeam, setLiberoTeam] = useState<'home' | 'away'>('home');
   const { settings } = useScoutSettings();
 
-  const skills: { key: Skill; color: string }[] = [
+  const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
     { key: 'R', color: 'bg-emerald-600 hover:bg-emerald-500' },
     { key: 'A', color: 'bg-red-600 hover:bg-red-500' },
@@ -44,7 +44,9 @@ export function ActionPanel() {
     { key: 'D', color: 'bg-amber-600 hover:bg-amber-500' },
     { key: 'E', color: 'bg-teal-600 hover:bg-teal-500' },
     { key: 'F', color: 'bg-gray-600 hover:bg-gray-500' },
-  ].filter((s) =>
+  ];
+
+  const skills = allSkills.filter((s) =>
     (s.key !== 'E' || settings.showAlzata) &&
     (s.key !== 'D' || settings.showDifesa) &&
     (s.key !== 'F' || settings.showFreeball)
