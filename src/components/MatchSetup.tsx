@@ -6,7 +6,7 @@ import { Calendar, MapPin, Users, Trophy, ArrowRight, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function MatchSetup() {
-  const { matchInfo, setMatchInfo, setStep, loadDemoMatch } = useMatchStore();
+  const { matchInfo, setMatchInfo, setStep, loadDemoMatch, homeTeam, awayTeam, setHomeTeam, setAwayTeam } = useMatchStore();
 
   const handleDemo = () => {
     loadDemoMatch();
@@ -72,8 +72,8 @@ export function MatchSetup() {
           <div className="space-y-2">
             <Label className="text-muted-foreground">Squadra Casa</Label>
             <Input
-              value={matchInfo.phase || ''}
-              onChange={(e) => setMatchInfo({ phase: e.target.value })}
+              value={homeTeam.name}
+              onChange={(e) => setHomeTeam({ name: e.target.value })}
               className="bg-secondary border-border text-foreground"
               placeholder="Casa"
             />
@@ -81,8 +81,8 @@ export function MatchSetup() {
           <div className="space-y-2">
             <Label className="text-muted-foreground">Squadra Ospite</Label>
             <Input
-              value={matchInfo.league || ''}
-              onChange={(e) => setMatchInfo({ league: e.target.value })}
+              value={awayTeam.name}
+              onChange={(e) => setAwayTeam({ name: e.target.value })}
               className="bg-secondary border-border text-foreground"
               placeholder="Ospite"
             />
