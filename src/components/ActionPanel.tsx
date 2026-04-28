@@ -116,6 +116,8 @@ export function ActionPanel() {
     setSelectedEvaluation(evaluation);
     if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showStartZone) {
       setStep('startZone');
+    } else if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showEndZone) {
+      setStep('endZone');
     } else {
       finalizeAction(evaluation, null, null);
     }
@@ -297,7 +299,7 @@ export function ActionPanel() {
             );
             return (
               <button key={t} onClick={() => setLiberoTeam(t)}
-                className={`px-3 py-1.5 rounded text-sm font-bold ${liberoTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                className={`min-h-12 px-4 rounded text-sm font-bold transition-transform duration-75 active:scale-95 ${liberoTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                 {t === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
                 {lp && <span className="ml-1 text-[10px] opacity-70">L#{lp.number}</span>}
               </button>
@@ -368,7 +370,7 @@ export function ActionPanel() {
             <div className="flex gap-2 flex-wrap">
               {(['home', 'away'] as const).map(t => (
                 <button key={t} onClick={() => setSubTeam(t)}
-                  className={`px-3 py-1.5 rounded text-sm font-bold ${subTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                  className={`min-h-12 px-4 rounded text-sm font-bold transition-transform duration-75 active:scale-95 ${subTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                   {t === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
                 </button>
               ))}
@@ -589,31 +591,31 @@ export function ActionPanel() {
       {/* Quick actions */}
       <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
         <button onClick={undoLastAction} disabled={matchState.actions.length === 0}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95">
           <Undo2 className="w-3.5 h-3.5" /> Annulla
         </button>
         <button onClick={() => addPoint('home')}
-          className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold">
+          className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
           +1 {homeTeam.name || 'Casa'}
         </button>
         <button onClick={() => addPoint('away')}
-          className="min-h-14 px-4 rounded-lg bg-secondary border border-red-700/20 text-foreground hover:border-red-500/40 text-sm font-bold">
+          className="min-h-14 px-4 rounded-lg bg-secondary border border-red-700/20 text-foreground hover:border-red-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
           +1 {awayTeam.name || 'Ospite'}
         </button>
         <button onClick={() => setShowSubstitution(true)}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold transition-transform duration-75 active:scale-95">
           <ArrowLeftRight className="w-3.5 h-3.5" /> Cambio
         </button>
         <button onClick={() => setShowLibero(true)}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-sm font-bold">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-sm font-bold transition-transform duration-75 active:scale-95">
           <Shield className="w-3.5 h-3.5" /> Libero
         </button>
         <button onClick={endSet}
-          className="min-h-14 px-4 rounded-lg bg-secondary text-warning hover:bg-warning/10 text-sm font-bold">
+          className="min-h-14 px-4 rounded-lg bg-secondary text-warning hover:bg-warning/10 text-sm font-bold transition-transform duration-75 active:scale-95">
           Fine Set
         </button>
         <button onClick={handleExportDVW}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto transition-transform duration-75 active:scale-95">
           <Download className="w-3.5 h-3.5" /> DVW
         </button>
       </div>
