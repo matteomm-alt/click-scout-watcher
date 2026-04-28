@@ -35,7 +35,7 @@ export function MatchSetup() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-muted-foreground flex items-center gap-2">
               <Calendar className="w-4 h-4" /> Data
@@ -48,108 +48,95 @@ export function MatchSetup() {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Ora</Label>
-            <Input
-              type="time"
-              value={matchInfo.time}
-              onChange={(e) => setMatchInfo({ time: e.target.value })}
-              className="bg-secondary border-border text-foreground"
-            />
+            <Label className="text-muted-foreground">Formato</Label>
+            <div className="flex gap-3">
+              {[3, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setMatchInfo({ totalSets: n })}
+                  className={`flex-1 min-h-14 rounded-lg font-black text-lg transition-all active:scale-95 ${
+                    matchInfo.totalSets === n
+                      ? 'bg-primary text-primary-foreground glow-primary'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  }`}
+                >
+                  {n} set
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Stagione</Label>
+            <Label className="text-muted-foreground">Squadra Casa</Label>
             <Input
-              value={matchInfo.season}
-              onChange={(e) => setMatchInfo({ season: e.target.value })}
+              value={matchInfo.phase || ''}
+              onChange={(e) => setMatchInfo({ phase: e.target.value })}
               className="bg-secondary border-border text-foreground"
-              placeholder="2024/2025"
+              placeholder="Casa"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Lega / Campionato</Label>
+            <Label className="text-muted-foreground">Squadra Ospite</Label>
             <Input
-              value={matchInfo.league}
+              value={matchInfo.league || ''}
               onChange={(e) => setMatchInfo({ league: e.target.value })}
               className="bg-secondary border-border text-foreground"
-              placeholder="Serie A"
+              placeholder="Ospite"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-muted-foreground flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Palazzetto
-            </Label>
-            <Input
-              value={matchInfo.venue}
-              onChange={(e) => setMatchInfo({ venue: e.target.value })}
-              className="bg-secondary border-border text-foreground"
-              placeholder="PalaVolley"
-            />
+        <details className="rounded-xl border border-border bg-secondary/30 p-4">
+          <summary className="cursor-pointer text-sm font-black uppercase tracking-wider text-muted-foreground">
+            Dettagli avanzati ▸
+          </summary>
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Ora</Label>
+              <Input type="time" value={matchInfo.time} onChange={(e) => setMatchInfo({ time: e.target.value })} className="bg-secondary border-border text-foreground" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Stagione</Label>
+              <Input value={matchInfo.season} onChange={(e) => setMatchInfo({ season: e.target.value })} className="bg-secondary border-border text-foreground" placeholder="2024/2025" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Lega / Campionato</Label>
+              <Input value={matchInfo.league} onChange={(e) => setMatchInfo({ league: e.target.value })} className="bg-secondary border-border text-foreground" placeholder="Serie A" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground flex items-center gap-2"><MapPin className="w-4 h-4" /> Palazzetto</Label>
+              <Input value={matchInfo.venue} onChange={(e) => setMatchInfo({ venue: e.target.value })} className="bg-secondary border-border text-foreground" placeholder="PalaVolley" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Città</Label>
+              <Input value={matchInfo.city} onChange={(e) => setMatchInfo({ city: e.target.value })} className="bg-secondary border-border text-foreground" placeholder="Roma" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground flex items-center gap-2"><Users className="w-4 h-4" /> 1° Arbitro</Label>
+              <Input value={matchInfo.referee1} onChange={(e) => setMatchInfo({ referee1: e.target.value })} className="bg-secondary border-border text-foreground" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">2° Arbitro</Label>
+              <Input value={matchInfo.referee2} onChange={(e) => setMatchInfo({ referee2: e.target.value })} className="bg-secondary border-border text-foreground" />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label className="text-muted-foreground">Segnapunti / Scout</Label>
+              <Input value={matchInfo.scorer} onChange={(e) => setMatchInfo({ scorer: e.target.value })} className="bg-secondary border-border text-foreground" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">Città</Label>
-            <Input
-              value={matchInfo.city}
-              onChange={(e) => setMatchInfo({ city: e.target.value })}
-              className="bg-secondary border-border text-foreground"
-              placeholder="Roma"
-            />
-          </div>
-        </div>
+        </details>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-muted-foreground flex items-center gap-2">
-              <Users className="w-4 h-4" /> 1° Arbitro
-            </Label>
-            <Input
-              value={matchInfo.referee1}
-              onChange={(e) => setMatchInfo({ referee1: e.target.value })}
-              className="bg-secondary border-border text-foreground"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">2° Arbitro</Label>
-            <Input
-              value={matchInfo.referee2}
-              onChange={(e) => setMatchInfo({ referee2: e.target.value })}
-              className="bg-secondary border-border text-foreground"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-muted-foreground">Segnapunti / Scout</Label>
-          <Input
-            value={matchInfo.scorer}
-            onChange={(e) => setMatchInfo({ scorer: e.target.value })}
-            className="bg-secondary border-border text-foreground"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-muted-foreground">Formato Partita</Label>
-          <div className="flex gap-3">
-            {[3, 5].map((n) => (
-              <button
-                key={n}
-                onClick={() => setMatchInfo({ totalSets: n })}
-                className={`flex-1 py-3 rounded-lg font-semibold text-lg transition-all touch-target ${
-                  matchInfo.totalSets === n
-                    ? 'bg-primary text-primary-foreground glow-primary'
-                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                }`}
-              >
-                Best of {n}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setStep('roster')}
+          className="w-full h-14 text-lg font-black"
+        >
+          ⚡ Inizia subito
+        </Button>
 
         <Button
           onClick={() => setStep('roster')}
