@@ -5,6 +5,7 @@ import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
 import { Undo2, Download, ArrowLeftRight, SkipForward, Shield } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
 import { ZoneCourt } from '@/components/VolleyballCourt';
+import { useScoutSettings } from '@/lib/scoutSettings';
 
 type ScoutStep = 'team' | 'player' | 'skill' | 'serveType' | 'attackCombo' | 'evaluation' | 'startZone' | 'endZone';
 
@@ -33,6 +34,7 @@ export function ActionPanel() {
   const [attackFilter, setAttackFilter] = useState<'all' | 'Q' | 'M' | 'T' | 'H' | 'O'>('all');
   const [showLibero, setShowLibero] = useState(false);
   const [liberoTeam, setLiberoTeam] = useState<'home' | 'away'>('home');
+  const { settings } = useScoutSettings();
 
   const skills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
@@ -42,7 +44,11 @@ export function ActionPanel() {
     { key: 'D', color: 'bg-amber-600 hover:bg-amber-500' },
     { key: 'E', color: 'bg-teal-600 hover:bg-teal-500' },
     { key: 'F', color: 'bg-gray-600 hover:bg-gray-500' },
-  ];
+  ].filter((s) =>
+    (s.key !== 'E' || settings.showAlzata) &&
+    (s.key !== 'D' || settings.showDifesa) &&
+    (s.key !== 'F' || settings.showFreeball)
+  );
 
   const evaluations: { key: Evaluation; color: string; label: string }[] = [
     { key: '#', color: 'bg-green-600 hover:bg-green-500', label: '# Perfetto' },
@@ -87,9 +93,9 @@ export function ActionPanel() {
 
   const handleSkillSelect = (skill: Skill) => {
     setSelectedSkill(skill);
-    if (skill === 'S') {
+    if (skill === 'S' && settings.showServeType) {
       setStep('serveType');
-    } else if (skill === 'A') {
+    } else if (skill === 'A' && settings.showAttackCombo) {
       setStep('attackCombo');
     } else {
       setStep('evaluation');
@@ -108,8 +114,10 @@ export function ActionPanel() {
 
   const handleEvaluationSelect = (evaluation: Evaluation) => {
     setSelectedEvaluation(evaluation);
-    if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill)) {
+    if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showStartZone) {
       setStep('startZone');
+    } else if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showEndZone) {
+      setStep('endZone');
     } else {
       finalizeAction(evaluation, null, null);
     }
@@ -117,7 +125,11 @@ export function ActionPanel() {
 
   const handleStartZone = (zone: number) => {
     setStartZone(zone);
-    setStep('endZone');
+    if (settings.showEndZone) {
+      setStep('endZone');
+    } else if (selectedEvaluation) {
+      finalizeAction(selectedEvaluation, zone, null);
+    }
   };
 
   const handleEndZone = (zone: number) => {
@@ -169,13 +181,42 @@ export function ActionPanel() {
     });
 
     // Auto-score
-    if ((selectedSkill === 'A' || selectedSkill === 'S' || selectedSkill === 'B') && evaluation === '#') {
+    if (settings.autoPoint && (selectedSkill === 'A' || selectedSkill === 'S' || selectedSkill === 'B') && evaluation === '#') {
       addPoint(selectedTeam);
-    } else if (evaluation === '=') {
+    } else if (settings.autoPoint && evaluation === '=') {
       addPoint(selectedTeam === 'home' ? 'away' : 'home');
     }
 
     resetSelection();
+  };
+
+
+  const goBack = () => {
+    if (step === 'endZone') {
+      setEndZone(null);
+      setStep('startZone');
+    } else if (step === 'startZone') {
+      setStartZone(null);
+      setSelectedEvaluation(null);
+      setStep('evaluation');
+    } else if (step === 'evaluation') {
+      setSelectedEvaluation(null);
+      if (selectedSkill === 'A' && settings.showAttackCombo) setStep('attackCombo');
+      else if (selectedSkill === 'S' && settings.showServeType) setStep('serveType');
+      else setStep('skill');
+    } else if (step === 'attackCombo') {
+      setSelectedAttackCombo(null);
+      setStep('skill');
+    } else if (step === 'serveType') {
+      setSelectedServeType(null);
+      setStep('skill');
+    } else if (step === 'skill') {
+      setSelectedSkill(null);
+      setStep('player');
+    } else if (step === 'player') {
+      setSelectedPlayer(null);
+      setStep('team');
+    }
   };
 
   const handleExportDVW = () => {
@@ -248,7 +289,7 @@ export function ActionPanel() {
             <Shield className="w-4 h-4 text-yellow-400" />
             Libero {liberoOnCourt ? 'OUT' : 'IN'}
           </h3>
-          <button onClick={() => setShowLibero(false)} className="text-xs text-muted-foreground hover:text-foreground">Annulla</button>
+          <button onClick={() => setShowLibero(false)} className="min-h-12 px-4 rounded-lg bg-secondary text-sm font-bold text-muted-foreground hover:text-foreground transition-transform duration-75 active:scale-95">Annulla</button>
         </div>
 
         <div className="flex gap-2">
@@ -258,7 +299,7 @@ export function ActionPanel() {
             );
             return (
               <button key={t} onClick={() => setLiberoTeam(t)}
-                className={`px-3 py-1.5 rounded text-xs font-semibold ${liberoTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                className={`min-h-12 px-4 rounded text-sm font-bold transition-transform duration-75 active:scale-95 ${liberoTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                 {t === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
                 {lp && <span className="ml-1 text-[10px] opacity-70">L#{lp.number}</span>}
               </button>
@@ -281,7 +322,7 @@ export function ActionPanel() {
                 .filter(p => !p.isLibero && !lineup.includes(p.number))
                 .map(p => (
                   <button key={p.number} onClick={() => handleLiberoSwap(p.number)}
-                    className="p-2 rounded-lg bg-secondary hover:bg-yellow-500/20 text-foreground text-sm font-semibold">
+                    className="min-h-16 p-4 rounded-lg bg-secondary hover:bg-yellow-500/20 text-foreground text-base font-bold transition-transform duration-75 active:scale-95">
                     {p.number} {p.lastName}
                   </button>
                 ))}
@@ -298,7 +339,7 @@ export function ActionPanel() {
                 const p = teamData.players.find(pp => pp.number === num);
                 return (
                   <button key={num} onClick={() => handleLiberoSwap(num)}
-                    className="p-2 rounded-lg bg-secondary hover:bg-yellow-500/20 text-foreground text-sm font-semibold">
+                    className="min-h-16 p-4 rounded-lg bg-secondary hover:bg-yellow-500/20 text-foreground text-base font-bold transition-transform duration-75 active:scale-95">
                     {num} {p?.lastName || ''}
                   </button>
                 );
@@ -321,7 +362,7 @@ export function ActionPanel() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground">Sostituzione</h3>
-          <button onClick={() => { setShowSubstitution(false); setSubOut(null); }} className="text-xs text-muted-foreground hover:text-foreground">Annulla</button>
+          <button onClick={() => { setShowSubstitution(false); setSubOut(null); }} className="min-h-12 px-4 rounded-lg bg-secondary text-sm font-bold text-muted-foreground hover:text-foreground transition-transform duration-75 active:scale-95">Annulla</button>
         </div>
         {!subOut ? (
           <>
@@ -329,7 +370,7 @@ export function ActionPanel() {
             <div className="flex gap-2 flex-wrap">
               {(['home', 'away'] as const).map(t => (
                 <button key={t} onClick={() => setSubTeam(t)}
-                  className={`px-3 py-1.5 rounded text-xs font-semibold ${subTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                  className={`min-h-12 px-4 rounded text-sm font-bold transition-transform duration-75 active:scale-95 ${subTeam === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                   {t === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
                 </button>
               ))}
@@ -337,7 +378,7 @@ export function ActionPanel() {
             <div className="grid grid-cols-3 gap-2">
               {lineup.map(p => (
                 <button key={p.number} onClick={() => setSubOut(p.number)}
-                  className="p-2 rounded-lg bg-secondary hover:bg-destructive/20 text-foreground text-sm font-semibold">
+                  className="min-h-16 p-4 rounded-lg bg-secondary hover:bg-destructive/20 text-foreground text-base font-bold transition-transform duration-75 active:scale-95">
                   {p.number} {p.name}
                 </button>
               ))}
@@ -349,7 +390,7 @@ export function ActionPanel() {
             <div className="grid grid-cols-3 gap-2">
               {bench.map(p => (
                 <button key={p.number} onClick={() => handleSubstitution(p.number)}
-                  className="p-2 rounded-lg bg-secondary hover:bg-accent/20 text-foreground text-sm font-semibold">
+                  className="min-h-16 p-4 rounded-lg bg-secondary hover:bg-accent/20 text-foreground text-base font-bold transition-transform duration-75 active:scale-95">
                   {p.number} {p.lastName}
                 </button>
               ))}
@@ -389,7 +430,8 @@ export function ActionPanel() {
       {/* Breadcrumb */}
       {step !== 'team' && (
         <div className="flex items-center gap-1.5 text-xs flex-wrap">
-          <button onClick={resetSelection} className="text-destructive hover:text-destructive/80 font-semibold">✕</button>
+          <button onClick={goBack} className="min-h-10 min-w-10 rounded bg-secondary text-foreground font-black transition-transform duration-75 active:scale-95">←</button>
+          <button onClick={resetSelection} className="min-h-10 min-w-10 rounded bg-secondary text-destructive hover:text-destructive/80 font-black transition-transform duration-75 active:scale-95">✕</button>
           {selectedTeam && (
             <span className="px-2 py-0.5 rounded bg-secondary text-primary font-semibold">
               {selectedTeam === 'home' ? homeTeam.name : awayTeam.name}
@@ -424,11 +466,11 @@ export function ActionPanel() {
       {step === 'team' && (
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => handleTeamSelect('home')}
-            className="p-4 rounded-xl bg-secondary border-2 border-blue-700/30 hover:border-blue-500/60 text-foreground font-bold text-lg transition-all touch-target">
+            className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-blue-700/30 hover:border-blue-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
             {homeTeam.name || 'Casa'}
           </button>
           <button onClick={() => handleTeamSelect('away')}
-            className="p-4 rounded-xl bg-secondary border-2 border-red-700/30 hover:border-red-500/60 text-foreground font-bold text-lg transition-all touch-target">
+            className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-red-700/30 hover:border-red-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
             {awayTeam.name || 'Ospite'}
           </button>
         </div>
@@ -439,9 +481,9 @@ export function ActionPanel() {
         <div className="grid grid-cols-3 gap-2">
           {getTeamLineup(selectedTeam).map((p, i) => (
             <button key={p.number} onClick={() => handlePlayerSelect(p.number)}
-              className="p-3 rounded-xl bg-secondary hover:bg-primary/20 border border-border hover:border-primary/50 text-foreground transition-all touch-target">
-              <div className="text-2xl font-black text-primary">{p.number}</div>
-              <div className="text-xs truncate text-muted-foreground">{p.name}</div>
+              className="min-h-20 p-4 rounded-xl bg-secondary hover:bg-primary/20 border border-border hover:border-primary/50 text-foreground transition-all touch-target active:scale-95 duration-75">
+              <div className="text-4xl font-black text-primary">{p.number}</div>
+              <div className="text-sm truncate text-muted-foreground">{p.name}</div>
               <div className="text-[10px] text-muted-foreground/50">P{i + 1}</div>
             </button>
           ))}
@@ -453,9 +495,9 @@ export function ActionPanel() {
         <div className="grid grid-cols-4 gap-2">
           {skills.map(s => (
             <button key={s.key} onClick={() => handleSkillSelect(s.key)}
-              className={`p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target`}>
-              <div className="text-xl">{s.key}</div>
-              <div className="text-[10px]">{SKILL_LABELS[s.key]}</div>
+              className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}>
+              <div className="text-2xl font-black">{s.key}</div>
+              <div className="text-sm">{SKILL_LABELS[s.key]}</div>
             </button>
           ))}
         </div>
@@ -465,10 +507,11 @@ export function ActionPanel() {
       {step === 'serveType' && (
         <div className="space-y-2">
           <span className="text-sm font-bold text-foreground">Tipo di Battuta</span>
+          <button onClick={() => { setSelectedServeType(null); setStep('evaluation'); }} className="w-full min-h-14 rounded-xl bg-secondary border-2 border-dashed border-border text-base font-bold text-foreground transition-transform duration-75 active:scale-95">↩ Salta tipo</button>
           <div className="grid grid-cols-3 gap-2">
             {SERVE_TYPES.map(st => (
               <button key={st.key} onClick={() => handleServeTypeSelect(st.key)}
-                className="p-3 rounded-xl bg-blue-900/30 border border-blue-700/30 hover:border-blue-500/50 text-foreground font-semibold transition-all touch-target">
+                className="min-h-16 p-3 rounded-xl bg-blue-900/30 border border-blue-700/30 hover:border-blue-500/50 text-foreground font-semibold transition-all touch-target active:scale-95 duration-75">
                 <div className="text-lg font-bold text-blue-300">{st.label}</div>
                 <div className="text-[10px] text-muted-foreground">{st.description}</div>
               </button>
@@ -480,18 +523,13 @@ export function ActionPanel() {
       {/* Step: Attack Combo */}
       {step === 'attackCombo' && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-foreground">Combinazione Attacco</span>
-            <button onClick={() => { setSelectedAttackCombo(null); setStep('evaluation'); }}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <SkipForward className="w-3 h-3" /> Salta
-            </button>
-          </div>
+          <span className="text-sm font-bold text-foreground">Combinazione Attacco</span>
+          <button onClick={() => { setSelectedAttackCombo(null); setStep('evaluation'); }} className="w-full min-h-14 rounded-xl bg-secondary border-2 border-dashed border-border text-base font-bold text-foreground transition-transform duration-75 active:scale-95">↩ Salta combinazione</button>
           {/* Tempo filter tabs */}
           <div className="flex gap-1 flex-wrap">
             {(['all', 'Q', 'M', 'T', 'H', 'O'] as const).map(f => (
               <button key={f} onClick={() => setAttackFilter(f)}
-                className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                className={`px-4 py-3 min-h-12 rounded text-sm font-bold transition-all active:scale-95 duration-75 ${
                   attackFilter === f
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -500,10 +538,10 @@ export function ActionPanel() {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-4 gap-1.5 max-h-[200px] overflow-y-auto">
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-1.5">
             {filteredCombos.map(combo => (
               <button key={combo.code} onClick={() => handleAttackComboSelect(combo)}
-                className={`p-2 rounded-lg border text-foreground font-semibold transition-all touch-target ${tempoColors[combo.tempo] || 'bg-secondary border-border'}`}>
+                className={`min-h-16 p-3 rounded-lg border text-foreground text-sm font-semibold transition-all touch-target active:scale-95 duration-75 ${tempoColors[combo.tempo] || 'bg-secondary border-border'}`}>
                 <div className="text-sm font-bold">{combo.code}</div>
                 <div className="text-[9px] text-muted-foreground leading-tight truncate">{combo.description}</div>
               </button>
@@ -514,10 +552,10 @@ export function ActionPanel() {
 
       {/* Step: Evaluation */}
       {step === 'evaluation' && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {evaluations.map(e => (
             <button key={e.key} onClick={() => handleEvaluationSelect(e.key)}
-              className={`p-3 rounded-xl ${e.color} text-primary-foreground font-bold text-base transition-all touch-target`}>
+              className={`min-h-20 p-3 rounded-xl ${e.color} text-primary-foreground text-xl font-black transition-all touch-target active:scale-95 duration-75`}>
               {e.label}
             </button>
           ))}
@@ -529,11 +567,11 @@ export function ActionPanel() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-foreground">Zona di partenza</span>
-            <button onClick={skipZones} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <SkipForward className="w-3 h-3" /> Salta
+            <button onClick={skipZones} className="w-full min-h-14 rounded-xl bg-secondary text-base font-bold text-foreground transition-transform duration-75 active:scale-95">
+              <SkipForward className="inline w-4 h-4 mr-1" /> Salta
             </button>
           </div>
-          <ZoneCourt mode="select-start" onZoneClick={handleStartZone} side={selectedTeam || 'home'} />
+          <ZoneCourt mode="select-start" onZoneClick={handleStartZone} side={selectedTeam || 'home'} skill={selectedSkill} large={true} />
         </div>
       )}
 
@@ -542,42 +580,42 @@ export function ActionPanel() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-foreground">Zona di arrivo</span>
-            <button onClick={skipZones} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <SkipForward className="w-3 h-3" /> Salta
+            <button onClick={skipZones} className="w-full min-h-14 rounded-xl bg-secondary text-base font-bold text-foreground transition-transform duration-75 active:scale-95">
+              <SkipForward className="inline w-4 h-4 mr-1" /> Salta
             </button>
           </div>
-          <ZoneCourt mode="select-end" onZoneClick={handleEndZone} startZone={startZone} side={selectedTeam || 'home'} />
+          <ZoneCourt mode="select-end" onZoneClick={handleEndZone} startZone={startZone} side={selectedTeam || 'home'} large={true} />
         </div>
       )}
 
       {/* Quick actions */}
       <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
         <button onClick={undoLastAction} disabled={matchState.actions.length === 0}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs font-medium disabled:opacity-30">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95">
           <Undo2 className="w-3.5 h-3.5" /> Annulla
         </button>
         <button onClick={() => addPoint('home')}
-          className="px-3 py-2 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-xs font-semibold">
+          className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
           +1 {homeTeam.name || 'Casa'}
         </button>
         <button onClick={() => addPoint('away')}
-          className="px-3 py-2 rounded-lg bg-secondary border border-red-700/20 text-foreground hover:border-red-500/40 text-xs font-semibold">
+          className="min-h-14 px-4 rounded-lg bg-secondary border border-red-700/20 text-foreground hover:border-red-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
           +1 {awayTeam.name || 'Ospite'}
         </button>
         <button onClick={() => setShowSubstitution(true)}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-xs font-medium">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold transition-transform duration-75 active:scale-95">
           <ArrowLeftRight className="w-3.5 h-3.5" /> Cambio
         </button>
         <button onClick={() => setShowLibero(true)}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-xs font-semibold">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-sm font-bold transition-transform duration-75 active:scale-95">
           <Shield className="w-3.5 h-3.5" /> Libero
         </button>
         <button onClick={endSet}
-          className="px-3 py-2 rounded-lg bg-secondary text-warning hover:bg-warning/10 text-xs font-semibold">
+          className="min-h-14 px-4 rounded-lg bg-secondary text-warning hover:bg-warning/10 text-sm font-bold transition-transform duration-75 active:scale-95">
           Fine Set
         </button>
         <button onClick={handleExportDVW}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold ml-auto">
+          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto transition-transform duration-75 active:scale-95">
           <Download className="w-3.5 h-3.5" /> DVW
         </button>
       </div>

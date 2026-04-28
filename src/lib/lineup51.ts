@@ -43,9 +43,11 @@ export function autoLineup51(players: Player[]): Partial<Lineup> | null {
   const opposites = players.filter(p => p.role === 'OP' && !p.isLibero);
   const middles = players.filter(p => p.role === 'M' && !p.isLibero);
   const outsides = players.filter(p => p.role === 'O' && !p.isLibero);
+  const universals = players.filter(p => p.role === 'U' && !p.isLibero);
+  const outsideSlots = [...outsides, ...universals.filter(u => !outsides.some(o => o.id === u.id))];
   const liberos = players.filter(p => p.isLibero || p.role === 'L');
 
-  if (setters.length < 1 || opposites.length < 1 || middles.length < 2 || outsides.length < 2) {
+  if (setters.length < 1 || opposites.length < 1 || middles.length < 2 || outsideSlots.length < 2) {
     return null;
   }
 
@@ -54,8 +56,8 @@ export function autoLineup51(players: Player[]): Partial<Lineup> | null {
     O: opposites[0],
     C1: middles[0],
     C2: middles[1],
-    S1: outsides[0],
-    S2: outsides[1],
+    S1: outsideSlots[0],
+    S2: outsideSlots[1],
   };
 
   const lineup: Partial<Lineup> = {

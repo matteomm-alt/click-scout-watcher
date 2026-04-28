@@ -98,6 +98,9 @@ const defaultMatchState: MatchState = {
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
 
+type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam'> & { actionCount: number };
+const lineupSnapshots: LineupSnapshot[] = [];
+
 export const useMatchStore = create<MatchStore>()(
   persist(
     (set, get) => ({
@@ -186,6 +189,14 @@ export const useMatchStore = create<MatchStore>()(
 
       addPoint: (team) => {
         const { matchState, matchInfo } = get();
+        lineupSnapshots.push({
+          homeCurrentLineup: [...matchState.homeCurrentLineup],
+          awayCurrentLineup: [...matchState.awayCurrentLineup],
+          homeSetterPosition: matchState.homeSetterPosition,
+          awaySetterPosition: matchState.awaySetterPosition,
+          servingTeam: matchState.servingTeam,
+          actionCount: matchState.actions.length,
+        });
         const newHomeScore = team === 'home' ? matchState.homeScore + 1 : matchState.homeScore;
         const newAwayScore = team === 'away' ? matchState.awayScore + 1 : matchState.awayScore;
 
@@ -277,12 +288,23 @@ export const useMatchStore = create<MatchStore>()(
         };
       }),
 
-      undoLastAction: () => set((s) => ({
-        matchState: {
-          ...s.matchState,
-          actions: s.matchState.actions.slice(0, -1),
-        },
-      })),
+      undoLastAction: () => set((s) => {
+        const latestSnapshot = lineupSnapshots[lineupSnapshots.length - 1];
+        const snapshot = latestSnapshot?.actionCount === s.matchState.actions.length ? lineupSnapshots.pop() : undefined;
+        return {
+          matchState: {
+            ...s.matchState,
+            ...(snapshot ? {
+              homeCurrentLineup: [...snapshot.homeCurrentLineup],
+              awayCurrentLineup: [...snapshot.awayCurrentLineup],
+              homeSetterPosition: snapshot.homeSetterPosition,
+              awaySetterPosition: snapshot.awaySetterPosition,
+              servingTeam: snapshot.servingTeam,
+            } : {}),
+            actions: s.matchState.actions.slice(0, -1),
+          },
+        };
+      }),
 
       substitutePlayer: (team, outNumber, inNumber) => set((s) => {
         const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
@@ -333,7 +355,9 @@ export const useMatchStore = create<MatchStore>()(
         matchState: { ...s.matchState, sanctions: s.matchState.sanctions.filter(x => x.id !== id) },
       })),
 
-      resetMatch: () => set({
+      resetMatch: () => {
+        lineupSnapshots.length = 0;
+        set({
         step: 'setup',
         matchInfo: { ...defaultMatchInfo },
         homeTeam: { ...defaultTeam, id: 'home', code: 'HOM' },
@@ -341,7 +365,8 @@ export const useMatchStore = create<MatchStore>()(
         homeLineup: { ...defaultLineup },
         awayLineup: { ...defaultLineup },
         matchState: { ...defaultMatchState },
-      }),
+        });
+      },
 
       loadDemoMatch: () => {
         const mkPlayer = (n: number, last: string, first: string, role: Player['role'], isLibero = false, isCaptain = false): Player => ({
