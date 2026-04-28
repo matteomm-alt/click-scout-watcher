@@ -98,7 +98,7 @@ const defaultMatchState: MatchState = {
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
 
-type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam'>;
+type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam'> & { actionCount: number };
 const lineupSnapshots: LineupSnapshot[] = [];
 
 export const useMatchStore = create<MatchStore>()(
@@ -195,6 +195,7 @@ export const useMatchStore = create<MatchStore>()(
           homeSetterPosition: matchState.homeSetterPosition,
           awaySetterPosition: matchState.awaySetterPosition,
           servingTeam: matchState.servingTeam,
+          actionCount: matchState.actions.length,
         });
         const newHomeScore = team === 'home' ? matchState.homeScore + 1 : matchState.homeScore;
         const newAwayScore = team === 'away' ? matchState.awayScore + 1 : matchState.awayScore;
@@ -288,7 +289,8 @@ export const useMatchStore = create<MatchStore>()(
       }),
 
       undoLastAction: () => set((s) => {
-        const snapshot = lineupSnapshots.pop();
+        const latestSnapshot = lineupSnapshots[lineupSnapshots.length - 1];
+        const snapshot = latestSnapshot?.actionCount === s.matchState.actions.length ? lineupSnapshots.pop() : undefined;
         return {
           matchState: {
             ...s.matchState,
