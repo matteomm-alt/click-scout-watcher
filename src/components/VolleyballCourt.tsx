@@ -179,6 +179,7 @@ export function VolleyballCourt() {
 
     return (
       <div className="relative h-full overflow-hidden" style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-1/3 bg-black/25" />
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
           {[30, 60].map((p) => (
             <line key={`v-${team}-${p}`} x1={p} y1="0" x2={p} y2="90" stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
