@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BarChart2, Settings, Target, Zap } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BarChart2, Pencil, Settings, Target, Zap } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -10,12 +10,14 @@ import { TeamComparison } from '@/components/TeamComparison';
 import { SetDistribution } from '@/components/SetDistribution';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useScoutSettings } from '@/lib/scoutSettings';
 import { useMatchStore } from '@/store/matchStore';
-import { SKILL_LABELS, SERVE_TYPES } from '@/types/volleyball';
+import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
 
-type RightTab = 'log' | 'stats' | 'heat' | 'compare' | 'sets';
+type RightTab = 'log' | 'stats' | 'heat' | 'compare' | 'sets' | 'dir';
 type MobileTab = 'scout' | 'quick' | 'live';
 
 const TABS: { key: RightTab; label: string }[] = [
@@ -24,6 +26,7 @@ const TABS: { key: RightTab; label: string }[] = [
   { key: 'heat', label: 'Heat' },
   { key: 'compare', label: 'VS' },
   { key: 'sets', label: 'Alz.' },
+  { key: 'dir', label: 'Dir' },
 ];
 
 const MOBILE_TABS = [
@@ -32,7 +35,7 @@ const MOBILE_TABS = [
   { key: 'live' as const, label: 'Live', icon: BarChart2 },
 ];
 
-const SETTING_ROWS = [
+const RILEVAZIONE_ROWS = [
   { key: 'showServeType' as const, label: 'Tipo battuta', description: 'Mostra lo step per scegliere il tipo di servizio.' },
   { key: 'showAttackCombo' as const, label: 'Combo attacco', description: 'Mostra lo step per la combinazione di attacco.' },
   { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell’azione.' },
@@ -41,14 +44,58 @@ const SETTING_ROWS = [
   { key: 'showDifesa' as const, label: 'Skill D', description: 'Mostra Difesa nella lista fondamentali.' },
   { key: 'showFreeball' as const, label: 'Skill F', description: 'Mostra Freeball nella lista fondamentali.' },
   { key: 'autoPoint' as const, label: 'Punto automatico', description: 'Aggiunge punto automatico su # per A/S/B e su errore.' },
+  { key: 'autoCorrelation' as const, label: 'Correlazione automatica', description: 'Aggiorna automaticamente battuta/ricezione e attacco/muro' },
+  { key: 'showMuroVincente' as const, label: 'Muro vincente', description: 'Rileva chi fa muro punto' },
+  { key: 'showMuroErrato' as const, label: 'Muro errato', description: 'Rileva chi commette errore a muro' },
+  { key: 'sostituzioniLibere' as const, label: 'Sostituzioni libere', description: 'Senza vincoli regolamento' },
+];
+
+const VISUAL_ROWS = [
+  { key: 'showAllDirections' as const, label: 'Tutte le direzioni', description: 'Mostra tutte le direzioni disponibili.' },
+  { key: 'posizionaPerRuolo' as const, label: 'Posiziona per ruolo', description: 'Giocatori in posizione tattica dopo ricezione' },
 ];
 
 export function LiveScout() {
-  const { matchState, homeTeam, awayTeam, endSet } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction } = useMatchStore();
   const { settings, setSetting } = useScoutSettings();
   const [tab, setTab] = useState<RightTab>('log');
   const [mobileTab, setMobileTab] = useState<MobileTab>('scout');
+  const [showEndSetDialog, setShowEndSetDialog] = useState(false);
+  const [editingAction, setEditingAction] = useState<ScoutAction | null>(null);
+  const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
+  const [timeoutBanner, setTimeoutBanner] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 30);
+
+
+  useEffect(() => {
+    const handler = () => {
+      setTab('dir');
+      setTimeoutBanner(true);
+      window.setTimeout(() => setTimeoutBanner(false), 4000);
+    };
+    window.addEventListener('scout-timeout', handler);
+    return () => window.removeEventListener('scout-timeout', handler);
+  }, []);
+
+  const openEditAction = (action: ScoutAction) => {
+    setEditingAction(action);
+    setEditDraft({
+      playerNumber: String(action.playerNumber),
+      evaluation: action.evaluation,
+      startZone: action.startZone ? String(action.startZone) : 'none',
+      endZone: action.endZone ? String(action.endZone) : 'none',
+    });
+  };
+
+  const currentSetActions = matchState.actions.filter((a) => a.setNumber === matchState.currentSet);
+  const endSetStats = {
+    homeAce: currentSetActions.filter((a) => a.team === 'home' && a.skill === 'S' && a.evaluation === '#').length,
+    awayAce: currentSetActions.filter((a) => a.team === 'away' && a.skill === 'S' && a.evaluation === '#').length,
+    homeErr: currentSetActions.filter((a) => a.team === 'home' && a.evaluation === '=').length,
+    awayErr: currentSetActions.filter((a) => a.team === 'away' && a.evaluation === '=').length,
+    homeKill: currentSetActions.filter((a) => a.team === 'home' && a.skill === 'A' && a.evaluation === '#').length,
+    awayKill: currentSetActions.filter((a) => a.team === 'away' && a.skill === 'A' && a.evaluation === '#').length,
+  };
 
   const ActionLog = () => (
     <>
@@ -88,6 +135,9 @@ export function LiveScout() {
               </span>
             )}
             <span className="text-muted-foreground/50 ml-auto text-[10px]">{action.timestamp}</span>
+            <button type="button" onClick={() => openEditAction(action)} className="min-h-8 min-w-8 rounded p-1 hover:bg-secondary ml-auto flex-shrink-0 active:scale-95" aria-label="Modifica azione">
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
           </div>
         ))}
       </div>
@@ -136,7 +186,7 @@ export function LiveScout() {
 
           <div className="col-span-3 min-h-0 overflow-hidden">
             <div className="glass rounded-xl p-3 h-full flex flex-col">
-              <div className="grid grid-cols-5 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50 mb-2">
+              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50 mb-2">
                 {TABS.map((t) => {
                   const active = tab === t.key;
                   return (
@@ -160,6 +210,7 @@ export function LiveScout() {
                 {tab === 'heat' && <AttackHeatmap team="all" />}
                 {tab === 'compare' && <TeamComparison />}
                 {tab === 'sets' && <SetDistribution />}
+                {tab === 'dir' && <RotationDirections />}
               </div>
             </div>
           </div>
@@ -188,7 +239,7 @@ export function LiveScout() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={endSet}
+              onClick={() => setShowEndSetDialog(true)}
               className="min-h-14 px-6 rounded-xl bg-secondary text-warning font-black border border-warning/40 transition-transform duration-75 active:scale-95"
             >
               ⏭ Fine Set
@@ -207,17 +258,7 @@ export function LiveScout() {
                 <SheetHeader>
                   <SheetTitle>Impostazioni scout</SheetTitle>
                 </SheetHeader>
-                <div className="mt-4 space-y-3">
-                  {SETTING_ROWS.map((row) => (
-                    <div key={row.key} className="flex items-center justify-between gap-4 rounded-xl border border-border bg-secondary/40 p-4">
-                      <div>
-                        <div className="text-sm font-black text-foreground">{row.label}</div>
-                        <div className="text-xs text-muted-foreground">{row.description}</div>
-                      </div>
-                      <Switch checked={settings[row.key]} onCheckedChange={(checked) => setSetting(row.key, checked)} />
-                    </div>
-                  ))}
-                </div>
+                <ScoutSettingsPanel settings={settings} setSetting={setSetting} />
               </SheetContent>
             </Sheet>
           </div>
@@ -255,6 +296,44 @@ export function LiveScout() {
           })}
         </div>
       </div>
+    
+      <EndSetDialog open={showEndSetDialog} onOpenChange={setShowEndSetDialog} stats={endSetStats} onConfirm={() => { endSet(); setShowEndSetDialog(false); }} currentSet={matchState.currentSet} homeName={homeTeam.name || 'Casa'} awayName={awayTeam.name || 'Ospite'} homeScore={matchState.homeScore} awayScore={matchState.awayScore} />
+
+      <Dialog open={editingAction !== null} onOpenChange={(open) => !open && setEditingAction(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica azione #{editingAction?.playerNumber} {editingAction?.skill}</DialogTitle>
+          </DialogHeader>
+          {editingAction && (
+            <div className="space-y-3">
+              <Select value={editDraft.playerNumber} onValueChange={(v) => setEditDraft((d) => ({ ...d, playerNumber: v }))}>
+                <SelectTrigger><SelectValue placeholder="Giocatore" /></SelectTrigger>
+                <SelectContent>
+                  {(editingAction.team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup).map((n) => <SelectItem key={n} value={String(n)}>#{n}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={editDraft.evaluation} onValueChange={(v) => setEditDraft((d) => ({ ...d, evaluation: v as Evaluation }))}>
+                <SelectTrigger><SelectValue placeholder="Valutazione" /></SelectTrigger>
+                <SelectContent>{(['#', '+', '!', '-', '/', '='] as Evaluation[]).map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+              </Select>
+              <Select value={editDraft.startZone} onValueChange={(v) => setEditDraft((d) => ({ ...d, startZone: v }))}>
+                <SelectTrigger><SelectValue placeholder="Zona origine" /></SelectTrigger>
+                <SelectContent><SelectItem value="none">Nessuna</SelectItem>{[1,2,3,4,5,6,7,8,9].map((z) => <SelectItem key={z} value={String(z)}>{z}</SelectItem>)}</SelectContent>
+              </Select>
+              <Select value={editDraft.endZone} onValueChange={(v) => setEditDraft((d) => ({ ...d, endZone: v }))}>
+                <SelectTrigger><SelectValue placeholder="Zona destinazione" /></SelectTrigger>
+                <SelectContent><SelectItem value="none">Nessuna</SelectItem>{[1,2,3,4,5,6,7,8,9].map((z) => <SelectItem key={z} value={String(z)}>{z}</SelectItem>)}</SelectContent>
+              </Select>
+              <button type="button" className="min-h-12 w-full rounded bg-destructive font-bold text-destructive-foreground" onClick={() => { deleteAction(editingAction.id); setEditingAction(null); }}>Elimina</button>
+              <div className="flex gap-2">
+                <button type="button" className="min-h-12 flex-1 rounded bg-secondary font-bold" onClick={() => setEditingAction(null)}>Annulla</button>
+                <button type="button" className="min-h-12 flex-1 rounded bg-primary font-bold text-primary-foreground" onClick={() => { updateAction(editingAction.id, { playerNumber: Number(editDraft.playerNumber), evaluation: editDraft.evaluation, startZone: editDraft.startZone === 'none' ? null : Number(editDraft.startZone), endZone: editDraft.endZone === 'none' ? null : Number(editDraft.endZone) }); setEditingAction(null); }}>Salva</button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+
