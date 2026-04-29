@@ -2,11 +2,12 @@ import { useMatchStore } from '@/store/matchStore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Users, Trophy, ArrowRight, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function MatchSetup() {
-  const { matchInfo, setMatchInfo, setStep, loadDemoMatch, homeTeam, awayTeam, setHomeTeam, setAwayTeam } = useMatchStore();
+  const { matchInfo, setMatchInfo, setStep, loadDemoMatch, homeTeam, awayTeam, setHomeTeam, setAwayTeam, matchState, setSingleTeamMode } = useMatchStore();
 
   const handleDemo = () => {
     loadDemoMatch();
@@ -128,6 +129,11 @@ export function MatchSetup() {
             </div>
           </div>
         </details>
+
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-secondary/30 p-4">
+          <Label className="text-sm font-bold text-foreground">Rileva solo squadra di casa — la squadra avversaria non richiede formazione</Label>
+          <Switch checked={Boolean(matchState.singleTeamMode)} onCheckedChange={setSingleTeamMode} />
+        </div>
 
         <Button
           type="button"

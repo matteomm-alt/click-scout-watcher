@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
   Team, Player, MatchInfo, Lineup, MatchState, ScoutAction,
-  SetResult, AppStep, SanctionType, Sanction, TimeoutRecord,
+  SetResult, AppStep, SanctionType, Sanction, TimeoutRecord, Evaluation,
 } from '@/types/volleyball';
+import { toast } from 'sonner';
 
 interface MatchStore {
   step: AppStep;
@@ -28,6 +29,11 @@ interface MatchStore {
   matchState: MatchState;
   startMatch: () => void;
   addAction: (action: Omit<ScoutAction, 'id' | 'setNumber' | 'homeScore' | 'awayScore' | 'homeSetterPosition' | 'awaySetterPosition' | 'homeLineup' | 'awayLineup'>) => void;
+  updateAction: (id: string, updates: { playerNumber?: number; evaluation?: Evaluation; startZone?: number | null; endZone?: number | null }) => void;
+  deleteAction: (id: string) => void;
+  setSingleTeamMode: (v: boolean) => void;
+  adjustScore: (team: 'home' | 'away', delta: number) => void;
+  setServingTeam: (team: 'home' | 'away') => void;
   addPoint: (team: 'home' | 'away') => void;
   rotateTeam: (team: 'home' | 'away') => void;
   endSet: () => void;
@@ -89,9 +95,12 @@ const defaultMatchState: MatchState = {
   awayCurrentLineup: [],
   isMatchStarted: false,
   isMatchEnded: false,
+  singleTeamMode: false,
   actions: [],
   homeTimeoutsUsed: 0,
   awayTimeoutsUsed: 0,
+  homeSubstitutionsUsed: 0,
+  awaySubstitutionsUsed: 0,
   timeouts: [],
   sanctions: [],
 };
@@ -182,10 +191,65 @@ export const useMatchStore = create<MatchStore>()(
           homeLineup: [...matchState.homeCurrentLineup],
           awayLineup: [...matchState.awayCurrentLineup],
         };
-        set((s) => ({
-          matchState: { ...s.matchState, actions: [...s.matchState.actions, action] },
-        }));
+        set((s) => {
+          const actions = [...s.matchState.actions, action];
+          let updated = false;
+          try {
+            const settingsRaw = typeof window !== 'undefined' ? window.localStorage.getItem('scout_settings') : null;
+            const autoCorrelation = settingsRaw ? JSON.parse(settingsRaw).autoCorrelation !== false : true;
+            if (autoCorrelation === true) {
+              if (action.skill === 'R') {
+                const map: Partial<Record<Evaluation, Evaluation>> = { '#': '-', '+': '-', '-': '+', '/': '/', '=': '=' };
+                const nextEval = map[action.evaluation];
+                const idx = [...actions].reverse().findIndex((a) => a.skill === 'S' && a.setNumber === action.setNumber);
+                if (nextEval && idx >= 0) {
+                  const realIdx = actions.length - 1 - idx;
+                  actions[realIdx] = { ...actions[realIdx], evaluation: nextEval };
+                  updated = true;
+                }
+              }
+              if (action.skill === 'B') {
+                const map: Partial<Record<Evaluation, Evaluation>> = { '#': '/', '+': '-', '=': '#', '!': '!' };
+                const nextEval = map[action.evaluation];
+                const idx = [...actions].reverse().findIndex((a) => a.skill === 'A' && a.setNumber === action.setNumber);
+                if (nextEval && idx >= 0) {
+                  const realIdx = actions.length - 1 - idx;
+                  actions[realIdx] = { ...actions[realIdx], evaluation: nextEval };
+                  updated = true;
+                }
+              }
+            }
+          } catch {}
+          if (updated) toast.info('Valutazione aggiornata', { duration: 1500 });
+          return { matchState: { ...s.matchState, actions } };
+        });
       },
+
+      updateAction: (id, updates) => set((s) => ({
+        matchState: {
+          ...s.matchState,
+          actions: s.matchState.actions.map((a) => a.id === id ? {
+            ...a,
+            ...(updates.playerNumber !== undefined ? { playerNumber: updates.playerNumber } : {}),
+            ...(updates.evaluation !== undefined ? { evaluation: updates.evaluation } : {}),
+            ...(updates.startZone !== undefined ? { startZone: updates.startZone ?? undefined } : {}),
+            ...(updates.endZone !== undefined ? { endZone: updates.endZone ?? undefined } : {}),
+          } : a),
+        },
+      })),
+
+      deleteAction: (id) => set((s) => ({
+        matchState: { ...s.matchState, actions: s.matchState.actions.filter((a) => a.id !== id) },
+      })),
+
+      setSingleTeamMode: (v) => set((s) => ({ matchState: { ...s.matchState, singleTeamMode: v } })),
+
+      adjustScore: (team, delta) => set((s) => {
+        const key = team === 'home' ? 'homeScore' : 'awayScore';
+        return { matchState: { ...s.matchState, [key]: Math.max(0, s.matchState[key] + delta) } };
+      }),
+
+      setServingTeam: (team) => set((s) => ({ matchState: { ...s.matchState, servingTeam: team } })),
 
       addPoint: (team) => {
         const { matchState, matchInfo } = get();
@@ -284,6 +348,8 @@ export const useMatchStore = create<MatchStore>()(
             // Reset time-outs at start of new set
             homeTimeoutsUsed: isMatchOver ? s.matchState.homeTimeoutsUsed : 0,
             awayTimeoutsUsed: isMatchOver ? s.matchState.awayTimeoutsUsed : 0,
+            homeSubstitutionsUsed: 0,
+            awaySubstitutionsUsed: 0,
           },
         };
       }),
@@ -308,10 +374,11 @@ export const useMatchStore = create<MatchStore>()(
 
       substitutePlayer: (team, outNumber, inNumber) => set((s) => {
         const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+        const usedKey = team === 'home' ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
         const lineup = [...s.matchState[lineupKey]];
         const idx = lineup.indexOf(outNumber);
         if (idx >= 0) lineup[idx] = inNumber;
-        return { matchState: { ...s.matchState, [lineupKey]: lineup } };
+        return { matchState: { ...s.matchState, [lineupKey]: lineup, [usedKey]: s.matchState[usedKey] + 1 } };
       }),
 
       callTimeout: (team) => {

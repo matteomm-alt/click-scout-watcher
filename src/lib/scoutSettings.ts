@@ -9,6 +9,14 @@ export type ScoutSettings = {
   showDifesa: boolean;
   showFreeball: boolean;
   autoPoint: boolean;
+  autoCorrelation: boolean;
+  showMuroVincente: boolean;
+  showMuroErrato: boolean;
+  sostituzioniLibere: boolean;
+  attaccoPredefinito: 'H' | 'Q' | 'T';
+  ricezionePredefinita: '#' | '+' | '!' | '-' | '/' | '=';
+  showAllDirections: boolean;
+  posizionaPerRuolo: boolean;
 };
 
 const STORAGE_KEY = 'scout_settings';
@@ -22,6 +30,14 @@ export const defaultScoutSettings: ScoutSettings = {
   showDifesa: true,
   showFreeball: true,
   autoPoint: true,
+  autoCorrelation: true,
+  showMuroVincente: false,
+  showMuroErrato: false,
+  sostituzioniLibere: false,
+  attaccoPredefinito: 'Q',
+  ricezionePredefinita: '+',
+  showAllDirections: true,
+  posizionaPerRuolo: false,
 };
 
 const readSettings = (): ScoutSettings => {

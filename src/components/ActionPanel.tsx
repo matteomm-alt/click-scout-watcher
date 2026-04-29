@@ -6,6 +6,7 @@ import { Undo2, Download, ArrowLeftRight, SkipForward, Shield } from 'lucide-rea
 import { generateDVW } from '@/lib/dvwExporter';
 import { ZoneCourt } from '@/components/VolleyballCourt';
 import { useScoutSettings } from '@/lib/scoutSettings';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type ScoutStep = 'team' | 'player' | 'skill' | 'serveType' | 'attackCombo' | 'evaluation' | 'startZone' | 'endZone';
 
@@ -33,6 +34,8 @@ export function ActionPanel() {
   const [subOut, setSubOut] = useState<number | null>(null);
   const [attackFilter, setAttackFilter] = useState<'all' | 'Q' | 'M' | 'T' | 'H' | 'O'>('all');
   const [showLibero, setShowLibero] = useState(false);
+  const [autoAttack, setAutoAttack] = useState(false);
+  const [showMuroDialog, setShowMuroDialog] = useState<'vincente' | 'errato' | null>(null);
   const [liberoTeam, setLiberoTeam] = useState<'home' | 'away'>('home');
   const { settings } = useScoutSettings();
 
@@ -72,6 +75,7 @@ export function ActionPanel() {
     setStartZone(null);
     setEndZone(null);
     setAttackFilter('all');
+    setAutoAttack(false);
   };
 
   const getTeamLineup = (team: 'home' | 'away') => {
@@ -95,6 +99,15 @@ export function ActionPanel() {
 
   const handleSkillSelect = (skill: Skill) => {
     setSelectedSkill(skill);
+    if (skill === 'A') {
+      const lastReceive = [...matchState.actions].reverse().find((a) => a.skill === 'R');
+      if (lastReceive && (lastReceive.evaluation === '-' || lastReceive.evaluation === '/' || lastReceive.evaluation === '=')) {
+        setSelectedAttackCombo({ code: 'HA', label: 'Palla Alta', description: 'Auto da ricezione negativa', tempo: 'H' as const, position: '-' as const });
+        setAutoAttack(true);
+        setStep('evaluation');
+        return;
+      }
+    }
     if (skill === 'S' && settings.showServeType) {
       setStep('serveType');
     } else if (skill === 'A' && settings.showAttackCombo) {
@@ -187,6 +200,15 @@ export function ActionPanel() {
       addPoint(selectedTeam);
     } else if (settings.autoPoint && evaluation === '=') {
       addPoint(selectedTeam === 'home' ? 'away' : 'home');
+    }
+
+    if (selectedSkill === 'A' && evaluation === '#' && settings.showMuroVincente) {
+      setShowMuroDialog('vincente');
+      return;
+    }
+    if (selectedSkill === 'A' && evaluation === '/' && settings.showMuroErrato) {
+      setShowMuroDialog('errato');
+      return;
     }
 
     resetSelection();
@@ -466,15 +488,23 @@ export function ActionPanel() {
 
       {/* Step: Team */}
       {step === 'team' && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className={matchState.singleTeamMode ? 'space-y-2' : 'grid grid-cols-2 gap-3'}>
           <button onClick={() => handleTeamSelect('home')}
             className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-blue-700/30 hover:border-blue-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
             {homeTeam.name || 'Casa'}
           </button>
-          <button onClick={() => handleTeamSelect('away')}
-            className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-red-700/30 hover:border-red-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
-            {awayTeam.name || 'Ospite'}
-          </button>
+          {!matchState.singleTeamMode && (
+            <button onClick={() => handleTeamSelect('away')}
+              className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-red-700/30 hover:border-red-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
+              {awayTeam.name || 'Ospite'}
+            </button>
+          )}
+          {matchState.singleTeamMode && (
+            <>
+              <button type="button" onClick={() => { addPoint('away'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-destructive/10 border border-destructive/30 text-destructive font-black">PUNTO AVVERSARIO</button>
+              <button type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`, team: 'home', playerNumber: 0, skill: 'B', skillType: 'H', evaluation: '#', code: '*00BH#~~' }); addPoint('home'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-black">🛡 MURO</button>
+            </>
+          )}
         </div>
       )}
 
@@ -554,6 +584,13 @@ export function ActionPanel() {
 
       {/* Step: Evaluation */}
       {step === 'evaluation' && (
+        <div className="space-y-2">
+          {autoAttack && (
+            <div className="flex items-center justify-between rounded-xl bg-warning/15 border border-warning/30 p-3 text-sm font-black text-warning">
+              <span>⚡ Auto: Palla Alta</span>
+              <button type="button" onClick={() => { setAutoAttack(false); setStep('attackCombo'); }} className="rounded bg-secondary px-3 py-2 text-foreground">Cambia</button>
+            </div>
+          )}
         <div className="grid grid-cols-2 gap-2">
           {evaluations.map(e => (
             <button key={e.key} onClick={() => handleEvaluationSelect(e.key)}
@@ -561,6 +598,7 @@ export function ActionPanel() {
               {e.label}
             </button>
           ))}
+        </div>
         </div>
       )}
 
@@ -621,6 +659,24 @@ export function ActionPanel() {
           <Download className="w-3.5 h-3.5" /> DVW
         </button>
       </div>
+    <Dialog open={showMuroDialog !== null} onOpenChange={(open) => !open && setShowMuroDialog(null)}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{showMuroDialog === 'vincente' ? 'Chi ha murato?' : 'Chi ha toccato a muro?'}</DialogTitle></DialogHeader>
+        <div className="space-y-2">
+          {(() => {
+            const opposite = selectedTeam === 'home' ? 'away' : 'home';
+            const nums = (opposite === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup).slice(1, 4);
+            const teamData = opposite === 'home' ? homeTeam : awayTeam;
+            return nums.map((num) => {
+              const player = teamData.players.find((p) => p.number === num);
+              return <button key={num} type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`, team: opposite, playerNumber: num, skill: 'B', skillType: 'H', evaluation: showMuroDialog === 'vincente' ? '#' : '/', code: `${opposite === 'home' ? '*' : 'a'}${String(num).padStart(2, '0')}BH${showMuroDialog === 'vincente' ? '#' : '/'}~~` }); resetSelection(); setShowMuroDialog(null); }} className="min-h-16 w-full rounded-xl bg-secondary text-lg font-black active:scale-95">#{num} {player?.lastName || ''}</button>;
+            });
+          })()}
+          <button type="button" onClick={() => { resetSelection(); setShowMuroDialog(null); }} className="min-h-12 w-full rounded bg-secondary text-muted-foreground font-bold">Tralascia</button>
+        </div>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }
+

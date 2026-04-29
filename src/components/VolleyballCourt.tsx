@@ -100,7 +100,7 @@ export function ZoneCourt({
               <span className={`select-none text-6xl md:text-7xl font-black italic leading-none ${active ? 'text-white/65' : 'text-white/22'}`}>
                 {z.zone}
               </span>
-              <span className="absolute left-2 top-1.5 text-[9px] font-bold uppercase tracking-widest text-white/40">{z.label}</span>
+              <span className="absolute left-2 top-1.5 text-xs font-black uppercase tracking-widest text-white/40">{z.label}</span>
             </button>
           );
         })}
@@ -120,7 +120,7 @@ export function ZoneCourt({
 
       {showServiceBand && (
         <div className="border-t-4 border-white">
-          <div className="bg-muted px-2 py-1 text-center text-[10px] font-black uppercase tracking-[0.35em] text-muted-foreground">BATTUTA</div>
+          <div className="bg-muted px-2 py-1 text-center text-xs md:text-sm font-black uppercase tracking-[0.35em] text-muted-foreground">BATTUTA</div>
           <div className="grid grid-cols-3 rounded-b-lg overflow-hidden" style={{ background: serviceBg }}>
             {SERVICE_ZONES.map((s, index) => (
               <button
@@ -202,14 +202,14 @@ export function VolleyballCourt() {
 
           return (
             <div key={`${team}-p-${pos}`} className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
-              <span className={`mb-0.5 text-[9px] font-black tracking-wider ${isSetter ? 'text-warning' : 'text-white/55'}`}>P{pos}</span>
+              <span className={`mb-0.5 text-[11px] font-black tracking-wider ${isSetter ? 'text-warning' : 'text-white/55'}`}>P{pos}</span>
               {info && (
                 <>
                   <div className={`relative flex size-10 md:size-12 items-center justify-center rounded-full text-sm md:text-base font-black text-white shadow-lg ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
                     {info.number}
-                    {isSetter && <span className="absolute -right-2 -top-2 rounded bg-warning px-1 text-[9px] font-black text-background">S</span>}
+                    {isSetter && <span className="absolute -right-2 -top-2 rounded bg-warning px-1.5 py-0.5 text-xs font-black text-background">S</span>}
                   </div>
-                  <span className="mt-0.5 max-w-16 truncate text-[9px] md:text-[10px] font-bold text-white/90 drop-shadow">{info.name}</span>
+                  <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
                 </>
               )}
             </div>
@@ -221,7 +221,7 @@ export function VolleyballCourt() {
 
   const renderServiceBand = (team: 'home' | 'away') => (
     <div className="relative flex h-full items-center justify-center border-x border-white/15" style={{ background: serviceBg }}>
-      <span className="rotate-180 [writing-mode:vertical-rl] text-[10px] md:text-xs font-black uppercase tracking-[0.35em] text-white/45">BATTUTA</span>
+      <span className="rotate-180 [writing-mode:vertical-rl] text-xs md:text-sm font-black uppercase tracking-[0.35em] text-white/45">BATTUTA</span>
       <span className={`absolute top-2 text-[10px] font-black uppercase tracking-wider ${team === 'home' ? 'text-blue-200' : 'text-red-200'}`}>
         {team === 'home' ? homeTeam.name || 'CASA' : awayTeam.name || 'OSPITE'}
       </span>

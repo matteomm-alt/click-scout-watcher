@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { Square, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Square, AlertTriangle, RotateCcw, BarChart2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import type { SanctionType } from '@/types/volleyball';
 import { toast } from 'sonner';
@@ -13,13 +14,38 @@ const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: '
   disqualification: { label: 'Squalifica', color: 'bg-zinc-900 border border-red-600', icon: 'square' },
 };
 
+function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePos, pct }: { open: boolean; setOpen: (v: boolean) => void; serverNumber: number; serveActions: any[]; zonePos: (z?: number) => number[] | undefined; pct: (n: number) => number }) {
+  const stat = {
+    ace: serveActions.filter((a) => a.evaluation === '#').length,
+    err: serveActions.filter((a) => a.evaluation === '=').length,
+    pos: serveActions.filter((a) => a.evaluation === '#' || a.evaluation === '+').length,
+  };
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild><button type="button" className="min-h-10 min-w-10 rounded-lg bg-secondary/50 hover:bg-secondary active:scale-95"><BarChart2 className="mx-auto h-4 w-4" /></button></SheetTrigger>
+      <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+        <SheetHeader><SheetTitle>#{serverNumber} — Direzioni battuta</SheetTitle></SheetHeader>
+        <svg viewBox="0 0 90 60" width="100%" className="mt-4 rounded-xl bg-orange-900/20">
+          {[30, 60].map((x) => <line key={`v-${x}`} x1={x} y1="0" x2={x} y2="60" stroke="rgba(255,255,255,.25)" />)}
+          {[20, 40].map((y) => <line key={`h-${y}`} x1="0" y1={y} x2="90" y2={y} stroke="rgba(255,255,255,.25)" />)}
+          {serveActions.map((a) => { const s = zonePos(a.startZone); const e = zonePos(a.endZone); if (!s || !e) return null; const c = a.evaluation === '#' ? '#000' : a.evaluation === '=' ? '#dc2626' : a.evaluation === '/' ? '#ea580c' : '#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth="1.8" strokeLinecap="round" />; })}
+        </svg>
+        <div className="mt-3 grid grid-cols-4 gap-2 text-center"><div><div className="text-xs text-muted-foreground">Tot</div><div className="text-xl font-black">{serveActions.length}</div></div><div><div className="text-xs text-muted-foreground">Ace%</div><div className="text-xl font-black">{pct(stat.ace)}</div></div><div><div className="text-xs text-muted-foreground">Err%</div><div className="text-xl font-black">{pct(stat.err)}</div></div><div><div className="text-xs text-muted-foreground">Pos%</div><div className="text-xl font-black">{pct(stat.pos)}</div></div></div>
+        <button type="button" onClick={() => setOpen(false)} className="mt-4 min-h-14 w-full rounded bg-secondary font-bold">Chiudi</button>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function ScoreBoard() {
   const {
     homeTeam, awayTeam, matchState,
-    callTimeout, addSanction, resetMatch,
+    callTimeout, addSanction, resetMatch, adjustScore, setServingTeam, rotateTeam,
   } = useMatchStore();
 
   const [sanctionOpen, setSanctionOpen] = useState(false);
+  const [serveAnalysisOpen, setServeAnalysisOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const [sanctionTeam, setSanctionTeam] = useState<'home' | 'away'>('home');
   const [sanctionType, setSanctionType] = useState<SanctionType>('yellow');
   const [sanctionPlayer, setSanctionPlayer] = useState<string>('');
@@ -28,6 +54,7 @@ export function ScoreBoard() {
     const ok = callTimeout(team);
     const teamName = team === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite');
     if (ok) {
+      window.dispatchEvent(new CustomEvent('scout-timeout', { detail: { team } }));
       toast.success(`Time-out ${teamName}`, {
         description: `Set ${matchState.currentSet} • ${matchState.homeScore}-${matchState.awayScore}`,
       });
@@ -82,6 +109,12 @@ export function ScoreBoard() {
       <span className="inline-block w-2.5 h-2.5 rounded-full bg-muted-foreground/20" />
     );
 
+  const serverNumber = matchState.servingTeam === 'home' ? matchState.homeCurrentLineup[0] : matchState.awayCurrentLineup[0];
+  const serverTeam = matchState.servingTeam;
+  const serveActions = matchState.actions.filter((a) => a.skill === 'S' && a.playerNumber === serverNumber && a.team === serverTeam);
+  const zonePos = (z?: number) => ({ 4: [15, 10], 3: [45, 10], 2: [75, 10], 5: [15, 30], 6: [45, 30], 1: [75, 30], 7: [15, 50], 8: [45, 50], 9: [75, 50] } as Record<number, number[]>)[z || 0];
+  const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
+
   return (
     <div className="glass rounded-xl px-6 py-3 flex items-center justify-between gap-4">
       {/* HOME */}
@@ -96,12 +129,13 @@ export function ScoreBoard() {
             {homeTeam.name || 'Casa'}
           </div>
           <div className="flex items-center justify-end gap-2 mt-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">T-out</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
             <TimeoutDots used={matchState.homeTimeoutsUsed} />
           </div>
+          <span className="text-xs text-muted-foreground font-bold">SOST {matchState.homeSubstitutionsUsed}/6</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Set</span>
+          <span className="text-xs font-bold text-muted-foreground">Set</span>
           <span className="text-xl font-bold text-primary">{matchState.homeSetsWon}</span>
         </div>
       </div>
@@ -121,7 +155,9 @@ export function ScoreBoard() {
         }`}>
           {matchState.homeScore}
         </div>
+        {matchState.servingTeam === 'home' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
         <div className="text-2xl text-muted-foreground font-light">:</div>
+        {matchState.servingTeam === 'away' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
         <div className={`text-5xl font-black tabular-nums transition-all ${
           matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground'
         }`}>
@@ -141,7 +177,7 @@ export function ScoreBoard() {
       <div className="flex items-center gap-4 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-xl font-bold text-primary">{matchState.awaySetsWon}</span>
-          <span className="text-xs text-muted-foreground">Set</span>
+          <span className="text-xs font-bold text-muted-foreground">Set</span>
         </div>
         <div className="text-left min-w-0">
           <div className="flex items-center gap-2">
@@ -153,15 +189,16 @@ export function ScoreBoard() {
             {awayTeam.name || 'Ospite'}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">T-out</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
             <TimeoutDots used={matchState.awayTimeoutsUsed} />
           </div>
+          <span className="text-xs text-muted-foreground font-bold">SOST {matchState.awaySubstitutionsUsed}/6</span>
         </div>
       </div>
 
       {/* Set indicator */}
       <div className="ml-2 px-3 py-1 rounded-lg bg-secondary text-center">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Set</div>
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Set</div>
         <div className="text-2xl font-bold text-primary">{matchState.currentSet}</div>
       </div>
 
@@ -170,7 +207,7 @@ export function ScoreBoard() {
         <DialogTrigger asChild>
           <button
             type="button"
-            className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider active:scale-95"
+            className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-sm font-bold uppercase tracking-wider active:scale-95"
             title="Cartellino / Sanzione"
           >
             <Square className="w-3 h-3" />
@@ -186,7 +223,7 @@ export function ScoreBoard() {
 
           <div className="space-y-3">
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Squadra</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Squadra</div>
               <div className="grid grid-cols-2 gap-2">
                 {(['home', 'away'] as const).map((t) => (
                   <button
@@ -206,7 +243,7 @@ export function ScoreBoard() {
             </div>
 
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Tipo</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Tipo</div>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(sanctionMeta) as SanctionType[]).map((t) => (
                   <button
@@ -225,7 +262,7 @@ export function ScoreBoard() {
             </div>
 
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 N° Giocatore <span className="opacity-60">(vuoto = staff/squadra)</span>
               </div>
               <input
@@ -245,6 +282,22 @@ export function ScoreBoard() {
                 Registra
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
+        <DialogTrigger asChild><button type="button" className="min-h-10 px-3 text-xs font-bold bg-secondary rounded-lg">✎ Correzione</button></DialogTrigger>
+        <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Correzione</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => adjustScore('home', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>
+            <button onClick={() => adjustScore('away', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Ospite</button>
+            <button onClick={() => adjustScore('home', -1)} className="min-h-12 px-4 font-black bg-secondary rounded">-1 Casa</button>
+            <button onClick={() => adjustScore('away', -1)} className="min-h-12 px-4 font-black bg-secondary rounded">-1 Ospite</button>
+            <button onClick={() => setServingTeam('home')} className="min-h-12 px-6 font-bold bg-secondary rounded">Serve Casa</button>
+            <button onClick={() => setServingTeam('away')} className="min-h-12 px-6 font-bold bg-secondary rounded">Serve Ospite</button>
+            <button onClick={() => rotateTeam('home')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Casa ↺</button>
+            <button onClick={() => rotateTeam('away')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Ospite ↺</button>
           </div>
         </DialogContent>
       </Dialog>

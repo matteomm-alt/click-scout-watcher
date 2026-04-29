@@ -133,7 +133,7 @@ export function QuickActions() {
               <X className="mx-auto w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-4 gap-2">
             {lineup.filter((n) => n > 0).map((num) => {
               const player = teamData.players.find((p) => p.number === num);
               return (
@@ -146,7 +146,7 @@ export function QuickActions() {
                 >
                   {num}
                   {player && (
-                    <span className="text-[7px] opacity-60 truncate max-w-full px-0.5">
+                    <span className="text-[11px] font-semibold opacity-80 truncate max-w-full px-0.5">
                       {player.lastName.slice(0, 4)}
                     </span>
                   )}
