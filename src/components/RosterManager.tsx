@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2, ArrowRight, ArrowLeft, Users, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 function PlayerForm({ onAdd }: { onAdd: (p: Omit<Player, 'id'>) => void }) {
   const [number, setNumber] = useState('');
@@ -112,6 +113,19 @@ function PlayerForm({ onAdd }: { onAdd: (p: Omit<Player, 'id'>) => void }) {
 function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
   const { addPlayer, removePlayer, setHomeTeam, setAwayTeam } = useMatchStore();
   const setTeam = side === 'home' ? setHomeTeam : setAwayTeam;
+  const fillTeam = () => {
+    const template = [
+      { number: 1, lastName: 'Giocatore 1', role: 'S' as PlayerRole, isLibero: false, isCaptain: false }, { number: 2, lastName: 'Giocatore 2', role: 'OP' as PlayerRole, isLibero: false, isCaptain: false },
+      { number: 3, lastName: 'Giocatore 3', role: 'O' as PlayerRole, isLibero: false, isCaptain: false }, { number: 4, lastName: 'Giocatore 4', role: 'O' as PlayerRole, isLibero: false, isCaptain: false },
+      { number: 5, lastName: 'Giocatore 5', role: 'O' as PlayerRole, isLibero: false, isCaptain: false }, { number: 6, lastName: 'Giocatore 6', role: 'O' as PlayerRole, isLibero: false, isCaptain: false },
+      { number: 7, lastName: 'Giocatore 7', role: 'M' as PlayerRole, isLibero: false, isCaptain: false }, { number: 8, lastName: 'Giocatore 8', role: 'M' as PlayerRole, isLibero: false, isCaptain: false },
+      { number: 9, lastName: 'Giocatore 9', role: 'M' as PlayerRole, isLibero: false, isCaptain: false }, { number: 10, lastName: 'Giocatore 10', role: 'M' as PlayerRole, isLibero: false, isCaptain: false },
+      { number: 11, lastName: 'Giocatore 11', role: 'L' as PlayerRole, isLibero: true, isCaptain: false }, { number: 12, lastName: 'Giocatore 12', role: 'L' as PlayerRole, isLibero: true, isCaptain: false },
+      { number: 13, lastName: 'Giocatore 13', role: 'U' as PlayerRole, isLibero: false, isCaptain: false }, { number: 14, lastName: 'Giocatore 14', role: 'U' as PlayerRole, isLibero: false, isCaptain: false },
+    ];
+    template.forEach((player) => addPlayer(side, { ...player, id: crypto.randomUUID(), firstName: '' }));
+    toast.success('✅ 14 giocatori aggiunti');
+  };
 
   return (
     <div className="space-y-4">
@@ -166,6 +180,7 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
       />
 
       <div className="space-y-1">
+        <button type="button" onClick={fillTeam} className="mb-3 min-h-12 px-4 bg-secondary border border-border text-sm font-bold rounded-lg">⚡ Riempi squadra</button>
         {team.players.length === 0 && (
           <div className="text-center py-8 text-muted-foreground text-sm">
             Nessun giocatore inserito
