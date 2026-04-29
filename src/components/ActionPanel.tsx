@@ -520,7 +520,6 @@ export function ActionPanel() {
             </button>
           ))}
         </div>
-        </div>
       )}
 
       {/* Step: Skill */}
@@ -533,6 +532,7 @@ export function ActionPanel() {
               <div className="text-sm">{SKILL_LABELS[s.key]}</div>
             </button>
           ))}
+        </div>
         </div>
       )}
 
