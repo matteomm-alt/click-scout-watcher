@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { Square, AlertTriangle, RotateCcw, BarChart2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import type { SanctionType } from '@/types/volleyball';
 import { toast } from 'sonner';
@@ -16,11 +17,12 @@ const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: '
 export function ScoreBoard() {
   const {
     homeTeam, awayTeam, matchState,
-    callTimeout, addSanction, resetMatch,
+    callTimeout, addSanction, resetMatch, addPoint, rotateTeam,
   } = useMatchStore();
 
   const [sanctionOpen, setSanctionOpen] = useState(false);
   const [serveAnalysisOpen, setServeAnalysisOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const [sanctionTeam, setSanctionTeam] = useState<'home' | 'away'>('home');
   const [sanctionType, setSanctionType] = useState<SanctionType>('yellow');
   const [sanctionPlayer, setSanctionPlayer] = useState<string>('');
@@ -84,6 +86,12 @@ export function ScoreBoard() {
       <span className="inline-block w-2.5 h-2.5 rounded-full bg-muted-foreground/20" />
     );
 
+  const serverNumber = matchState.servingTeam === 'home' ? matchState.homeCurrentLineup[0] : matchState.awayCurrentLineup[0];
+  const serverTeam = matchState.servingTeam;
+  const serveActions = matchState.actions.filter((a) => a.skill === 'S' && a.playerNumber === serverNumber && a.team === serverTeam);
+  const zonePos = (z?: number) => ({ 4: [15, 10], 3: [45, 10], 2: [75, 10], 5: [15, 30], 6: [45, 30], 1: [75, 30], 7: [15, 50], 8: [45, 50], 9: [75, 50] } as Record<number, number[]>)[z || 0];
+  const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
+
   return (
     <div className="glass rounded-xl px-6 py-3 flex items-center justify-between gap-4">
       {/* HOME */}
@@ -101,6 +109,7 @@ export function ScoreBoard() {
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
             <TimeoutDots used={matchState.homeTimeoutsUsed} />
           </div>
+          <span className="text-xs text-muted-foreground font-bold">SOST {matchState.homeSubstitutionsUsed}/6</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-muted-foreground">Set</span>
@@ -123,7 +132,9 @@ export function ScoreBoard() {
         }`}>
           {matchState.homeScore}
         </div>
+        {matchState.servingTeam === 'home' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
         <div className="text-2xl text-muted-foreground font-light">:</div>
+        {matchState.servingTeam === 'away' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
         <div className={`text-5xl font-black tabular-nums transition-all ${
           matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground'
         }`}>
@@ -158,6 +169,7 @@ export function ScoreBoard() {
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
             <TimeoutDots used={matchState.awayTimeoutsUsed} />
           </div>
+          <span className="text-xs text-muted-foreground font-bold">SOST {matchState.awaySubstitutionsUsed}/6</span>
         </div>
       </div>
 
@@ -247,6 +259,18 @@ export function ScoreBoard() {
                 Registra
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
+        <DialogTrigger asChild><button type="button" className="min-h-10 px-3 text-xs font-bold bg-secondary rounded-lg">✎ Correzione</button></DialogTrigger>
+        <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Correzione</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => addPoint('home')} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>
+            <button onClick={() => addPoint('away')} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Ospite</button>
+            <button onClick={() => rotateTeam('home')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Casa ↺</button>
+            <button onClick={() => rotateTeam('away')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Ospite ↺</button>
           </div>
         </DialogContent>
       </Dialog>
