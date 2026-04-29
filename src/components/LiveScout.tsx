@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useScoutSettings } from '@/lib/scoutSettings';
+import { useScoutSettings, type ScoutSettings } from '@/lib/scoutSettings';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
 
@@ -347,5 +347,87 @@ export function LiveScout() {
       </Dialog>
     </>
   );
+}
+
+function SettingRow({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-secondary/40 p-4">
+      <div>
+        <div className="text-sm font-black text-foreground">{label}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function ScoutSettingsPanel({ settings, setSetting }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void }) {
+  return (
+    <div className="mt-4 space-y-5">
+      <section>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Rilevazione</h3>
+        <div className="space-y-3">
+          {RILEVAZIONE_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
+        </div>
+      </section>
+      <section>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Valori predefiniti</h3>
+        <div className="grid gap-3 rounded-xl border border-border bg-secondary/40 p-4">
+          <Select value={settings.attaccoPredefinito} onValueChange={(v) => setSetting('attaccoPredefinito', v as ScoutSettings['attaccoPredefinito'])}>
+            <SelectTrigger><SelectValue placeholder="Attacco predefinito" /></SelectTrigger>
+            <SelectContent><SelectItem value="H">H — Alta</SelectItem><SelectItem value="Q">Q — Veloce</SelectItem><SelectItem value="T">T — Tesa</SelectItem></SelectContent>
+          </Select>
+          <Select value={settings.ricezionePredefinita} onValueChange={(v) => setSetting('ricezionePredefinita', v as ScoutSettings['ricezionePredefinita'])}>
+            <SelectTrigger><SelectValue placeholder="Ricezione predefinita" /></SelectTrigger>
+            <SelectContent>{(['#', '+', '!', '-', '/', '='] as const).map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </section>
+      <section>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Visualizzazione</h3>
+        <div className="space-y-3">
+          {VISUAL_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function EndSetDialog({ open, onOpenChange, stats, onConfirm, currentSet, homeName, awayName, homeScore, awayScore }: { open: boolean; onOpenChange: (v: boolean) => void; stats: Record<string, number>; onConfirm: () => void; currentSet: number; homeName: string; awayName: string; homeScore: number; awayScore: number }) {
+  const rows = [['Ace Casa', stats.homeAce], ['Ace Ospite', stats.awayAce], ['Errori Casa', stats.homeErr], ['Errori Ospite', stats.awayErr], ['Kill Casa', stats.homeKill], ['Kill Ospite', stats.awayKill]];
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Fine Set {currentSet}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div className="text-center text-3xl font-black">{homeName} {homeScore} — {awayScore} {awayName}</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {rows.map(([label, value]) => <div key={label} className="rounded-lg bg-secondary p-3 text-center"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black text-primary">{value}</div></div>)}
+          </div>
+          <div className="flex gap-2"><button type="button" onClick={() => onOpenChange(false)} className="min-h-14 flex-1 rounded bg-secondary font-bold">Annulla</button><button type="button" onClick={onConfirm} className="min-h-14 flex-1 rounded bg-primary font-black text-primary-foreground">Conferma Fine Set</button></div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RotationDirections() {
+  const { matchState } = useMatchStore();
+  const [team, setTeam] = useState<'home' | 'away'>('home');
+  const [filter, setFilter] = useState<'all' | 'pos' | 'neg'>('all');
+  const [zoom, setZoom] = useState<number | null>(null);
+  const zone = (z?: number) => ({ 4: [15, 10], 3: [45, 10], 2: [75, 10], 5: [15, 30], 6: [45, 30], 1: [75, 30], 7: [15, 50], 8: [45, 50], 9: [75, 50] } as Record<number, number[]>)[z || 0];
+  const actionsFor = (rot: number) => matchState.actions.filter((a, idx, arr) => {
+    if (a.skill !== 'A' || a.team !== team || (team === 'home' ? a.homeSetterPosition : a.awaySetterPosition) !== rot) return false;
+    const prevR = [...arr.slice(0, idx)].reverse().find((x) => x.skill === 'R');
+    if (filter === 'pos') return prevR?.evaluation === '#' || prevR?.evaluation === '+';
+    if (filter === 'neg') return prevR?.evaluation === '-' || prevR?.evaluation === '/';
+    return true;
+  });
+  const Field = ({ rot, large = false }: { rot: number; large?: boolean }) => {
+    const acts = actionsFor(rot);
+    return <svg viewBox="0 0 90 60" width="100%" className="rounded-lg bg-secondary/60"><text x="4" y="10" className="fill-foreground text-[8px] font-bold">R{rot}</text>{[30,60].map(x=><line key={x} x1={x} y1="0" x2={x} y2="60" stroke="rgba(255,255,255,.25)" />)}{[20,40].map(y=><line key={y} x1="0" y1={y} x2="90" y2={y} stroke="rgba(255,255,255,.25)" />)}{acts.map((a,i)=>{const s=zone(a.startZone), e=zone(a.endZone); if(!s||!e)return null; const c=a.evaluation==='#'?'#16a34a':(a.evaluation==='='||a.evaluation==='/')?'#dc2626':'#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth={i===acts.length-1?'2.5':'1.2'} strokeLinecap="round" />})}</svg>;
+  };
+  return <div className="space-y-2"><div className="flex flex-wrap gap-2">{(['home','away'] as const).map(t=><button key={t} onClick={()=>setTeam(t)} className={`min-h-9 rounded-lg px-3 text-xs font-bold ${team===t?'bg-primary text-primary-foreground':'bg-secondary'}`}>{t==='home'?'CASA':'OSPITE'}</button>)}{(['all','pos','neg'] as const).map(f=><button key={f} onClick={()=>setFilter(f)} className={`min-h-9 rounded-lg px-3 text-xs font-bold ${filter===f?'bg-primary text-primary-foreground':'bg-secondary'}`}>{f==='all'?'TUTTI':f==='pos'?'RIC+':'CONTRO'}</button>)}</div><div className="grid grid-cols-2 gap-2">{[1,2,3,4,5,6].map(r=><button key={r} onClick={()=>setZoom(r)}><Field rot={r} /></button>)}</div><Dialog open={zoom!==null} onOpenChange={(o)=>!o&&setZoom(null)}><DialogContent>{zoom && <Field rot={zoom} large />}</DialogContent></Dialog></div>;
 }
 
