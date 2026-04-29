@@ -32,6 +32,8 @@ interface MatchStore {
   updateAction: (id: string, updates: { playerNumber?: number; evaluation?: Evaluation; startZone?: number | null; endZone?: number | null }) => void;
   deleteAction: (id: string) => void;
   setSingleTeamMode: (v: boolean) => void;
+  adjustScore: (team: 'home' | 'away', delta: number) => void;
+  setServingTeam: (team: 'home' | 'away') => void;
   addPoint: (team: 'home' | 'away') => void;
   rotateTeam: (team: 'home' | 'away') => void;
   endSet: () => void;
@@ -241,6 +243,13 @@ export const useMatchStore = create<MatchStore>()(
       })),
 
       setSingleTeamMode: (v) => set((s) => ({ matchState: { ...s.matchState, singleTeamMode: v } })),
+
+      adjustScore: (team, delta) => set((s) => {
+        const key = team === 'home' ? 'homeScore' : 'awayScore';
+        return { matchState: { ...s.matchState, [key]: Math.max(0, s.matchState[key] + delta) } };
+      }),
+
+      setServingTeam: (team) => set((s) => ({ matchState: { ...s.matchState, servingTeam: team } })),
 
       addPoint: (team) => {
         const { matchState, matchInfo } = get();
