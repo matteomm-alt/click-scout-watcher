@@ -186,6 +186,12 @@ export function LiveScout() {
 
           <div className="col-span-3 min-h-0 overflow-hidden">
             <div className="glass rounded-xl p-3 h-full flex flex-col">
+              {timeoutBanner && (
+                <div className="mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
+                  <span>⏸ TIME-OUT — Analisi avversario</span>
+                  <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
+                </div>
+              )}
               <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50 mb-2">
                 {TABS.map((t) => {
                   const active = tab === t.key;
@@ -269,6 +275,12 @@ export function LiveScout() {
           {mobileTab === 'quick' && <QuickActions />}
           {mobileTab === 'live' && (
             <div className="space-y-4">
+              {timeoutBanner && (
+                <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
+                  <span>⏸ TIME-OUT — Analisi avversario</span>
+                  <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
+                </div>
+              )}
               <ActionLog />
               <PlayerStatsPanel />
               <AttackHeatmap team="all" />
