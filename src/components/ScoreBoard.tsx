@@ -14,6 +14,29 @@ const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: '
   disqualification: { label: 'Squalifica', color: 'bg-zinc-900 border border-red-600', icon: 'square' },
 };
 
+function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePos, pct }: { open: boolean; setOpen: (v: boolean) => void; serverNumber: number; serveActions: any[]; zonePos: (z?: number) => number[] | undefined; pct: (n: number) => number }) {
+  const stat = {
+    ace: serveActions.filter((a) => a.evaluation === '#').length,
+    err: serveActions.filter((a) => a.evaluation === '=').length,
+    pos: serveActions.filter((a) => a.evaluation === '#' || a.evaluation === '+').length,
+  };
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild><button type="button" className="min-h-10 min-w-10 rounded-lg bg-secondary/50 hover:bg-secondary active:scale-95"><BarChart2 className="mx-auto h-4 w-4" /></button></SheetTrigger>
+      <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+        <SheetHeader><SheetTitle>#{serverNumber} — Direzioni battuta</SheetTitle></SheetHeader>
+        <svg viewBox="0 0 90 60" width="100%" className="mt-4 rounded-xl bg-orange-900/20">
+          {[30, 60].map((x) => <line key={`v-${x}`} x1={x} y1="0" x2={x} y2="60" stroke="rgba(255,255,255,.25)" />)}
+          {[20, 40].map((y) => <line key={`h-${y}`} x1="0" y1={y} x2="90" y2={y} stroke="rgba(255,255,255,.25)" />)}
+          {serveActions.map((a) => { const s = zonePos(a.startZone); const e = zonePos(a.endZone); if (!s || !e) return null; const c = a.evaluation === '#' ? '#000' : a.evaluation === '=' ? '#dc2626' : a.evaluation === '/' ? '#ea580c' : '#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth="1.8" strokeLinecap="round" />; })}
+        </svg>
+        <div className="mt-3 grid grid-cols-4 gap-2 text-center"><div><div className="text-xs text-muted-foreground">Tot</div><div className="text-xl font-black">{serveActions.length}</div></div><div><div className="text-xs text-muted-foreground">Ace%</div><div className="text-xl font-black">{pct(stat.ace)}</div></div><div><div className="text-xs text-muted-foreground">Err%</div><div className="text-xl font-black">{pct(stat.err)}</div></div><div><div className="text-xs text-muted-foreground">Pos%</div><div className="text-xl font-black">{pct(stat.pos)}</div></div></div>
+        <button type="button" onClick={() => setOpen(false)} className="mt-4 min-h-14 w-full rounded bg-secondary font-bold">Chiudi</button>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function ScoreBoard() {
   const {
     homeTeam, awayTeam, matchState,
