@@ -764,6 +764,7 @@ function CompareTab({ actions, match, currentTeamId }: { actions: DbAction[]; ma
 
 function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[]; allActions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
+  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve'>('base');
 
   const rallies = new Map<number, DbAction[]>();
   allActions.forEach(a => {
@@ -827,6 +828,18 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
 
   return (
     <div className="space-y-6">
+      <div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/30 p-1">
+        {[
+          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'],
+        ].map(([key, label]) => (
+          <button key={key} onClick={() => setAdvancedTab(key as typeof advancedTab)} className={`min-h-10 px-3 rounded text-xs font-bold uppercase ${advancedTab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{label}</button>
+        ))}
+      </div>
+
+      {advancedTab === 'distribution' && <DistributionAnalysis actions={actions} side={side} pct={pct} />}
+      {advancedTab === 'reception' && <ReceptionAnalysis actions={actions} side={side} pct={pct} />}
+      {advancedTab === 'serve' && <ServeAnalysis actions={actions} pct={pct} />}
+      {advancedTab === 'base' && <>
       <SetProgressTab actions={actions} />
       <TechTypesTab actions={actions} />
       <RotationsDetailTab actions={actions} side={side} />
@@ -927,6 +940,31 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
           Verde = positivo · Giallo = neutro · Rosso = errore · Spessore = volume
         </p>
       </Card>
+      </>}
     </div>
   );
+}
+
+function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
+  const zoneGroup = (z: number | null) => z === 2 ? 'sinistra' : z === 3 ? 'centro' : z === 4 ? 'destra' : [1, 5, 6].includes(z || 0) ? 'seconda linea' : 'altro';
+  const rows = [1, 2, 3, 4, 5, 6].flatMap((rot) => ['sinistra', 'centro', 'destra', 'seconda linea'].map((zg) => {
+    const atts = actions.filter((a) => a.skill === 'A' && rotationOf(a, side) === rot && zoneGroup(a.start_zone) === zg);
+    const kill = atts.filter((a) => a.evaluation === '#').length;
+    const err = atts.filter((a) => a.evaluation === '=' || a.evaluation === '/').length;
+    return { rot, zg, total: atts.length, kill, eff: pct(kill - err, atts.length), killPct: pct(kill, atts.length) };
+  })).filter((r) => r.total > 0);
+  return <Card className="p-5"><h3 className="mb-4 text-sm font-bold uppercase italic">Distribuzione</h3><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 text-left">Rot</th><th>Zona</th><th>Tot</th><th>Eff%</th><th>Kill%</th></tr></thead><tbody>{rows.map((r) => <tr key={`${r.rot}-${r.zg}`} className="border-b border-border/40"><td className="py-2 font-bold">P{r.rot}</td><td className="text-center">{r.zg}</td><td className="text-center">{r.total}</td><td className={`text-center font-black ${r.eff > 30 ? 'text-success' : r.eff >= 0 ? 'text-warning' : 'text-destructive'}`}>{r.eff}</td><td className="text-center">{r.killPct}</td></tr>)}</tbody></table></div></Card>;
+}
+
+function ReceptionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
+  const rec = actions.filter((a) => a.skill === 'R');
+  const band = (z: number | null) => [5,7,4].includes(z || 0) ? 'sinistra' : [6,8,3].includes(z || 0) ? 'centro' : [1,9,2].includes(z || 0) ? 'destra' : 'n/d';
+  return <Card className="p-5"><h3 className="mb-4 text-sm font-bold uppercase italic">Ricezione</h3><div className="grid gap-3 md:grid-cols-2">{[1,2,3,4,5,6].map((rot)=>{const items=rec.filter(a=>rotationOf(a, side)===rot); return <div key={rot} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">P{rot}</div><div className="text-sm text-muted-foreground">Positività <span className="text-success font-bold">{pct(items.filter(a=>a.evaluation==='#'||a.evaluation==='+').length, items.length)}%</span> · Errori <span className="text-destructive font-bold">{pct(items.filter(a=>a.evaluation==='=').length, items.length)}%</span></div><div className="mt-2 flex flex-wrap gap-1">{items.map(a=><span key={a.id} className={`rounded px-2 py-1 text-xs font-bold ${a.evaluation==='#'?'bg-success/20 text-success':a.evaluation==='='?'bg-destructive/20 text-destructive':'bg-warning/20 text-warning'}`}>#{a.player_number} {band(a.end_zone)} {a.evaluation}</span>)}</div></div>})}</div></Card>;
+}
+
+function ServeAnalysis({ actions, pct }: { actions: DbAction[]; pct: (n: number, d: number) => number }) {
+  const serves = actions.filter((a) => a.skill === 'S');
+  const players = [...new Set(serves.map((a) => a.player_number).filter(Boolean))];
+  const zc = (z: number | null) => ({4:[15,10],3:[45,10],2:[75,10],5:[15,30],6:[45,30],1:[75,30],7:[15,50],8:[45,50],9:[75,50]} as Record<number, number[]>)[z || 0];
+  return <Card className="p-5"><h3 className="mb-4 text-sm font-bold uppercase italic">Battuta</h3><div className="grid gap-4 md:grid-cols-2">{players.map((n)=>{const items=serves.filter(a=>a.player_number===n); return <div key={n} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">#{n}</div><svg viewBox="0 0 90 60" className="w-full rounded bg-card">{items.map(a=>{const s=zc(a.start_zone), e=zc(a.end_zone); if(!s||!e)return null; const c=a.evaluation==='#'?'#000':a.evaluation==='='?'#dc2626':a.evaluation==='/'?'#ea580c':'#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth="1.5" />})}</svg><div className="mt-2 grid grid-cols-3 text-center text-xs"><span>Tot <b>{items.length}</b></span><span>Ace% <b>{pct(items.filter(a=>a.evaluation==='#').length, items.length)}</b></span><span>Err% <b>{pct(items.filter(a=>a.evaluation==='=').length, items.length)}</b></span></div></div>})}</div></Card>;
 }
