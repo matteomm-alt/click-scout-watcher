@@ -40,7 +40,7 @@ function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePo
 export function ScoreBoard() {
   const {
     homeTeam, awayTeam, matchState,
-    callTimeout, addSanction, resetMatch, addPoint, rotateTeam,
+    callTimeout, addSanction, resetMatch, adjustScore, setServingTeam, rotateTeam,
   } = useMatchStore();
 
   const [sanctionOpen, setSanctionOpen] = useState(false);
@@ -290,8 +290,12 @@ export function ScoreBoard() {
         <DialogTrigger asChild><button type="button" className="min-h-10 px-3 text-xs font-bold bg-secondary rounded-lg">✎ Correzione</button></DialogTrigger>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Correzione</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => addPoint('home')} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>
-            <button onClick={() => addPoint('away')} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Ospite</button>
+            <button onClick={() => adjustScore('home', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>
+            <button onClick={() => adjustScore('away', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Ospite</button>
+            <button onClick={() => adjustScore('home', -1)} className="min-h-12 px-4 font-black bg-secondary rounded">-1 Casa</button>
+            <button onClick={() => adjustScore('away', -1)} className="min-h-12 px-4 font-black bg-secondary rounded">-1 Ospite</button>
+            <button onClick={() => setServingTeam('home')} className="min-h-12 px-6 font-bold bg-secondary rounded">Serve Casa</button>
+            <button onClick={() => setServingTeam('away')} className="min-h-12 px-6 font-bold bg-secondary rounded">Serve Ospite</button>
             <button onClick={() => rotateTeam('home')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Casa ↺</button>
             <button onClick={() => rotateTeam('away')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Ospite ↺</button>
           </div>
