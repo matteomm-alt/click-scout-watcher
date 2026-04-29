@@ -533,7 +533,6 @@ export function ActionPanel() {
             </button>
           ))}
         </div>
-        </div>
       )}
 
       {/* Step: Serve Type */}
@@ -599,6 +598,7 @@ export function ActionPanel() {
               {e.label}
             </button>
           ))}
+        </div>
         </div>
       )}
 
