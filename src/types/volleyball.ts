@@ -204,10 +204,13 @@ export interface MatchState {
   awayCurrentLineup: number[]; // 6 player numbers P1-P6
   isMatchStarted: boolean;
   isMatchEnded: boolean;
+  singleTeamMode?: boolean;
   actions: ScoutAction[];
   // Time-outs used in the CURRENT set per team (max 2)
   homeTimeoutsUsed: number;
   awayTimeoutsUsed: number;
+  homeSubstitutionsUsed: number;
+  awaySubstitutionsUsed: number;
   timeouts: TimeoutRecord[];
   sanctions: Sanction[];
 }
