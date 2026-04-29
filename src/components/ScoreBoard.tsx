@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { Square, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Square, AlertTriangle, RotateCcw, BarChart2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { SanctionType } from '@/types/volleyball';
@@ -20,6 +20,7 @@ export function ScoreBoard() {
   } = useMatchStore();
 
   const [sanctionOpen, setSanctionOpen] = useState(false);
+  const [serveAnalysisOpen, setServeAnalysisOpen] = useState(false);
   const [sanctionTeam, setSanctionTeam] = useState<'home' | 'away'>('home');
   const [sanctionType, setSanctionType] = useState<SanctionType>('yellow');
   const [sanctionPlayer, setSanctionPlayer] = useState<string>('');
@@ -28,6 +29,7 @@ export function ScoreBoard() {
     const ok = callTimeout(team);
     const teamName = team === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite');
     if (ok) {
+      window.dispatchEvent(new CustomEvent('scout-timeout', { detail: { team } }));
       toast.success(`Time-out ${teamName}`, {
         description: `Set ${matchState.currentSet} • ${matchState.homeScore}-${matchState.awayScore}`,
       });
@@ -96,12 +98,12 @@ export function ScoreBoard() {
             {homeTeam.name || 'Casa'}
           </div>
           <div className="flex items-center justify-end gap-2 mt-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">T-out</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
             <TimeoutDots used={matchState.homeTimeoutsUsed} />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Set</span>
+          <span className="text-xs font-bold text-muted-foreground">Set</span>
           <span className="text-xl font-bold text-primary">{matchState.homeSetsWon}</span>
         </div>
       </div>
@@ -141,7 +143,7 @@ export function ScoreBoard() {
       <div className="flex items-center gap-4 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-xl font-bold text-primary">{matchState.awaySetsWon}</span>
-          <span className="text-xs text-muted-foreground">Set</span>
+          <span className="text-xs font-bold text-muted-foreground">Set</span>
         </div>
         <div className="text-left min-w-0">
           <div className="flex items-center gap-2">
@@ -153,7 +155,7 @@ export function ScoreBoard() {
             {awayTeam.name || 'Ospite'}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">T-out</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
             <TimeoutDots used={matchState.awayTimeoutsUsed} />
           </div>
         </div>
@@ -161,7 +163,7 @@ export function ScoreBoard() {
 
       {/* Set indicator */}
       <div className="ml-2 px-3 py-1 rounded-lg bg-secondary text-center">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Set</div>
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Set</div>
         <div className="text-2xl font-bold text-primary">{matchState.currentSet}</div>
       </div>
 
@@ -170,7 +172,7 @@ export function ScoreBoard() {
         <DialogTrigger asChild>
           <button
             type="button"
-            className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider active:scale-95"
+            className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-sm font-bold uppercase tracking-wider active:scale-95"
             title="Cartellino / Sanzione"
           >
             <Square className="w-3 h-3" />
@@ -186,7 +188,7 @@ export function ScoreBoard() {
 
           <div className="space-y-3">
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Squadra</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Squadra</div>
               <div className="grid grid-cols-2 gap-2">
                 {(['home', 'away'] as const).map((t) => (
                   <button
@@ -206,7 +208,7 @@ export function ScoreBoard() {
             </div>
 
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Tipo</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Tipo</div>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(sanctionMeta) as SanctionType[]).map((t) => (
                   <button
@@ -225,7 +227,7 @@ export function ScoreBoard() {
             </div>
 
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 N° Giocatore <span className="opacity-60">(vuoto = staff/squadra)</span>
               </div>
               <input
