@@ -881,14 +881,60 @@ function CompareTab({ actions, match, currentTeamId }: { actions: DbAction[]; ma
   );
 }
 
+const SERVE_TYPES = [
+  { key: 'M', label: 'Jump Float' },
+  { key: 'Q', label: 'Jump Spin' },
+  { key: 'H', label: 'Float' },
+];
+
+const ATTACK_TYPES = [
+  { key: 'H', label: 'Alta' },
+  { key: 'Q', label: 'Veloce' },
+  { key: 'T', label: 'Tesa' },
+  { key: 'U', label: 'Super' },
+];
+
+function PhaseToggle({ value, onChange }: { value: 'all' | 'K1' | 'K2'; onChange: (v: 'all' | 'K1' | 'K2') => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {[
+        ['all', 'Tutti'], ['K1', 'K1 — Cambio palla'], ['K2', 'K2 — Break point'],
+      ].map(([key, label]) => (
+        <button key={key} onClick={() => onChange(key as 'all' | 'K1' | 'K2')}
+          className={`min-h-9 px-3 text-xs font-bold rounded-lg border transition-colors ${value === key ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'}`}
+        >{label}</button>
+      ))}
+    </div>
+  );
+}
+
+function MiniField({ children }: { children: React.ReactNode }) {
+  return (
+    <svg viewBox="0 0 90 60" className="w-full rounded bg-card">
+      <rect x="1" y="1" width="88" height="58" fill="none" stroke="hsl(var(--border))" strokeWidth="1" />
+      {[30, 60].map(x => <line key={`x${x}`} x1={x} y1="1" x2={x} y2="59" stroke="hsl(var(--muted-foreground))" strokeOpacity="0.2" strokeDasharray="3,2" />)}
+      {[20, 40].map(y => <line key={`y${y}`} x1="1" y1={y} x2="89" y2={y} stroke="hsl(var(--muted-foreground))" strokeOpacity="0.2" strokeDasharray="3,2" />)}
+      {children}
+    </svg>
+  );
+}
+
 function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[]; allActions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
   const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve'>('base');
+  const [phaseFilter, setPhaseFilter] = useState<'all' | 'K1' | 'K2'>('all');
+  const [dirSkill, setDirSkill] = useState<string>('A');
+  const [dirType, setDirType] = useState<string>('all');
+  const [attackType, setAttackType] = useState<string>('all');
 
-  const rallies = new Map<number, DbAction[]>();
-  allActions.forEach(a => {
-    if (!rallies.has(a.rally_index)) rallies.set(a.rally_index, []);
-    rallies.get(a.rally_index)!.push(a);
+  const phaseActions = actions.filter(a => phaseFilter === 'all' || phaseOf(a, side) === phaseFilter);
+  const phaseAllActions = allActions.filter(a => phaseFilter === 'all' || phaseOf(a, side) === phaseFilter);
+
+  const rallies = new Map<string, DbAction[]>();
+  phaseAllActions.forEach(a => {
+    const key = `${a.set_number}-${a.rally_index}`;
+    if (!rallies.has(key)) rallies.set(key, []);
+    rallies.get(key)!.push(a);
   });
 
   let fbso_att = 0, fbso_pts = 0, so_att = 0, so_pts = 0;
@@ -922,13 +968,16 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
     { label: 'FBPS', desc: '1° att. in PS',       att: fbps_att, pts: fbps_pts, pct: pct(fbps_pts, fbps_att) },
   ];
 
-  const attActs = actions.filter(a => a.skill === 'A');
+  const attActs = phaseActions.filter(a => a.skill === 'A');
   const kills = attActs.filter(a => a.evaluation === '#').length;
   const attErr = attActs.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
   const hitEff = attActs.length ? ((kills - attErr) / attActs.length * 100).toFixed(1) : '—';
 
-  const [dirSkill, setDirSkill] = useState<string>('A');
-  const dirActs = actions.filter(a => a.skill === dirSkill && a.start_zone && a.end_zone);
+  const dirActs = phaseActions.filter(a =>
+    a.skill === dirSkill && a.start_zone && a.end_zone &&
+    (dirSkill !== 'S' || dirType === 'all' || a.skill_type === dirType) &&
+    (dirSkill !== 'A' || attackType === 'all' || a.skill_type === attackType)
+  );
 
   const ZC: Record<number, [number, number]> = {
     1: [225,200], 2: [225,70], 3: [150,70],
@@ -947,6 +996,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
 
   return (
     <div className="space-y-6">
+      <PhaseToggle value={phaseFilter} onChange={setPhaseFilter} />
       <div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/30 p-1">
         {[
           ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'],
@@ -955,14 +1005,14 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
         ))}
       </div>
 
-      {advancedTab === 'distribution' && <DistributionAnalysis actions={actions} side={side} pct={pct} />}
-      {advancedTab === 'reception' && <ReceptionAnalysis actions={actions} side={side} pct={pct} />}
-      {advancedTab === 'serve' && <ServeAnalysis actions={actions} pct={pct} />}
+      {advancedTab === 'distribution' && <DistributionAnalysis actions={phaseActions} side={side} pct={pct} />}
+      {advancedTab === 'reception' && <ReceptionAnalysis actions={phaseActions} side={side} pct={pct} />}
+      {advancedTab === 'serve' && <ServeAnalysis actions={phaseActions} pct={pct} />}
       {advancedTab === 'base' && <>
-      <SetProgressTab actions={actions} />
-      <TechTypesTab actions={actions} />
-      <RotationsDetailTab actions={actions} side={side} />
-      <SetDistributionTab actions={actions} />
+      <SetProgressTab actions={phaseActions} />
+      <TechTypesTab actions={phaseActions} />
+      <RotationsDetailTab actions={phaseActions} side={side} />
+      <SetDistributionTab actions={phaseActions} />
 
       <Card className="p-5">
         <h3 className="text-sm font-bold uppercase italic mb-4">Sistema — FBSO / SO / PS / FBPS</h3>
@@ -976,9 +1026,6 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
             </div>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground mt-3">
-          FBSO = 1° attacco dopo ricezione → punto · SO = side out · PS = point score · FBPS = 1° attacco in PS
-        </p>
       </Card>
 
       <Card className="p-5">
@@ -989,26 +1036,17 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
             <p className="text-xs text-muted-foreground mt-1">Eff = (Kills − Err) / Att</p>
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-black italic text-success">{kills}</p>
-              <p className="text-xs text-muted-foreground">Kills (#)</p>
-            </div>
-            <div>
-              <p className="text-2xl font-black italic text-destructive">{attErr}</p>
-              <p className="text-xs text-muted-foreground">Errori (= /)</p>
-            </div>
-            <div>
-              <p className="text-2xl font-black italic">{attActs.length}</p>
-              <p className="text-xs text-muted-foreground">Tentativi</p>
-            </div>
+            <div><p className="text-2xl font-black italic text-success">{kills}</p><p className="text-xs text-muted-foreground">Kills (#)</p></div>
+            <div><p className="text-2xl font-black italic text-destructive">{attErr}</p><p className="text-xs text-muted-foreground">Errori (= /)</p></div>
+            <div><p className="text-2xl font-black italic">{attActs.length}</p><p className="text-xs text-muted-foreground">Tentativi</p></div>
           </div>
         </div>
       </Card>
 
       <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
           <h3 className="text-sm font-bold uppercase italic">Directional Lines</h3>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {['A', 'S', 'R'].map(sk => (
               <button key={sk} onClick={() => setDirSkill(sk)}
                 className={`px-3 py-1 rounded text-xs font-bold uppercase transition-colors ${dirSkill === sk ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
@@ -1017,47 +1055,29 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
             ))}
           </div>
         </div>
-        <svg viewBox="0 0 300 270" className="w-full max-w-xs mx-auto rounded-lg overflow-hidden"
-          style={{ background: 'linear-gradient(180deg, hsl(var(--muted)) 0%, hsl(var(--card)) 100%)' }}>
+        {dirSkill === 'S' && <div className="mb-4 flex flex-wrap gap-1">{[{ key: 'all', label: 'Tutti' }, ...SERVE_TYPES].map(t => <button key={t.key} onClick={() => setDirType(t.key)} className={`px-3 py-1 rounded text-xs font-bold ${dirType === t.key ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>{t.key === 'all' ? t.label : `${t.key}=${t.label}`}</button>)}</div>}
+        {dirSkill === 'A' && <div className="mb-4 flex flex-wrap gap-1">{[{ key: 'all', label: 'Tutti' }, ...ATTACK_TYPES].map(t => <button key={t.key} onClick={() => setAttackType(t.key)} className={`px-3 py-1 rounded text-xs font-bold ${attackType === t.key ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>{t.key === 'all' ? t.label : `${t.key}=${t.label}`}</button>)}</div>}
+        <svg viewBox="0 0 300 270" className="w-full max-w-xs mx-auto rounded-lg overflow-hidden" style={{ background: 'linear-gradient(180deg, hsl(var(--muted)) 0%, hsl(var(--card)) 100%)' }}>
           <rect x={30} y={10} width={240} height={250} fill="none" stroke="hsl(var(--border))" strokeWidth={1} />
           <line x1={30} y1={135} x2={270} y2={135} stroke="hsl(var(--foreground))" strokeWidth={2} strokeOpacity={0.5} />
           <line x1={30} y1={75} x2={270} y2={75} stroke="hsl(var(--border))" strokeWidth={1} strokeDasharray="4,3" />
           <line x1={30} y1={195} x2={270} y2={195} stroke="hsl(var(--border))" strokeWidth={1} strokeDasharray="4,3" />
-          {[110,150,190].map(x => (
-            <line key={x} x1={x} y1={10} x2={x} y2={260} stroke="hsl(var(--border))" strokeWidth={0.5} />
-          ))}
+          {[110,150,190].map(x => <line key={x} x1={x} y1={10} x2={x} y2={260} stroke="hsl(var(--border))" strokeWidth={0.5} />)}
           <text x={150} y={131} textAnchor="middle" fontSize={7} fill="hsl(var(--muted-foreground))">RETE</text>
-          {Object.entries(ZC).map(([z, [cx, cy]]) => (
-            <text key={z} x={cx} y={cy+3} textAnchor="middle" fontSize={8} fill="hsl(var(--muted-foreground))" opacity={0.4} fontWeight="bold">{z}</text>
-          ))}
+          {Object.entries(ZC).map(([z, [cx, cy]]) => <text key={z} x={cx} y={cy+3} textAnchor="middle" fontSize={8} fill="hsl(var(--muted-foreground))" opacity={0.4} fontWeight="bold">{z}</text>)}
           {Object.entries(grouped).map(([key, { count, pts }]) => {
             const [z1s, z2s] = key.split('-');
-            const from = ZC[parseInt(z1s)];
-            const to = ZC[parseInt(z2s)];
+            const from = ZC[parseInt(z1s)], to = ZC[parseInt(z2s)];
             if (!from || !to) return null;
             const thickness = Math.max(1, (count / maxCount) * 5);
             const posRatio = pts / count;
             const col = posRatio >= 0.6 ? 'hsl(var(--success))' : posRatio >= 0.3 ? 'hsl(var(--warning))' : 'hsl(var(--destructive))';
-            const dx = to[0]-from[0], dy = to[1]-from[1];
-            const len = Math.sqrt(dx*dx+dy*dy) || 1;
-            const nx = dx/len, ny = dy/len;
-            const ex = to[0]-nx*8, ey = to[1]-ny*8;
-            return (
-              <g key={key}>
-                <line x1={from[0]} y1={from[1]} x2={ex} y2={ey}
-                  stroke={col} strokeWidth={thickness} strokeOpacity={0.7} strokeLinecap="round" />
-                <polygon points={`${to[0]},${to[1]} ${ex-ny*4},${ey+nx*4} ${ex+ny*4},${ey-nx*4}`}
-                  fill={col} fillOpacity={0.8} />
-                {count > 1 && (
-                  <text x={(from[0]+to[0])/2} y={(from[1]+to[1])/2} textAnchor="middle" fontSize={7} fill="hsl(var(--foreground))">{count}</text>
-                )}
-              </g>
-            );
+            const dx = to[0]-from[0], dy = to[1]-from[1], len = Math.sqrt(dx*dx+dy*dy) || 1;
+            const nx = dx/len, ny = dy/len, ex = to[0]-nx*8, ey = to[1]-ny*8;
+            return <g key={key}><line x1={from[0]} y1={from[1]} x2={ex} y2={ey} stroke={col} strokeWidth={thickness} strokeOpacity={0.7} strokeLinecap="round" /><polygon points={`${to[0]},${to[1]} ${ex-ny*4},${ey+nx*4} ${ex+ny*4},${ey-nx*4}`} fill={col} fillOpacity={0.8} />{count > 1 && <text x={(from[0]+to[0])/2} y={(from[1]+to[1])/2} textAnchor="middle" fontSize={7} fill="hsl(var(--foreground))">{count}</text>}</g>;
           })}
         </svg>
-        <p className="text-xs text-muted-foreground mt-3 text-center">
-          Verde = positivo · Giallo = neutro · Rosso = errore · Spessore = volume
-        </p>
+        <p className="text-xs text-muted-foreground mt-3 text-center">Verde = positivo · Giallo = neutro · Rosso = errore · Spessore = volume</p>
       </Card>
       </>}
     </div>
@@ -1065,25 +1085,89 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
 }
 
 function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
+  const [selectedType, setSelectedType] = useState<string>('all');
   const zoneGroup = (z: number | null) => z === 2 ? 'sinistra' : z === 3 ? 'centro' : z === 4 ? 'destra' : [1, 5, 6].includes(z || 0) ? 'seconda linea' : 'altro';
   const rows = [1, 2, 3, 4, 5, 6].flatMap((rot) => ['sinistra', 'centro', 'destra', 'seconda linea'].map((zg) => {
-    const atts = actions.filter((a) => a.skill === 'A' && rotationOf(a, side) === rot && zoneGroup(a.start_zone) === zg);
+    const atts = actions.filter((a) => a.skill === 'A' && rotationOf(a, side) === rot && zoneGroup(a.start_zone) === zg && (selectedType === 'all' || a.skill_type === selectedType));
     const kill = atts.filter((a) => a.evaluation === '#').length;
     const err = atts.filter((a) => a.evaluation === '=' || a.evaluation === '/').length;
     return { rot, zg, total: atts.length, kill, eff: pct(kill - err, atts.length), killPct: pct(kill, atts.length) };
   })).filter((r) => r.total > 0);
-  return <Card className="p-5"><h3 className="mb-4 text-sm font-bold uppercase italic">Distribuzione</h3><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 text-left">Rot</th><th>Zona</th><th>Tot</th><th>Eff%</th><th>Kill%</th></tr></thead><tbody>{rows.map((r) => <tr key={`${r.rot}-${r.zg}`} className="border-b border-border/40"><td className="py-2 font-bold">P{r.rot}</td><td className="text-center">{r.zg}</td><td className="text-center">{r.total}</td><td className={`text-center font-black ${r.eff > 30 ? 'text-success' : r.eff >= 0 ? 'text-warning' : 'text-destructive'}`}>{r.eff}</td><td className="text-center">{r.killPct}</td></tr>)}</tbody></table></div></Card>;
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 className="text-sm font-bold uppercase italic">Distribuzione</h3>
+        <Select value={selectedType} onValueChange={setSelectedType}>
+          <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Tipo attacco" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti</SelectItem>
+            {ATTACK_TYPES.map(t => <SelectItem key={t.key} value={t.key}>{t.key} — {t.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 text-left">Rot</th><th>Zona</th><th>Tot</th><th>Eff%</th><th>Kill%</th></tr></thead><tbody>{rows.map((r) => <tr key={`${r.rot}-${r.zg}`} className="border-b border-border/40"><td className="py-2 font-bold">P{r.rot}</td><td className="text-center">{r.zg}</td><td className="text-center">{r.total}</td><td className={`text-center font-black ${r.eff > 30 ? 'text-success' : r.eff >= 0 ? 'text-warning' : 'text-destructive'}`}>{r.eff}</td><td className="text-center">{r.killPct}</td></tr>)}</tbody></table></div>
+    </Card>
+  );
 }
 
 function ReceptionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
   const rec = actions.filter((a) => a.skill === 'R');
+  const zc: Record<number, [number, number]> = { 4:[15,10],3:[45,10],2:[75,10],5:[15,30],6:[45,30],1:[75,30],7:[15,50],8:[45,50],9:[75,50] };
   const band = (z: number | null) => [5,7,4].includes(z || 0) ? 'sinistra' : [6,8,3].includes(z || 0) ? 'centro' : [1,9,2].includes(z || 0) ? 'destra' : 'n/d';
-  return <Card className="p-5"><h3 className="mb-4 text-sm font-bold uppercase italic">Ricezione</h3><div className="grid gap-3 md:grid-cols-2">{[1,2,3,4,5,6].map((rot)=>{const items=rec.filter(a=>rotationOf(a, side)===rot); return <div key={rot} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">P{rot}</div><div className="text-sm text-muted-foreground">Positività <span className="text-success font-bold">{pct(items.filter(a=>a.evaluation==='#'||a.evaluation==='+').length, items.length)}%</span> · Errori <span className="text-destructive font-bold">{pct(items.filter(a=>a.evaluation==='=').length, items.length)}%</span></div><div className="mt-2 flex flex-wrap gap-1">{items.map(a=><span key={a.id} className={`rounded px-2 py-1 text-xs font-bold ${a.evaluation==='#'?'bg-success/20 text-success':a.evaluation==='='?'bg-destructive/20 text-destructive':'bg-warning/20 text-warning'}`}>#{a.player_number} {band(a.end_zone)} {a.evaluation}</span>)}</div></div>})}</div></Card>;
+  const dot = (ev: string) => ev === '#' ? '#16a34a' : ev === '=' ? '#dc2626' : '#ca8a04';
+  return (
+    <Card className="p-5">
+      <h3 className="mb-4 text-sm font-bold uppercase italic">Ricezione</h3>
+      <div className="grid gap-3 md:grid-cols-2">
+        {[1,2,3,4,5,6].map((rot) => {
+          const items = rec.filter(a => rotationOf(a, side) === rot);
+          const players = [...new Set(items.map(a => a.player_number).filter((n): n is number => n !== null))].sort((a,b)=>a-b);
+          return (
+            <div key={rot} className="rounded-lg border border-border bg-muted/30 p-3">
+              <div className="mb-2 font-black">P{rot}</div>
+              <div className="text-sm text-muted-foreground">Positività <span className="text-success font-bold">{pct(items.filter(a=>a.evaluation==='#'||a.evaluation==='+').length, items.length)}%</span> · Errori <span className="text-destructive font-bold">{pct(items.filter(a=>a.evaluation==='=').length, items.length)}%</span></div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {players.map(num => {
+                  const list = items.filter(a => a.player_number === num);
+                  const pos = list.filter(a => a.evaluation === '+' || a.evaluation === '!').length;
+                  const bands = ['sinistra', 'centro', 'destra'].map(name => {
+                    const b = list.filter(a => band(a.end_zone) === name);
+                    return { name, pct: pct(b.filter(a => a.evaluation === '#' || a.evaluation === '+' || a.evaluation === '!').length, b.length) };
+                  });
+                  return (
+                    <div key={num} className="rounded border border-border/60 bg-background/40 p-2">
+                      <div className="mb-1 text-xs font-black">#{num}</div>
+                      <MiniField>{list.map((a, i) => { const c = zc[a.end_zone || 0]; return c ? <circle key={a.id || i} cx={c[0]} cy={c[1]} r="4" fill={dot(a.evaluation)} fillOpacity="0.85" /> : null; })}</MiniField>
+                      <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]"><span>Tot <b>{list.length}</b></span><span>Prf <b>{pct(list.filter(a=>a.evaluation==='#').length, list.length)}%</b></span><span>Err <b>{pct(list.filter(a=>a.evaluation==='=').length, list.length)}%</b></span><span>Pos <b>{pct(pos, list.length)}%</b></span></div>
+                      <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] text-muted-foreground">{bands.map(b => <span key={b.name}>{b.name.slice(0,3)} <b className="text-foreground">{b.pct}%</b></span>)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
 }
 
 function ServeAnalysis({ actions, pct }: { actions: DbAction[]; pct: (n: number, d: number) => number }) {
-  const serves = actions.filter((a) => a.skill === 'S');
-  const players = [...new Set(serves.map((a) => a.player_number).filter(Boolean))];
-  const zc = (z: number | null) => ({4:[15,10],3:[45,10],2:[75,10],5:[15,30],6:[45,30],1:[75,30],7:[15,50],8:[45,50],9:[75,50]} as Record<number, number[]>)[z || 0];
-  return <Card className="p-5"><h3 className="mb-4 text-sm font-bold uppercase italic">Battuta</h3><div className="grid gap-4 md:grid-cols-2">{players.map((n)=>{const items=serves.filter(a=>a.player_number===n); return <div key={n} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">#{n}</div><svg viewBox="0 0 90 60" className="w-full rounded bg-card">{items.map(a=>{const s=zc(a.start_zone), e=zc(a.end_zone); if(!s||!e)return null; const c=a.evaluation==='#'?'#000':a.evaluation==='='?'#dc2626':a.evaluation==='/'?'#ea580c':'#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth="1.5" />})}</svg><div className="mt-2 grid grid-cols-3 text-center text-xs"><span>Tot <b>{items.length}</b></span><span>Ace% <b>{pct(items.filter(a=>a.evaluation==='#').length, items.length)}</b></span><span>Err% <b>{pct(items.filter(a=>a.evaluation==='=').length, items.length)}</b></span></div></div>})}</div></Card>;
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const serves = actions.filter((a) => a.skill === 'S' && (selectedType === 'all' || a.skill_type === selectedType));
+  const players = [...new Set(serves.map((a) => a.player_number).filter((n): n is number => n !== null))].sort((a,b)=>a-b);
+  const zc: Record<number, [number, number]> = { 4:[15,10],3:[45,10],2:[75,10],5:[15,30],6:[45,30],1:[75,30],7:[15,50],8:[45,50],9:[75,50] };
+  const color = (ev: string) => ev === '#' ? '#000' : ev === '=' ? '#dc2626' : ev === '/' ? '#ea580c' : '#ca8a04';
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 className="text-sm font-bold uppercase italic">Battuta</h3>
+        <div className="flex flex-wrap gap-1">{[{ key: 'all', label: 'Tutti' }, ...SERVE_TYPES].map(t => <button key={t.key} onClick={() => setSelectedType(t.key)} className={`px-3 py-1 rounded text-xs font-bold ${selectedType === t.key ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>{t.key === 'all' ? t.label : `${t.key}=${t.label}`}</button>)}</div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">{players.map((n)=>{
+        const playerServes = serves.filter(a=>a.player_number===n);
+        return <div key={n} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">#{n}</div><div className="grid gap-2 sm:grid-cols-3">{SERVE_TYPES.map(t => { const items = playerServes.filter(a => a.skill_type === t.key); if (!items.length) return null; return <div key={t.key}><div className="mb-1 text-[10px] font-bold uppercase text-muted-foreground">{t.label}</div><MiniField>{items.map(a=>{const st=zc[a.start_zone || 0], e=zc[a.end_zone || 0]; if(!st||!e)return null; return <line key={a.id} x1={st[0]} y1={st[1]} x2={e[0]} y2={e[1]} stroke={color(a.evaluation)} strokeWidth="1.5" />})}</MiniField></div>; })}</div><div className="mt-2 grid grid-cols-3 text-center text-xs"><span>Tot <b>{playerServes.length}</b></span><span>Ace% <b>{pct(playerServes.filter(a=>a.evaluation==='#').length, playerServes.length)}</b></span><span>Err% <b>{pct(playerServes.filter(a=>a.evaluation==='=').length, playerServes.length)}</b></span></div></div>;
+      })}</div>
+    </Card>
+  );
 }
