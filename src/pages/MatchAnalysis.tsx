@@ -285,7 +285,7 @@ export default function MatchAnalysis() {
     const date = match.match_date || new Date().toISOString().slice(0, 10);
     const safe = (v: string) => v.replace(/[^A-Za-z0-9]+/g, '').slice(0, 8).toUpperCase() || 'TEAM';
     const totalDuration = Array.isArray(match.set_results)
-      ? match.set_results.reduce((sum: number, set: any) => sum + (Number(set?.duration) || 0), 0)
+      ? (match.set_results as Array<{ duration?: number | string }>).reduce((sum, set) => sum + (Number(set?.duration) || 0), 0)
       : 0;
     const teamRows = (teamSide: 'home' | 'away') => {
       const id = teamSide === 'home' ? match.home_team.id : match.away_team.id;
