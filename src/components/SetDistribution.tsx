@@ -96,7 +96,7 @@ export function SetDistribution() {
       const rotation = team === 'home' ? a.homeSetterPosition : a.awaySetterPosition;
       if (rotation < 1 || rotation > 6) continue;
       const row = base[rotation - 1];
-      const group = setTargetGroups.find((g) => g.zones.includes(a.endZone));
+      const group = setTargetGroups.find((g) => (g.zones as readonly number[]).includes(a.endZone));
       if (!group) continue;
       row.counts[group.key]++;
       row.total++;
