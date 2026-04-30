@@ -65,6 +65,12 @@ export default {
           line: "hsl(var(--court-line))",
           highlight: "hsl(var(--court-highlight))",
         },
+        set: {
+          left: "hsl(var(--set-left))",
+          middle: "hsl(var(--set-middle))",
+          right: "hsl(var(--set-right))",
+          back: "hsl(var(--set-back))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
