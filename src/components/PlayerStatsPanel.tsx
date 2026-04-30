@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ScoutAction, Skill } from '@/types/volleyball';
 
 type TeamFilter = 'home' | 'away';
+type PhaseFilter = 'all' | 'K1' | 'K2';
+type SkillMetric = 'A' | 'R' | 'S' | 'B';
 
 interface PlayerRow {
   number: number;
@@ -70,6 +73,33 @@ const pct = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 10
 // Attack efficiency (FIVB) = (kills - errors) / total_attempts
 const eff = (kills: number, errors: number, total: number) =>
   total > 0 ? Math.round(((kills - errors) / total) * 100) : 0;
+
+function phaseForAction(actions: ScoutAction[], index: number): 'K1' | 'K2' | null {
+  const action = actions[index];
+  if (!action) return null;
+  if (action.skill === 'S') return 'K2';
+
+  for (let i = index - 1; i >= 0; i--) {
+    const prev = actions[i];
+    if (prev.setNumber !== action.setNumber) break;
+    if (prev.skill !== 'S') continue;
+    return prev.team === action.team ? 'K2' : 'K1';
+  }
+  return null;
+}
+
+function playerSkillMetrics(actions: ScoutAction[], playerNumber: number, skill: SkillMetric) {
+  const skillActions = actions.filter((a) => a.playerNumber === playerNumber && a.skill === skill);
+  const total = skillActions.length;
+  const perfect = skillActions.filter((a) => a.evaluation === '#').length;
+  const errors = skillActions.filter((a) => isError(a.evaluation)).length;
+  return {
+    total,
+    perfectPct: pct(perfect, total),
+    errorPct: pct(errors, total),
+    efficiency: eff(perfect, errors, total),
+  };
+}
 
 export function PlayerStatsPanel() {
   const { matchState, homeTeam, awayTeam } = useMatchStore();
