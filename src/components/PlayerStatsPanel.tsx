@@ -104,10 +104,33 @@ function playerSkillMetrics(actions: ScoutAction[], playerNumber: number, skill:
 export function PlayerStatsPanel() {
   const { matchState, homeTeam, awayTeam } = useMatchStore();
   const [team, setTeam] = useState<TeamFilter>('home');
+  const [phase, setPhase] = useState<PhaseFilter>('all');
+  const [selectedPlayer, setSelectedPlayer] = useState<string>('all');
+
+  const phaseFilteredActions = useMemo(() => {
+    const actions = matchState.actions;
+    if (phase === 'all') return actions;
+    return actions.filter((_, index) => phaseForAction(actions, index) === phase);
+  }, [matchState.actions, phase]);
+
+  const teamActions = useMemo(
+    () => phaseFilteredActions.filter((a) => a.team === team),
+    [phaseFilteredActions, team],
+  );
+
+  const lineupPlayers = useMemo(() => {
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const teamData = team === 'home' ? homeTeam : awayTeam;
+    return lineup
+      .filter((num) => num > 0)
+      .map((num) => ({
+        number: num,
+        name: teamData.players.find((p) => p.number === num)?.lastName || `#${num}`,
+      }));
+  }, [matchState.homeCurrentLineup, matchState.awayCurrentLineup, team, homeTeam, awayTeam]);
 
   const rows = useMemo(() => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
-    const teamActions = matchState.actions.filter((a) => a.team === team);
 
     // Players that appear in roster OR have actions
     const numbers = new Set<number>();
@@ -126,7 +149,40 @@ export function PlayerStatsPanel() {
     });
     out.sort((a, b) => b.totalPoints - a.totalPoints || a.number - b.number);
     return out;
-  }, [matchState.actions, team, homeTeam, awayTeam]);
+  }, [teamActions, team, homeTeam, awayTeam]);
+
+  const selectedPlayerNumber = selectedPlayer === 'all' ? null : Number(selectedPlayer);
+
+  const singlePlayerStats = useMemo(() => {
+    if (!selectedPlayerNumber) return [];
+    const skills: { key: SkillMetric; label: string }[] = [
+      { key: 'A', label: 'Attacco' },
+      { key: 'R', label: 'Ricezione' },
+      { key: 'S', label: 'Battuta' },
+      { key: 'B', label: 'Muro' },
+    ];
+
+    return skills.map(({ key, label }) => {
+      const playerMetrics = playerSkillMetrics(teamActions, selectedPlayerNumber, key);
+      const eligible = rows
+        .map((r) => playerSkillMetrics(teamActions, r.number, key))
+        .filter((m) => m.total >= 3);
+      const avg = (metric: keyof Omit<ReturnType<typeof playerSkillMetrics>, 'total'>) => (
+        eligible.length > 0 ? Math.round(eligible.reduce((sum, m) => sum + m[metric], 0) / eligible.length) : 0
+      );
+
+      return {
+        key,
+        label,
+        ...playerMetrics,
+        deltas: {
+          perfectPct: playerMetrics.perfectPct - avg('perfectPct'),
+          errorPct: playerMetrics.errorPct - avg('errorPct'),
+          efficiency: playerMetrics.efficiency - avg('efficiency'),
+        },
+      };
+    }).filter((s) => s.total > 0);
+  }, [selectedPlayerNumber, teamActions, rows]);
 
   const colorBy = (val: number, kind: 'eff' | 'pct') => {
     if (kind === 'eff') {
