@@ -197,6 +197,13 @@ export function PlayerStatsPanel() {
     return 'text-destructive';
   };
 
+  const renderDelta = (value: number, inverse = false) => {
+    const positive = inverse ? value < 0 : value > 0;
+    const negative = inverse ? value > 0 : value < 0;
+    const cls = positive ? 'text-emerald-400' : negative ? 'text-destructive' : 'text-muted-foreground';
+    return <span className={`font-mono text-[10px] font-bold ${cls}`}>{value > 0 ? '+' : ''}{value}%</span>;
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
@@ -204,6 +211,27 @@ export function PlayerStatsPanel() {
           Statistiche Giocatori
         </h4>
         <span className="text-[10px] font-mono text-muted-foreground">{rows.length} att.</span>
+      </div>
+
+      <div className="flex items-center gap-1">
+        {([
+          ['all', 'Tutti'],
+          ['K1', 'K1'],
+          ['K2', 'K2'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setPhase(key)}
+            className={`min-h-9 px-3 text-xs font-bold rounded-lg border transition-colors ${
+              phase === key
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background text-muted-foreground border-border hover:text-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Team toggle */}
@@ -218,7 +246,7 @@ export function PlayerStatsPanel() {
             <button
               key={k}
               type="button"
-              onClick={() => setTeam(k)}
+              onClick={() => { setTeam(k); setSelectedPlayer('all'); }}
               className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${cls}`}
             >
               {label.slice(0, 14)}
@@ -227,9 +255,53 @@ export function PlayerStatsPanel() {
         })}
       </div>
 
+      <Select value={selectedPlayer} onValueChange={setSelectedPlayer}>
+        <SelectTrigger className="h-9 text-xs font-bold">
+          <SelectValue placeholder="Tutti i giocatori" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tutti i giocatori</SelectItem>
+          {lineupPlayers.map((p) => (
+            <SelectItem key={p.number} value={String(p.number)}>
+              #{p.number} {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       {rows.length === 0 ? (
         <div className="text-center text-muted-foreground text-xs py-3">
           Nessun dato disponibile
+        </div>
+      ) : selectedPlayerNumber ? (
+        <div className="space-y-2 rounded-md border border-border/50 p-2 bg-secondary/20">
+          <div className="text-xs font-black text-foreground">
+            #{selectedPlayerNumber} {lineupPlayers.find((p) => p.number === selectedPlayerNumber)?.name || ''}
+          </div>
+          {singlePlayerStats.length === 0 ? (
+            <div className="text-center text-muted-foreground text-xs py-3">Nessuna azione per il filtro selezionato</div>
+          ) : singlePlayerStats.map((s) => (
+            <div key={s.key} className="rounded border border-border/40 p-2 bg-background/60">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold uppercase text-foreground">{s.label}</span>
+                <span className="text-[10px] font-mono text-muted-foreground">Tot {s.total}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[10px]">
+                <div>
+                  <div className="text-muted-foreground uppercase">Perfetti</div>
+                  <div className="font-bold tabular-nums">{s.perfectPct}% {renderDelta(s.deltas.perfectPct)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground uppercase">Errori</div>
+                  <div className="font-bold tabular-nums">{s.errorPct}% {renderDelta(s.deltas.errorPct, true)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground uppercase">Eff.</div>
+                  <div className="font-bold tabular-nums">{s.efficiency}% {renderDelta(s.deltas.efficiency)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="overflow-x-auto -mx-1">
