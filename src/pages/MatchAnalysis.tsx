@@ -599,22 +599,66 @@ function PlayersTab({ actions, playerNames }: { actions: DbAction[]; playerNames
   );
 }
 
+function rallyWinner(rally: DbAction[]): 'home' | 'away' | null {
+  for (let i = rally.length - 1; i >= 0; i--) {
+    const a = rally[i];
+    if (a.evaluation === '#') {
+      if (['A', 'B', 'S'].includes(a.skill)) return a.side;
+      if (a.skill === 'E' && (a.skill_type === 'T' || a.skill_type === 'H')) return a.side;
+    }
+    if (a.evaluation === '=' || a.evaluation === '/') return a.side === 'home' ? 'away' : 'home';
+  }
+  const last = rally[rally.length - 1];
+  if (!last) return null;
+  return last.home_score > last.away_score ? 'home' : last.away_score > last.home_score ? 'away' : null;
+}
+
 function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const stats = rotationStats(actions, teamId, { side });
+  const raw = new Map<number, { made: number; conceded: number }>();
+  for (let p = 1; p <= 6; p++) raw.set(p, { made: 0, conceded: 0 });
+  const rallies = new Map<string, DbAction[]>();
+  actions.forEach(a => {
+    const key = `${a.set_number}-${a.rally_index}`;
+    if (!rallies.has(key)) rallies.set(key, []);
+    rallies.get(key)!.push(a);
+  });
+  rallies.forEach(rally => {
+    const mine = rally.find(a => a.scout_team_id === teamId);
+    if (!mine) return;
+    const rot = rotationOf(mine, side);
+    const winner = rallyWinner(rally);
+    if (!rot || !winner) return;
+    const row = raw.get(rot)!;
+    if (winner === side) row.made++; else row.conceded++;
+  });
   return (
     <div className="space-y-4">
       <Card className="p-5">
         <h3 className="text-sm font-bold uppercase italic mb-4">Side-out% e Point-win% per rotazione</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {stats.map(r => (
-            <div key={r.setterPos} className="p-4 border border-border rounded">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Rotazione {r.setterPos}</p>
-              <div className="mt-2 space-y-2">
-                <BarRow label="Side-out%" value={r.sideOutPct} sub={`${r.receptionWon}/${r.receptionRallies}`} />
-                <BarRow label="Point-win%" value={r.pointWinPct} sub={`${r.serveWon}/${r.serveRallies}`} />
+          {stats.map(r => {
+            const score = raw.get(r.setterPos) || { made: 0, conceded: 0 };
+            const total = score.made + score.conceded;
+            const balance = total ? (score.made / total) * 100 : 50;
+            const positive = score.made - score.conceded >= 0;
+            return (
+              <div key={r.setterPos} className="p-4 border border-border rounded">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Rotazione {r.setterPos}</p>
+                  <div className={`text-lg font-black ${positive ? 'text-success' : 'text-destructive'}`}>{score.made} — {score.conceded}</div>
+                </div>
+                <div className="mt-2 h-2 flex overflow-hidden rounded bg-muted">
+                  <div className="bg-success" style={{ width: `${balance}%` }} />
+                  <div className="bg-destructive" style={{ width: `${100 - balance}%` }} />
+                </div>
+                <div className="mt-2 space-y-2">
+                  <BarRow label="Side-out%" value={r.sideOutPct} sub={`${r.receptionWon}/${r.receptionRallies}`} />
+                  <BarRow label="Point-win%" value={r.pointWinPct} sub={`${r.serveWon}/${r.serveRallies}`} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <p className="text-xs text-muted-foreground mt-4">
           Side-out% = % rally vinti quando la squadra è in ricezione. Point-win% = % rally vinti quando è in battuta.
