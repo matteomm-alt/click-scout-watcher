@@ -75,8 +75,8 @@ export function TechTypesTab({ actions }: Props) {
                   <span>+{t.posPct}%</span>
                   <span className="text-destructive">={t.errPct}%</span>
                   <span className="text-muted-foreground">{t.tot} az. ({Math.round(t.tot / skillActs.length * 100)}%)</span>
-                  <span className="font-bold w-12 text-right" style={{ color: t.eff >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))' }}>
-                    {t.eff > 0 ? '+' : ''}{t.eff}%
+                  <span className="font-bold w-16 text-right" style={{ color: t.eff >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))' }}>
+                    Eff: {t.eff > 0 ? '+' : ''}{t.eff}%
                   </span>
                 </div>
               </div>

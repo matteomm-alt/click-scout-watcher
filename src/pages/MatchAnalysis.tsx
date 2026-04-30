@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -908,7 +908,7 @@ function PhaseToggle({ value, onChange }: { value: 'all' | 'K1' | 'K2'; onChange
   );
 }
 
-function MiniField({ children }: { children: React.ReactNode }) {
+function MiniField({ children }: { children: ReactNode }) {
   return (
     <svg viewBox="0 0 90 60" className="w-full rounded bg-card">
       <rect x="1" y="1" width="88" height="58" fill="none" stroke="hsl(var(--border))" strokeWidth="1" />
