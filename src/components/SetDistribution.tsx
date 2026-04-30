@@ -213,6 +213,40 @@ export function SetDistribution() {
         </div>
       )}
 
+      <div className="space-y-2 pt-2 border-t border-border/50">
+        <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+          Alzata per rotazione
+        </h5>
+        <div className="space-y-2">
+          {rotationRows.map((row) => (
+            <div key={row.rotation} className="grid grid-cols-[28px_1fr] items-center gap-2 text-[10px]">
+              <div className="font-mono font-black text-primary">R{row.rotation}</div>
+              {row.total < 3 ? (
+                <div className="h-8 rounded border border-border/40 flex items-center justify-center text-muted-foreground font-bold">—</div>
+              ) : (
+                <div className="h-8 rounded border border-border/40 overflow-hidden flex bg-secondary/40">
+                  {setTargetGroups.map((group) => {
+                    const count = row.counts[group.key];
+                    const width = (count / row.total) * 100;
+                    if (count === 0) return null;
+                    return (
+                      <div
+                        key={group.key}
+                        className={`h-full min-w-8 flex items-center justify-center text-[9px] font-black text-primary-foreground ${group.className}`}
+                        style={{ width: `${width}%` }}
+                        title={`${group.label}: ${Math.round(width)}%`}
+                      >
+                        {Math.round(width)}%
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="text-[9px] text-muted-foreground italic">
         * Inferita dalla zona di partenza degli attacchi e dal setter in posizione
       </div>
