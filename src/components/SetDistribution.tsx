@@ -12,6 +12,19 @@ interface SetterRow {
   total: number;
 }
 
+interface RotationDistributionRow {
+  rotation: number;
+  total: number;
+  counts: Record<'left' | 'middle' | 'right' | 'back', number>;
+}
+
+const setTargetGroups = [
+  { key: 'left', label: 'Z4', zones: [4], className: 'bg-opponent' },
+  { key: 'middle', label: 'Z3', zones: [3], className: 'bg-accent' },
+  { key: 'right', label: 'Z2', zones: [2], className: 'bg-primary' },
+  { key: 'back', label: '2ª', zones: [1, 5, 6], className: 'bg-sidebar-primary' },
+] as const;
+
 /**
  * Heuristic: "set distribution" is inferred from where attacks STARTED.
  * For each attack action, we attribute the set to the setter currently in lineup.
@@ -70,6 +83,27 @@ export function SetDistribution() {
 
     return Array.from(map.values()).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
   }, [matchState.actions, team, homeTeam, awayTeam]);
+
+  const rotationRows = useMemo<RotationDistributionRow[]>(() => {
+    const base = Array.from({ length: 6 }, (_, index) => ({
+      rotation: index + 1,
+      total: 0,
+      counts: { left: 0, middle: 0, right: 0, back: 0 },
+    }));
+
+    for (const a of matchState.actions) {
+      if (a.team !== team || a.skill !== 'E' || !a.endZone) continue;
+      const rotation = team === 'home' ? a.homeSetterPosition : a.awaySetterPosition;
+      if (rotation < 1 || rotation > 6) continue;
+      const row = base[rotation - 1];
+      const group = setTargetGroups.find((g) => g.zones.includes(a.endZone));
+      if (!group) continue;
+      row.counts[group.key]++;
+      row.total++;
+    }
+
+    return base;
+  }, [matchState.actions, team]);
 
   return (
     <div className="space-y-2">
