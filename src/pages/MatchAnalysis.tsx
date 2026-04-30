@@ -5,7 +5,7 @@ import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
   rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
 } from '@/lib/scoutAnalysis';
-import { ArrowLeft, BarChart3, Download, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, BarChart3, Download, FileText, SlidersHorizontal } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -21,6 +21,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
 } from 'recharts';
+import jsPDF from 'jspdf';
 
 interface MatchRow {
   id: string;
@@ -278,6 +279,76 @@ export default function MatchAnalysis() {
     URL.revokeObjectURL(url);
   };
 
+  const exportScoresheetPdf = () => {
+    if (!match) return;
+    const doc = new jsPDF('l', 'mm', 'a4');
+    const date = match.match_date || new Date().toISOString().slice(0, 10);
+    const safe = (v: string) => v.replace(/[^A-Za-z0-9]+/g, '').slice(0, 8).toUpperCase() || 'TEAM';
+    const totalDuration = Array.isArray(match.set_results)
+      ? match.set_results.reduce((sum: number, set: any) => sum + (Number(set?.duration) || 0), 0)
+      : 0;
+    const teamRows = (teamSide: 'home' | 'away') => {
+      const id = teamSide === 'home' ? match.home_team.id : match.away_team.id;
+      const teamActions = filteredAllActions.filter(a => a.scout_team_id === id);
+      const nums = [...new Set([
+        ...players.filter(p => p.scout_team_id === id).map(p => p.number),
+        ...teamActions.map(a => a.player_number).filter((n): n is number => n !== null),
+      ])].sort((a, b) => a - b);
+      return nums.map(num => {
+        const info = players.find(p => p.scout_team_id === id && p.number === num);
+        const acts = teamActions.filter(a => a.player_number === num);
+        const stat = (skill: string) => {
+          const list = acts.filter(a => a.skill === skill);
+          const tot = list.length;
+          const ace = list.filter(a => a.evaluation === '#').length;
+          const err = list.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+          const pos = list.filter(a => a.evaluation === '#' || a.evaluation === '+' || a.evaluation === '!').length;
+          return { tot, ace, err, pos, pct: (n: number) => tot ? Math.round(n / tot * 100) : 0 };
+        };
+        const s = stat('S'), r = stat('R'), a = stat('A'), b = stat('B');
+        return [
+          String(num), info?.role || '',
+          `${s.tot}/${s.pct(s.ace)}%/${s.pct(s.err)}%`,
+          `${r.tot}/${r.pct(r.pos)}%/${r.pct(r.err)}%/${r.pct(r.ace)}%`,
+          `${a.tot}/${a.pct(a.ace)}%/${a.pct(a.err)}%/${a.pct(a.ace - a.err)}%`,
+          `${b.tot}/${b.ace}`,
+        ];
+      });
+    };
+    const drawTable = (title: string, rows: string[][], yStart: number) => {
+      const headers = ['N°', 'Ruolo', 'Battuta Tot/Ace/Err', 'Ricezione Tot/Pos/Err/Prf', 'Attacco Tot/Kill/Err/Eff', 'Muro Tot/Pt'];
+      const widths = [14, 20, 43, 55, 55, 32];
+      let y = yStart;
+      doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.text(title, 14, y); y += 6;
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      let x = 14;
+      headers.forEach((h, i) => { doc.text(h, x + 1, y); x += widths[i]; });
+      y += 4; doc.line(14, y, 14 + widths.reduce((a, b) => a + b, 0), y); y += 5;
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+      rows.forEach(row => {
+        x = 14;
+        row.forEach((cell, i) => { doc.text(cell || '—', x + 1, y); x += widths[i]; });
+        y += 5;
+        if (y > 185) { doc.addPage(); y = 18; }
+      });
+      const totals = rows.reduce((acc, row) => {
+        row.slice(2).forEach((cell, i) => { acc[i] += Number(cell.split('/')[0]) || 0; });
+        return acc;
+      }, [0,0,0,0]);
+      doc.setFont('helvetica', 'bold');
+      x = 14;
+      ['Totali', '', String(totals[0]), String(totals[1]), String(totals[2]), String(totals[3])].forEach((cell, i) => { doc.text(cell, x + 1, y); x += widths[i]; });
+      return y + 10;
+    };
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+    doc.text(`${match.home_team.name} ${match.home_sets_won}-${match.away_sets_won} ${match.away_team.name}`, 14, 14);
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+    doc.text(`${date} · ${match.league || ''} · ${match.venue || ''} · Durata ${totalDuration || '—'} min`, 14, 21);
+    const nextY = drawTable(match.home_team.name, teamRows('home'), 32);
+    drawTable(match.away_team.name, teamRows('away'), Math.min(nextY + 4, 118));
+    doc.save(`${safe(match.home_team.name)}_${safe(match.away_team.name)}_${date}.pdf`);
+  };
+
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
   }
@@ -313,6 +384,10 @@ export default function MatchAnalysis() {
               >{t.label}</button>
             ))}
             </div>
+            <Button onClick={exportScoresheetPdf} variant="secondary" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Tabellino</span>
+            </Button>
             <Button onClick={exportCsv} variant="outline" size="sm" className="shrink-0">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Esporta CSV</span>
