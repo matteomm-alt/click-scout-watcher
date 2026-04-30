@@ -19,10 +19,10 @@ interface RotationDistributionRow {
 }
 
 const setTargetGroups = [
-  { key: 'left', label: 'Z4', zones: [4], className: 'bg-opponent' },
-  { key: 'middle', label: 'Z3', zones: [3], className: 'bg-accent' },
-  { key: 'right', label: 'Z2', zones: [2], className: 'bg-primary' },
-  { key: 'back', label: '2ª', zones: [1, 5, 6], className: 'bg-sidebar-primary' },
+  { key: 'left', label: 'Z4', zones: [4], className: 'bg-set-left' },
+  { key: 'middle', label: 'Z3', zones: [3], className: 'bg-set-middle' },
+  { key: 'right', label: 'Z2', zones: [2], className: 'bg-set-right' },
+  { key: 'back', label: '2ª', zones: [1, 5, 6], className: 'bg-set-back' },
 ] as const;
 
 /**
