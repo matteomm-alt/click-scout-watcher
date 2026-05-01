@@ -342,6 +342,7 @@ export type Database = {
           created_by: string
           expires_at: string | null
           id: string
+          is_urgent: boolean
           pinned: boolean
           priority: Database["public"]["Enums"]["communication_priority"]
           society_id: string
@@ -354,6 +355,7 @@ export type Database = {
           created_by: string
           expires_at?: string | null
           id?: string
+          is_urgent?: boolean
           pinned?: boolean
           priority?: Database["public"]["Enums"]["communication_priority"]
           society_id: string
@@ -366,6 +368,7 @@ export type Database = {
           created_by?: string
           expires_at?: string | null
           id?: string
+          is_urgent?: boolean
           pinned?: boolean
           priority?: Database["public"]["Enums"]["communication_priority"]
           society_id?: string
@@ -944,6 +947,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          onboarded: boolean
           updated_at: string
         }
         Insert: {
@@ -951,6 +955,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          onboarded?: boolean
           updated_at?: string
         }
         Update: {
@@ -958,6 +963,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          onboarded?: boolean
           updated_at?: string
         }
         Relationships: []
