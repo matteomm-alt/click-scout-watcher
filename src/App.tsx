@@ -14,6 +14,8 @@ import MatchAnalysis from "./pages/MatchAnalysis.tsx";
 import Archive from "./pages/Archive.tsx";
 import Auth from "./pages/Auth.tsx";
 import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
+import Onboarding from "./pages/Onboarding.tsx";
+import Support from "./pages/Support.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 // Gestionale
@@ -63,6 +65,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Home />} />
@@ -70,6 +73,7 @@ const App = () => (
               <Route path="/match/:id" element={<MatchAnalysis />} />
               <Route path="/archive" element={<Archive />} />
               <Route path="/scout" element={<Index />} />
+              <Route path="/supporto" element={<Support />} />
 
               {/* Gestionale */}
               <Route path="/calendario" element={<Calendario />} />
