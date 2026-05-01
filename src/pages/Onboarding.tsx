@@ -217,9 +217,9 @@ export default function Onboarding() {
       const { error } = await supabase.from('dvw_matches').insert({
         user_id: user.id,
         file_name: file.name,
-        squadra_casa: parsed.header?.homeTeam?.name ?? null,
-        avversario: parsed.header?.awayTeam?.name ?? null,
-        data: parsed.header?.matchDate ?? null,
+        squadra_casa: parsed.teams?.home?.name ?? null,
+        avversario: parsed.teams?.away?.name ?? null,
+        data: parsed.header?.date ?? null,
       } as never);
       if (error) throw error;
       toast.success('Partita DVW importata! La trovi in Archivio.');
