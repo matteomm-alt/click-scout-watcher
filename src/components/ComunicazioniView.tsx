@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Megaphone, Plus, Pin, AlertTriangle, X } from 'lucide-react';
+import { Megaphone, Plus, Pin, AlertTriangle, X, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ interface Communication {
   id: string; title: string; content: string;
   priority: Priority;
   pinned: boolean; expires_at: string | null; created_at: string;
+  is_urgent: boolean;
 }
 
 const PRIORITY_VARIANT: Record<Priority, 'destructive' | 'default' | 'secondary' | 'outline'> = {
