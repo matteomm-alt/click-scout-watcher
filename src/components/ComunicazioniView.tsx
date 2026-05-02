@@ -33,17 +33,46 @@ export function ComunicazioniView() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<{ title: string; content: string; priority: Priority; pinned: boolean }>({ title: '', content: '', priority: 'normale', pinned: false });
+  const [readBy, setReadBy] = useState<Record<string, boolean>>({}); // commId -> mio
+  const [readCounts, setReadCounts] = useState<Record<string, number>>({}); // commId -> totale lettori
 
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
     const { data } = await supabase.from('communications').select('*')
       .eq('society_id', societyId).order('pinned', { ascending: false }).order('created_at', { ascending: false });
-    setComms((data as any) || []);
+    const list = ((data as any) || []) as Communication[];
+    setComms(list);
+
+    if (list.length > 0 && user) {
+      const ids = list.map(c => c.id);
+      const { data: reads } = await supabase
+        .from('communication_reads')
+        .select('communication_id, user_id')
+        .in('communication_id', ids);
+      const counts: Record<string, number> = {};
+      const mine: Record<string, boolean> = {};
+      ((reads as any) || []).forEach((r: { communication_id: string; user_id: string }) => {
+        counts[r.communication_id] = (counts[r.communication_id] || 0) + 1;
+        if (r.user_id === user.id) mine[r.communication_id] = true;
+      });
+      setReadCounts(counts);
+      setReadBy(mine);
+    } else {
+      setReadCounts({}); setReadBy({});
+    }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [societyId]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId, user?.id]);
+
+  const markAsRead = async (commId: string) => {
+    if (!user || readBy[commId]) return;
+    const { error } = await supabase.from('communication_reads').insert({ communication_id: commId, user_id: user.id });
+    if (error) { toast.error('Errore conferma lettura'); return; }
+    setReadBy(prev => ({ ...prev, [commId]: true }));
+    setReadCounts(prev => ({ ...prev, [commId]: (prev[commId] || 0) + 1 }));
+  };
 
   const create = async () => {
     if (!form.title || !form.content || !societyId || !user) return;
