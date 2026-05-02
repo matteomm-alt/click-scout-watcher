@@ -196,9 +196,17 @@ export function ConvocazioniView() {
       {selected && (
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="p-5 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold uppercase italic">Convocati</h3>
-              <Badge variant="outline">{players.length} atleti</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{players.length} atleti</Badge>
+                {convocati.length > 0 && (
+                  <Button onClick={generatePdf}
+                    className="min-h-9 px-3 text-xs font-bold bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg gap-1.5">
+                    <FileDown className="w-3.5 h-3.5" /> Distinta PDF
+                  </Button>
+                )}
+              </div>
             </div>
             {loading ? <p className="text-sm text-muted-foreground">Caricamento...</p> :
              convocati.length === 0 ? <p className="text-sm text-muted-foreground">Nessun convocato ancora.</p> : (
