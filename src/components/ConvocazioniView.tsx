@@ -92,6 +92,79 @@ export function ConvocazioniView() {
   const convocati = players.map(p => ({ player: p, athlete: athletes.find(a => a.id === p.athlete_id)! })).filter(x => x.athlete);
   const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
 
+  const { societyName } = useActiveSociety();
+
+  const generatePdf = () => {
+    if (!selected) return;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth();
+    let y = 14;
+
+    // Header
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+    doc.text(societyName || 'Società', 12, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text(`Distinta ufficiale`, W - 12, y, { align: 'right' });
+    y += 6;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+    doc.text(selected.title, 12, y); y += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    const meta = [
+      selected.match_date ? `Data: ${new Date(selected.match_date).toLocaleDateString('it-IT')}` : null,
+      selected.meeting_time ? `Ritrovo: ${selected.meeting_time}` : null,
+      selected.location ? `Luogo: ${selected.location}` : null,
+    ].filter(Boolean).join('   •   ');
+    if (meta) { doc.text(meta, 12, y); y += 6; }
+    doc.setDrawColor(180); doc.line(12, y, W - 12, y); y += 6;
+
+    // Tabella convocati
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    const cols = [
+      { x: 14, w: 14, t: 'N°' },
+      { x: 28, w: 90, t: 'Cognome Nome' },
+      { x: 118, w: 30, t: 'Ruolo' },
+      { x: 150, w: 50, t: 'Firma' },
+    ];
+    cols.forEach(c => doc.text(c.t, c.x, y));
+    y += 1.5; doc.line(12, y, W - 12, y); y += 5;
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    const sorted = [...convocati].sort((a, b) => (a.athlete.number ?? 999) - (b.athlete.number ?? 999));
+    sorted.forEach(({ player, athlete }) => {
+      if (y > 270) { doc.addPage(); y = 14; }
+      doc.text(athlete.number != null ? String(athlete.number) : '—', cols[0].x, y);
+      const nome = `${athlete.last_name}${athlete.first_name ? ' ' + athlete.first_name : ''}`;
+      doc.text(nome, cols[1].x, y);
+      doc.text((player.role_in_match || 'titolare').toString(), cols[2].x, y);
+      // riga firma
+      doc.setDrawColor(200);
+      doc.line(cols[3].x, y + 1, cols[3].x + cols[3].w, y + 1);
+      y += 8;
+    });
+
+    // Note
+    if (selected.notes) {
+      if (y > 250) { doc.addPage(); y = 14; }
+      y += 4;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text('Note coach:', 12, y); y += 5;
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
+      const split = doc.splitTextToSize(selected.notes, W - 24);
+      doc.text(split, 12, y);
+    }
+
+    // Footer
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(`Distinta ufficiale — ${new Date().toLocaleDateString('it-IT')}`, 12, doc.internal.pageSize.getHeight() - 8);
+
+    const safe = selected.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40);
+    const dt = selected.match_date || new Date().toISOString().split('T')[0];
+    doc.save(`convocazione_${dt}_${safe}.pdf`);
+  };
+
+
   return (
     <div className="container py-8 space-y-6">
       <div className="flex items-start justify-between">
