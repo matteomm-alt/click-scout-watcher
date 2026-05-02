@@ -117,18 +117,41 @@ export function ComunicazioniView() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {comms.map(c => (
-            <Card key={c.id} className={`p-5 ${c.pinned ? 'border-primary/40' : ''}`}>
+          {comms.map(c => {
+            const isUrgent = c.is_urgent || c.priority === 'urgente';
+            const mineRead = !!readBy[c.id];
+            const totalReads = readCounts[c.id] || 0;
+            return (
+            <Card key={c.id} className={`p-5 ${c.pinned ? 'border-primary/40' : ''} ${isUrgent && !mineRead ? 'border-destructive/60' : ''}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {c.pinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
                     {c.priority === 'urgente' && <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />}
                     <Badge variant={PRIORITY_VARIANT[c.priority]}>{c.priority}</Badge>
+                    {isUrgent && !mineRead && (
+                      <Badge variant="destructive" className="animate-pulse text-[10px] px-1.5 py-0">● URGENTE</Badge>
+                    )}
                     <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('it-IT')}</span>
                   </div>
                   <h3 className="font-bold text-sm mb-1">{c.title}</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-line">{c.content}</p>
+                  <div className="mt-3 flex items-center gap-3 flex-wrap">
+                    {mineRead ? (
+                      <Badge variant="outline" className="text-xs bg-green-500/10 border-green-500/30 text-green-400 gap-1">
+                        <Check className="w-3 h-3" /> Letta
+                      </Badge>
+                    ) : (
+                      <button
+                        onClick={() => markAsRead(c.id)}
+                        className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" /> Segna come letta
+                      </button>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      Letta da {totalReads} {totalReads === 1 ? 'persona' : 'persone'}
+                    </span>
+                  </div>
                 </div>
                 {isAdmin && (
                   <div className="flex gap-1 flex-shrink-0">
@@ -142,7 +165,8 @@ export function ComunicazioniView() {
                 )}
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
