@@ -92,7 +92,6 @@ export function ConvocazioniView() {
   const convocati = players.map(p => ({ player: p, athlete: athletes.find(a => a.id === p.athlete_id)! })).filter(x => x.athlete);
   const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
 
-  const { societyName } = useActiveSociety();
 
   const generatePdf = () => {
     if (!selected) return;
