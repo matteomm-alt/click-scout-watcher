@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Megaphone, Plus, Pin, AlertTriangle, X } from 'lucide-react';
+import { Megaphone, Plus, Pin, AlertTriangle, X, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ interface Communication {
   id: string; title: string; content: string;
   priority: Priority;
   pinned: boolean; expires_at: string | null; created_at: string;
+  is_urgent: boolean;
 }
 
 const PRIORITY_VARIANT: Record<Priority, 'destructive' | 'default' | 'secondary' | 'outline'> = {
@@ -32,17 +33,46 @@ export function ComunicazioniView() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<{ title: string; content: string; priority: Priority; pinned: boolean }>({ title: '', content: '', priority: 'normale', pinned: false });
+  const [readBy, setReadBy] = useState<Record<string, boolean>>({}); // commId -> mio
+  const [readCounts, setReadCounts] = useState<Record<string, number>>({}); // commId -> totale lettori
 
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
     const { data } = await supabase.from('communications').select('*')
       .eq('society_id', societyId).order('pinned', { ascending: false }).order('created_at', { ascending: false });
-    setComms((data as any) || []);
+    const list = ((data as any) || []) as Communication[];
+    setComms(list);
+
+    if (list.length > 0 && user) {
+      const ids = list.map(c => c.id);
+      const { data: reads } = await supabase
+        .from('communication_reads')
+        .select('communication_id, user_id')
+        .in('communication_id', ids);
+      const counts: Record<string, number> = {};
+      const mine: Record<string, boolean> = {};
+      ((reads as any) || []).forEach((r: { communication_id: string; user_id: string }) => {
+        counts[r.communication_id] = (counts[r.communication_id] || 0) + 1;
+        if (r.user_id === user.id) mine[r.communication_id] = true;
+      });
+      setReadCounts(counts);
+      setReadBy(mine);
+    } else {
+      setReadCounts({}); setReadBy({});
+    }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [societyId]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId, user?.id]);
+
+  const markAsRead = async (commId: string) => {
+    if (!user || readBy[commId]) return;
+    const { error } = await supabase.from('communication_reads').insert({ communication_id: commId, user_id: user.id });
+    if (error) { toast.error('Errore conferma lettura'); return; }
+    setReadBy(prev => ({ ...prev, [commId]: true }));
+    setReadCounts(prev => ({ ...prev, [commId]: (prev[commId] || 0) + 1 }));
+  };
 
   const create = async () => {
     if (!form.title || !form.content || !societyId || !user) return;
@@ -87,18 +117,41 @@ export function ComunicazioniView() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {comms.map(c => (
-            <Card key={c.id} className={`p-5 ${c.pinned ? 'border-primary/40' : ''}`}>
+          {comms.map(c => {
+            const isUrgent = c.is_urgent || c.priority === 'urgente';
+            const mineRead = !!readBy[c.id];
+            const totalReads = readCounts[c.id] || 0;
+            return (
+            <Card key={c.id} className={`p-5 ${c.pinned ? 'border-primary/40' : ''} ${isUrgent && !mineRead ? 'border-destructive/60' : ''}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {c.pinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
                     {c.priority === 'urgente' && <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />}
                     <Badge variant={PRIORITY_VARIANT[c.priority]}>{c.priority}</Badge>
+                    {isUrgent && !mineRead && (
+                      <Badge variant="destructive" className="animate-pulse text-[10px] px-1.5 py-0">● URGENTE</Badge>
+                    )}
                     <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('it-IT')}</span>
                   </div>
                   <h3 className="font-bold text-sm mb-1">{c.title}</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-line">{c.content}</p>
+                  <div className="mt-3 flex items-center gap-3 flex-wrap">
+                    {mineRead ? (
+                      <Badge variant="outline" className="text-xs bg-green-500/10 border-green-500/30 text-green-400 gap-1">
+                        <Check className="w-3 h-3" /> Letta
+                      </Badge>
+                    ) : (
+                      <button
+                        onClick={() => markAsRead(c.id)}
+                        className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" /> Segna come letta
+                      </button>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      Letta da {totalReads} {totalReads === 1 ? 'persona' : 'persone'}
+                    </span>
+                  </div>
                 </div>
                 {isAdmin && (
                   <div className="flex gap-1 flex-shrink-0">
@@ -112,7 +165,8 @@ export function ComunicazioniView() {
                 )}
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
