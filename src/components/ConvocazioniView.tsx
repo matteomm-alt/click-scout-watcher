@@ -24,7 +24,7 @@ const ROLE_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destru
 
 export function ConvocazioniView() {
   const { user } = useAuth();
-  const { societyId } = useActiveSociety();
+  const { societyId, societyName } = useActiveSociety();
   const [convocations, setConvocations] = useState<Convocation[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [players, setPlayers] = useState<ConvocationPlayer[]>([]);
