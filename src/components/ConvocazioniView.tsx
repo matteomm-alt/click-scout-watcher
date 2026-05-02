@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ListChecks, Plus, Trash2, UserPlus } from 'lucide-react';
+import { ListChecks, Plus, Trash2, UserPlus, FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
