@@ -32,6 +32,8 @@ interface Guideline {
   difficulty: string | null;
   video_url: string | null;
   duration_min: number | null;
+  common_errors: string | null;
+  progression: string | null;
   tags: string[];
   created_by: string | null;
   created_at: string;
@@ -66,6 +68,8 @@ export default function GuidaTecnica() {
     difficulty: NONE,
     video_url: '',
     duration_min: '',
+    common_errors: '',
+    progression: '',
     tags: '',
   });
   const [saving, setSaving] = useState(false);
@@ -108,7 +112,7 @@ export default function GuidaTecnica() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', tags: '' });
+    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', common_errors: '', progression: '', tags: '' });
     setDialogOpen(true);
   };
 
@@ -123,6 +127,8 @@ export default function GuidaTecnica() {
       difficulty: g.difficulty ?? NONE,
       video_url: g.video_url ?? '',
       duration_min: g.duration_min != null ? String(g.duration_min) : '',
+      common_errors: g.common_errors ?? '',
+      progression: g.progression ?? '',
       tags: (g.tags || []).join(', '),
     });
     setDialogOpen(true);
@@ -145,6 +151,8 @@ export default function GuidaTecnica() {
       difficulty: form.difficulty === NONE ? null : form.difficulty,
       video_url: form.video_url.trim() || null,
       duration_min: form.duration_min ? parseInt(form.duration_min, 10) : null,
+      common_errors: form.common_errors.trim() || null,
+      progression: form.progression.trim() || null,
       tags: form.tags
         .split(',')
         .map((t) => t.trim())
@@ -424,8 +432,30 @@ export default function GuidaTecnica() {
                 id="content"
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                rows={8}
-                placeholder="Descrizione tecnica, progressioni didattiche, errori comuni…"
+                rows={6}
+                placeholder="Descrizione tecnica, progressioni didattiche…"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="errors">Errori comuni</Label>
+              <Textarea
+                id="errors"
+                value={form.common_errors}
+                onChange={(e) => setForm({ ...form, common_errors: e.target.value })}
+                rows={3}
+                placeholder="Es. Gomiti non paralleli, piedi non orientati verso l'alzatrice"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="prog">Progressione didattica</Label>
+              <Textarea
+                id="prog"
+                value={form.progression}
+                onChange={(e) => setForm({ ...form, progression: e.target.value })}
+                rows={2}
+                placeholder="Es. 1) Fermo, 2) In movimento, 3) Con opposizione"
               />
             </div>
           </div>

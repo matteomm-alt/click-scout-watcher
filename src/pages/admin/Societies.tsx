@@ -525,9 +525,15 @@ export default function AdminSocieties() {
                     size="sm"
                     variant="ghost"
                     className="gap-1.5 w-full"
-                    onClick={() => navigate(`/societa/${s.slug}`)}
+                    onClick={async () => {
+                      try {
+                        localStorage.setItem(`active_society_${user?.id ?? 'anon'}`, s.id);
+                      } catch { /* ignore */ }
+                      await refreshActiveSociety();
+                      navigate('/');
+                    }}
                   >
-                    <ExternalLink className="w-3.5 h-3.5" /> Apri pagina società
+                    <ExternalLink className="w-3.5 h-3.5" /> Accedi a questa società
                   </Button>
                 </footer>
               </article>

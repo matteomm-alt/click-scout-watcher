@@ -122,6 +122,48 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_notes: {
+        Row: {
+          athlete_id: string
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          society_id: string
+        }
+        Insert: {
+          athlete_id: string
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          society_id: string
+        }
+        Update: {
+          athlete_id?: string
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          society_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_notes_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_notes_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athlete_objectives: {
         Row: {
           athlete_id: string
@@ -259,8 +301,10 @@ export type Database = {
           note: string | null
           recorded_at: string
           recorded_by: string
+          season: string | null
           society_id: string
           status: Database["public"]["Enums"]["attendance_status"]
+          training_id: string | null
         }
         Insert: {
           athlete_id: string
@@ -269,8 +313,10 @@ export type Database = {
           note?: string | null
           recorded_at?: string
           recorded_by: string
+          season?: string | null
           society_id: string
           status?: Database["public"]["Enums"]["attendance_status"]
+          training_id?: string | null
         }
         Update: {
           athlete_id?: string
@@ -279,8 +325,10 @@ export type Database = {
           note?: string | null
           recorded_at?: string
           recorded_by?: string
+          season?: string | null
           society_id?: string
           status?: Database["public"]["Enums"]["attendance_status"]
+          training_id?: string | null
         }
         Relationships: [
           {
@@ -302,6 +350,13 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
             referencedColumns: ["id"]
           },
         ]
@@ -557,6 +612,7 @@ export type Database = {
           recurrence_parent_id: string | null
           recurrence_rule: string | null
           recurrence_until: string | null
+          season: string | null
           society_id: string
           start_at: string
           team_label: string | null
@@ -575,6 +631,7 @@ export type Database = {
           recurrence_parent_id?: string | null
           recurrence_rule?: string | null
           recurrence_until?: string | null
+          season?: string | null
           society_id: string
           start_at: string
           team_label?: string | null
@@ -593,6 +650,7 @@ export type Database = {
           recurrence_parent_id?: string | null
           recurrence_rule?: string | null
           recurrence_until?: string | null
+          season?: string | null
           society_id?: string
           start_at?: string
           team_label?: string | null
@@ -617,12 +675,15 @@ export type Database = {
           duration_min: number | null
           equipment: string | null
           fundamental: string | null
+          fundamentals: string[] | null
           id: string
           intensity: string | null
           is_shared: boolean
           name: string
           objective: string | null
           progression: string | null
+          repetitions: string | null
+          scheme_data: Json | null
           society_id: string
           space: string | null
           tags: string[]
@@ -637,12 +698,15 @@ export type Database = {
           duration_min?: number | null
           equipment?: string | null
           fundamental?: string | null
+          fundamentals?: string[] | null
           id?: string
           intensity?: string | null
           is_shared?: boolean
           name: string
           objective?: string | null
           progression?: string | null
+          repetitions?: string | null
+          scheme_data?: Json | null
           society_id: string
           space?: string | null
           tags?: string[]
@@ -657,12 +721,15 @@ export type Database = {
           duration_min?: number | null
           equipment?: string | null
           fundamental?: string | null
+          fundamentals?: string[] | null
           id?: string
           intensity?: string | null
           is_shared?: boolean
           name?: string
           objective?: string | null
           progression?: string | null
+          repetitions?: string | null
+          scheme_data?: Json | null
           society_id?: string
           space?: string | null
           tags?: string[]
@@ -1108,6 +1175,7 @@ export type Database = {
           raw_header: Json | null
           season: string | null
           set_results: Json
+          share_token: string | null
           source_filename: string | null
           updated_at: string
           venue: string | null
@@ -1128,6 +1196,7 @@ export type Database = {
           raw_header?: Json | null
           season?: string | null
           set_results?: Json
+          share_token?: string | null
           source_filename?: string | null
           updated_at?: string
           venue?: string | null
@@ -1148,6 +1217,7 @@ export type Database = {
           raw_header?: Json | null
           season?: string | null
           set_results?: Json
+          share_token?: string | null
           source_filename?: string | null
           updated_at?: string
           venue?: string | null
@@ -1480,6 +1550,7 @@ export type Database = {
         Row: {
           age_group: string | null
           category: string | null
+          common_errors: string | null
           content: string
           created_at: string
           created_by: string | null
@@ -1487,6 +1558,7 @@ export type Database = {
           duration_min: number | null
           fundamental: string | null
           id: string
+          progression: string | null
           society_id: string
           tags: string[]
           title: string
@@ -1496,6 +1568,7 @@ export type Database = {
         Insert: {
           age_group?: string | null
           category?: string | null
+          common_errors?: string | null
           content: string
           created_at?: string
           created_by?: string | null
@@ -1503,6 +1576,7 @@ export type Database = {
           duration_min?: number | null
           fundamental?: string | null
           id?: string
+          progression?: string | null
           society_id: string
           tags?: string[]
           title: string
@@ -1512,6 +1586,7 @@ export type Database = {
         Update: {
           age_group?: string | null
           category?: string | null
+          common_errors?: string | null
           content?: string
           created_at?: string
           created_by?: string | null
@@ -1519,6 +1594,7 @@ export type Database = {
           duration_min?: number | null
           fundamental?: string | null
           id?: string
+          progression?: string | null
           society_id?: string
           tags?: string[]
           title?: string
@@ -1713,6 +1789,7 @@ export type Database = {
           players_count: number | null
           roles: string[]
           scheduled_date: string | null
+          season: string | null
           skeleton_id: string | null
           society_id: string
           status: string
@@ -1734,6 +1811,7 @@ export type Database = {
           players_count?: number | null
           roles?: string[]
           scheduled_date?: string | null
+          season?: string | null
           skeleton_id?: string | null
           society_id: string
           status?: string
@@ -1755,6 +1833,7 @@ export type Database = {
           players_count?: number | null
           roles?: string[]
           scheduled_date?: string | null
+          season?: string | null
           skeleton_id?: string | null
           society_id?: string
           status?: string

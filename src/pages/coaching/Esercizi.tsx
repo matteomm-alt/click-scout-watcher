@@ -31,6 +31,9 @@ interface Exercise {
   name: string;
   description: string | null;
   fundamental: string | null;
+  fundamentals: string[];
+  repetitions: string | null;
+  scheme_data: Record<string, unknown>;
   duration_min: number | null;
   intensity: string | null;
   equipment: string | null;
@@ -55,7 +58,7 @@ interface ExportPayload {
   exported_at: string;
   exported_from_society: string | null;
   count: number;
-  exercises: Array<Omit<Exercise, 'id' | 'society_id' | 'created_by' | 'created_at' | 'updated_at' | 'is_shared'>>;
+  exercises: Array<Partial<Omit<Exercise, 'id' | 'society_id' | 'created_by' | 'created_at' | 'updated_at' | 'is_shared'>>>;
 }
 
 export default function Esercizi() {
@@ -79,6 +82,8 @@ export default function Esercizi() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [fundamental, setFundamental] = useState<string>(NONE);
+  const [fundamentals, setFundamentals] = useState<string[]>([]);
+  const [repetitions, setRepetitions] = useState('');
   const [duration, setDuration] = useState<string>('');
   const [intensity, setIntensity] = useState<string>(NONE);
   const [equipment, setEquipment] = useState('');
@@ -129,7 +134,7 @@ export default function Esercizi() {
         (it.description || '').toLowerCase().includes(s) ||
         it.tags.some((t) => t.toLowerCase().includes(s))
       )) return false;
-      if (fFund !== ALL && it.fundamental !== fFund) return false;
+      if (fFund !== ALL && !((it.fundamentals ?? []).includes(fFund) || it.fundamental === fFund)) return false;
       if (fIntensity !== ALL && it.intensity !== fIntensity) return false;
       if (tagFilters.length > 0) {
         const lower = it.tags.map((t) => t.toLowerCase());
@@ -150,6 +155,8 @@ export default function Esercizi() {
     setName('');
     setDescription('');
     setFundamental(NONE);
+    setFundamentals([]);
+    setRepetitions('');
     setDuration('');
     setIntensity(NONE);
     setEquipment('');
@@ -171,6 +178,8 @@ export default function Esercizi() {
     setName(ex.name);
     setDescription(ex.description || '');
     setFundamental(ex.fundamental || NONE);
+    setFundamentals(ex.fundamentals && ex.fundamentals.length > 0 ? ex.fundamentals : (ex.fundamental ? [ex.fundamental] : []));
+    setRepetitions(ex.repetitions || '');
     setDuration(ex.duration_min?.toString() || '');
     setIntensity(ex.intensity || NONE);
     setEquipment(ex.equipment || '');
@@ -190,10 +199,13 @@ export default function Esercizi() {
       return;
     }
     setSubmitting(true);
+    const cleanFundamentals = fundamentals.map((f) => f.trim()).filter(Boolean);
     const payload = {
       name: name.trim(),
       description: description.trim() || null,
-      fundamental: fundamental === NONE ? null : fundamental,
+      fundamental: cleanFundamentals[0] ?? (fundamental === NONE ? null : fundamental),
+      fundamentals: cleanFundamentals,
+      repetitions: repetitions.trim() || null,
       duration_min: duration ? parseInt(duration, 10) : null,
       intensity: intensity === NONE ? null : intensity,
       equipment: equipment.trim() || null,
@@ -246,6 +258,8 @@ export default function Esercizi() {
         name: e.name,
         description: e.description,
         fundamental: e.fundamental,
+        fundamentals: e.fundamentals ?? [],
+        repetitions: e.repetitions,
         duration_min: e.duration_min,
         intensity: e.intensity,
         equipment: e.equipment,
@@ -290,6 +304,10 @@ export default function Esercizi() {
           name: String(ex.name).trim(),
           description: ex.description ?? null,
           fundamental: ex.fundamental ?? null,
+          fundamentals: Array.isArray((ex as Partial<Exercise>).fundamentals)
+            ? ((ex as Partial<Exercise>).fundamentals as string[]).filter((t) => typeof t === 'string')
+            : (ex.fundamental ? [ex.fundamental] : []),
+          repetitions: (ex as Partial<Exercise>).repetitions ?? null,
           duration_min: typeof ex.duration_min === 'number' ? ex.duration_min : null,
           intensity: ex.intensity ?? null,
           equipment: ex.equipment ?? null,
@@ -460,14 +478,20 @@ export default function Esercizi() {
                   <div className="min-w-0">
                     <h3 className="font-black italic uppercase tracking-tight leading-tight truncate">{ex.name}</h3>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {ex.fundamental && (
-                        <Badge variant="outline" className="border-primary/30 text-primary text-xs">{ex.fundamental}</Badge>
-                      )}
+                      {(ex.fundamentals && ex.fundamentals.length > 0
+                        ? ex.fundamentals
+                        : (ex.fundamental ? [ex.fundamental] : [])
+                      ).map((f) => (
+                        <Badge key={f} variant="outline" className="border-primary/30 text-primary text-xs">{f}</Badge>
+                      ))}
                       {ex.intensity && (
                         <Badge variant="outline" className="text-xs">{ex.intensity}</Badge>
                       )}
                       {ex.duration_min != null && (
                         <Badge variant="outline" className="text-xs gap-1"><Clock className="w-3 h-3" />{ex.duration_min}′</Badge>
+                      )}
+                      {ex.repetitions && (
+                        <span className="text-xs text-muted-foreground">· {ex.repetitions}</span>
                       )}
                     </div>
                   </div>
@@ -543,17 +567,19 @@ export default function Esercizi() {
               <Label htmlFor="ex-desc">Descrizione</Label>
               <Textarea id="ex-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
+            <div className="grid gap-2">
+              <Label>Fondamentali</Label>
+              <p className="text-xs text-muted-foreground">
+                Un esercizio può allenare più fondamentali (es. <em>Ricezione + Difesa</em>).
+              </p>
+              <TagPicker
+                value={fundamentals}
+                onChange={setFundamentals}
+                suggestions={[...FUNDAMENTALS]}
+                placeholder="Aggiungi un fondamentale…"
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="grid gap-2">
-                <Label>Fondamentale</Label>
-                <Select value={fundamental} onValueChange={setFundamental}>
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>—</SelectItem>
-                    {FUNDAMENTALS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="grid gap-2">
                 <Label>Intensità</Label>
                 <Select value={intensity} onValueChange={setIntensity}>
@@ -567,6 +593,10 @@ export default function Esercizi() {
               <div className="grid gap-2">
                 <Label htmlFor="ex-dur">Durata (min)</Label>
                 <Input id="ex-dur" type="number" min="0" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="15" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="ex-rep">Ripetizioni</Label>
+                <Input id="ex-rep" value={repetitions} onChange={(e) => setRepetitions(e.target.value)} placeholder="Es. 3 serie da 10, 5 min a rotazione" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
