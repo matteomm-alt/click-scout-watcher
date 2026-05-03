@@ -82,6 +82,8 @@ export default function Esercizi() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [fundamental, setFundamental] = useState<string>(NONE);
+  const [fundamentals, setFundamentals] = useState<string[]>([]);
+  const [repetitions, setRepetitions] = useState('');
   const [duration, setDuration] = useState<string>('');
   const [intensity, setIntensity] = useState<string>(NONE);
   const [equipment, setEquipment] = useState('');
