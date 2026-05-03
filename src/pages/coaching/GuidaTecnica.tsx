@@ -68,6 +68,8 @@ export default function GuidaTecnica() {
     difficulty: NONE,
     video_url: '',
     duration_min: '',
+    common_errors: '',
+    progression: '',
     tags: '',
   });
   const [saving, setSaving] = useState(false);
