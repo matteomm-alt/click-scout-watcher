@@ -258,6 +258,8 @@ export default function Esercizi() {
         name: e.name,
         description: e.description,
         fundamental: e.fundamental,
+        fundamentals: e.fundamentals ?? [],
+        repetitions: e.repetitions,
         duration_min: e.duration_min,
         intensity: e.intensity,
         equipment: e.equipment,
