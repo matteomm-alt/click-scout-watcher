@@ -304,6 +304,10 @@ export default function Esercizi() {
           name: String(ex.name).trim(),
           description: ex.description ?? null,
           fundamental: ex.fundamental ?? null,
+          fundamentals: Array.isArray((ex as Partial<Exercise>).fundamentals)
+            ? ((ex as Partial<Exercise>).fundamentals as string[]).filter((t) => typeof t === 'string')
+            : (ex.fundamental ? [ex.fundamental] : []),
+          repetitions: (ex as Partial<Exercise>).repetitions ?? null,
           duration_min: typeof ex.duration_min === 'number' ? ex.duration_min : null,
           intensity: ex.intensity ?? null,
           equipment: ex.equipment ?? null,
