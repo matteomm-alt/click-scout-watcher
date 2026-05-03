@@ -31,6 +31,9 @@ interface Exercise {
   name: string;
   description: string | null;
   fundamental: string | null;
+  fundamentals: string[];
+  repetitions: string | null;
+  scheme_data: Record<string, unknown>;
   duration_min: number | null;
   intensity: string | null;
   equipment: string | null;
