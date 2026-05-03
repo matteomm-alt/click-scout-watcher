@@ -18,8 +18,8 @@ interface Props {
   playerNames: Map<number, string>;
 }
 
-const COLORS = ['#378ADD','#1D9E75','#D85A30','#BA7517','#7F77DD','#D4537E','#888780'];
-const TOOLTIP = { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 };
+const COLORS = ['#2563EB','#16A34A','#DC2626','#D97706','#7C3AED','#0891B2','#BE185D'];
+const TOOLTIP = { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12, borderRadius: 8, padding: '10px 14px' };
 
 // Zone layout campo (9 zone FIVB, disposizione visiva 3x3)
 const ZONE_LAYOUT = [4, 3, 2, 7, 8, 9, 5, 6, 1]; // top-left → bottom-right
@@ -263,10 +263,10 @@ export function ChartsTab({ actions, playerNames }: Props) {
               <ResponsiveContainer>
                 <BarChart data={skillData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip contentStyle={TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="Totale" fill="hsl(var(--primary))" radius={[3,3,0,0]} />
                   <Bar dataKey="Perfetti" fill="#1D9E75" radius={[3,3,0,0]} />
                   <Bar dataKey="Errori" fill="hsl(var(--destructive))" radius={[3,3,0,0]} />
@@ -284,7 +284,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     {evalData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip contentStyle={TOOLTIP} formatter={(v: any, n: any) => [`${v} azioni`, n]} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -295,10 +295,10 @@ export function ChartsTab({ actions, playerNames }: Props) {
               <ResponsiveContainer>
                 <BarChart data={skillData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                   <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => [`${v}%`]} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" />
                   <Bar dataKey="Pos" name="Positivi%" fill="#1D9E75" radius={[3,3,0,0]} />
                   <Bar dataKey="ErrPct" name="Errori%" fill="hsl(var(--destructive))" radius={[3,3,0,0]} />
@@ -319,10 +319,10 @@ export function ChartsTab({ actions, playerNames }: Props) {
               <ResponsiveContainer>
                 <BarChart data={playerData} layout="vertical" margin={{ left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={110} />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={110} />
                   <Tooltip contentStyle={TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="Punti" fill="#1D9E75" radius={[0,3,3,0]} />
                   <Bar dataKey="Errori" fill="hsl(var(--destructive))" radius={[0,3,3,0]} />
                 </BarChart>
@@ -336,9 +336,9 @@ export function ChartsTab({ actions, playerNames }: Props) {
               <ResponsiveContainer>
                 <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="x" name="Punti" type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  <XAxis dataKey="x" name="Punti" type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                     label={{ value: 'Punti diretti', position: 'insideBottom', offset: -10, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="y" name="Errori" type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  <YAxis dataKey="y" name="Errori" type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                     label={{ value: 'Errori', angle: -90, position: 'insideLeft', fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                   <ZAxis dataKey="z" range={[40, 400]} name="Volume" />
                   <Tooltip contentStyle={TOOLTIP}
@@ -346,7 +346,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       if (!payload?.length) return null;
                       const d = payload[0]?.payload;
                       return (
-                        <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 6, fontSize: 12 }}>
+                        <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 6, fontSize: 12, borderRadius: 8, padding: '10px 14px' }}>
                           <p style={{ fontWeight: 600 }}>{d?.name}</p>
                           <p>Punti: {d?.x} · Errori: {d?.y} · Tot: {d?.z}</p>
                           <p>Eff: {d?.Eff}%</p>
@@ -366,8 +366,8 @@ export function ChartsTab({ actions, playerNames }: Props) {
                 <ResponsiveContainer>
                   <BarChart data={playerSkillData} layout="vertical" margin={{ left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={110} />
+                    <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={110} />
                     <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <ReferenceLine x={0} stroke="hsl(var(--border))" />
@@ -395,7 +395,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                     <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
                       <Line key={sk} type="monotone" dataKey={sk} stroke={COLORS[i]} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} />
@@ -411,11 +411,11 @@ export function ChartsTab({ actions, playerNames }: Props) {
               <ResponsiveContainer>
                 <LineChart>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" dataKey="idx" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  <XAxis type="number" dataKey="idx" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                     label={{ value: 'Azioni', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip contentStyle={TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                   {cumulativeData.map((s, i) => (
                     <Line key={s.set} data={s.points} dataKey="value" name={`Set ${s.set}`}
                       type="monotone" stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} />
@@ -437,10 +437,10 @@ export function ChartsTab({ actions, playerNames }: Props) {
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
                   <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <Radar name="Efficienza" dataKey="Efficienza" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
                   <Tooltip contentStyle={TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -452,11 +452,11 @@ export function ChartsTab({ actions, playerNames }: Props) {
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
                   <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <Radar name="Positivi%" dataKey="Positivi" stroke="#1D9E75" fill="#1D9E75" fillOpacity={0.2} strokeWidth={2} />
                   <Radar name="Errori%" dataKey="Errori" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.15} strokeWidth={2} />
                   <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => [`${v}%`]} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -488,14 +488,14 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <ResponsiveContainer>
                     <BarChart data={trendData} barCategoryGap="20%">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" domain={['auto', 'auto']} />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" domain={['auto', 'auto']} />
                       <Tooltip contentStyle={TOOLTIP}
                         content={({ active, payload, label }) => {
                           if (!active || !payload?.length) return null;
                           const d = payload[0]?.payload;
                           return (
-                            <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 6, fontSize: 12 }}>
+                            <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 6, fontSize: 12, borderRadius: 8, padding: '10px 14px' }}>
                               <p style={{ fontWeight: 600 }}>{d?.opponent || label}</p>
                               <p>{d?.date}</p>
                               {payload.map((p: any) => <p key={p.dataKey} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
@@ -504,7 +504,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                         }}
                       />
                       <ReferenceLine y={0} stroke="hsl(var(--border))" />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
                       {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
                         <Bar key={sk} dataKey={sk} fill={COLORS[i]}
                           opacity={sk === SKILL_NAMES[trendSkill] ? 1 : 0.3}
@@ -521,8 +521,8 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <ResponsiveContainer>
                     <LineChart data={trendData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                       <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
                       <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <Line type="monotone" dataKey={SKILL_NAMES[trendSkill]}
@@ -582,7 +582,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                       <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                       <Tooltip contentStyle={TOOLTIP} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Bar dataKey="Attacchi" fill="hsl(var(--primary))" radius={[3,3,0,0]} />
                       <Bar dataKey="Kills" fill="#1D9E75" radius={[3,3,0,0]} />
                     </BarChart>
@@ -646,7 +646,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                         <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                         <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                         <Tooltip contentStyle={TOOLTIP} />
-                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
                         <Bar dataKey="Alzate" fill="hsl(var(--primary))" radius={[3,3,0,0]} />
                         <Bar dataKey="Perf" name="Perfette" fill="#1D9E75" radius={[3,3,0,0]} />
                       </BarChart>
