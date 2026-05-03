@@ -35,6 +35,10 @@ interface Exercise {
   intensity: string | null;
   equipment: string | null;
   video_url: string | null;
+  objective: string | null;
+  variants: string | null;
+  space: string | null;
+  progression: string | null;
   tags: string[];
   is_shared: boolean;
   created_at: string;
@@ -79,6 +83,10 @@ export default function Esercizi() {
   const [intensity, setIntensity] = useState<string>(NONE);
   const [equipment, setEquipment] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [objective, setObjective] = useState('');
+  const [variants, setVariants] = useState('');
+  const [space, setSpace] = useState('');
+  const [progression, setProgression] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -146,6 +154,10 @@ export default function Esercizi() {
     setIntensity(NONE);
     setEquipment('');
     setVideoUrl('');
+    setObjective('');
+    setVariants('');
+    setSpace('');
+    setProgression('');
     setTags([]);
   };
 
@@ -163,6 +175,10 @@ export default function Esercizi() {
     setIntensity(ex.intensity || NONE);
     setEquipment(ex.equipment || '');
     setVideoUrl(ex.video_url || '');
+    setObjective(ex.objective || '');
+    setVariants(ex.variants || '');
+    setSpace(ex.space || '');
+    setProgression(ex.progression || '');
     setTags(ex.tags || []);
     setDlgOpen(true);
   };
@@ -182,6 +198,10 @@ export default function Esercizi() {
       intensity: intensity === NONE ? null : intensity,
       equipment: equipment.trim() || null,
       video_url: videoUrl.trim() || null,
+      objective: objective.trim() || null,
+      variants: variants.trim() || null,
+      space: space.trim() || null,
+      progression: progression.trim() || null,
       tags: tags.map((t) => t.trim()).filter(Boolean),
     };
     const { error } = editing
