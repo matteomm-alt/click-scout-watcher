@@ -151,6 +151,8 @@ export default function GuidaTecnica() {
       difficulty: form.difficulty === NONE ? null : form.difficulty,
       video_url: form.video_url.trim() || null,
       duration_min: form.duration_min ? parseInt(form.duration_min, 10) : null,
+      common_errors: form.common_errors.trim() || null,
+      progression: form.progression.trim() || null,
       tags: form.tags
         .split(',')
         .map((t) => t.trim())
