@@ -134,7 +134,7 @@ export default function Esercizi() {
         (it.description || '').toLowerCase().includes(s) ||
         it.tags.some((t) => t.toLowerCase().includes(s))
       )) return false;
-      if (fFund !== ALL && it.fundamental !== fFund) return false;
+      if (fFund !== ALL && !((it.fundamentals ?? []).includes(fFund) || it.fundamental === fFund)) return false;
       if (fIntensity !== ALL && it.intensity !== fIntensity) return false;
       if (tagFilters.length > 0) {
         const lower = it.tags.map((t) => t.toLowerCase());
@@ -155,6 +155,8 @@ export default function Esercizi() {
     setName('');
     setDescription('');
     setFundamental(NONE);
+    setFundamentals([]);
+    setRepetitions('');
     setDuration('');
     setIntensity(NONE);
     setEquipment('');
@@ -176,6 +178,8 @@ export default function Esercizi() {
     setName(ex.name);
     setDescription(ex.description || '');
     setFundamental(ex.fundamental || NONE);
+    setFundamentals(ex.fundamentals && ex.fundamentals.length > 0 ? ex.fundamentals : (ex.fundamental ? [ex.fundamental] : []));
+    setRepetitions(ex.repetitions || '');
     setDuration(ex.duration_min?.toString() || '');
     setIntensity(ex.intensity || NONE);
     setEquipment(ex.equipment || '');
@@ -195,10 +199,13 @@ export default function Esercizi() {
       return;
     }
     setSubmitting(true);
+    const cleanFundamentals = fundamentals.map((f) => f.trim()).filter(Boolean);
     const payload = {
       name: name.trim(),
       description: description.trim() || null,
-      fundamental: fundamental === NONE ? null : fundamental,
+      fundamental: cleanFundamentals[0] ?? (fundamental === NONE ? null : fundamental),
+      fundamentals: cleanFundamentals,
+      repetitions: repetitions.trim() || null,
       duration_min: duration ? parseInt(duration, 10) : null,
       intensity: intensity === NONE ? null : intensity,
       equipment: equipment.trim() || null,
