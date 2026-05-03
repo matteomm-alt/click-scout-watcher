@@ -250,6 +250,10 @@ export default function Esercizi() {
         intensity: e.intensity,
         equipment: e.equipment,
         video_url: e.video_url,
+        objective: e.objective,
+        variants: e.variants,
+        space: e.space,
+        progression: e.progression,
         tags: e.tags,
       })),
     };
@@ -290,6 +294,10 @@ export default function Esercizi() {
           intensity: ex.intensity ?? null,
           equipment: ex.equipment ?? null,
           video_url: ex.video_url ?? null,
+          objective: (ex as Partial<Exercise>).objective ?? null,
+          variants: (ex as Partial<Exercise>).variants ?? null,
+          space: (ex as Partial<Exercise>).space ?? null,
+          progression: (ex as Partial<Exercise>).progression ?? null,
           tags: Array.isArray(ex.tags) ? ex.tags.filter((t) => typeof t === 'string') : [],
         }));
       if (rows.length === 0) throw new Error('Nessun esercizio valido nel file');
