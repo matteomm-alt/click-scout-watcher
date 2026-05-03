@@ -432,8 +432,30 @@ export default function GuidaTecnica() {
                 id="content"
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                rows={8}
-                placeholder="Descrizione tecnica, progressioni didattiche, errori comuni…"
+                rows={6}
+                placeholder="Descrizione tecnica, progressioni didattiche…"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="errors">Errori comuni</Label>
+              <Textarea
+                id="errors"
+                value={form.common_errors}
+                onChange={(e) => setForm({ ...form, common_errors: e.target.value })}
+                rows={3}
+                placeholder="Es. Gomiti non paralleli, piedi non orientati verso l'alzatrice"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="prog">Progressione didattica</Label>
+              <Textarea
+                id="prog"
+                value={form.progression}
+                onChange={(e) => setForm({ ...form, progression: e.target.value })}
+                rows={2}
+                placeholder="Es. 1) Fermo, 2) In movimento, 3) Con opposizione"
               />
             </div>
           </div>
