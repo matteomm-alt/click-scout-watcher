@@ -29,11 +29,16 @@ interface Guideline {
   category: string | null;
   fundamental: string | null;
   age_group: string | null;
+  difficulty: string | null;
+  video_url: string | null;
+  duration_min: number | null;
   tags: string[];
   created_by: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const DIFFICULTIES = ['Principiante', 'Intermedio', 'Avanzato'] as const;
 
 const ALL = '__ALL__';
 const NONE = '__NONE__';
@@ -58,6 +63,9 @@ export default function GuidaTecnica() {
     category: '',
     fundamental: NONE,
     age_group: NONE,
+    difficulty: NONE,
+    video_url: '',
+    duration_min: '',
     tags: '',
   });
   const [saving, setSaving] = useState(false);
@@ -100,7 +108,7 @@ export default function GuidaTecnica() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, tags: '' });
+    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', tags: '' });
     setDialogOpen(true);
   };
 
@@ -112,6 +120,9 @@ export default function GuidaTecnica() {
       category: g.category ?? '',
       fundamental: g.fundamental ?? NONE,
       age_group: g.age_group ?? NONE,
+      difficulty: g.difficulty ?? NONE,
+      video_url: g.video_url ?? '',
+      duration_min: g.duration_min != null ? String(g.duration_min) : '',
       tags: (g.tags || []).join(', '),
     });
     setDialogOpen(true);
@@ -131,6 +142,9 @@ export default function GuidaTecnica() {
       category: form.category.trim() || null,
       fundamental: form.fundamental === NONE ? null : form.fundamental,
       age_group: form.age_group === NONE ? null : form.age_group,
+      difficulty: form.difficulty === NONE ? null : form.difficulty,
+      video_url: form.video_url.trim() || null,
+      duration_min: form.duration_min ? parseInt(form.duration_min, 10) : null,
       tags: form.tags
         .split(',')
         .map((t) => t.trim())
@@ -277,10 +291,22 @@ export default function GuidaTecnica() {
                     </Badge>
                   )}
                   {g.category && <Badge variant="secondary">{g.category}</Badge>}
+                  {g.difficulty && (
+                    <Badge variant="outline" className="border-accent/40 text-accent text-xs">{g.difficulty}</Badge>
+                  )}
+                  {g.duration_min != null && (
+                    <Badge variant="outline" className="text-xs">{g.duration_min}′</Badge>
+                  )}
                   {(g.tags || []).map((t) => (
                     <Badge key={t} variant="outline" className="text-xs">{t}</Badge>
                   ))}
                 </div>
+
+                {g.video_url && (
+                  <a href={g.video_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                    🎬 Video tutorial
+                  </a>
+                )}
 
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-6">
                   {g.content}
@@ -338,7 +364,7 @@ export default function GuidaTecnica() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="cat">Categoria</Label>
                 <Input
@@ -346,6 +372,39 @@ export default function GuidaTecnica() {
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   placeholder="Es: Tecnica individuale"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Difficoltà</Label>
+                <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v })}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>—</SelectItem>
+                    {DIFFICULTIES.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dur">Durata (min)</Label>
+                <Input
+                  id="dur"
+                  type="number"
+                  min="0"
+                  value={form.duration_min}
+                  onChange={(e) => setForm({ ...form, duration_min: e.target.value })}
+                  placeholder="15"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="vid">Video URL</Label>
+                <Input
+                  id="vid"
+                  value={form.video_url}
+                  onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                  placeholder="https://youtube.com/…"
                 />
               </div>
               <div className="grid gap-2">

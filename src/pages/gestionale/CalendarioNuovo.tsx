@@ -25,6 +25,37 @@ import { EVENT_TYPES, getEventMeta, type EventType } from '@/lib/eventTypes';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+function expandRecurrences(
+  start: Date,
+  end: Date | null,
+  rule: 'weekly' | 'biweekly' | 'monthly',
+  until: Date,
+): Array<{ start: Date; end: Date | null }> {
+  const out: Array<{ start: Date; end: Date | null }> = [];
+  const next = new Date(start);
+  // skip the seed (parent), generate children only
+  while (true) {
+    if (rule === 'weekly') next.setDate(next.getDate() + 7);
+    else if (rule === 'biweekly') next.setDate(next.getDate() + 14);
+    else next.setMonth(next.getMonth() + 1);
+    if (next > until) break;
+    const dur = end ? end.getTime() - start.getTime() : 0;
+    out.push({
+      start: new Date(next),
+      end: end ? new Date(next.getTime() + dur) : null,
+    });
+    if (out.length > 200) break; // safety
+  }
+  return out;
+}
+
+const RECURRENCE_OPTIONS = [
+  { value: 'none', label: 'Nessuna' },
+  { value: 'weekly', label: 'Settimanale' },
+  { value: 'biweekly', label: 'Bi-settimanale' },
+  { value: 'monthly', label: 'Mensile' },
+] as const;
+
 const schema = z.object({
   title: z.string().min(2, 'Titolo richiesto').max(120),
   event_type: z.enum(['allenamento', 'partita', 'riunione', 'torneo', 'altro']),
@@ -34,6 +65,8 @@ const schema = z.object({
   location: z.string().max(200).optional(),
   team_label: z.string().max(80).optional(),
   description: z.string().max(2000).optional(),
+  recurrence_rule: z.enum(['none', 'weekly', 'biweekly', 'monthly']).default('none'),
+  recurrence_until: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -59,6 +92,8 @@ export default function CalendarioNuovo() {
       location: '',
       team_label: '',
       description: '',
+      recurrence_rule: 'none',
+      recurrence_until: '',
     },
   });
 
@@ -94,6 +129,8 @@ export default function CalendarioNuovo() {
         location: data.location ?? '',
         team_label: data.team_label ?? '',
         description: data.description ?? '',
+        recurrence_rule: (data.recurrence_rule as 'none' | 'weekly' | 'biweekly' | 'monthly') ?? 'none',
+        recurrence_until: data.recurrence_until ?? '',
       });
       setCreatedBy(data.created_by);
       setLoadingExisting(false);
@@ -115,7 +152,7 @@ export default function CalendarioNuovo() {
       ? new Date(`${values.date}T${values.end_time}:00`).toISOString()
       : null;
 
-    const payload = {
+    const basePayload = {
       title: values.title.trim(),
       event_type: values.event_type,
       start_at: startISO,
@@ -129,9 +166,38 @@ export default function CalendarioNuovo() {
 
     let error;
     if (isEdit && editId) {
-      ({ error } = await supabase.from('events').update(payload).eq('id', editId));
+      ({ error } = await supabase.from('events').update({
+        ...basePayload,
+        recurrence_rule: values.recurrence_rule === 'none' ? null : values.recurrence_rule,
+        recurrence_until: values.recurrence_until || null,
+      }).eq('id', editId));
+    } else if (values.recurrence_rule !== 'none' && values.recurrence_until) {
+      // Crea serie ricorrente: parent + figli
+      const occurrences = expandRecurrences(
+        new Date(`${values.date}T${values.start_time}:00`),
+        endISO ? new Date(endISO) : null,
+        values.recurrence_rule,
+        new Date(values.recurrence_until),
+      );
+      const { data: parent, error: pErr } = await supabase.from('events').insert({
+        ...basePayload,
+        recurrence_rule: values.recurrence_rule,
+        recurrence_until: values.recurrence_until,
+      }).select('id').single();
+      if (pErr || !parent) {
+        error = pErr;
+      } else if (occurrences.length > 0) {
+        const childRows = occurrences.map((occ) => ({
+          ...basePayload,
+          start_at: occ.start.toISOString(),
+          end_at: occ.end ? occ.end.toISOString() : null,
+          recurrence_parent_id: parent.id,
+        }));
+        const { error: cErr } = await supabase.from('events').insert(childRows);
+        error = cErr;
+      }
     } else {
-      ({ error } = await supabase.from('events').insert(payload));
+      ({ error } = await supabase.from('events').insert(basePayload));
     }
 
     setSaving(false);
@@ -290,6 +356,46 @@ export default function CalendarioNuovo() {
               placeholder="Dettagli, programma, avversario, materiale necessario…"
             />
           </div>
+
+          {/* Ricorrenza */}
+          {!isEdit && (
+            <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Ricorrenza</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="rec_rule" className="text-xs">Regola</Label>
+                  <Select
+                    value={form.watch('recurrence_rule')}
+                    onValueChange={(v) => form.setValue('recurrence_rule', v as 'none' | 'weekly' | 'biweekly' | 'monthly')}
+                    disabled={!canEdit}
+                  >
+                    <SelectTrigger id="rec_rule"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {RECURRENCE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.watch('recurrence_rule') !== 'none' && (
+                  <div>
+                    <Label htmlFor="rec_until" className="text-xs">Ripeti fino al</Label>
+                    <Input
+                      id="rec_until"
+                      type="date"
+                      {...form.register('recurrence_until')}
+                      disabled={!canEdit}
+                    />
+                  </div>
+                )}
+              </div>
+              {form.watch('recurrence_rule') !== 'none' && (
+                <p className="text-xs text-muted-foreground">
+                  Verranno creati eventi automatici fino alla data indicata.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Anteprima */}
           <div
