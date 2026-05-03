@@ -25,6 +25,13 @@ import { EVENT_TYPES, getEventMeta, type EventType } from '@/lib/eventTypes';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+const RECURRENCE_OPTIONS = [
+  { value: 'none', label: 'Nessuna' },
+  { value: 'weekly', label: 'Settimanale' },
+  { value: 'biweekly', label: 'Bi-settimanale' },
+  { value: 'monthly', label: 'Mensile' },
+] as const;
+
 const schema = z.object({
   title: z.string().min(2, 'Titolo richiesto').max(120),
   event_type: z.enum(['allenamento', 'partita', 'riunione', 'torneo', 'altro']),
@@ -34,6 +41,8 @@ const schema = z.object({
   location: z.string().max(200).optional(),
   team_label: z.string().max(80).optional(),
   description: z.string().max(2000).optional(),
+  recurrence_rule: z.enum(['none', 'weekly', 'biweekly', 'monthly']).default('none'),
+  recurrence_until: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -59,6 +68,8 @@ export default function CalendarioNuovo() {
       location: '',
       team_label: '',
       description: '',
+      recurrence_rule: 'none',
+      recurrence_until: '',
     },
   });
 
@@ -115,7 +126,7 @@ export default function CalendarioNuovo() {
       ? new Date(`${values.date}T${values.end_time}:00`).toISOString()
       : null;
 
-    const payload = {
+    const basePayload = {
       title: values.title.trim(),
       event_type: values.event_type,
       start_at: startISO,
@@ -129,9 +140,38 @@ export default function CalendarioNuovo() {
 
     let error;
     if (isEdit && editId) {
-      ({ error } = await supabase.from('events').update(payload).eq('id', editId));
+      ({ error } = await supabase.from('events').update({
+        ...basePayload,
+        recurrence_rule: values.recurrence_rule === 'none' ? null : values.recurrence_rule,
+        recurrence_until: values.recurrence_until || null,
+      }).eq('id', editId));
+    } else if (values.recurrence_rule !== 'none' && values.recurrence_until) {
+      // Crea serie ricorrente: parent + figli
+      const occurrences = expandRecurrences(
+        new Date(`${values.date}T${values.start_time}:00`),
+        endISO ? new Date(endISO) : null,
+        values.recurrence_rule,
+        new Date(values.recurrence_until),
+      );
+      const { data: parent, error: pErr } = await supabase.from('events').insert({
+        ...basePayload,
+        recurrence_rule: values.recurrence_rule,
+        recurrence_until: values.recurrence_until,
+      }).select('id').single();
+      if (pErr || !parent) {
+        error = pErr;
+      } else if (occurrences.length > 0) {
+        const childRows = occurrences.map((occ) => ({
+          ...basePayload,
+          start_at: occ.start.toISOString(),
+          end_at: occ.end ? occ.end.toISOString() : null,
+          recurrence_parent_id: parent.id,
+        }));
+        const { error: cErr } = await supabase.from('events').insert(childRows);
+        error = cErr;
+      }
     } else {
-      ({ error } = await supabase.from('events').insert(payload));
+      ({ error } = await supabase.from('events').insert(basePayload));
     }
 
     setSaving(false);
