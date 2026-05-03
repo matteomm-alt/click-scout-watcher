@@ -554,6 +554,9 @@ export type Database = {
           event_type: Database["public"]["Enums"]["event_type"]
           id: string
           location: string | null
+          recurrence_parent_id: string | null
+          recurrence_rule: string | null
+          recurrence_until: string | null
           society_id: string
           start_at: string
           team_label: string | null
@@ -569,6 +572,9 @@ export type Database = {
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
           location?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: string | null
+          recurrence_until?: string | null
           society_id: string
           start_at: string
           team_label?: string | null
@@ -584,6 +590,9 @@ export type Database = {
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
           location?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: string | null
+          recurrence_until?: string | null
           society_id?: string
           start_at?: string
           team_label?: string | null
@@ -612,9 +621,13 @@ export type Database = {
           intensity: string | null
           is_shared: boolean
           name: string
+          objective: string | null
+          progression: string | null
           society_id: string
+          space: string | null
           tags: string[]
           updated_at: string
+          variants: string | null
           video_url: string | null
         }
         Insert: {
@@ -628,9 +641,13 @@ export type Database = {
           intensity?: string | null
           is_shared?: boolean
           name: string
+          objective?: string | null
+          progression?: string | null
           society_id: string
+          space?: string | null
           tags?: string[]
           updated_at?: string
+          variants?: string | null
           video_url?: string | null
         }
         Update: {
@@ -644,9 +661,13 @@ export type Database = {
           intensity?: string | null
           is_shared?: boolean
           name?: string
+          objective?: string | null
+          progression?: string | null
           society_id?: string
+          space?: string | null
           tags?: string[]
           updated_at?: string
+          variants?: string | null
           video_url?: string | null
         }
         Relationships: [
@@ -1462,12 +1483,15 @@ export type Database = {
           content: string
           created_at: string
           created_by: string | null
+          difficulty: string | null
+          duration_min: number | null
           fundamental: string | null
           id: string
           society_id: string
           tags: string[]
           title: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           age_group?: string | null
@@ -1475,12 +1499,15 @@ export type Database = {
           content: string
           created_at?: string
           created_by?: string | null
+          difficulty?: string | null
+          duration_min?: number | null
           fundamental?: string | null
           id?: string
           society_id: string
           tags?: string[]
           title: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           age_group?: string | null
@@ -1488,12 +1515,15 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string | null
+          difficulty?: string | null
+          duration_min?: number | null
           fundamental?: string | null
           id?: string
           society_id?: string
           tags?: string[]
           title?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
