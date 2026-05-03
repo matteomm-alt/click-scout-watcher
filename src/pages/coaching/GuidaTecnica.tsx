@@ -291,10 +291,22 @@ export default function GuidaTecnica() {
                     </Badge>
                   )}
                   {g.category && <Badge variant="secondary">{g.category}</Badge>}
+                  {g.difficulty && (
+                    <Badge variant="outline" className="border-accent/40 text-accent text-xs">{g.difficulty}</Badge>
+                  )}
+                  {g.duration_min != null && (
+                    <Badge variant="outline" className="text-xs">{g.duration_min}′</Badge>
+                  )}
                   {(g.tags || []).map((t) => (
                     <Badge key={t} variant="outline" className="text-xs">{t}</Badge>
                   ))}
                 </div>
+
+                {g.video_url && (
+                  <a href={g.video_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                    🎬 Video tutorial
+                  </a>
+                )}
 
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-6">
                   {g.content}
@@ -352,7 +364,7 @@ export default function GuidaTecnica() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="cat">Categoria</Label>
                 <Input
@@ -360,6 +372,39 @@ export default function GuidaTecnica() {
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   placeholder="Es: Tecnica individuale"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Difficoltà</Label>
+                <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v })}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>—</SelectItem>
+                    {DIFFICULTIES.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dur">Durata (min)</Label>
+                <Input
+                  id="dur"
+                  type="number"
+                  min="0"
+                  value={form.duration_min}
+                  onChange={(e) => setForm({ ...form, duration_min: e.target.value })}
+                  placeholder="15"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="vid">Video URL</Label>
+                <Input
+                  id="vid"
+                  value={form.video_url}
+                  onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                  placeholder="https://youtube.com/…"
                 />
               </div>
               <div className="grid gap-2">
