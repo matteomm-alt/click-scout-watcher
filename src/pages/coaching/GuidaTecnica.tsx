@@ -29,11 +29,16 @@ interface Guideline {
   category: string | null;
   fundamental: string | null;
   age_group: string | null;
+  difficulty: string | null;
+  video_url: string | null;
+  duration_min: number | null;
   tags: string[];
   created_by: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const DIFFICULTIES = ['Principiante', 'Intermedio', 'Avanzato'] as const;
 
 const ALL = '__ALL__';
 const NONE = '__NONE__';
@@ -58,6 +63,9 @@ export default function GuidaTecnica() {
     category: '',
     fundamental: NONE,
     age_group: NONE,
+    difficulty: NONE,
+    video_url: '',
+    duration_min: '',
     tags: '',
   });
   const [saving, setSaving] = useState(false);
@@ -100,7 +108,7 @@ export default function GuidaTecnica() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, tags: '' });
+    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', tags: '' });
     setDialogOpen(true);
   };
 
@@ -112,6 +120,9 @@ export default function GuidaTecnica() {
       category: g.category ?? '',
       fundamental: g.fundamental ?? NONE,
       age_group: g.age_group ?? NONE,
+      difficulty: g.difficulty ?? NONE,
+      video_url: g.video_url ?? '',
+      duration_min: g.duration_min != null ? String(g.duration_min) : '',
       tags: (g.tags || []).join(', '),
     });
     setDialogOpen(true);
@@ -131,6 +142,9 @@ export default function GuidaTecnica() {
       category: form.category.trim() || null,
       fundamental: form.fundamental === NONE ? null : form.fundamental,
       age_group: form.age_group === NONE ? null : form.age_group,
+      difficulty: form.difficulty === NONE ? null : form.difficulty,
+      video_url: form.video_url.trim() || null,
+      duration_min: form.duration_min ? parseInt(form.duration_min, 10) : null,
       tags: form.tags
         .split(',')
         .map((t) => t.trim())
