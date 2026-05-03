@@ -112,7 +112,7 @@ export default function GuidaTecnica() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', tags: '' });
+    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', common_errors: '', progression: '', tags: '' });
     setDialogOpen(true);
   };
 
