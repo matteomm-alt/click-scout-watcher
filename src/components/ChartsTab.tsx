@@ -320,7 +320,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                 <BarChart data={playerData} layout="vertical" margin={{ left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={110} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={130} />
                   <Tooltip contentStyle={TOOLTIP} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="Punti" fill="#1D9E75" radius={[0,3,3,0]} />
@@ -346,7 +346,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       if (!payload?.length) return null;
                       const d = payload[0]?.payload;
                       return (
-                        <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 6, fontSize: 12, borderRadius: 8, padding: '10px 14px' }}>
+                        <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
                           <p style={{ fontWeight: 600 }}>{d?.name}</p>
                           <p>Punti: {d?.x} · Errori: {d?.y} · Tot: {d?.z}</p>
                           <p>Eff: {d?.Eff}%</p>
@@ -354,7 +354,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       );
                     }}
                   />
-                  <Scatter data={playerData} fill="hsl(var(--primary))" fillOpacity={0.7} />
+                  <Scatter data={playerData} fill="hsl(var(--primary))" fillOpacity={0.85} stroke="hsl(var(--border))" strokeWidth={1} />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
@@ -367,7 +367,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <BarChart data={playerSkillData} layout="vertical" margin={{ left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={110} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={130} />
                     <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <ReferenceLine x={0} stroke="hsl(var(--border))" />
@@ -495,7 +495,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                           if (!active || !payload?.length) return null;
                           const d = payload[0]?.payload;
                           return (
-                            <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 6, fontSize: 12, borderRadius: 8, padding: '10px 14px' }}>
+                            <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
                               <p style={{ fontWeight: 600 }}>{d?.opponent || label}</p>
                               <p>{d?.date}</p>
                               {payload.map((p: any) => <p key={p.dataKey} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
