@@ -73,12 +73,12 @@ export const EVAL_NAMES: Record<string, string> = {
 };
 
 export const EVAL_COLORS: Record<string, string> = {
-  '#': 'hsl(var(--success))',
-  '+': 'hsl(142 70% 50%)',
-  '!': 'hsl(var(--muted-foreground))',
-  '-': 'hsl(var(--warning))',
-  '/': 'hsl(25 90% 55%)',
-  '=': 'hsl(var(--destructive))',
+  '#': '#16A34A',
+  '+': '#2563EB',
+  '!': '#D97706',
+  '-': '#6B7280',
+  '/': '#EA580C',
+  '=': '#DC2626',
 };
 
 /* -------------------- Aggregazioni base -------------------- */
