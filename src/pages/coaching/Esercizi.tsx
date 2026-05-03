@@ -58,7 +58,7 @@ interface ExportPayload {
   exported_at: string;
   exported_from_society: string | null;
   count: number;
-  exercises: Array<Omit<Exercise, 'id' | 'society_id' | 'created_by' | 'created_at' | 'updated_at' | 'is_shared'>>;
+  exercises: Array<Partial<Omit<Exercise, 'id' | 'society_id' | 'created_by' | 'created_at' | 'updated_at' | 'is_shared'>>>;
 }
 
 export default function Esercizi() {
