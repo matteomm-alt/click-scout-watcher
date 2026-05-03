@@ -555,17 +555,19 @@ export default function Esercizi() {
               <Label htmlFor="ex-desc">Descrizione</Label>
               <Textarea id="ex-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
+            <div className="grid gap-2">
+              <Label>Fondamentali</Label>
+              <p className="text-xs text-muted-foreground">
+                Un esercizio può allenare più fondamentali (es. <em>Ricezione + Difesa</em>).
+              </p>
+              <TagPicker
+                value={fundamentals}
+                onChange={setFundamentals}
+                suggestions={[...FUNDAMENTALS]}
+                placeholder="Aggiungi un fondamentale…"
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="grid gap-2">
-                <Label>Fondamentale</Label>
-                <Select value={fundamental} onValueChange={setFundamental}>
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>—</SelectItem>
-                    {FUNDAMENTALS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="grid gap-2">
                 <Label>Intensità</Label>
                 <Select value={intensity} onValueChange={setIntensity}>
@@ -579,6 +581,10 @@ export default function Esercizi() {
               <div className="grid gap-2">
                 <Label htmlFor="ex-dur">Durata (min)</Label>
                 <Input id="ex-dur" type="number" min="0" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="15" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="ex-rep">Ripetizioni</Label>
+                <Input id="ex-rep" value={repetitions} onChange={(e) => setRepetitions(e.target.value)} placeholder="Es. 3 serie da 10, 5 min a rotazione" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
