@@ -32,6 +32,8 @@ interface Guideline {
   difficulty: string | null;
   video_url: string | null;
   duration_min: number | null;
+  common_errors: string | null;
+  progression: string | null;
   tags: string[];
   created_by: string | null;
   created_at: string;
