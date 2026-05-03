@@ -127,6 +127,8 @@ export default function GuidaTecnica() {
       difficulty: g.difficulty ?? NONE,
       video_url: g.video_url ?? '',
       duration_min: g.duration_min != null ? String(g.duration_min) : '',
+      common_errors: g.common_errors ?? '',
+      progression: g.progression ?? '',
       tags: (g.tags || []).join(', '),
     });
     setDialogOpen(true);
