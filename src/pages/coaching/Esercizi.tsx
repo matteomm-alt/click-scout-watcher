@@ -472,14 +472,20 @@ export default function Esercizi() {
                   <div className="min-w-0">
                     <h3 className="font-black italic uppercase tracking-tight leading-tight truncate">{ex.name}</h3>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {ex.fundamental && (
-                        <Badge variant="outline" className="border-primary/30 text-primary text-xs">{ex.fundamental}</Badge>
-                      )}
+                      {(ex.fundamentals && ex.fundamentals.length > 0
+                        ? ex.fundamentals
+                        : (ex.fundamental ? [ex.fundamental] : [])
+                      ).map((f) => (
+                        <Badge key={f} variant="outline" className="border-primary/30 text-primary text-xs">{f}</Badge>
+                      ))}
                       {ex.intensity && (
                         <Badge variant="outline" className="text-xs">{ex.intensity}</Badge>
                       )}
                       {ex.duration_min != null && (
                         <Badge variant="outline" className="text-xs gap-1"><Clock className="w-3 h-3" />{ex.duration_min}′</Badge>
+                      )}
+                      {ex.repetitions && (
+                        <span className="text-xs text-muted-foreground">· {ex.repetitions}</span>
                       )}
                     </div>
                   </div>
