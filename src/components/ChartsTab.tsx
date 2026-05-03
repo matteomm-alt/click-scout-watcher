@@ -346,7 +346,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       if (!payload?.length) return null;
                       const d = payload[0]?.payload;
                       return (
-                        <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
+                        <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '10px 14px', borderRadius: 8, fontSize: 12 }}>
                           <p style={{ fontWeight: 600 }}>{d?.name}</p>
                           <p>Punti: {d?.x} · Errori: {d?.y} · Tot: {d?.z}</p>
                           <p>Eff: {d?.Eff}%</p>
@@ -495,7 +495,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                           if (!active || !payload?.length) return null;
                           const d = payload[0]?.payload;
                           return (
-                            <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '8px 12px', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
+                            <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '10px 14px', borderRadius: 8, fontSize: 12 }}>
                               <p style={{ fontWeight: 600 }}>{d?.opponent || label}</p>
                               <p>{d?.date}</p>
                               {payload.map((p: any) => <p key={p.dataKey} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
