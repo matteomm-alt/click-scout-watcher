@@ -25,6 +25,30 @@ import { EVENT_TYPES, getEventMeta, type EventType } from '@/lib/eventTypes';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+function expandRecurrences(
+  start: Date,
+  end: Date | null,
+  rule: 'weekly' | 'biweekly' | 'monthly',
+  until: Date,
+): Array<{ start: Date; end: Date | null }> {
+  const out: Array<{ start: Date; end: Date | null }> = [];
+  const next = new Date(start);
+  // skip the seed (parent), generate children only
+  while (true) {
+    if (rule === 'weekly') next.setDate(next.getDate() + 7);
+    else if (rule === 'biweekly') next.setDate(next.getDate() + 14);
+    else next.setMonth(next.getMonth() + 1);
+    if (next > until) break;
+    const dur = end ? end.getTime() - start.getTime() : 0;
+    out.push({
+      start: new Date(next),
+      end: end ? new Date(next.getTime() + dur) : null,
+    });
+    if (out.length > 200) break; // safety
+  }
+  return out;
+}
+
 const RECURRENCE_OPTIONS = [
   { value: 'none', label: 'Nessuna' },
   { value: 'weekly', label: 'Settimanale' },
@@ -105,6 +129,8 @@ export default function CalendarioNuovo() {
         location: data.location ?? '',
         team_label: data.team_label ?? '',
         description: data.description ?? '',
+        recurrence_rule: (data.recurrence_rule as 'none' | 'weekly' | 'biweekly' | 'monthly') ?? 'none',
+        recurrence_until: data.recurrence_until ?? '',
       });
       setCreatedBy(data.created_by);
       setLoadingExisting(false);
