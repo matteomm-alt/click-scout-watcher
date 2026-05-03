@@ -357,6 +357,46 @@ export default function CalendarioNuovo() {
             />
           </div>
 
+          {/* Ricorrenza */}
+          {!isEdit && (
+            <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Ricorrenza</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="rec_rule" className="text-xs">Regola</Label>
+                  <Select
+                    value={form.watch('recurrence_rule')}
+                    onValueChange={(v) => form.setValue('recurrence_rule', v as 'none' | 'weekly' | 'biweekly' | 'monthly')}
+                    disabled={!canEdit}
+                  >
+                    <SelectTrigger id="rec_rule"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {RECURRENCE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.watch('recurrence_rule') !== 'none' && (
+                  <div>
+                    <Label htmlFor="rec_until" className="text-xs">Ripeti fino al</Label>
+                    <Input
+                      id="rec_until"
+                      type="date"
+                      {...form.register('recurrence_until')}
+                      disabled={!canEdit}
+                    />
+                  </div>
+                )}
+              </div>
+              {form.watch('recurrence_rule') !== 'none' && (
+                <p className="text-xs text-muted-foreground">
+                  Verranno creati eventi automatici fino alla data indicata.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Anteprima */}
           <div
             className={cn(
