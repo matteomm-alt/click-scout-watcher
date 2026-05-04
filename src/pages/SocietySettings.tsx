@@ -102,6 +102,79 @@ export default function SocietySettings() {
   const [primaryHex, setPrimaryHex] = useState('#3b82f6');
   const [accentHex, setAccentHex] = useState('#f59e0b');
 
+  // Coach management
+  const [coaches, setCoaches] = useState<{ id: string; user_id: string; full_name: string | null }[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; email: string; expires_at: string; token: string }[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
+
+  const loadCoaches = async () => {
+    if (!societyId) return;
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('id, user_id')
+      .eq('society_id', societyId)
+      .eq('role', 'coach');
+    const userIds = (roles ?? []).map((r) => r.user_id);
+    let profilesMap = new Map<string, string | null>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      profilesMap = new Map((profs ?? []).map((p) => [p.id, p.full_name]));
+    }
+    setCoaches((roles ?? []).map((r) => ({
+      id: r.id,
+      user_id: r.user_id,
+      full_name: profilesMap.get(r.user_id) ?? null,
+    })));
+    const { data: inv } = await supabase
+      .from('society_invitations')
+      .select('id, email, expires_at, token')
+      .eq('society_id', societyId)
+      .eq('role', 'coach')
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString());
+    setInvitations(inv ?? []);
+  };
+
+  useEffect(() => { loadCoaches(); /* eslint-disable-next-line */ }, [societyId]);
+
+  const handleInvite = async () => {
+    if (!societyId || !user || !inviteEmail.trim()) return;
+    const { data, error } = await supabase
+      .from('society_invitations')
+      .insert({
+        society_id: societyId,
+        email: inviteEmail.toLowerCase().trim(),
+        role: 'coach',
+        invited_by: user.id,
+      })
+      .select('token')
+      .single();
+    if (error || !data) {
+      toast.error('Errore creazione invito');
+      return;
+    }
+    setGeneratedLink(`${window.location.origin}/auth?invite=${data.token}`);
+    setInviteEmail('');
+    await loadCoaches();
+  };
+
+  const removeCoach = async (roleId: string) => {
+    const { error } = await supabase.from('user_roles').delete().eq('id', roleId);
+    if (error) toast.error('Errore rimozione');
+    else { toast.success('Coach rimosso'); await loadCoaches(); }
+  };
+
+  const revokeInvitation = async (id: string) => {
+    const { error } = await supabase.from('society_invitations').delete().eq('id', id);
+    if (error) toast.error('Errore revoca');
+    else { toast.success('Invito revocato'); await loadCoaches(); }
+  };
+
   useEffect(() => {
     if (!societyId) {
       setLoading(false);
