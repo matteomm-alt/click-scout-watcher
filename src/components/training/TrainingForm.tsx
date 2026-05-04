@@ -78,6 +78,25 @@ const NO_TEAM = '__NONE__';
 export function TrainingForm({ value, onChange, exercises, teams, athletes, templates, onLoadTemplate }: Props) {
   const { toast } = useToast();
   const [loadingTpl, setLoadingTpl] = useState(false);
+  const [skeletons, setSkeletons] = useState<{ id: string; name: string; total_duration_min: number | null; blocks: unknown }[]>([]);
+  const [selectedSkeletonId, setSelectedSkeletonId] = useState('');
+  const [skeletonApplied, setSkeletonApplied] = useState(false);
+
+  useEffect(() => {
+    if (value.id) { setSkeletonApplied(true); return; }
+    setSkeletonApplied(false);
+    // eslint-disable-next-line
+  }, [value.id]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('training_skeletons')
+        .select('id, name, total_duration_min, blocks')
+        .order('name');
+      setSkeletons((data as typeof skeletons) ?? []);
+    })();
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
