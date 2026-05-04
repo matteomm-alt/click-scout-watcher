@@ -18,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Plus, Pencil, Trash2, Search, Filter } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink } from 'lucide-react';
 import { FUNDAMENTALS, AGE_GROUPS, FUNDAMENTAL_COLOR } from '@/lib/volleyConstants';
 
 interface Guideline {
@@ -310,15 +310,48 @@ export default function GuidaTecnica() {
                   ))}
                 </div>
 
-                {g.video_url && (
-                  <a href={g.video_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-                    🎬 Video tutorial
-                  </a>
-                )}
+                {g.video_url && (() => {
+                  const match = g.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                  const embedUrl = match ? `https://www.youtube.com/embed/${match[1]}` : null;
+                  return embedUrl ? (
+                    <div className="aspect-video w-full overflow-hidden rounded-lg border border-border">
+                      <iframe
+                        src={embedUrl}
+                        title={g.title}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <a href={g.video_url} target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" /> Video
+                    </a>
+                  );
+                })()}
 
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-6">
                   {g.content}
                 </p>
+
+                {g.common_errors && (
+                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
+                    <p className="text-xs font-bold text-destructive mb-1">⚠️ Errori comuni</p>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3">{g.common_errors}</p>
+                  </div>
+                )}
+
+                {g.progression && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Progressione</p>
+                    <ol className="list-decimal list-inside space-y-0.5">
+                      {g.progression.split('\n').filter(Boolean).map((line, i) => (
+                        <li key={i} className="text-xs text-muted-foreground">{line.replace(/^\d+[\.\)]\s*/, '')}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
 
                 <footer className="text-[11px] text-muted-foreground mt-auto pt-2 border-t border-border/50">
                   Aggiornata il {new Date(g.updated_at).toLocaleDateString('it-IT')}
