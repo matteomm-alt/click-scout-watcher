@@ -419,6 +419,121 @@ export default function SocietySettings() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Gestione coach</CardTitle>
+            <CardDescription>Invita nuovi coach o rimuovi quelli esistenti.</CardDescription>
+          </div>
+          <Button size="sm" onClick={() => { setInviteDialogOpen(true); setGeneratedLink(''); }}>
+            <UserPlus className="h-4 w-4 mr-2" /> Invita coach
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {coaches.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessun coach associato.</p>
+          ) : (
+            <div className="space-y-2">
+              {coaches.map((c) => (
+                <div key={c.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2">
+                  <span className="text-sm font-medium">{c.full_name ?? 'Coach senza nome'}</span>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4 mr-1" /> Rimuovi
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Rimuovere il coach?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Il coach non potrà più accedere a questa società.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annulla</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeCoach(c.id)}>Rimuovi</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {invitations.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Inviti pendenti</p>
+              {invitations.map((inv) => {
+                const link = `${window.location.origin}/auth?invite=${inv.token}`;
+                return (
+                  <div key={inv.id} className="flex items-center justify-between border border-dashed border-border rounded-md px-3 py-2 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium flex items-center gap-2 truncate">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        {inv.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Scade il {new Date(inv.expires_at).toLocaleDateString('it-IT')}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { navigator.clipboard.writeText(link); toast.success('Link copiato!'); }}
+                    >
+                      <Copy className="h-3.5 w-3.5 mr-1" /> Copia link
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => revokeInvitation(inv.id)}
+                    >
+                      Revoca
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={inviteDialogOpen} onOpenChange={(o) => { setInviteDialogOpen(o); if (!o) setGeneratedLink(''); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invita un coach</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="email@esempio.it"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              type="email"
+            />
+            {generatedLink && (
+              <div className="space-y-2 border border-primary/30 bg-primary/5 rounded-md p-3">
+                <p className="text-xs text-muted-foreground">Copia questo link e mandalo al coach:</p>
+                <div className="flex gap-2">
+                  <Input value={generatedLink} readOnly className="text-xs" />
+                  <Button
+                    size="sm"
+                    onClick={() => { navigator.clipboard.writeText(generatedLink); toast.success('Link copiato!'); }}
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1" /> Copia
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setInviteDialogOpen(false); setGeneratedLink(''); }}>Chiudi</Button>
+            <Button onClick={handleInvite} disabled={!inviteEmail.trim()}>Genera link</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-end gap-2 sticky bottom-4">
         <Button onClick={handleSave} disabled={saving} size="lg">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
