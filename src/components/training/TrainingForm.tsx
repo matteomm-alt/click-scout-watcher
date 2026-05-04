@@ -78,6 +78,25 @@ const NO_TEAM = '__NONE__';
 export function TrainingForm({ value, onChange, exercises, teams, athletes, templates, onLoadTemplate }: Props) {
   const { toast } = useToast();
   const [loadingTpl, setLoadingTpl] = useState(false);
+  const [skeletons, setSkeletons] = useState<{ id: string; name: string; total_duration_min: number | null; blocks: unknown }[]>([]);
+  const [selectedSkeletonId, setSelectedSkeletonId] = useState('');
+  const [skeletonApplied, setSkeletonApplied] = useState(false);
+
+  useEffect(() => {
+    if (value.id) { setSkeletonApplied(true); return; }
+    setSkeletonApplied(false);
+    // eslint-disable-next-line
+  }, [value.id]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('training_skeletons')
+        .select('id, name, total_duration_min, blocks')
+        .order('name');
+      setSkeletons((data as typeof skeletons) ?? []);
+    })();
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -190,6 +209,58 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      {/* Applica scheletro */}
+      {!skeletonApplied && skeletons.length > 0 && !value.id && (
+        <div className="rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 flex flex-col md:flex-row md:items-center gap-3">
+          <Label className="text-xs uppercase tracking-wider text-accent font-semibold shrink-0">
+            Scheletro (opzionale)
+          </Label>
+          <Select value={selectedSkeletonId} onValueChange={setSelectedSkeletonId}>
+            <SelectTrigger className="h-8 flex-1">
+              <SelectValue placeholder="Scegli uno scheletro…" />
+            </SelectTrigger>
+            <SelectContent>
+              {skeletons.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedSkeletonId && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={async () => {
+                const skel = skeletons.find((s) => s.id === selectedSkeletonId);
+                if (!skel) return;
+                const blocksJson = skel.blocks as { settimane?: { sedute?: { fondamentale?: string; note?: string; durata_min?: number }[] }[] } | null;
+                const sedute = blocksJson?.settimane?.[0]?.sedute ?? [];
+                const newBlocks: BlockDraft[] = sedute.map((s, i) => ({
+                  key: crypto.randomUUID(),
+                  title: s.fondamentale ?? `Blocco ${i + 1}`,
+                  description: s.note ?? '',
+                  exercise_id: null,
+                  duration_min: s.durata_min ?? null,
+                  reps: null,
+                  intensity: null,
+                  players_count: null,
+                  roles: [],
+                }));
+                onChange({
+                  ...value,
+                  blocks: newBlocks,
+                  ...(skel.total_duration_min ? { duration_min: skel.total_duration_min } : {}),
+                });
+                toast({ title: '✅ Struttura applicata', description: 'Personalizza i dettagli dei blocchi.' });
+                setSkeletonApplied(true);
+                setSelectedSkeletonId('');
+              }}
+            >
+              ⚡ Applica struttura
+            </Button>
+          )}
         </div>
       )}
 

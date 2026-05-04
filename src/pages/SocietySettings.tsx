@@ -8,8 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Loader2, Save, Upload, Building2 } from 'lucide-react';
+import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail } from 'lucide-react';
 
 interface SocietyRow {
   id: string;
@@ -93,6 +100,79 @@ export default function SocietySettings() {
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryHex, setPrimaryHex] = useState('#3b82f6');
   const [accentHex, setAccentHex] = useState('#f59e0b');
+
+  // Coach management
+  const [coaches, setCoaches] = useState<{ id: string; user_id: string; full_name: string | null }[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; email: string; expires_at: string; token: string }[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
+
+  const loadCoaches = async () => {
+    if (!societyId) return;
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('id, user_id')
+      .eq('society_id', societyId)
+      .eq('role', 'coach');
+    const userIds = (roles ?? []).map((r) => r.user_id);
+    let profilesMap = new Map<string, string | null>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      profilesMap = new Map((profs ?? []).map((p) => [p.id, p.full_name]));
+    }
+    setCoaches((roles ?? []).map((r) => ({
+      id: r.id,
+      user_id: r.user_id,
+      full_name: profilesMap.get(r.user_id) ?? null,
+    })));
+    const { data: inv } = await supabase
+      .from('society_invitations')
+      .select('id, email, expires_at, token')
+      .eq('society_id', societyId)
+      .eq('role', 'coach')
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString());
+    setInvitations(inv ?? []);
+  };
+
+  useEffect(() => { loadCoaches(); /* eslint-disable-next-line */ }, [societyId]);
+
+  const handleInvite = async () => {
+    if (!societyId || !user || !inviteEmail.trim()) return;
+    const { data, error } = await supabase
+      .from('society_invitations')
+      .insert({
+        society_id: societyId,
+        email: inviteEmail.toLowerCase().trim(),
+        role: 'coach',
+        invited_by: user.id,
+      })
+      .select('token')
+      .single();
+    if (error || !data) {
+      toast.error('Errore creazione invito');
+      return;
+    }
+    setGeneratedLink(`${window.location.origin}/auth?invite=${data.token}`);
+    setInviteEmail('');
+    await loadCoaches();
+  };
+
+  const removeCoach = async (roleId: string) => {
+    const { error } = await supabase.from('user_roles').delete().eq('id', roleId);
+    if (error) toast.error('Errore rimozione');
+    else { toast.success('Coach rimosso'); await loadCoaches(); }
+  };
+
+  const revokeInvitation = async (id: string) => {
+    const { error } = await supabase.from('society_invitations').delete().eq('id', id);
+    if (error) toast.error('Errore revoca');
+    else { toast.success('Invito revocato'); await loadCoaches(); }
+  };
 
   useEffect(() => {
     if (!societyId) {
@@ -337,6 +417,121 @@ export default function SocietySettings() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Gestione coach</CardTitle>
+            <CardDescription>Invita nuovi coach o rimuovi quelli esistenti.</CardDescription>
+          </div>
+          <Button size="sm" onClick={() => { setInviteDialogOpen(true); setGeneratedLink(''); }}>
+            <UserPlus className="h-4 w-4 mr-2" /> Invita coach
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {coaches.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessun coach associato.</p>
+          ) : (
+            <div className="space-y-2">
+              {coaches.map((c) => (
+                <div key={c.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2">
+                  <span className="text-sm font-medium">{c.full_name ?? 'Coach senza nome'}</span>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4 mr-1" /> Rimuovi
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Rimuovere il coach?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Il coach non potrà più accedere a questa società.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annulla</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeCoach(c.id)}>Rimuovi</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {invitations.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Inviti pendenti</p>
+              {invitations.map((inv) => {
+                const link = `${window.location.origin}/auth?invite=${inv.token}`;
+                return (
+                  <div key={inv.id} className="flex items-center justify-between border border-dashed border-border rounded-md px-3 py-2 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium flex items-center gap-2 truncate">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        {inv.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Scade il {new Date(inv.expires_at).toLocaleDateString('it-IT')}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { navigator.clipboard.writeText(link); toast.success('Link copiato!'); }}
+                    >
+                      <Copy className="h-3.5 w-3.5 mr-1" /> Copia link
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => revokeInvitation(inv.id)}
+                    >
+                      Revoca
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={inviteDialogOpen} onOpenChange={(o) => { setInviteDialogOpen(o); if (!o) setGeneratedLink(''); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invita un coach</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="email@esempio.it"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              type="email"
+            />
+            {generatedLink && (
+              <div className="space-y-2 border border-primary/30 bg-primary/5 rounded-md p-3">
+                <p className="text-xs text-muted-foreground">Copia questo link e mandalo al coach:</p>
+                <div className="flex gap-2">
+                  <Input value={generatedLink} readOnly className="text-xs" />
+                  <Button
+                    size="sm"
+                    onClick={() => { navigator.clipboard.writeText(generatedLink); toast.success('Link copiato!'); }}
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1" /> Copia
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setInviteDialogOpen(false); setGeneratedLink(''); }}>Chiudi</Button>
+            <Button onClick={handleInvite} disabled={!inviteEmail.trim()}>Genera link</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex justify-end gap-2 sticky bottom-4">
         <Button onClick={handleSave} disabled={saving} size="lg">
