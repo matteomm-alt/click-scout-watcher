@@ -752,6 +752,18 @@ export function ActionPanel() {
         </div>
       </DialogContent>
     </Dialog>
+    <Dialog open={showAnalysisDialog} onOpenChange={setShowAnalysisDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Partita registrata! 🎉</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">Vuoi analizzare questa partita subito in MatchAnalysis?</p>
+        <div className="flex gap-2 mt-4">
+          <button type="button" disabled={importingDvw} onClick={importAndAnalyze} className="min-h-12 flex-1 rounded bg-primary font-bold text-primary-foreground disabled:opacity-50 flex items-center justify-center gap-2">
+            <BarChart3 className="w-4 h-4" /> {importingDvw ? 'Importazione…' : 'Analizza ora'}
+          </button>
+          <button type="button" onClick={() => setShowAnalysisDialog(false)} className="min-h-12 flex-1 rounded bg-secondary font-bold">Solo scarica</button>
+        </div>
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }
