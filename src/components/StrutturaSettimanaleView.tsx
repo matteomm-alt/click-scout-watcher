@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { LayoutTemplate, Plus, Pencil, Trash2, Copy, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LayoutTemplate, Plus, Pencil, Trash2, Copy, ChevronDown, ChevronUp, X, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +72,9 @@ function totalMinuti(blocks: StrutturaBlocks): number {
 export function StrutturaSettimanaleView() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
+  const navigate = useNavigate();
   const [strutture, setStrutture] = useState<Struttura[]>([]);
+  const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,10 +94,20 @@ export function StrutturaSettimanaleView() {
     const { data } = await supabase.from('training_skeletons')
       .select('*').eq('society_id', societyId)
       .order('created_at', { ascending: false });
-    setStrutture(((data as any) || []).map((d: any) => ({
+    const list = ((data as any) || []).map((d: any) => ({
       ...d,
       blocks: typeof d.blocks === 'string' ? JSON.parse(d.blocks) : d.blocks,
-    })));
+    }));
+    setStrutture(list);
+    const counts: Record<string, number> = {};
+    await Promise.all(list.map(async (s: Struttura) => {
+      const { count } = await supabase
+        .from('trainings')
+        .select('id', { count: 'exact', head: true })
+        .eq('skeleton_id', s.id);
+      counts[s.id] = count ?? 0;
+    }));
+    setUsageCounts(counts);
     setLoading(false);
   };
 
@@ -233,6 +246,13 @@ export function StrutturaSettimanaleView() {
         <Button onClick={openCreate} className="gap-2"><Plus className="w-4 h-4" /> Nuova</Button>
       </div>
 
+      <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground">
+          Gli scheletri sono modelli di allenamento riutilizzabili. Creane uno e applicalo a più sedute senza dover ricominciare da zero.
+        </p>
+      </div>
+
       {loading ? <p className="text-muted-foreground">Caricamento...</p> :
        strutture.length === 0 ? (
         <Card className="p-10 text-center">
@@ -255,12 +275,20 @@ export function StrutturaSettimanaleView() {
                         <Badge variant="outline">{tipoLabel(blocks.nSettimane)}</Badge>
                         <Badge variant="secondary">{blocks.nSedute} sed/sett</Badge>
                         {s.total_duration_min && <Badge variant="secondary">{s.total_duration_min} min/sed</Badge>}
+                        <Badge variant="outline" className="text-[10px]">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
                       </div>
                       {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
                     </div>
                     {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
                   </button>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex gap-1 flex-shrink-0 items-center">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/allenamenti?skeleton_id=${s.id}`)}
+                      className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors"
+                    >
+                      ➕ Crea allenamento
+                    </button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => duplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>

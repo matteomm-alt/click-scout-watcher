@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -18,7 +19,7 @@ interface DvwKpi {
   total: number;
   wins: number;
   winRate: number;
-  lastResult: { won: boolean | null; opponent: string | null; date: string | null } | null;
+  lastResult: { won: boolean; opponent: string; date: string | null } | null;
 }
 
 interface RecentTraining {
@@ -36,6 +37,7 @@ interface AttendanceAlert {
 
 export function HomeDashboard() {
   const { societyId } = useActiveSociety();
+  const { user } = useAuth();
   const [nextEvent, setNextEvent] = useState<NextEvent | null>(null);
   const [dvw, setDvw] = useState<DvwKpi>({ total: 0, wins: 0, winRate: 0, lastResult: null });
   const [trainings, setTrainings] = useState<RecentTraining[]>([]);
@@ -43,7 +45,7 @@ export function HomeDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!societyId) {
+    if (!societyId || !user) {
       setLoading(false);
       return;
     }
@@ -60,9 +62,10 @@ export function HomeDashboard() {
           .order('start_at', { ascending: true })
           .limit(1),
         supabase
-          .from('dvw_matches')
-          .select('id, vinta, avversario, data')
-          .order('data', { ascending: false }),
+          .from('scout_matches')
+          .select('id, home_sets_won, away_sets_won, match_date, away_team:away_team_id(name), home_team:home_team_id(name)')
+          .eq('coach_id', user.id)
+          .order('match_date', { ascending: false }),
         supabase
           .from('trainings')
           .select('id, title, scheduled_date')
@@ -81,18 +84,17 @@ export function HomeDashboard() {
 
       setNextEvent((eventRes.data?.[0] as NextEvent) ?? null);
 
-      const dvwRows = dvwRes.data ?? [];
+      const dvwRows = (dvwRes.data ?? []) as any[];
       const total = dvwRows.length;
-      const wins = dvwRows.filter((m) => m.vinta === true).length;
-      const last = dvwRows[0];
-      setDvw({
-        total,
-        wins,
-        winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
-        lastResult: last
-          ? { won: last.vinta, opponent: last.avversario, date: last.data }
-          : null,
-      });
+      const wins = dvwRows.filter((m: any) => m.home_sets_won > m.away_sets_won).length;
+      const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+      const lastRow = dvwRows[0];
+      const lastResult = lastRow ? {
+        won: lastRow.home_sets_won > lastRow.away_sets_won,
+        opponent: lastRow.away_team?.name ?? '—',
+        date: lastRow.match_date,
+      } : null;
+      setDvw({ total, wins, winRate, lastResult });
 
       setTrainings((trainingsRes.data as RecentTraining[]) ?? []);
 
@@ -123,7 +125,7 @@ export function HomeDashboard() {
       setLoading(false);
     };
     load();
-  }, [societyId]);
+  }, [societyId, user]);
 
   if (!societyId) return null;
 

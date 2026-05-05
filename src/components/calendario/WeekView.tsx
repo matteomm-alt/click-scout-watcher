@@ -78,6 +78,20 @@ export function WeekView({ anchor, events, showCreator }: Props) {
                         {evt.creator_name}
                       </p>
                     )}
+                    {evt.event_type === 'partita' && (
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(
+                            `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent(evt.location || '')}`,
+                          );
+                        }}
+                        className="mt-1.5 inline-flex items-center min-h-7 px-2 text-[10px] font-bold bg-primary/10 text-primary border border-primary/30 rounded-md hover:bg-primary/20"
+                      >
+                        📋 Convocazione
+                      </span>
+                    )}
                   </button>
                 );
               })}

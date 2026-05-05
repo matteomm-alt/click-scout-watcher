@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
 import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
-import { Undo2, Download, ArrowLeftRight, SkipForward, Shield } from 'lucide-react';
+import { Undo2, Download, ArrowLeftRight, SkipForward, Shield, BarChart3 } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
+import { parseDvw } from '@/lib/dvwImporter';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { ZoneCourt } from '@/components/VolleyballCourt';
 import { useScoutSettings } from '@/lib/scoutSettings';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 type ScoutStep = 'team' | 'player' | 'skill' | 'serveType' | 'attackCombo' | 'evaluation' | 'startZone' | 'endZone';
 
@@ -37,6 +42,12 @@ export function ActionPanel() {
   const [autoAttack, setAutoAttack] = useState(false);
   const [showMuroDialog, setShowMuroDialog] = useState<'vincente' | 'errato' | null>(null);
   const [liberoTeam, setLiberoTeam] = useState<'home' | 'away'>('home');
+  const [showAnalysisDialog, setShowAnalysisDialog] = useState(false);
+  const [lastDvwText, setLastDvwText] = useState<string>('');
+  const [lastDvwFilename, setLastDvwFilename] = useState<string>('');
+  const [importingDvw, setImportingDvw] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { settings } = useScoutSettings();
 
   const allSkills: { key: Skill; color: string }[] = [
@@ -252,13 +263,78 @@ export function ActionPanel() {
       matchState.homeSetsWon,
       matchState.awaySetsWon
     );
+    const filename = `${homeTeam.code}_${awayTeam.code}_${matchInfo.date}.dvw`;
     const blob = new Blob([dvw], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${homeTeam.code}_${awayTeam.code}_${matchInfo.date}.dvw`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+    setLastDvwText(dvw);
+    setLastDvwFilename(filename);
+    setShowAnalysisDialog(true);
+  };
+
+  const importAndAnalyze = async () => {
+    if (!user || !lastDvwText) return;
+    setImportingDvw(true);
+    try {
+      const parsed = parseDvw(lastDvwText);
+      const resolveTeam = async (name: string, isOwn: boolean) => {
+        const trimmed = (name || '').trim() || 'Squadra';
+        const { data: existing } = await supabase.from('scout_teams').select('id').ilike('name', trimmed).maybeSingle();
+        if (existing) return existing.id;
+        const { data, error } = await supabase.from('scout_teams').insert({ coach_id: user.id, name: trimmed, is_own_team: isOwn }).select('id').single();
+        if (error) throw error;
+        return data.id;
+      };
+      const homeTeamId = await resolveTeam(parsed.teams.home.name, true);
+      const awayTeamId = await resolveTeam(parsed.teams.away.name, false);
+
+      const homePlayers = parsed.players.home.map(p => ({ scout_team_id: homeTeamId, number: p.number, last_name: p.lastName, first_name: p.firstName, role: p.role, is_libero: p.isLibero, external_id: p.externalId }));
+      const awayPlayers = parsed.players.away.map(p => ({ scout_team_id: awayTeamId, number: p.number, last_name: p.lastName, first_name: p.firstName, role: p.role, is_libero: p.isLibero, external_id: p.externalId }));
+      await supabase.from('scout_players').upsert([...homePlayers, ...awayPlayers], { onConflict: 'scout_team_id,number', ignoreDuplicates: true });
+
+      const { data: match, error: matchErr } = await supabase.from('scout_matches').insert({
+        coach_id: user.id,
+        home_team_id: homeTeamId, away_team_id: awayTeamId,
+        match_date: parsed.header.date, match_time: parsed.header.time,
+        season: parsed.header.season, league: parsed.header.league,
+        phase: parsed.header.phase, venue: parsed.header.venue, city: parsed.header.city,
+        home_sets_won: parsed.setsWon.home, away_sets_won: parsed.setsWon.away,
+        set_results: parsed.setResults as any,
+        source_filename: lastDvwFilename,
+        raw_header: parsed.header as any,
+      }).select('id').single();
+      if (matchErr) throw matchErr;
+
+      const allActions = parsed.actions.map(a => ({
+        scout_match_id: match.id,
+        scout_team_id: a.side === 'home' ? homeTeamId : awayTeamId,
+        side: a.side, set_number: a.setNumber, rally_index: a.rallyIndex, action_index: a.actionIndex,
+        player_number: a.playerNumber, skill: a.skill, skill_type: a.skillType, evaluation: a.evaluation,
+        start_zone: a.startZone, end_zone: a.endZone, end_subzone: a.endSubzone,
+        attack_combo: a.attackCombo, set_combo: a.setCombo,
+        home_score: a.homeScore, away_score: a.awayScore,
+        home_rotation: a.homeRotation, away_rotation: a.awayRotation,
+        serving_side: a.servingSide, raw_code: a.rawCode, timestamp_clock: a.timestampClock,
+      }));
+      const BATCH = 500;
+      for (let i = 0; i < allActions.length; i += BATCH) {
+        const { error } = await supabase.from('scout_actions').insert(allActions.slice(i, i + BATCH));
+        if (error) throw error;
+      }
+
+      toast.success('Partita importata');
+      setShowAnalysisDialog(false);
+      navigate(`/match/${match.id}`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Errore import: ' + (e?.message || 'sconosciuto'));
+    } finally {
+      setImportingDvw(false);
+    }
   };
 
   const handleSubstitution = (inNumber: number) => {
@@ -673,6 +749,18 @@ export function ActionPanel() {
             });
           })()}
           <button type="button" onClick={() => { resetSelection(); setShowMuroDialog(null); }} className="min-h-12 w-full rounded bg-secondary text-muted-foreground font-bold">Tralascia</button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={showAnalysisDialog} onOpenChange={setShowAnalysisDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Partita registrata! 🎉</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">Vuoi analizzare questa partita subito in MatchAnalysis?</p>
+        <div className="flex gap-2 mt-4">
+          <button type="button" disabled={importingDvw} onClick={importAndAnalyze} className="min-h-12 flex-1 rounded bg-primary font-bold text-primary-foreground disabled:opacity-50 flex items-center justify-center gap-2">
+            <BarChart3 className="w-4 h-4" /> {importingDvw ? 'Importazione…' : 'Analizza ora'}
+          </button>
+          <button type="button" onClick={() => setShowAnalysisDialog(false)} className="min-h-12 flex-1 rounded bg-secondary font-bold">Solo scarica</button>
         </div>
       </DialogContent>
     </Dialog>
