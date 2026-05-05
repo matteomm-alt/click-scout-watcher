@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { LayoutTemplate, Plus, Pencil, Trash2, Copy, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LayoutTemplate, Plus, Pencil, Trash2, Copy, ChevronDown, ChevronUp, X, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +72,9 @@ function totalMinuti(blocks: StrutturaBlocks): number {
 export function StrutturaSettimanaleView() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
+  const navigate = useNavigate();
   const [strutture, setStrutture] = useState<Struttura[]>([]);
+  const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,10 +94,20 @@ export function StrutturaSettimanaleView() {
     const { data } = await supabase.from('training_skeletons')
       .select('*').eq('society_id', societyId)
       .order('created_at', { ascending: false });
-    setStrutture(((data as any) || []).map((d: any) => ({
+    const list = ((data as any) || []).map((d: any) => ({
       ...d,
       blocks: typeof d.blocks === 'string' ? JSON.parse(d.blocks) : d.blocks,
-    })));
+    }));
+    setStrutture(list);
+    const counts: Record<string, number> = {};
+    await Promise.all(list.map(async (s: Struttura) => {
+      const { count } = await supabase
+        .from('trainings')
+        .select('id', { count: 'exact', head: true })
+        .eq('skeleton_id', s.id);
+      counts[s.id] = count ?? 0;
+    }));
+    setUsageCounts(counts);
     setLoading(false);
   };
 
