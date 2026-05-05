@@ -275,12 +275,20 @@ export function StrutturaSettimanaleView() {
                         <Badge variant="outline">{tipoLabel(blocks.nSettimane)}</Badge>
                         <Badge variant="secondary">{blocks.nSedute} sed/sett</Badge>
                         {s.total_duration_min && <Badge variant="secondary">{s.total_duration_min} min/sed</Badge>}
+                        <Badge variant="outline" className="text-[10px]">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
                       </div>
                       {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
                     </div>
                     {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
                   </button>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex gap-1 flex-shrink-0 items-center">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/allenamenti?skeleton_id=${s.id}`)}
+                      className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors"
+                    >
+                      ➕ Crea allenamento
+                    </button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => duplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
