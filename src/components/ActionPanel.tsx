@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
 import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
-import { Undo2, Download, ArrowLeftRight, SkipForward, Shield } from 'lucide-react';
+import { Undo2, Download, ArrowLeftRight, SkipForward, Shield, BarChart3 } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
+import { parseDvw } from '@/lib/dvwImporter';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { ZoneCourt } from '@/components/VolleyballCourt';
 import { useScoutSettings } from '@/lib/scoutSettings';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 type ScoutStep = 'team' | 'player' | 'skill' | 'serveType' | 'attackCombo' | 'evaluation' | 'startZone' | 'endZone';
 
