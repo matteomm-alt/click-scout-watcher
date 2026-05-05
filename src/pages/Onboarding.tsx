@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Zap, FileSpreadsheet, SkipForward, FileUp, BarChart3, Calendar, Activity, ArrowRight, ChevronRight } from 'lucide-react';
+import { Loader2, Zap, FileSpreadsheet, SkipForward, FileUp, BarChart3, Calendar, Activity, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { parseDvw } from '@/lib/dvwImporter';
 import * as XLSX from 'xlsx';
 
@@ -35,6 +35,22 @@ export default function Onboarding() {
   const { user, refreshRoles } = useAuth();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [skippedStep1, setSkippedStep1] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('society_id')
+        .eq('user_id', user.id)
+        .not('society_id', 'is', null);
+      if (data && data.length > 0) {
+        setSkippedStep1(true);
+        setStep((s) => (s === 1 ? 2 : s));
+      }
+    })();
+  }, [user]);
 
   // Step 1
   const [teamName, setTeamName] = useState('');
@@ -255,16 +271,28 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen p-4 flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20">
       <Card className="w-full max-w-2xl p-8 space-y-6">
+        {skippedStep1 && (
+          <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
+            <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+            <span>Sei stato associato a una società esistente. Completa il tuo profilo.</span>
+          </div>
+        )}
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-bold uppercase italic tracking-wide text-muted-foreground">
-            <span>Step {step} di 4</span>
-            <span>{Math.round((step / 4) * 100)}%</span>
+            <span>
+              Step {skippedStep1 ? step - 1 : step} di {skippedStep1 ? 3 : 4}
+            </span>
+            <span>
+              {Math.round(((skippedStep1 ? step - 1 : step) / (skippedStep1 ? 3 : 4)) * 100)}%
+            </span>
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-500"
-              style={{ width: `${(step / 4) * 100}%` }}
+              style={{
+                width: `${((skippedStep1 ? step - 1 : step) / (skippedStep1 ? 3 : 4)) * 100}%`,
+              }}
             />
           </div>
         </div>
