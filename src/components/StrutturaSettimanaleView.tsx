@@ -246,6 +246,13 @@ export function StrutturaSettimanaleView() {
         <Button onClick={openCreate} className="gap-2"><Plus className="w-4 h-4" /> Nuova</Button>
       </div>
 
+      <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground">
+          Gli scheletri sono modelli di allenamento riutilizzabili. Creane uno e applicalo a più sedute senza dover ricominciare da zero.
+        </p>
+      </div>
+
       {loading ? <p className="text-muted-foreground">Caricamento...</p> :
        strutture.length === 0 ? (
         <Card className="p-10 text-center">
