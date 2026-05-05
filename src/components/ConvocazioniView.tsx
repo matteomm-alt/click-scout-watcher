@@ -33,6 +33,25 @@ export function ConvocazioniView() {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ title: '', match_date: '', meeting_time: '', location: '' });
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const prefillEventId = searchParams.get('event_id');
+    if (!prefillEventId) return;
+    const prefillTitle = searchParams.get('title') ?? '';
+    const prefillDate = searchParams.get('date') ?? '';
+    const prefillLocation = searchParams.get('location') ?? '';
+    setForm((f) => ({
+      ...f,
+      title: prefillTitle,
+      match_date: prefillDate.slice(0, 10),
+      location: prefillLocation,
+    }));
+    setDialogOpen(true);
+    toast.info('Dati evento pre-compilati');
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!societyId) return;
