@@ -19,8 +19,9 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
-  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search,
+  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
