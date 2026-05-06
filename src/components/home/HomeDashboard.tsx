@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
