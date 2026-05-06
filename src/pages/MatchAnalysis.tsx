@@ -128,7 +128,7 @@ export default function MatchAnalysis() {
       setLoading(true);
       const { data: m } = await supabase
         .from('scout_matches')
-        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename,
+        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename, share_token,
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .eq('id', id).single();
       if (m) setMatch(m as any);
