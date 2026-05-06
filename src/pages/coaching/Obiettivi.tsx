@@ -29,7 +29,10 @@ interface Objective {
   status: string;
   target_date: string | null;
   created_by: string;
+  phase_id: string | null;
 }
+
+interface PhaseOpt { id: string; name: string; plan_name: string }
 
 const SCOPES = ['team', 'individuale'] as const;
 const STATUSES = ['aperto', 'in_corso', 'completato'] as const;
@@ -45,7 +48,7 @@ const STATUS_ICON: Record<string, typeof Circle> = {
   completato: CheckCircle2,
 };
 
-const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto', target_date: '' };
+const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto', target_date: '', phase_id: '' };
 
 export default function Obiettivi() {
   const { user } = useAuth();
