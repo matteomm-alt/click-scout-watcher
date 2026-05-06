@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface NextEvent {
   id: string;
