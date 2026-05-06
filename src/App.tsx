@@ -17,6 +17,7 @@ import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import Support from "./pages/Support.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AnalisiPubblica from "./pages/AnalisiPubblica.tsx";
 
 // Gestionale
 import Calendario from "./pages/gestionale/Calendario.tsx";
