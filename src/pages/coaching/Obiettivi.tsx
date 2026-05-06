@@ -284,6 +284,15 @@ export default function Obiettivi() {
             <div><Label>Titolo *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Es. Migliorare side-out P1" /></div>
             <div><Label>Descrizione</Label><Textarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
             <div><Label>Scadenza</Label><Input type="date" value={form.target_date} onChange={e => setForm(f => ({ ...f, target_date: e.target.value }))} /></div>
+            <div><Label>Fase stagionale (opzionale)</Label>
+              <Select value={form.phase_id || '__none__'} onValueChange={v => setForm(f => ({ ...f, phase_id: v === '__none__' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Nessuna fase" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nessuna fase</SelectItem>
+                  {phases.map(p => <SelectItem key={p.id} value={p.id}>{p.plan_name} → {p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
