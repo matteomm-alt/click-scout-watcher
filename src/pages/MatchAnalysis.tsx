@@ -405,6 +405,10 @@ export default function MatchAnalysis() {
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Tabellino</span>
             </Button>
+            <Button onClick={handleShare} variant="secondary" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Condividi</span>
+            </Button>
             <Button onClick={exportCsv} variant="outline" size="sm" className="shrink-0">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Esporta CSV</span>
@@ -412,6 +416,32 @@ export default function MatchAnalysis() {
           </div>
         </div>
       </header>
+
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🔗 Condividi analisi</DialogTitle>
+            <DialogDescription>
+              Chiunque abbia questo link può vedere le statistiche base della partita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={shareUrl}
+              className="flex-1 min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm font-mono"
+            />
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                toast.success('Link copiato!');
+              }}
+            >
+              📋 Copia
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="container py-3 border-b border-border/40">
         <div className="flex items-center gap-3">
