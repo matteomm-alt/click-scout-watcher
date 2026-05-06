@@ -163,6 +163,25 @@ export function HomeDashboard() {
         <h3 className="text-3xl md:text-4xl font-black italic uppercase leading-none">Panoramica</h3>
       </div>
 
+      {!isAdmin && (
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { icon: '✅', label: 'Presenze oggi', href: '/presenze' },
+            { icon: '📋', label: 'Nuova convocazione', href: '/convocazioni?new=1' },
+            { icon: '🔴', label: 'Scout Live', href: '/scout' },
+          ].map((a) => (
+            <button
+              key={a.href}
+              onClick={() => navigate(a.href)}
+              className="min-h-16 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors active:scale-95"
+            >
+              <span className="text-xl">{a.icon}</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-center px-1">{a.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* PROSSIMO EVENTO — hero */}
       <Card className="relative overflow-hidden p-8 border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card">
         <div className="absolute top-0 right-0 w-1 h-full bg-primary" />
