@@ -56,6 +56,8 @@ export default function Obiettivi() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [phaseFilter, setPhaseFilter] = useState<string>('all');
+  const [phases, setPhases] = useState<PhaseOpt[]>([]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Objective | null>(null);
@@ -65,12 +67,14 @@ export default function Obiettivi() {
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('objectives')
-      .select('*')
-      .eq('society_id', societyId)
-      .order('created_at', { ascending: false });
-    setObjectives((data as Objective[]) ?? []);
+    const [objRes, phRes] = await Promise.all([
+      supabase.from('objectives').select('*').eq('society_id', societyId).order('created_at', { ascending: false }),
+      supabase.from('season_phases').select('id, name, season_plans!inner(name, society_id)').eq('season_plans.society_id', societyId).order('name'),
+    ]);
+    setObjectives((objRes.data as Objective[]) ?? []);
+    setPhases(((phRes.data ?? []) as any[]).map((p) => ({
+      id: p.id, name: p.name, plan_name: p.season_plans?.name ?? '',
+    })));
     setLoading(false);
   };
   useEffect(() => { load(); }, [societyId]);
@@ -80,7 +84,7 @@ export default function Obiettivi() {
     setEditing(o);
     setForm({
       scope: o.scope, title: o.title, description: o.description ?? '',
-      status: o.status, target_date: o.target_date ?? '',
+      status: o.status, target_date: o.target_date ?? '', phase_id: o.phase_id ?? '',
     });
     setDialogOpen(true);
   };
