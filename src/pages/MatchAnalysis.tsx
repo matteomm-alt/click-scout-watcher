@@ -73,6 +73,19 @@ export default function MatchAnalysis() {
   const [multiActions, setMultiActions] = useState<DbAction[]>([]);
   const [loadingMulti, setLoadingMulti] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+
+  const handleShare = async () => {
+    if (!id) return;
+    let token = (match as any)?.share_token as string | null;
+    if (!token) {
+      token = crypto.randomUUID();
+      await supabase.from('scout_matches').update({ share_token: token }).eq('id', id);
+    }
+    setShareUrl(`${window.location.origin}/analisi-pubblica/${id}?t=${token}`);
+    setShareDialogOpen(true);
+  };
 
   useEffect(() => {
     setFilters(f => ({ ...f, playerNumbers: [] }));
