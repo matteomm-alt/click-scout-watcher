@@ -216,10 +216,18 @@ export default function Obiettivi() {
       <Card className="p-3 flex items-center gap-3 flex-wrap">
         <Label className="text-xs uppercase tracking-widest text-muted-foreground">Filtro stato</Label>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutti</SelectItem>
             {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Label className="text-xs uppercase tracking-widest text-muted-foreground">Fase</Label>
+        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+          <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte</SelectItem>
+            {phases.map(p => <SelectItem key={p.id} value={p.id}>{p.plan_name} → {p.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </Card>
