@@ -96,6 +96,7 @@ export default function Obiettivi() {
       description: form.description || null,
       status: form.status,
       target_date: form.target_date || null,
+      phase_id: form.phase_id || null,
     };
     if (editing) {
       const { error } = await supabase.from('objectives').update(payload).eq('id', editing.id);
