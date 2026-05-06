@@ -565,6 +565,9 @@ export default function Allenamenti() {
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openDuplicate(t.id)} title="Duplica">
                   <Copy className="w-3.5 h-3.5" />
                 </Button>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handlePDF(t)} title="Esporta PDF">
+                  <FileDown className="w-3.5 h-3.5" />
+                </Button>
                 <Button
                   size="sm" variant="ghost"
                   className="h-8 w-8 p-0 text-destructive hover:text-destructive"
