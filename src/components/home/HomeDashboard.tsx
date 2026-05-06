@@ -131,6 +131,21 @@ export function HomeDashboard() {
 
   if (!societyId) return null;
 
+  if (loading) {
+    return (
+      <section className="container pb-16 space-y-6">
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+        </div>
+      </section>
+    );
+  }
+
   const daysUntil = nextEvent
     ? Math.max(0, Math.ceil((new Date(nextEvent.start_at).getTime() - Date.now()) / 86400000))
     : null;
