@@ -150,6 +150,11 @@ export default function Obiettivi() {
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className={`font-bold ${o.status === 'completato' ? 'line-through text-muted-foreground' : ''}`}>{o.title}</span>
               <Badge variant={STATUS_VARIANT[o.status]} className="text-[10px]">{STATUS_LABEL[o.status]}</Badge>
+              {o.phase_id && (
+                <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                  📍 {phases.find(p => p.id === o.phase_id)?.name ?? 'Fase'}
+                </Badge>
+              )}
               {o.target_date && (
                 <span className="text-[11px] text-muted-foreground">scad. {new Date(o.target_date).toLocaleDateString('it-IT')}</span>
               )}
