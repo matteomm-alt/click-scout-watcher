@@ -125,7 +125,11 @@ export default function Obiettivi() {
     load();
   };
 
-  const filtered = statusFilter === 'all' ? objectives : objectives.filter(o => o.status === statusFilter);
+  const filtered = objectives.filter(o => {
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+    if (phaseFilter !== 'all' && o.phase_id !== phaseFilter) return false;
+    return true;
+  });
   const teamObjs = filtered.filter(o => o.scope === 'team');
   const indivObjs = filtered.filter(o => o.scope === 'individuale');
 
