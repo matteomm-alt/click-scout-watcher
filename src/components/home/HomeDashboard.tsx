@@ -267,6 +267,20 @@ export function HomeDashboard() {
         </div>
       </div>
 
+      {isAdmin && !isSuperAdmin && (
+        <button
+          onClick={() => navigate('/report-stagione')}
+          className="w-full min-h-20 rounded-xl border-2 border-primary/30 bg-primary/5 hover:border-primary hover:bg-primary/10 flex items-center gap-4 px-6 transition-colors"
+        >
+          <BarChart3 className="w-8 h-8 text-primary shrink-0" />
+          <div className="flex-1 text-left">
+            <p className="font-black uppercase italic text-lg">Report Stagione</p>
+            <p className="text-xs text-muted-foreground">Statistiche complete e PDF esportabile</p>
+          </div>
+          <span className="text-2xl text-primary">→</span>
+        </button>
+      )}
+
       {/* ULTIMI ALLENAMENTI + ALERT PRESENZE */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="p-6">
