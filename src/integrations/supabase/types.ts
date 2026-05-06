@@ -988,6 +988,7 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          phase_id: string | null
           scope: string
           society_id: string
           status: string
@@ -1000,6 +1001,7 @@ export type Database = {
           created_by: string
           description?: string | null
           id?: string
+          phase_id?: string | null
           scope?: string
           society_id: string
           status?: string
@@ -1012,6 +1014,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          phase_id?: string | null
           scope?: string
           society_id?: string
           status?: string
@@ -1020,6 +1023,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "objectives_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "season_phases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "objectives_society_id_fkey"
             columns: ["society_id"]
