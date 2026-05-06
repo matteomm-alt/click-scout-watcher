@@ -37,8 +37,9 @@ interface AttendanceAlert {
 }
 
 export function HomeDashboard() {
-  const { societyId } = useActiveSociety();
-  const { user } = useAuth();
+  const { societyId, isAdmin } = useActiveSociety();
+  const { user, isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
   const [nextEvent, setNextEvent] = useState<NextEvent | null>(null);
   const [dvw, setDvw] = useState<DvwKpi>({ total: 0, wins: 0, winRate: 0, lastResult: null });
   const [trainings, setTrainings] = useState<RecentTraining[]>([]);
