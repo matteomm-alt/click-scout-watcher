@@ -29,7 +29,10 @@ interface Objective {
   status: string;
   target_date: string | null;
   created_by: string;
+  phase_id: string | null;
 }
+
+interface PhaseOpt { id: string; name: string; plan_name: string }
 
 const SCOPES = ['team', 'individuale'] as const;
 const STATUSES = ['aperto', 'in_corso', 'completato'] as const;
@@ -45,7 +48,7 @@ const STATUS_ICON: Record<string, typeof Circle> = {
   completato: CheckCircle2,
 };
 
-const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto', target_date: '' };
+const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto', target_date: '', phase_id: '' };
 
 export default function Obiettivi() {
   const { user } = useAuth();
@@ -53,6 +56,8 @@ export default function Obiettivi() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [phaseFilter, setPhaseFilter] = useState<string>('all');
+  const [phases, setPhases] = useState<PhaseOpt[]>([]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Objective | null>(null);
@@ -62,12 +67,14 @@ export default function Obiettivi() {
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('objectives')
-      .select('*')
-      .eq('society_id', societyId)
-      .order('created_at', { ascending: false });
-    setObjectives((data as Objective[]) ?? []);
+    const [objRes, phRes] = await Promise.all([
+      supabase.from('objectives').select('*').eq('society_id', societyId).order('created_at', { ascending: false }),
+      supabase.from('season_phases').select('id, name, season_plans!inner(name, society_id)').eq('season_plans.society_id', societyId).order('name'),
+    ]);
+    setObjectives((objRes.data as Objective[]) ?? []);
+    setPhases(((phRes.data ?? []) as any[]).map((p) => ({
+      id: p.id, name: p.name, plan_name: p.season_plans?.name ?? '',
+    })));
     setLoading(false);
   };
   useEffect(() => { load(); }, [societyId]);
@@ -77,7 +84,7 @@ export default function Obiettivi() {
     setEditing(o);
     setForm({
       scope: o.scope, title: o.title, description: o.description ?? '',
-      status: o.status, target_date: o.target_date ?? '',
+      status: o.status, target_date: o.target_date ?? '', phase_id: o.phase_id ?? '',
     });
     setDialogOpen(true);
   };
@@ -89,6 +96,7 @@ export default function Obiettivi() {
       description: form.description || null,
       status: form.status,
       target_date: form.target_date || null,
+      phase_id: form.phase_id || null,
     };
     if (editing) {
       const { error } = await supabase.from('objectives').update(payload).eq('id', editing.id);
@@ -117,7 +125,11 @@ export default function Obiettivi() {
     load();
   };
 
-  const filtered = statusFilter === 'all' ? objectives : objectives.filter(o => o.status === statusFilter);
+  const filtered = objectives.filter(o => {
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+    if (phaseFilter !== 'all' && o.phase_id !== phaseFilter) return false;
+    return true;
+  });
   const teamObjs = filtered.filter(o => o.scope === 'team');
   const indivObjs = filtered.filter(o => o.scope === 'individuale');
 
@@ -138,6 +150,11 @@ export default function Obiettivi() {
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className={`font-bold ${o.status === 'completato' ? 'line-through text-muted-foreground' : ''}`}>{o.title}</span>
               <Badge variant={STATUS_VARIANT[o.status]} className="text-[10px]">{STATUS_LABEL[o.status]}</Badge>
+              {o.phase_id && (
+                <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                  📍 {phases.find(p => p.id === o.phase_id)?.name ?? 'Fase'}
+                </Badge>
+              )}
               {o.target_date && (
                 <span className="text-[11px] text-muted-foreground">scad. {new Date(o.target_date).toLocaleDateString('it-IT')}</span>
               )}
@@ -204,10 +221,18 @@ export default function Obiettivi() {
       <Card className="p-3 flex items-center gap-3 flex-wrap">
         <Label className="text-xs uppercase tracking-widest text-muted-foreground">Filtro stato</Label>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutti</SelectItem>
             {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Label className="text-xs uppercase tracking-widest text-muted-foreground">Fase</Label>
+        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+          <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte</SelectItem>
+            {phases.map(p => <SelectItem key={p.id} value={p.id}>{p.plan_name} → {p.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </Card>
@@ -264,6 +289,15 @@ export default function Obiettivi() {
             <div><Label>Titolo *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Es. Migliorare side-out P1" /></div>
             <div><Label>Descrizione</Label><Textarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
             <div><Label>Scadenza</Label><Input type="date" value={form.target_date} onChange={e => setForm(f => ({ ...f, target_date: e.target.value }))} /></div>
+            <div><Label>Fase stagionale (opzionale)</Label>
+              <Select value={form.phase_id || '__none__'} onValueChange={v => setForm(f => ({ ...f, phase_id: v === '__none__' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Nessuna fase" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nessuna fase</SelectItem>
+                  {phases.map(p => <SelectItem key={p.id} value={p.id}>{p.plan_name} → {p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>

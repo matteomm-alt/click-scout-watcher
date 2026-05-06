@@ -5,10 +5,14 @@ import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
   rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
 } from '@/lib/scoutAnalysis';
-import { ArrowLeft, BarChart3, Download, FileText, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, BarChart3, Download, FileText, SlidersHorizontal, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MatchFilters, EMPTY_FILTERS, type AnalysisFilters, type PlayerOption } from '@/components/MatchFilters';
 import { ChartsTab } from '@/components/ChartsTab';
@@ -69,6 +73,19 @@ export default function MatchAnalysis() {
   const [multiActions, setMultiActions] = useState<DbAction[]>([]);
   const [loadingMulti, setLoadingMulti] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+
+  const handleShare = async () => {
+    if (!id) return;
+    let token = (match as any)?.share_token as string | null;
+    if (!token) {
+      token = crypto.randomUUID();
+      await supabase.from('scout_matches').update({ share_token: token }).eq('id', id);
+    }
+    setShareUrl(`${window.location.origin}/analisi-pubblica/${id}?t=${token}`);
+    setShareDialogOpen(true);
+  };
 
   useEffect(() => {
     setFilters(f => ({ ...f, playerNumbers: [] }));
@@ -111,7 +128,7 @@ export default function MatchAnalysis() {
       setLoading(true);
       const { data: m } = await supabase
         .from('scout_matches')
-        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename,
+        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename, share_token,
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .eq('id', id).single();
       if (m) setMatch(m as any);
@@ -388,6 +405,10 @@ export default function MatchAnalysis() {
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Tabellino</span>
             </Button>
+            <Button onClick={handleShare} variant="secondary" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Condividi</span>
+            </Button>
             <Button onClick={exportCsv} variant="outline" size="sm" className="shrink-0">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Esporta CSV</span>
@@ -395,6 +416,32 @@ export default function MatchAnalysis() {
           </div>
         </div>
       </header>
+
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🔗 Condividi analisi</DialogTitle>
+            <DialogDescription>
+              Chiunque abbia questo link può vedere le statistiche base della partita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={shareUrl}
+              className="flex-1 min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm font-mono"
+            />
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                toast.success('Link copiato!');
+              }}
+            >
+              📋 Copia
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="container py-3 border-b border-border/40">
         <div className="flex items-center gap-3">

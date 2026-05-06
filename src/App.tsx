@@ -17,6 +17,7 @@ import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import Support from "./pages/Support.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AnalisiPubblica from "./pages/AnalisiPubblica.tsx";
 
 // Gestionale
 import Calendario from "./pages/gestionale/Calendario.tsx";
@@ -65,6 +66,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
+            <Route path="/analisi-pubblica/:matchId" element={<AnalisiPubblica />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

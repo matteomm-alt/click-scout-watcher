@@ -71,22 +71,34 @@ export function MonthView({ anchor, events }: Props) {
                 {dayEvents.slice(0, 3).map((evt) => {
                   const meta = getEventMeta(evt.event_type);
                   return (
-                    <button
-                      key={evt.id}
-                      onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
-                      className={cn(
-                        'text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:bg-muted/50 transition-colors',
-                        meta.bgClass,
-                        meta.borderClass,
-                        meta.textClass,
+                    <div key={evt.id} className="flex items-center gap-1">
+                      <button
+                        onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
+                        className={cn(
+                          'flex-1 text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:bg-muted/50 transition-colors',
+                          meta.bgClass,
+                          meta.borderClass,
+                          meta.textClass,
+                        )}
+                        title={evt.title}
+                      >
+                        <span className="font-bold mr-1">
+                          {format(new Date(evt.start_at), 'HH:mm')}
+                        </span>
+                        <span className="text-foreground">{evt.title}</span>
+                      </button>
+                      {evt.event_type === 'partita' && (
+                        <button
+                          onClick={() => navigate(
+                            `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent((evt as any).location || '')}`,
+                          )}
+                          className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0"
+                          title="Crea convocazione"
+                        >
+                          📋
+                        </button>
                       )}
-                      title={evt.title}
-                    >
-                      <span className="font-bold mr-1">
-                        {format(new Date(evt.start_at), 'HH:mm')}
-                      </span>
-                      <span className="text-foreground">{evt.title}</span>
-                    </button>
+                    </div>
                   );
                 })}
                 {dayEvents.length > 3 && (

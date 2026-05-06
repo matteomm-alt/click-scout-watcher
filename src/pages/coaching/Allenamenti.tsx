@@ -19,8 +19,9 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
-  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search,
+  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
@@ -331,6 +332,66 @@ export default function Allenamenti() {
     else { toast({ title: 'Eliminato' }); load(); }
   };
 
+  const handlePDF = async (t: TrainingRow) => {
+    const { data: blData } = await supabase
+      .from('training_blocks')
+      .select('title, description, duration_min, order_index')
+      .eq('training_id', t.id)
+      .order('order_index');
+    const blocks = (blData ?? []) as { title: string; description: string | null; duration_min: number | null; order_index: number }[];
+
+    const doc = new jsPDF('l', 'mm', 'a4');
+    const W = 297; const M = 15;
+    let y = M;
+
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+    doc.text(societyName ?? '', M, y);
+    doc.text(t.scheduled_date ? new Date(t.scheduled_date).toLocaleDateString('it-IT') : '', W - M, y, { align: 'right' });
+    y += 7;
+    doc.setFontSize(15); doc.setFont('helvetica', 'bold');
+    doc.text(t.title, M, y); y += 7;
+    if (t.duration_min) {
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+      doc.text(`Durata totale: ${t.duration_min} min`, M, y); y += 5;
+    }
+    if (t.goal) {
+      doc.setFillColor(245, 245, 245);
+      doc.rect(M, y, W - M * 2, 9, 'F');
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.text('Obiettivo:', M + 2, y + 6);
+      doc.setFont('helvetica', 'normal');
+      doc.text(t.goal.slice(0, 120), M + 28, y + 6); y += 13;
+    }
+    if (t.notes) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(8);
+      doc.text(t.notes.slice(0, 200), M, y); doc.setFont('helvetica', 'normal'); y += 6;
+    }
+    doc.setDrawColor(200); doc.setLineWidth(0.3); doc.line(M, y, W - M, y); y += 6;
+
+    blocks.forEach((b, i) => {
+      if (y > 178) { doc.addPage(); y = M; }
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+      doc.text(`${i + 1}. ${b.title}`, M, y);
+      if (b.duration_min) doc.text(`${b.duration_min} min`, W - M, y, { align: 'right' });
+      y += 5;
+      if (b.description) {
+        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        const lines = doc.splitTextToSize(b.description, W - M * 2 - 8);
+        doc.text(lines, M + 4, y); y += lines.length * 4;
+      }
+      doc.setDrawColor(210); doc.setLineDashPattern([1.5, 1.5], 0);
+      doc.line(M, y + 2, W - M, y + 2); doc.setLineDashPattern([], 0);
+      y += 8;
+    });
+
+    doc.setFontSize(7); doc.setTextColor(170);
+    doc.text(`Generato il ${new Date().toLocaleString('it-IT')} — VolleyScout Pro`, M, 200);
+    const safeName = t.title.slice(0, 20).replace(/[^a-zA-Z0-9]/g, '_');
+    const dateStr = t.scheduled_date ? t.scheduled_date.replace(/-/g, '') : 'senza_data';
+    doc.save(`allenamento_${dateStr}_${safeName}.pdf`);
+  };
+
+
   // ── Render ───────────────────────────────────────────────────────────────
   if (socLoading) {
     return (
@@ -503,6 +564,9 @@ export default function Allenamenti() {
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openDuplicate(t.id)} title="Duplica">
                   <Copy className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handlePDF(t)} title="Esporta PDF">
+                  <FileDown className="w-3.5 h-3.5" />
                 </Button>
                 <Button
                   size="sm" variant="ghost"

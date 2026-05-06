@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface NextEvent {
   id: string;
@@ -36,8 +37,9 @@ interface AttendanceAlert {
 }
 
 export function HomeDashboard() {
-  const { societyId } = useActiveSociety();
-  const { user } = useAuth();
+  const { societyId, isAdmin } = useActiveSociety();
+  const { user, isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
   const [nextEvent, setNextEvent] = useState<NextEvent | null>(null);
   const [dvw, setDvw] = useState<DvwKpi>({ total: 0, wins: 0, winRate: 0, lastResult: null });
   const [trainings, setTrainings] = useState<RecentTraining[]>([]);
@@ -129,6 +131,21 @@ export function HomeDashboard() {
 
   if (!societyId) return null;
 
+  if (loading) {
+    return (
+      <section className="container pb-16 space-y-6">
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+        </div>
+      </section>
+    );
+  }
+
   const daysUntil = nextEvent
     ? Math.max(0, Math.ceil((new Date(nextEvent.start_at).getTime() - Date.now()) / 86400000))
     : null;
@@ -145,6 +162,25 @@ export function HomeDashboard() {
         <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Dashboard</p>
         <h3 className="text-3xl md:text-4xl font-black italic uppercase leading-none">Panoramica</h3>
       </div>
+
+      {!isAdmin && (
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { icon: '✅', label: 'Presenze oggi', href: '/presenze' },
+            { icon: '📋', label: 'Nuova convocazione', href: '/convocazioni?new=1' },
+            { icon: '🔴', label: 'Scout Live', href: '/scout' },
+          ].map((a) => (
+            <button
+              key={a.href}
+              onClick={() => navigate(a.href)}
+              className="min-h-16 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors active:scale-95"
+            >
+              <span className="text-xl">{a.icon}</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-center px-1">{a.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* PROSSIMO EVENTO — hero */}
       <Card className="relative overflow-hidden p-8 border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card">
@@ -230,6 +266,20 @@ export function HomeDashboard() {
           </Card>
         </div>
       </div>
+
+      {isAdmin && !isSuperAdmin && (
+        <button
+          onClick={() => navigate('/report-stagione')}
+          className="w-full min-h-20 rounded-xl border-2 border-primary/30 bg-primary/5 hover:border-primary hover:bg-primary/10 flex items-center gap-4 px-6 transition-colors"
+        >
+          <BarChart3 className="w-8 h-8 text-primary shrink-0" />
+          <div className="flex-1 text-left">
+            <p className="font-black uppercase italic text-lg">Report Stagione</p>
+            <p className="text-xs text-muted-foreground">Statistiche complete e PDF esportabile</p>
+          </div>
+          <span className="text-2xl text-primary">→</span>
+        </button>
+      )}
 
       {/* ULTIMI ALLENAMENTI + ALERT PRESENZE */}
       <div className="grid md:grid-cols-2 gap-4">

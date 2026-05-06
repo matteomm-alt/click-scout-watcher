@@ -73,21 +73,33 @@ export function SeasonView({ start, end, events }: Props) {
                         const meta = getEventMeta(evt.event_type);
                         const Icon = meta.icon;
                         return (
-                          <button
-                            key={evt.id}
-                            onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
-                            className={cn(
-                              'flex items-center gap-1.5 text-xs px-2 py-1 rounded border-l-2 hover:bg-muted/50 transition-colors text-left',
-                              meta.bgClass,
-                              meta.borderClass,
+                          <div key={evt.id} className="flex items-center gap-1">
+                            <button
+                              onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
+                              className={cn(
+                                'flex-1 flex items-center gap-1.5 text-xs px-2 py-1 rounded border-l-2 hover:bg-muted/50 transition-colors text-left',
+                                meta.bgClass,
+                                meta.borderClass,
+                              )}
+                            >
+                              <Icon className={cn('w-3 h-3 shrink-0', meta.textClass)} />
+                              <span className={cn('font-bold shrink-0', meta.textClass)}>
+                                {format(new Date(evt.start_at), 'HH:mm')}
+                              </span>
+                              <span className="truncate">{evt.title}</span>
+                            </button>
+                            {evt.event_type === 'partita' && (
+                              <button
+                                onClick={() => navigate(
+                                  `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent((evt as any).location || '')}`,
+                                )}
+                                className="text-[10px] px-1.5 py-1 rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0"
+                                title="Crea convocazione"
+                              >
+                                📋
+                              </button>
                             )}
-                          >
-                            <Icon className={cn('w-3 h-3 shrink-0', meta.textClass)} />
-                            <span className={cn('font-bold shrink-0', meta.textClass)}>
-                              {format(new Date(evt.start_at), 'HH:mm')}
-                            </span>
-                            <span className="truncate">{evt.title}</span>
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
