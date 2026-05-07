@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
