@@ -596,6 +596,7 @@ export function ActionPanel() {
 
       {/* Step: Team */}
       {step === 'team' && (
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150">
         <div className={matchState.singleTeamMode ? 'space-y-2' : 'grid grid-cols-2 gap-3'}>
           <button onClick={() => handleTeamSelect('home')}
             className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-blue-700/30 hover:border-blue-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
@@ -614,38 +615,70 @@ export function ActionPanel() {
             </>
           )}
         </div>
+        </div>
       )}
 
       {/* Step: Player */}
-      {step === 'player' && selectedTeam && (
-        <div className="grid grid-cols-3 gap-2">
-          {getTeamLineup(selectedTeam).map((p, i) => (
-            <button key={p.number} onClick={() => handlePlayerSelect(p.number)}
-              className="min-h-20 p-4 rounded-xl bg-secondary hover:bg-primary/20 border border-border hover:border-primary/50 text-foreground transition-all touch-target active:scale-95 duration-75">
-              <div className="text-4xl font-black text-primary">{p.number}</div>
-              <div className="text-sm truncate text-muted-foreground">{p.name}</div>
-              <div className="text-[10px] text-muted-foreground/50">P{i + 1}</div>
-            </button>
-          ))}
-        </div>
-      )}
+      {step === 'player' && selectedTeam && (() => {
+        const servingLineup = selectedTeam === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+        const isServingTeam = selectedTeam === matchState.servingTeam;
+        const serverNumber = servingLineup[0];
+        return (
+          <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+            <div className="grid grid-cols-3 gap-2">
+              {getTeamLineup(selectedTeam).map((p) => {
+                const isServer = isServingTeam && p.number === serverNumber;
+                return (
+                  <button
+                    key={p.number}
+                    onClick={() => handlePlayerSelect(p.number)}
+                    className={`min-h-24 p-3 rounded-xl border-2 transition-all touch-target active:scale-95 duration-75 flex flex-col items-center justify-center gap-1 ${
+                      isServer ? 'border-warning bg-warning/10 hover:bg-warning/20' : 'border-border bg-secondary hover:bg-primary/20 hover:border-primary/50'
+                    }`}
+                  >
+                    {isServer && (
+                      <span className="text-[9px] bg-warning text-black px-1.5 py-0.5 rounded font-black uppercase tracking-wide">SERVE</span>
+                    )}
+                    <div className="text-5xl font-black text-primary leading-none">{p.number}</div>
+                    <div className="text-sm font-semibold text-foreground truncate w-full text-center">{p.name}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Step: Skill */}
-      {step === 'skill' && (
-        <div className="grid grid-cols-4 gap-2">
-          {skills.map(s => (
-            <button key={s.key} onClick={() => handleSkillSelect(s.key)}
-              className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}>
-              <div className="text-2xl font-black">{s.key}</div>
-              <div className="text-sm">{SKILL_LABELS[s.key]}</div>
-            </button>
-          ))}
-        </div>
-      )}
+      {step === 'skill' && (() => {
+        const isLiberoSelected = (() => {
+          if (!selectedPlayer || !selectedTeam) return false;
+          const teamData = selectedTeam === 'home' ? homeTeam : awayTeam;
+          const player = teamData.players.find(p => p.number === selectedPlayer);
+          return player?.isLibero === true;
+        })();
+        const visibleSkills = isLiberoSelected ? skills.filter(s => ['R', 'D', 'F'].includes(s.key)) : skills;
+        return (
+          <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+            <div className="grid grid-cols-4 gap-2">
+              {visibleSkills.map(s => (
+                <button key={s.key} onClick={() => handleSkillSelect(s.key)}
+                  className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}>
+                  <div className="text-2xl font-black">{s.key}</div>
+                  <div className="text-sm">{SKILL_LABELS[s.key]}</div>
+                </button>
+              ))}
+            </div>
+            {isLiberoSelected && (
+              <p className="text-xs text-muted-foreground text-center mt-1">Libero — solo ricezione, difesa, freeball</p>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Step: Serve Type */}
       {step === 'serveType' && (
-        <div className="space-y-2">
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
           <span className="text-sm font-bold text-foreground">Tipo di Battuta</span>
           <button onClick={() => { setSelectedServeType(null); setStep('evaluation'); }} className="w-full min-h-14 rounded-xl bg-secondary border-2 border-dashed border-border text-base font-bold text-foreground transition-transform duration-75 active:scale-95">↩ Salta tipo</button>
           <div className="grid grid-cols-3 gap-2">
@@ -662,28 +695,35 @@ export function ActionPanel() {
 
       {/* Step: Attack Combo */}
       {step === 'attackCombo' && (
-        <div className="space-y-2">
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
           <span className="text-sm font-bold text-foreground">Combinazione Attacco</span>
           <button onClick={() => { setSelectedAttackCombo(null); setStep('evaluation'); }} className="w-full min-h-14 rounded-xl bg-secondary border-2 border-dashed border-border text-base font-bold text-foreground transition-transform duration-75 active:scale-95">↩ Salta combinazione</button>
-          {/* Tempo filter tabs */}
-          <div className="flex gap-1 flex-wrap">
-            {(['all', 'Q', 'M', 'T', 'H', 'O'] as const).map(f => (
-              <button key={f} onClick={() => setAttackFilter(f)}
-                className={`px-4 py-3 min-h-12 rounded text-sm font-bold transition-all active:scale-95 duration-75 ${
-                  attackFilter === f
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-muted-foreground hover:text-foreground'
-                }`}>
-                {tempoLabels[f]}
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowTempoFilter(v => !v)}
+            className="w-full min-h-10 rounded-lg bg-secondary/50 text-xs font-bold text-muted-foreground flex items-center justify-between px-3 active:scale-95"
+          >
+            <span>Filtra per tempo</span>
+            <span>{showTempoFilter ? '▴' : '▾'}</span>
+          </button>
+          {showTempoFilter && (
+            <div className="flex gap-1 flex-wrap animate-in fade-in duration-150">
+              {(['all', 'Q', 'M', 'T', 'H', 'O'] as const).map(f => (
+                <button key={f} onClick={() => setAttackFilter(f)}
+                  className={`px-4 py-3 min-h-12 rounded text-sm font-bold transition-all active:scale-95 duration-75 ${
+                    attackFilter === f ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'
+                  }`}>
+                  {tempoLabels[f]}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="grid grid-cols-3 md:grid-cols-4 gap-1.5">
             {filteredCombos.map(combo => (
               <button key={combo.code} onClick={() => handleAttackComboSelect(combo)}
                 className={`min-h-16 p-3 rounded-lg border text-foreground text-sm font-semibold transition-all touch-target active:scale-95 duration-75 ${tempoColors[combo.tempo] || 'bg-secondary border-border'}`}>
                 <div className="text-sm font-bold">{combo.code}</div>
-                <div className="text-[9px] text-muted-foreground leading-tight truncate">{combo.description}</div>
+                <div className="text-[11px] text-muted-foreground leading-tight truncate">{combo.description}</div>
               </button>
             ))}
           </div>
@@ -692,31 +732,65 @@ export function ActionPanel() {
 
       {/* Step: Evaluation */}
       {step === 'evaluation' && (
-        <div className="space-y-2">
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
           {autoAttack && (
-            <div className="flex items-center justify-between rounded-xl bg-warning/15 border border-warning/30 p-3 text-sm font-black text-warning">
+            <div className="bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-3 py-2 text-sm font-bold flex items-center justify-between">
               <span>⚡ Auto: Palla Alta</span>
-              <button type="button" onClick={() => { setAutoAttack(false); setStep('attackCombo'); }} className="rounded bg-secondary px-3 py-2 text-foreground">Cambia</button>
+              <button className="text-xs underline" onClick={() => { setAutoAttack(false); setStep('attackCombo'); }}>Cambia</button>
             </div>
           )}
-        <div className="grid grid-cols-2 gap-2">
-          {evaluations.map(e => (
-            <button key={e.key} onClick={() => handleEvaluationSelect(e.key)}
-              className={`min-h-20 p-3 rounded-xl ${e.color} text-primary-foreground text-xl font-black transition-all touch-target active:scale-95 duration-75`}>
-              {e.label}
+          <button
+            onClick={() => handleEvaluationSelect('#')}
+            className="min-h-24 w-full rounded-xl bg-green-600 hover:bg-green-500 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 flex items-center justify-center gap-3 text-2xl"
+          >
+            <span className="text-4xl">#</span>
+            <span>Perfetto</span>
+          </button>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: '+' as Evaluation, color: 'bg-emerald-600 hover:bg-emerald-500', label: 'Positivo' },
+              { key: '!' as Evaluation, color: 'bg-yellow-600 hover:bg-yellow-500', label: 'OK' },
+              { key: '-' as Evaluation, color: 'bg-orange-600 hover:bg-orange-500', label: 'Negativo' },
+            ].map(e => (
+              <button
+                key={e.key}
+                onClick={() => handleEvaluationSelect(e.key)}
+                className={`min-h-16 p-3 rounded-xl ${e.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}
+              >
+                <div className="text-xl font-black">{e.key}</div>
+                <div className="text-xs">{e.label}</div>
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleEvaluationSelect('/')}
+              className="min-h-16 p-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75"
+            >
+              <div className="text-xl font-black">/</div>
+              <div className="text-xs">Murato</div>
             </button>
-          ))}
-        </div>
+            <button
+              onClick={() => handleEvaluationSelect('=')}
+              className="min-h-16 p-3 rounded-xl bg-red-700 hover:bg-red-600 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 border-2 border-destructive"
+            >
+              <div className="text-xl font-black">=</div>
+              <div className="text-xs">Errore</div>
+            </button>
+          </div>
         </div>
       )}
 
       {/* Step: Start Zone */}
       {step === 'startZone' && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-bold text-foreground">Zona di partenza</span>
-            <button onClick={skipZones} className="w-full min-h-14 rounded-xl bg-secondary text-base font-bold text-foreground transition-transform duration-75 active:scale-95">
-              <SkipForward className="inline w-4 h-4 mr-1" /> Salta
+            <button
+              onClick={skipZones}
+              className="min-h-10 px-4 rounded-xl bg-secondary text-sm font-bold text-foreground transition-transform duration-75 active:scale-95 flex items-center gap-1 shrink-0"
+            >
+              <SkipForward className="w-4 h-4" /> Salta
             </button>
           </div>
           <ZoneCourt mode="select-start" onZoneClick={handleStartZone} side={selectedTeam || 'home'} skill={selectedSkill} large={true} />
@@ -725,11 +799,14 @@ export function ActionPanel() {
 
       {/* Step: End Zone */}
       {step === 'endZone' && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-bold text-foreground">Zona di arrivo</span>
-            <button onClick={skipZones} className="w-full min-h-14 rounded-xl bg-secondary text-base font-bold text-foreground transition-transform duration-75 active:scale-95">
-              <SkipForward className="inline w-4 h-4 mr-1" /> Salta
+            <button
+              onClick={skipZones}
+              className="min-h-10 px-4 rounded-xl bg-secondary text-sm font-bold text-foreground transition-transform duration-75 active:scale-95 flex items-center gap-1 shrink-0"
+            >
+              <SkipForward className="w-4 h-4" /> Salta
             </button>
           </div>
           <ZoneCourt mode="select-end" onZoneClick={handleEndZone} startZone={startZone} side={selectedTeam || 'home'} large={true} />
@@ -737,36 +814,51 @@ export function ActionPanel() {
       )}
 
       {/* Quick actions */}
-      <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
-        <button onClick={undoLastAction} disabled={matchState.actions.length === 0}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95">
-          <Undo2 className="w-3.5 h-3.5" /> Annulla
-        </button>
-        <button onClick={() => addPoint('home')}
-          className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
-          +1 {homeTeam.name || 'Casa'}
-        </button>
-        <button onClick={() => addPoint('away')}
-          className="min-h-14 px-4 rounded-lg bg-secondary border border-red-700/20 text-foreground hover:border-red-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
-          +1 {awayTeam.name || 'Ospite'}
-        </button>
-        <button onClick={() => setShowSubstitution(true)}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold transition-transform duration-75 active:scale-95">
-          <ArrowLeftRight className="w-3.5 h-3.5" /> Cambio
-        </button>
-        <button onClick={() => setShowLibero(true)}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-sm font-bold transition-transform duration-75 active:scale-95">
-          <Shield className="w-3.5 h-3.5" /> Libero
-        </button>
-        <button onClick={endSet}
-          className="min-h-14 px-4 rounded-lg bg-secondary text-warning hover:bg-warning/10 text-sm font-bold transition-transform duration-75 active:scale-95">
-          Fine Set
-        </button>
-        <button onClick={handleExportDVW}
-          className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto transition-transform duration-75 active:scale-95">
-          <Download className="w-3.5 h-3.5" /> DVW
-        </button>
-      </div>
+      {step === 'team' && (
+        <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
+          <button onClick={undoLastAction} disabled={matchState.actions.length === 0}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95">
+            <Undo2 className="w-3.5 h-3.5" /> Annulla
+          </button>
+          <button onClick={() => addPoint('home')}
+            className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
+            +1 {homeTeam.name || 'Casa'}
+          </button>
+          <button onClick={() => addPoint('away')}
+            className="min-h-14 px-4 rounded-lg bg-secondary border border-red-700/20 text-foreground hover:border-red-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
+            +1 {awayTeam.name || 'Ospite'}
+          </button>
+          <button onClick={() => setShowSubstitution(true)}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold transition-transform duration-75 active:scale-95">
+            <ArrowLeftRight className="w-3.5 h-3.5" /> Cambio
+          </button>
+          <button onClick={() => setShowLibero(true)}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-sm font-bold transition-transform duration-75 active:scale-95">
+            <Shield className="w-3.5 h-3.5" /> Libero
+          </button>
+          <button onClick={() => setShowEndSetDialog(true)}
+            className="min-h-14 px-4 rounded-lg bg-warning/10 border border-warning/30 text-warning hover:bg-warning/20 text-sm font-black transition-transform duration-75 active:scale-95">
+            Fine Set
+          </button>
+          <button onClick={handleExportDVW}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto transition-transform duration-75 active:scale-95 border border-primary/20">
+            <Download className="w-3.5 h-3.5" /> DVW
+          </button>
+        </div>
+      )}
+    <Dialog open={showEndSetDialog} onOpenChange={setShowEndSetDialog}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Fine Set {matchState.currentSet}</DialogTitle></DialogHeader>
+        <div className="text-center py-4">
+          <p className="text-4xl font-black text-primary">{matchState.homeScore} — {matchState.awayScore}</p>
+          <p className="text-sm text-muted-foreground mt-1">{homeTeam.name || 'Casa'} · Set {matchState.currentSet}</p>
+        </div>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setShowEndSetDialog(false)} className="min-h-14 flex-1 rounded-xl bg-secondary font-bold">Annulla</button>
+          <button type="button" onClick={() => { endSet(); setShowEndSetDialog(false); }} className="min-h-14 flex-1 rounded-xl bg-warning text-black font-black">Conferma Fine Set</button>
+        </div>
+      </DialogContent>
+    </Dialog>
     <Dialog open={showMuroDialog !== null} onOpenChange={(open) => !open && setShowMuroDialog(null)}>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>{showMuroDialog === 'vincente' ? 'Chi ha murato?' : 'Chi ha toccato a muro?'}</DialogTitle></DialogHeader>
