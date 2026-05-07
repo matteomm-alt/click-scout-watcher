@@ -383,14 +383,21 @@ export const useMatchStore = create<MatchStore>()(
         };
       }),
 
-      substitutePlayer: (team, outNumber, inNumber) => set((s) => {
-        const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+      substitutePlayer: (team, outNumber, inNumber) => {
+        const { matchState } = get();
         const usedKey = team === 'home' ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
-        const lineup = [...s.matchState[lineupKey]];
-        const idx = lineup.indexOf(outNumber);
-        if (idx >= 0) lineup[idx] = inNumber;
-        return { matchState: { ...s.matchState, [lineupKey]: lineup, [usedKey]: s.matchState[usedKey] + 1 } };
-      }),
+        if (matchState[usedKey] >= 6) {
+          toast.error('Limite sostituzioni raggiunto (6/6)');
+          return;
+        }
+        set((s) => {
+          const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+          const lineup = [...s.matchState[lineupKey]];
+          const idx = lineup.indexOf(outNumber);
+          if (idx >= 0) lineup[idx] = inNumber;
+          return { matchState: { ...s.matchState, [lineupKey]: lineup, [usedKey]: s.matchState[usedKey] + 1 } };
+        });
+      },
 
       callTimeout: (team) => {
         const { matchState } = get();
