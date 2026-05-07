@@ -103,6 +103,7 @@ const defaultMatchState: MatchState = {
   awaySubstitutionsUsed: 0,
   timeouts: [],
   sanctions: [],
+  setOverPending: false,
 };
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
