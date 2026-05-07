@@ -50,6 +50,7 @@ export function ScoreBoard() {
   const [sanctionTeam, setSanctionTeam] = useState<'home' | 'away'>('home');
   const [sanctionType, setSanctionType] = useState<SanctionType>('yellow');
   const [sanctionPlayer, setSanctionPlayer] = useState<string>('');
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   const handleTimeout = (team: 'home' | 'away') => {
     const ok = callTimeout(team);
