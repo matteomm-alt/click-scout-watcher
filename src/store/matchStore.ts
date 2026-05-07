@@ -103,11 +103,12 @@ const defaultMatchState: MatchState = {
   awaySubstitutionsUsed: 0,
   timeouts: [],
   sanctions: [],
+  setOverPending: false,
 };
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
 
-type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam'> & { actionCount: number };
+type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number };
 const lineupSnapshots: LineupSnapshot[] = [];
 
 export const useMatchStore = create<MatchStore>()(
@@ -259,6 +260,8 @@ export const useMatchStore = create<MatchStore>()(
           homeSetterPosition: matchState.homeSetterPosition,
           awaySetterPosition: matchState.awaySetterPosition,
           servingTeam: matchState.servingTeam,
+          homeScore: matchState.homeScore,
+          awayScore: matchState.awayScore,
           actionCount: matchState.actions.length,
         });
         const newHomeScore = team === 'home' ? matchState.homeScore + 1 : matchState.homeScore;
@@ -269,11 +272,14 @@ export const useMatchStore = create<MatchStore>()(
           Math.abs(newHomeScore - newAwayScore) >= 2;
 
         if (isSetOver) {
-          // Apply final score before ending the set
           set((s) => ({
-            matchState: { ...s.matchState, homeScore: newHomeScore, awayScore: newAwayScore },
+            matchState: {
+              ...s.matchState,
+              homeScore: newHomeScore,
+              awayScore: newAwayScore,
+              setOverPending: true,
+            },
           }));
-          get().endSet();
           return;
         }
 
@@ -350,6 +356,9 @@ export const useMatchStore = create<MatchStore>()(
             awayTimeoutsUsed: isMatchOver ? s.matchState.awayTimeoutsUsed : 0,
             homeSubstitutionsUsed: 0,
             awaySubstitutionsUsed: 0,
+            homeSetterPosition: 1,
+            awaySetterPosition: 1,
+            setOverPending: false,
           },
         };
       }),
@@ -366,20 +375,29 @@ export const useMatchStore = create<MatchStore>()(
               homeSetterPosition: snapshot.homeSetterPosition,
               awaySetterPosition: snapshot.awaySetterPosition,
               servingTeam: snapshot.servingTeam,
+              homeScore: snapshot.homeScore,
+              awayScore: snapshot.awayScore,
             } : {}),
             actions: s.matchState.actions.slice(0, -1),
           },
         };
       }),
 
-      substitutePlayer: (team, outNumber, inNumber) => set((s) => {
-        const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+      substitutePlayer: (team, outNumber, inNumber) => {
+        const { matchState } = get();
         const usedKey = team === 'home' ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
-        const lineup = [...s.matchState[lineupKey]];
-        const idx = lineup.indexOf(outNumber);
-        if (idx >= 0) lineup[idx] = inNumber;
-        return { matchState: { ...s.matchState, [lineupKey]: lineup, [usedKey]: s.matchState[usedKey] + 1 } };
-      }),
+        if (matchState[usedKey] >= 6) {
+          toast.error('Limite sostituzioni raggiunto (6/6)');
+          return;
+        }
+        set((s) => {
+          const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+          const lineup = [...s.matchState[lineupKey]];
+          const idx = lineup.indexOf(outNumber);
+          if (idx >= 0) lineup[idx] = inNumber;
+          return { matchState: { ...s.matchState, [lineupKey]: lineup, [usedKey]: s.matchState[usedKey] + 1 } };
+        });
+      },
 
       callTimeout: (team) => {
         const { matchState } = get();

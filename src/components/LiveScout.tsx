@@ -64,7 +64,7 @@ export function LiveScout() {
   const [editingAction, setEditingAction] = useState<ScoutAction | null>(null);
   const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
   const [timeoutBanner, setTimeoutBanner] = useState(false);
-  const recentActions = [...matchState.actions].reverse().slice(0, 30);
+  const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
 
   useEffect(() => {
@@ -141,6 +141,11 @@ export function LiveScout() {
           </div>
         ))}
       </div>
+      {matchState.actions.length > 100 && (
+        <p className="text-xs text-muted-foreground text-center py-2">
+          Ultime 100 azioni su {matchState.actions.length} totali
+        </p>
+      )}
 
       {matchState.setResults.length > 0 && (
         <div className="border-t border-border mt-3 pt-2">

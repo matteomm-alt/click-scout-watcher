@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { Square, AlertTriangle, RotateCcw, BarChart2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import type { SanctionType } from '@/types/volleyball';
@@ -49,6 +50,7 @@ export function ScoreBoard() {
   const [sanctionTeam, setSanctionTeam] = useState<'home' | 'away'>('home');
   const [sanctionType, setSanctionType] = useState<SanctionType>('yellow');
   const [sanctionPlayer, setSanctionPlayer] = useState<string>('');
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   const handleTimeout = (team: 'home' | 'away') => {
     const ok = callTimeout(team);
@@ -305,17 +307,31 @@ export function ScoreBoard() {
       {/* Reset match */}
       <button
         type="button"
-        onClick={() => {
-          if (confirm('Resettare la partita? Tutti i dati locali verranno persi.')) {
-            resetMatch();
-            toast.info('Partita resettata');
-          }
-        }}
+        onClick={() => setResetConfirmOpen(true)}
         className="min-h-12 min-w-12 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors active:scale-95"
         title="Reset partita"
       >
         <RotateCcw className="w-4 h-4" />
       </button>
+      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resettare la partita?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tutti i dati della partita corrente verranno persi definitivamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => { resetMatch(); toast.info('Partita resettata'); }}
+            >
+              Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

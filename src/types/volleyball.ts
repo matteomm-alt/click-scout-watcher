@@ -213,6 +213,7 @@ export interface MatchState {
   awaySubstitutionsUsed: number;
   timeouts: TimeoutRecord[];
   sanctions: Sanction[];
+  setOverPending?: boolean;
 }
 
 export type AppStep = 'setup' | 'roster' | 'lineup' | 'scout';
