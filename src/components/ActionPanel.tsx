@@ -108,16 +108,19 @@ export function ActionPanel() {
   };
 
   const handleTeamSelect = (team: 'home' | 'away') => {
+    navigator.vibrate?.(25);
     setSelectedTeam(team);
     setStep('player');
   };
 
   const handlePlayerSelect = (num: number) => {
+    navigator.vibrate?.(25);
     setSelectedPlayer(num);
     setStep('skill');
   };
 
   const handleSkillSelect = (skill: Skill) => {
+    navigator.vibrate?.(25);
     setSelectedSkill(skill);
     if (skill === 'A') {
       const lastReceive = [...matchState.actions].reverse().find((a) => a.skill === 'R');
@@ -148,6 +151,7 @@ export function ActionPanel() {
   };
 
   const handleEvaluationSelect = (evaluation: Evaluation) => {
+    navigator.vibrate?.(25);
     setSelectedEvaluation(evaluation);
     if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showStartZone) {
       setStep('startZone');
