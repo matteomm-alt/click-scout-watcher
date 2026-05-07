@@ -46,9 +46,18 @@ export function ActionPanel() {
   const [lastDvwText, setLastDvwText] = useState<string>('');
   const [lastDvwFilename, setLastDvwFilename] = useState<string>('');
   const [importingDvw, setImportingDvw] = useState(false);
+  const [showEndSetDialog, setShowEndSetDialog] = useState(false);
+  const [showTempoFilter, setShowTempoFilter] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { settings } = useScoutSettings();
+
+  useEffect(() => {
+    if ((matchState as any).setOverPending && !showEndSetDialog) {
+      setShowEndSetDialog(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(matchState as any).setOverPending]);
 
   const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
