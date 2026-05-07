@@ -184,7 +184,7 @@ export function ActionPanel() {
     if (!selectedTeam || selectedPlayer === null || !selectedSkill) return;
 
     const now = new Date();
-    const timestamp = `${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`;
+    const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
     // Determine skill type from serve type, attack combo, or default
     let skillType: SkillType = 'H';
@@ -587,7 +587,7 @@ export function ActionPanel() {
           {matchState.singleTeamMode && (
             <>
               <button type="button" onClick={() => { addPoint('away'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-destructive/10 border border-destructive/30 text-destructive font-black">PUNTO AVVERSARIO</button>
-              <button type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`, team: 'home', playerNumber: 0, skill: 'B', skillType: 'H', evaluation: '#', code: '*00BH#~~' }); addPoint('home'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-black">🛡 MURO</button>
+              <button type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`, team: 'home', playerNumber: 0, skill: 'B', skillType: 'H', evaluation: '#', code: '*00BH#~~' }); addPoint('home'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-black">🛡 MURO</button>
             </>
           )}
         </div>
@@ -754,7 +754,7 @@ export function ActionPanel() {
             const teamData = opposite === 'home' ? homeTeam : awayTeam;
             return nums.map((num) => {
               const player = teamData.players.find((p) => p.number === num);
-              return <button key={num} type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`, team: opposite, playerNumber: num, skill: 'B', skillType: 'H', evaluation: showMuroDialog === 'vincente' ? '#' : '/', code: `${opposite === 'home' ? '*' : 'a'}${String(num).padStart(2, '0')}BH${showMuroDialog === 'vincente' ? '#' : '/'}~~` }); resetSelection(); setShowMuroDialog(null); }} className="min-h-16 w-full rounded-xl bg-secondary text-lg font-black active:scale-95">#{num} {player?.lastName || ''}</button>;
+              return <button key={num} type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`, team: opposite, playerNumber: num, skill: 'B', skillType: 'H', evaluation: showMuroDialog === 'vincente' ? '#' : '/', code: `${opposite === 'home' ? '*' : 'a'}${String(num).padStart(2, '0')}BH${showMuroDialog === 'vincente' ? '#' : '/'}~~` }); resetSelection(); setShowMuroDialog(null); }} className="min-h-16 w-full rounded-xl bg-secondary text-lg font-black active:scale-95">#{num} {player?.lastName || ''}</button>;
             });
           })()}
           <button type="button" onClick={() => { resetSelection(); setShowMuroDialog(null); }} className="min-h-12 w-full rounded bg-secondary text-muted-foreground font-bold">Tralascia</button>
