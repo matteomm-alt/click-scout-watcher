@@ -260,6 +260,8 @@ export const useMatchStore = create<MatchStore>()(
           homeSetterPosition: matchState.homeSetterPosition,
           awaySetterPosition: matchState.awaySetterPosition,
           servingTeam: matchState.servingTeam,
+          homeScore: matchState.homeScore,
+          awayScore: matchState.awayScore,
           actionCount: matchState.actions.length,
         });
         const newHomeScore = team === 'home' ? matchState.homeScore + 1 : matchState.homeScore;
@@ -270,11 +272,14 @@ export const useMatchStore = create<MatchStore>()(
           Math.abs(newHomeScore - newAwayScore) >= 2;
 
         if (isSetOver) {
-          // Apply final score before ending the set
           set((s) => ({
-            matchState: { ...s.matchState, homeScore: newHomeScore, awayScore: newAwayScore },
+            matchState: {
+              ...s.matchState,
+              homeScore: newHomeScore,
+              awayScore: newAwayScore,
+              setOverPending: true,
+            },
           }));
-          get().endSet();
           return;
         }
 
