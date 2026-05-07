@@ -538,36 +538,55 @@ export function ActionPanel() {
     <div className="space-y-3">
       {/* Breadcrumb */}
       {step !== 'team' && (
-        <div className="flex items-center gap-1.5 text-xs flex-wrap">
-          <button onClick={goBack} className="min-h-10 min-w-10 rounded bg-secondary text-foreground font-black transition-transform duration-75 active:scale-95">←</button>
-          <button onClick={resetSelection} className="min-h-10 min-w-10 rounded bg-secondary text-destructive hover:text-destructive/80 font-black transition-transform duration-75 active:scale-95">✕</button>
-          {selectedTeam && (
-            <span className="px-2 py-0.5 rounded bg-secondary text-primary font-semibold">
-              {selectedTeam === 'home' ? homeTeam.name : awayTeam.name}
-            </span>
-          )}
-          {selectedPlayer !== null && (
-            <span className="px-2 py-0.5 rounded bg-secondary text-foreground font-semibold">#{selectedPlayer}</span>
-          )}
-          {selectedSkill && (
-            <span className="px-2 py-0.5 rounded bg-secondary text-foreground font-semibold">{SKILL_LABELS[selectedSkill]}</span>
-          )}
-          {selectedServeType && (
-            <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">
-              {SERVE_TYPES.find(s => s.key === selectedServeType)?.label}
-            </span>
-          )}
-          {selectedAttackCombo && (
-            <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-semibold">
-              {selectedAttackCombo.code}
-            </span>
-          )}
-          {selectedEvaluation && (
-            <span className="px-2 py-0.5 rounded bg-secondary text-foreground font-bold">{selectedEvaluation}</span>
-          )}
-          {startZone && (
-            <span className="px-2 py-0.5 rounded bg-primary/20 text-primary font-semibold">Z{startZone}→</span>
-          )}
+        <div className="flex items-center gap-2 mb-1">
+          <button onClick={goBack} className="min-h-12 min-w-12 rounded-lg bg-secondary text-foreground text-base font-black transition-transform duration-75 active:scale-95 shrink-0">←</button>
+          <button onClick={resetSelection} className="min-h-12 min-w-12 rounded-lg bg-secondary text-destructive font-black transition-transform duration-75 active:scale-95 shrink-0">✕</button>
+          <button
+            onClick={undoLastAction}
+            disabled={matchState.actions.length === 0}
+            className="min-h-12 min-w-12 rounded-lg bg-secondary text-muted-foreground disabled:opacity-30 transition-transform duration-75 active:scale-95 shrink-0 flex items-center justify-center"
+            title="Annulla ultima azione"
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-1 flex-wrap min-w-0">
+            {selectedTeam && (
+              <span className={`px-2 py-0.5 rounded text-xs font-bold ${selectedTeam === 'home' ? 'bg-blue-600/20 text-blue-300' : 'bg-red-600/20 text-red-300'}`}>
+                {selectedTeam === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
+              </span>
+            )}
+            {selectedPlayer !== null && (
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-secondary text-foreground">#{selectedPlayer}</span>
+            )}
+            {selectedSkill && (
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-secondary text-foreground">{SKILL_LABELS[selectedSkill]}</span>
+            )}
+            {selectedEvaluation && (
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-secondary text-foreground">{selectedEvaluation}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-1 ml-auto shrink-0">
+            {(() => {
+              const base: ScoutStep[] = ['team', 'player', 'skill'];
+              if (selectedSkill === 'S' && settings.showServeType) base.push('serveType');
+              if (selectedSkill === 'A' && settings.showAttackCombo) base.push('attackCombo');
+              base.push('evaluation');
+              if (settings.showStartZone) base.push('startZone');
+              if (settings.showEndZone) base.push('endZone');
+              const currentIdx = base.indexOf(step);
+              return base.map((s, i) => {
+                const isDone = i < currentIdx;
+                const isCurrent = s === step;
+                return (
+                  <span key={s} className={`rounded-full transition-all duration-200 ${
+                    isCurrent ? 'w-3 h-3 bg-primary animate-pulse'
+                    : isDone ? 'w-2 h-2 bg-primary'
+                    : 'w-2 h-2 bg-muted'
+                  }`} />
+                );
+              });
+            })()}
+          </div>
         </div>
       )}
 
