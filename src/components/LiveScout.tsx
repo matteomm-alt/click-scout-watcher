@@ -139,6 +139,7 @@ export function LiveScout() {
               <Pencil className="h-3.5 w-3.5" />
             </button>
           </div>
+        ))}
       </div>
       {matchState.actions.length > 100 && (
         <p className="text-xs text-muted-foreground text-center py-2">
