@@ -108,7 +108,7 @@ const defaultMatchState: MatchState = {
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
 
-type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam'> & { actionCount: number };
+type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number };
 const lineupSnapshots: LineupSnapshot[] = [];
 
 export const useMatchStore = create<MatchStore>()(
