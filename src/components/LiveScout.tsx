@@ -64,7 +64,7 @@ export function LiveScout() {
   const [editingAction, setEditingAction] = useState<ScoutAction | null>(null);
   const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
   const [timeoutBanner, setTimeoutBanner] = useState(false);
-  const recentActions = [...matchState.actions].reverse().slice(0, 30);
+  const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
 
   useEffect(() => {
