@@ -375,6 +375,8 @@ export const useMatchStore = create<MatchStore>()(
               homeSetterPosition: snapshot.homeSetterPosition,
               awaySetterPosition: snapshot.awaySetterPosition,
               servingTeam: snapshot.servingTeam,
+              homeScore: snapshot.homeScore,
+              awayScore: snapshot.awayScore,
             } : {}),
             actions: s.matchState.actions.slice(0, -1),
           },
