@@ -40,7 +40,7 @@ export function QuickActions() {
 
   const fire = (cfg: QuickConfig, playerNumber: number | null) => {
     const now = new Date();
-    const ts = `${String(now.getHours()).padStart(2,'0')}.${String(now.getMinutes()).padStart(2,'0')}.${String(now.getSeconds()).padStart(2,'0')}`;
+    const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     const scoring: 'home' | 'away' = cfg.scoringTeam === 'self' ? team : (team === 'home' ? 'away' : 'home');
 
     if (cfg.skill && cfg.evaluation && playerNumber !== null) {
