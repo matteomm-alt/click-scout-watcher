@@ -356,6 +356,9 @@ export const useMatchStore = create<MatchStore>()(
             awayTimeoutsUsed: isMatchOver ? s.matchState.awayTimeoutsUsed : 0,
             homeSubstitutionsUsed: 0,
             awaySubstitutionsUsed: 0,
+            homeSetterPosition: 1,
+            awaySetterPosition: 1,
+            setOverPending: false,
           },
         };
       }),
