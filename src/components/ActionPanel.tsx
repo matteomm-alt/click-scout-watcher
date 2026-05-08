@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
@@ -80,7 +80,7 @@ export function ActionPanel() {
     { key: '+', color: 'bg-emerald-600 hover:bg-emerald-500', label: '+ Positivo' },
     { key: '!', color: 'bg-yellow-600 hover:bg-yellow-500', label: '! OK' },
     { key: '-', color: 'bg-orange-600 hover:bg-orange-500', label: '- Negativo' },
-    { key: '/', color: 'bg-red-500 hover:bg-red-400', label: '/ Scarso' },
+    { key: '/', color: 'bg-orange-600 hover:bg-orange-500', label: '/ Murato' },
     { key: '=', color: 'bg-red-700 hover:bg-red-600', label: '= Errore' },
   ];
 
@@ -123,7 +123,11 @@ export function ActionPanel() {
     navigator.vibrate?.(25);
     setSelectedSkill(skill);
     if (skill === 'A') {
-      const lastReceive = [...matchState.actions].reverse().find((a) => a.skill === 'R');
+      const lastReceive = [...matchState.actions].reverse().find((a) =>
+        a.skill === 'R' &&
+        a.setNumber === matchState.currentSet &&
+        a.team === selectedTeam
+      );
       if (lastReceive && (lastReceive.evaluation === '-' || lastReceive.evaluation === '/' || lastReceive.evaluation === '=')) {
         setSelectedAttackCombo({ code: 'HA', label: 'Palla Alta', description: 'Auto da ricezione negativa', tempo: 'H' as const, position: '-' as const });
         setAutoAttack(true);
@@ -220,9 +224,18 @@ export function ActionPanel() {
     });
 
     // Auto-score
-    if (settings.autoPoint && (selectedSkill === 'A' || selectedSkill === 'S' || selectedSkill === 'B') && evaluation === '#') {
+    if (
+      settings.autoPoint &&
+      (selectedSkill === 'A' || selectedSkill === 'S' || selectedSkill === 'B') &&
+      evaluation === '#' &&
+      !(selectedSkill === 'A' && settings.showMuroVincente)
+    ) {
       addPoint(selectedTeam);
-    } else if (settings.autoPoint && evaluation === '=') {
+    } else if (
+      settings.autoPoint &&
+      evaluation === '=' &&
+      (selectedSkill === 'S' || selectedSkill === 'A')
+    ) {
       addPoint(selectedTeam === 'home' ? 'away' : 'home');
     }
 
@@ -233,6 +246,12 @@ export function ActionPanel() {
     if (selectedSkill === 'A' && evaluation === '/' && settings.showMuroErrato) {
       setShowMuroDialog('errato');
       return;
+    }
+
+    if (!settings.fastMode) {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      setActionFlash(true);
+      flashTimerRef.current = setTimeout(() => setActionFlash(false), 280);
     }
 
     resetSelection();
@@ -469,7 +488,9 @@ export function ActionPanel() {
     const lineup = getTeamLineup(subTeam);
     const teamData = subTeam === 'home' ? homeTeam : awayTeam;
     const lineupNumbers = subTeam === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
-    const bench = teamData.players.filter(p => !lineupNumbers.includes(p.number) && !p.isLibero);
+    const bench = teamData.players
+      .filter(p => !lineupNumbers.includes(p.number) && !p.isLibero)
+      .sort((a, b) => a.number - b.number);
 
     return (
       <div className="space-y-3">
