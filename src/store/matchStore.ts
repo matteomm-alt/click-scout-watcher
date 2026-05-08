@@ -328,40 +328,46 @@ export const useMatchStore = create<MatchStore>()(
         };
       }),
 
-      endSet: () => set((s) => {
-        const setResult: SetResult = {
-          homeScore: s.matchState.homeScore,
-          awayScore: s.matchState.awayScore,
-          duration: 0,
-        };
-        const newSetResults = [...s.matchState.setResults, setResult];
-        const homeWon = s.matchState.homeScore > s.matchState.awayScore;
-        const newHomeSetsWon = s.matchState.homeSetsWon + (homeWon ? 1 : 0);
-        const newAwaySetsWon = s.matchState.awaySetsWon + (homeWon ? 0 : 1);
-        const maxSets = Math.ceil(s.matchInfo.totalSets / 2);
-        const isMatchOver = newHomeSetsWon >= maxSets || newAwaySetsWon >= maxSets;
+      endSet: () => {
+        set((s) => {
+          const setResult: SetResult = {
+            homeScore: s.matchState.homeScore,
+            awayScore: s.matchState.awayScore,
+            duration: 0,
+          };
+          const newSetResults = [...s.matchState.setResults, setResult];
+          const homeWon = s.matchState.homeScore > s.matchState.awayScore;
+          const newHomeSetsWon = s.matchState.homeSetsWon + (homeWon ? 1 : 0);
+          const newAwaySetsWon = s.matchState.awaySetsWon + (homeWon ? 0 : 1);
+          const maxSets = Math.ceil(s.matchInfo.totalSets / 2);
+          const isMatchOver = newHomeSetsWon >= maxSets || newAwaySetsWon >= maxSets;
 
-        return {
-          matchState: {
-            ...s.matchState,
-            setResults: newSetResults,
-            homeSetsWon: newHomeSetsWon,
-            awaySetsWon: newAwaySetsWon,
-            currentSet: isMatchOver ? s.matchState.currentSet : s.matchState.currentSet + 1,
-            homeScore: isMatchOver ? s.matchState.homeScore : 0,
-            awayScore: isMatchOver ? s.matchState.awayScore : 0,
-            isMatchEnded: isMatchOver,
-            // Reset time-outs at start of new set
-            homeTimeoutsUsed: isMatchOver ? s.matchState.homeTimeoutsUsed : 0,
-            awayTimeoutsUsed: isMatchOver ? s.matchState.awayTimeoutsUsed : 0,
-            homeSubstitutionsUsed: 0,
-            awaySubstitutionsUsed: 0,
-            homeSetterPosition: 1,
-            awaySetterPosition: 1,
-            setOverPending: false,
-          },
-        };
-      }),
+          return {
+            matchState: {
+              ...s.matchState,
+              setResults: newSetResults,
+              homeSetsWon: newHomeSetsWon,
+              awaySetsWon: newAwaySetsWon,
+              currentSet: isMatchOver ? s.matchState.currentSet : s.matchState.currentSet + 1,
+              homeScore: isMatchOver ? s.matchState.homeScore : 0,
+              awayScore: isMatchOver ? s.matchState.awayScore : 0,
+              isMatchEnded: isMatchOver,
+              homeTimeoutsUsed: isMatchOver ? s.matchState.homeTimeoutsUsed : 0,
+              awayTimeoutsUsed: isMatchOver ? s.matchState.awayTimeoutsUsed : 0,
+              homeSubstitutionsUsed: 0,
+              awaySubstitutionsUsed: 0,
+              homeSetterPosition: 1,
+              awaySetterPosition: 1,
+              setOverPending: false,
+            },
+          };
+        });
+        try {
+          const st = get();
+          localStorage.setItem('last_lineup_home', JSON.stringify({ lineup: st.homeLineup }));
+          localStorage.setItem('last_lineup_away', JSON.stringify({ lineup: st.awayLineup }));
+        } catch {}
+      },
 
       undoLastAction: () => set((s) => {
         const latestSnapshot = lineupSnapshots[lineupSnapshots.length - 1];

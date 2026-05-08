@@ -38,6 +38,11 @@ function TeamLineup({
   );
   const liberoPlayers = team.players.filter(p => p.isLibero);
 
+  const savedKey = `last_lineup_${side}`;
+  const savedRaw = typeof window !== 'undefined' ? localStorage.getItem(savedKey) : null;
+  let savedLineup: Lineup | null = null;
+  try { savedLineup = savedRaw ? JSON.parse(savedRaw).lineup : null; } catch { savedLineup = null; }
+
   const getPlayer = (id: string | null): Player | undefined =>
     id ? team.players.find(p => p.id === id) : undefined;
 
@@ -83,13 +88,24 @@ function TeamLineup({
         <h3 className="text-lg font-bold text-foreground">
           {team.name || (side === 'home' ? 'Casa' : 'Ospite')}
         </h3>
-        <button
-          type="button"
-          onClick={handleAuto51}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 transition-colors"
-        >
-          <Wand2 className="w-3 h-3" /> Auto 5-1
-        </button>
+        <div className="flex items-center gap-2">
+          {savedLineup && (
+            <button
+              type="button"
+              onClick={() => { setLineup(savedLineup as Lineup); toast.success('Formazione ripristinata'); }}
+              className="min-h-10 px-3 text-xs font-bold bg-secondary rounded-lg hover:bg-secondary/70 transition-colors"
+            >
+              ⚡ Usa ultima formazione
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleAuto51}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 transition-colors"
+          >
+            <Wand2 className="w-3 h-3" /> Auto 5-1
+          </button>
+        </div>
       </div>
       {/* Court visual */}
       <div className="court-gradient rounded-xl p-4 border border-court-line/30">
