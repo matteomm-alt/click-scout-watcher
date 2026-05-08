@@ -147,7 +147,21 @@ export function ZoneCourt({
   );
 }
 
-export function VolleyballCourt() {
+type LiveArrow = { startZone: number; endZone: number; evaluation: string };
+
+interface VolleyballCourtProps {
+  highlightPlayerNumber?: number;
+  highlightTeam?: 'home' | 'away';
+  heatmapData?: Record<number, number>;
+  liveArrows?: LiveArrow[];
+}
+
+export function VolleyballCourt({
+  highlightPlayerNumber,
+  highlightTeam,
+  heatmapData,
+  liveArrows,
+}: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam } = useMatchStore();
 
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
@@ -173,9 +187,16 @@ export function VolleyballCourt() {
     { zone: 7, x: 16.66, y: 83.33 }, { zone: 8, x: 50, y: 83.33 }, { zone: 9, x: 83.33, y: 83.33 },
   ];
 
+  const zonePct = (zone: number) => {
+    const z = zoneLabels.find(zl => zl.zone === zone);
+    return z ? { x: z.x, y: z.y } : null;
+  };
+
   const renderHalfCourt = (team: 'home' | 'away') => {
     const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+    const showHeatmap = heatmapData && team === 'away';
+    const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
 
     return (
       <div className="relative h-full overflow-hidden" style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}>
@@ -188,6 +209,22 @@ export function VolleyballCourt() {
             <line key={`h-${team}-${p}`} x1="0" y1={p} x2="90" y2={p} stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           ))}
         </svg>
+        {showHeatmap && zoneLabels.map((z) => {
+          const count = heatmapData![z.zone] ?? 0;
+          if (!count) return null;
+          const opacity = Math.min(0.55, (count / maxHeat) * 0.55);
+          return (
+            <div
+              key={`heat-${z.zone}`}
+              className="pointer-events-none absolute z-[5] -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                left: `${z.x}%`, top: `${z.y}%`,
+                width: '28%', height: '28%',
+                background: `radial-gradient(circle, hsl(0 84% 55% / ${opacity}) 0%, transparent 70%)`,
+              }}
+            />
+          );
+        })}
         {zoneLabels.map((z) => (
           <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-4xl md:text-5xl font-black italic text-white/16" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
             {z.zone}
@@ -199,13 +236,14 @@ export function VolleyballCourt() {
           const p = positions[pos];
           const isSetter = pos === setterPosition;
           const isLibero = Boolean(info?.isLibero || info?.role === 'L');
+          const isHighlighted = highlightTeam === team && highlightPlayerNumber === playerNum;
 
           return (
             <div key={`${team}-p-${pos}`} className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
               <span className={`mb-0.5 text-[11px] font-black tracking-wider ${isSetter ? 'text-warning' : 'text-white/55'}`}>P{pos}</span>
               {info && (
                 <>
-                  <div className={`relative flex size-10 md:size-12 items-center justify-center rounded-full text-sm md:text-base font-black text-white shadow-lg ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
+                  <div className={`relative flex size-10 md:size-12 items-center justify-center rounded-full text-sm md:text-base font-black text-white shadow-lg ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
                     {info.number}
                     {isSetter && <span className="absolute -right-2 -top-2 rounded bg-warning px-1.5 py-0.5 text-xs font-black text-background">S</span>}
                   </div>
@@ -215,6 +253,32 @@ export function VolleyballCourt() {
             </div>
           );
         })}
+        {liveArrows && liveArrows.length > 0 && team === 'home' && (
+          <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <marker id="arrow-live" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="currentColor" />
+              </marker>
+            </defs>
+            {liveArrows.slice(-5).map((arr, i, arrs) => {
+              const from = zonePct(arr.startZone);
+              const to = zonePct(arr.endZone);
+              if (!from || !to || arr.startZone === arr.endZone) return null;
+              const opacity = 0.2 + (i / Math.max(1, arrs.length - 1)) * 0.75;
+              const color = arr.evaluation === '#' ? '#16a34a' : arr.evaluation === '=' ? '#dc2626' : '#ca8a04';
+              return (
+                <line
+                  key={i}
+                  x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                  stroke={color} strokeWidth="0.9" strokeLinecap="round"
+                  strokeDasharray="2 1" opacity={opacity}
+                  markerEnd="url(#arrow-live)"
+                  vectorEffect="non-scaling-stroke"
+                />
+              );
+            })}
+          </svg>
+        )}
       </div>
     );
   };

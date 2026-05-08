@@ -274,7 +274,7 @@ export function LiveScout() {
         <ScoreBoard />
 
         {mobileTab === 'scout' && (
-          <div className="flex max-h-40 shrink-0 overflow-hidden">
+          <div className="flex max-h-32 shrink-0 overflow-hidden">
             <VolleyballCourt />
           </div>
         )}
