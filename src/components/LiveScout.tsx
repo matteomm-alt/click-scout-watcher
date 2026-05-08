@@ -53,6 +53,7 @@ const RILEVAZIONE_ROWS = [
 const VISUAL_ROWS = [
   { key: 'showAllDirections' as const, label: 'Tutte le direzioni', description: 'Mostra tutte le direzioni disponibili.' },
   { key: 'posizionaPerRuolo' as const, label: 'Posiziona per ruolo', description: 'Giocatori in posizione tattica dopo ricezione' },
+  { key: 'fastMode' as const, label: '⚡ Fast Mode', description: 'Ritorno immediato dopo ogni azione' },
 ];
 
 export function LiveScout() {
