@@ -48,6 +48,9 @@ export function ActionPanel() {
   const [importingDvw, setImportingDvw] = useState(false);
   const [showEndSetDialog, setShowEndSetDialog] = useState(false);
   const [showTempoFilter, setShowTempoFilter] = useState(false);
+  const [actionFlash, setActionFlash] = useState(false);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { settings } = useScoutSettings();
