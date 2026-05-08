@@ -17,6 +17,7 @@ export type ScoutSettings = {
   ricezionePredefinita: '#' | '+' | '!' | '-' | '/' | '=';
   showAllDirections: boolean;
   posizionaPerRuolo: boolean;
+  fastMode: boolean;
 };
 
 const STORAGE_KEY = 'scout_settings';
@@ -38,6 +39,7 @@ export const defaultScoutSettings: ScoutSettings = {
   ricezionePredefinita: '+',
   showAllDirections: true,
   posizionaPerRuolo: false,
+  fastMode: false,
 };
 
 const readSettings = (): ScoutSettings => {

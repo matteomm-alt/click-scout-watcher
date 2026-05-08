@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, Pencil, Settings, Target, Zap } from 'lucide-react';
+import { BarChart2, Pencil, Settings, Target, Zap, PanelRight } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -53,6 +53,7 @@ const RILEVAZIONE_ROWS = [
 const VISUAL_ROWS = [
   { key: 'showAllDirections' as const, label: 'Tutte le direzioni', description: 'Mostra tutte le direzioni disponibili.' },
   { key: 'posizionaPerRuolo' as const, label: 'Posiziona per ruolo', description: 'Giocatori in posizione tattica dopo ricezione' },
+  { key: 'fastMode' as const, label: '⚡ Fast Mode', description: 'Ritorno immediato dopo ogni azione' },
 ];
 
 export function LiveScout() {
@@ -64,7 +65,24 @@ export function LiveScout() {
   const [editingAction, setEditingAction] = useState<ScoutAction | null>(null);
   const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
   const [timeoutBanner, setTimeoutBanner] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
+
+  const awayHeatmap = useMemo(() => {
+    const data: Record<number, number> = {};
+    matchState.actions
+      .filter(a => a.skill === 'A' && a.team === 'away' && a.endZone)
+      .forEach(a => { data[a.endZone!] = (data[a.endZone!] || 0) + 1; });
+    return Object.keys(data).length > 0 ? data : undefined;
+  }, [matchState.actions]);
+
+  const liveArrows = useMemo(() =>
+    matchState.actions
+      .filter(a => a.skill === 'A' && a.startZone != null && a.endZone != null)
+      .slice(-5)
+      .map(a => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation })),
+    [matchState.actions]
+  );
 
 
   useEffect(() => {
@@ -167,8 +185,8 @@ export function LiveScout() {
         <FullscreenToggle />
         <ScoreBoard />
 
-        <div className="flex-shrink-0">
-          <VolleyballCourt />
+        <div className="flex-shrink-0 max-h-[45vh] overflow-hidden">
+          <VolleyballCourt heatmapData={awayHeatmap} liveArrows={liveArrows} />
         </div>
 
         <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
@@ -178,7 +196,7 @@ export function LiveScout() {
             </div>
           </div>
 
-          <div className="col-span-5 min-h-0 overflow-hidden">
+          <div className="col-span-6 min-h-0 overflow-hidden">
             <div className="glass rounded-xl p-4 h-full flex flex-col">
               <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
                 Inserimento Azione
@@ -190,14 +208,33 @@ export function LiveScout() {
           </div>
 
           <div className="col-span-3 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-3 h-full flex flex-col">
+            <div className="glass rounded-xl p-3 h-full flex flex-col items-center justify-center gap-3">
               {timeoutBanner && (
-                <div className="mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
-                  <span>⏸ TIME-OUT — Analisi avversario</span>
+                <div className="w-full mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
+                  <span>⏸ TIME-OUT</span>
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
-              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50 mb-2">
+              <button
+                type="button"
+                onClick={() => setPanelOpen(true)}
+                className="min-h-10 min-w-10 rounded-lg bg-secondary/80 border border-border flex items-center justify-center hover:bg-secondary transition-colors px-3 gap-2 text-xs font-bold text-muted-foreground"
+                title="Apri pannello statistiche"
+              >
+                <PanelRight className="w-4 h-4" />
+                <span>Pannello</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+          <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Pannello statistiche</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-3">
+              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
                 {TABS.map((t) => {
                   const active = tab === t.key;
                   return (
@@ -214,18 +251,15 @@ export function LiveScout() {
                   );
                 })}
               </div>
-
-              <div className="flex-1 overflow-y-auto">
-                {tab === 'log' && <ActionLog />}
-                {tab === 'stats' && <PlayerStatsPanel />}
-                {tab === 'heat' && <AttackHeatmap team="all" />}
-                {tab === 'compare' && <TeamComparison />}
-                {tab === 'sets' && <SetDistribution />}
-                {tab === 'dir' && <RotationDirections />}
-              </div>
+              {tab === 'log' && <ActionLog />}
+              {tab === 'stats' && <PlayerStatsPanel />}
+              {tab === 'heat' && <AttackHeatmap team="all" />}
+              {tab === 'compare' && <TeamComparison />}
+              {tab === 'sets' && <SetDistribution />}
+              {tab === 'dir' && <RotationDirections />}
             </div>
-          </div>
-        </div>
+          </SheetContent>
+        </Sheet>
 
         {matchState.isMatchEnded && (
           <div className="glass rounded-xl p-4 text-center">
@@ -241,7 +275,7 @@ export function LiveScout() {
         <ScoreBoard />
 
         {mobileTab === 'scout' && (
-          <div className="flex max-h-40 shrink-0 overflow-hidden">
+          <div className="flex max-h-32 shrink-0 overflow-hidden">
             <VolleyballCourt />
           </div>
         )}
