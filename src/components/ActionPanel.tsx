@@ -623,25 +623,31 @@ export function ActionPanel() {
 
       {/* Step: Team */}
       {step === 'team' && (
-        <div className="animate-in fade-in slide-in-from-right-2 duration-150">
-        <div className={matchState.singleTeamMode ? 'space-y-2' : 'grid grid-cols-2 gap-3'}>
-          <button onClick={() => handleTeamSelect('home')}
-            className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-blue-700/30 hover:border-blue-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
-            {homeTeam.name || 'Casa'}
-          </button>
-          {!matchState.singleTeamMode && (
-            <button onClick={() => handleTeamSelect('away')}
-              className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-red-700/30 hover:border-red-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
-              {awayTeam.name || 'Ospite'}
+        <div className="animate-in fade-in slide-in-from-right-2 duration-150 relative">
+          {actionFlash && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-emerald-500/15 border-2 border-emerald-500/40 animate-in fade-in zoom-in-95 duration-150">
+              <span className="text-5xl font-black text-emerald-400 drop-shadow">✓</span>
+              <span className="mt-1 text-xs font-bold uppercase tracking-widest text-emerald-300">Registrata</span>
+            </div>
+          )}
+          <div className={matchState.singleTeamMode ? 'space-y-2' : 'grid grid-cols-2 gap-3'}>
+            <button onClick={() => handleTeamSelect('home')}
+              className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-blue-700/30 hover:border-blue-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
+              {homeTeam.name || 'Casa'}
             </button>
-          )}
-          {matchState.singleTeamMode && (
-            <>
-              <button type="button" onClick={() => { addPoint('away'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-destructive/10 border border-destructive/30 text-destructive font-black">PUNTO AVVERSARIO</button>
-              <button type="button" onClick={() => { const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`, team: 'home', playerNumber: 0, skill: 'B', skillType: 'H', evaluation: '#', code: '*00BH#~~' }); addPoint('home'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-black">🛡 MURO</button>
-            </>
-          )}
-        </div>
+            {!matchState.singleTeamMode && (
+              <button onClick={() => handleTeamSelect('away')}
+                className="min-h-24 w-full p-4 rounded-xl bg-secondary border-2 border-red-700/30 hover:border-red-500/60 text-foreground text-2xl font-black transition-all touch-target active:scale-95 duration-75">
+                {awayTeam.name || 'Ospite'}
+              </button>
+            )}
+            {matchState.singleTeamMode && (
+              <>
+                <button type="button" onClick={() => { navigator.vibrate?.(25); addPoint('away'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-destructive/10 border border-destructive/30 text-destructive font-black">PUNTO AVVERSARIO</button>
+                <button type="button" onClick={() => { navigator.vibrate?.(25); const now = new Date(); addAction({ timestamp: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`, team: 'home', playerNumber: 0, skill: 'B', skillType: 'H', evaluation: '#', code: '*00BH#~~' }); addPoint('home'); resetSelection(); }} className="min-h-14 w-full rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-black">🛡 MURO</button>
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -724,7 +730,7 @@ export function ActionPanel() {
       {step === 'attackCombo' && (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
           <span className="text-sm font-bold text-foreground">Combinazione Attacco</span>
-          <button onClick={() => { setSelectedAttackCombo(null); setStep('evaluation'); }} className="w-full min-h-14 rounded-xl bg-secondary border-2 border-dashed border-border text-base font-bold text-foreground transition-transform duration-75 active:scale-95">↩ Salta combinazione</button>
+          <button onClick={() => { setSelectedAttackCombo(null); setStep('evaluation'); }} className="w-full text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 px-2 py-2 transition-colors text-center">↩ Salta combinazione</button>
           <button
             type="button"
             onClick={() => setShowTempoFilter(v => !v)}
@@ -766,45 +772,66 @@ export function ActionPanel() {
               <button className="text-xs underline" onClick={() => { setAutoAttack(false); setStep('attackCombo'); }}>Cambia</button>
             </div>
           )}
-          <button
-            onClick={() => handleEvaluationSelect('#')}
-            className="min-h-24 w-full rounded-xl bg-green-600 hover:bg-green-500 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 flex items-center justify-center gap-3 text-2xl"
-          >
-            <span className="text-4xl">#</span>
-            <span>Perfetto</span>
-          </button>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { key: '+' as Evaluation, color: 'bg-emerald-600 hover:bg-emerald-500', label: 'Positivo' },
-              { key: '!' as Evaluation, color: 'bg-yellow-600 hover:bg-yellow-500', label: 'OK' },
-              { key: '-' as Evaluation, color: 'bg-orange-600 hover:bg-orange-500', label: 'Negativo' },
-            ].map(e => (
-              <button
-                key={e.key}
-                onClick={() => handleEvaluationSelect(e.key)}
-                className={`min-h-16 p-3 rounded-xl ${e.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}
-              >
-                <div className="text-xl font-black">{e.key}</div>
-                <div className="text-xs">{e.label}</div>
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleEvaluationSelect('/')}
-              className="min-h-16 p-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75"
-            >
-              <div className="text-xl font-black">/</div>
-              <div className="text-xs">Murato</div>
-            </button>
-            <button
-              onClick={() => handleEvaluationSelect('=')}
-              className="min-h-16 p-3 rounded-xl bg-red-700 hover:bg-red-600 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 border-2 border-destructive"
-            >
-              <div className="text-xl font-black">=</div>
-              <div className="text-xs">Errore</div>
-            </button>
-          </div>
+          {(() => {
+            const makeHold = (k: Evaluation) => ({
+              onPointerDown: () => {
+                holdTimerRef.current = setTimeout(() => {
+                  navigator.vibrate?.(50);
+                  finalizeAction(k, null, null);
+                  holdTimerRef.current = null;
+                }, 500);
+              },
+              onPointerUp: () => { if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; } },
+              onPointerLeave: () => { if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; } },
+            });
+            return (
+              <>
+                <button
+                  onClick={() => handleEvaluationSelect('#')}
+                  {...makeHold('#')}
+                  className="min-h-24 w-full rounded-xl bg-green-600 hover:bg-green-500 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 flex items-center justify-center gap-3 text-2xl"
+                >
+                  <span className="text-4xl">#</span>
+                  <span>Perfetto</span>
+                </button>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: '+' as Evaluation, color: 'bg-emerald-600 hover:bg-emerald-500', label: 'Positivo' },
+                    { key: '!' as Evaluation, color: 'bg-yellow-600 hover:bg-yellow-500', label: 'OK' },
+                    { key: '-' as Evaluation, color: 'bg-orange-600 hover:bg-orange-500', label: 'Negativo' },
+                  ].map(e => (
+                    <button
+                      key={e.key}
+                      onClick={() => handleEvaluationSelect(e.key)}
+                      {...makeHold(e.key)}
+                      className={`min-h-16 p-3 rounded-xl ${e.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}
+                    >
+                      <div className="text-xl font-black">{e.key}</div>
+                      <div className="text-xs">{e.label}</div>
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleEvaluationSelect('/')}
+                    {...makeHold('/')}
+                    className="min-h-16 p-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75"
+                  >
+                    <div className="text-xl font-black">/</div>
+                    <div className="text-xs">Murato</div>
+                  </button>
+                  <button
+                    onClick={() => handleEvaluationSelect('=')}
+                    {...makeHold('=')}
+                    className="min-h-16 p-3 rounded-xl bg-red-700 hover:bg-red-600 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 border-2 border-destructive"
+                  >
+                    <div className="text-xl font-black">=</div>
+                    <div className="text-xs">Errore</div>
+                  </button>
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -879,6 +906,9 @@ export function ActionPanel() {
         <div className="text-center py-4">
           <p className="text-4xl font-black text-primary">{matchState.homeScore} — {matchState.awayScore}</p>
           <p className="text-sm text-muted-foreground mt-1">{homeTeam.name || 'Casa'} · Set {matchState.currentSet}</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            {matchState.actions.filter(a => a.setNumber === matchState.currentSet).length} azioni registrate in questo set
+          </p>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setShowEndSetDialog(false)} className="min-h-14 flex-1 rounded-xl bg-secondary font-bold">Annulla</button>
