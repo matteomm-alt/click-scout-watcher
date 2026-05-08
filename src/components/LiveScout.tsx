@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, Pencil, Settings, Target, Zap } from 'lucide-react';
+import { BarChart2, Pencil, Settings, Target, Zap, PanelRight } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -64,7 +64,24 @@ export function LiveScout() {
   const [editingAction, setEditingAction] = useState<ScoutAction | null>(null);
   const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
   const [timeoutBanner, setTimeoutBanner] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
+
+  const awayHeatmap = useMemo(() => {
+    const data: Record<number, number> = {};
+    matchState.actions
+      .filter(a => a.skill === 'A' && a.team === 'away' && a.endZone)
+      .forEach(a => { data[a.endZone!] = (data[a.endZone!] || 0) + 1; });
+    return Object.keys(data).length > 0 ? data : undefined;
+  }, [matchState.actions]);
+
+  const liveArrows = useMemo(() =>
+    matchState.actions
+      .filter(a => a.skill === 'A' && a.startZone != null && a.endZone != null)
+      .slice(-5)
+      .map(a => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation })),
+    [matchState.actions]
+  );
 
 
   useEffect(() => {
