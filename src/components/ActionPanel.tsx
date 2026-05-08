@@ -578,20 +578,23 @@ export function ActionPanel() {
             <Undo2 className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-1 flex-wrap min-w-0">
-            {selectedTeam && (
-              <span className={`px-2 py-0.5 rounded text-xs font-bold ${selectedTeam === 'home' ? 'bg-blue-600/20 text-blue-300' : 'bg-red-600/20 text-red-300'}`}>
-                {selectedTeam === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite'}
-              </span>
-            )}
-            {selectedPlayer !== null && (
-              <span className="px-2 py-0.5 rounded text-xs font-bold bg-secondary text-foreground">#{selectedPlayer}</span>
-            )}
-            {selectedSkill && (
-              <span className="px-2 py-0.5 rounded text-xs font-bold bg-secondary text-foreground">{SKILL_LABELS[selectedSkill]}</span>
-            )}
-            {selectedEvaluation && (
-              <span className="px-2 py-0.5 rounded text-xs font-bold bg-secondary text-foreground">{selectedEvaluation}</span>
-            )}
+            {(() => {
+              let label = '';
+              let cls = 'bg-secondary text-foreground';
+              if (selectedEvaluation) {
+                label = selectedEvaluation;
+              } else if (selectedSkill) {
+                label = SKILL_LABELS[selectedSkill] ?? selectedSkill;
+              } else if (selectedPlayer !== null) {
+                label = `#${selectedPlayer}`;
+              } else if (selectedTeam) {
+                label = selectedTeam === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite');
+                cls = selectedTeam === 'home' ? 'bg-blue-600/20 text-blue-300' : 'bg-red-600/20 text-red-300';
+              }
+              return label ? (
+                <span className={`px-2 py-0.5 rounded text-xs font-bold ${cls}`}>{label}</span>
+              ) : null;
+            })()}
           </div>
           <div className="flex items-center gap-1 ml-auto shrink-0">
             {(() => {
