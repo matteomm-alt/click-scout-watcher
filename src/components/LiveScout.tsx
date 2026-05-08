@@ -184,8 +184,8 @@ export function LiveScout() {
         <FullscreenToggle />
         <ScoreBoard />
 
-        <div className="flex-shrink-0">
-          <VolleyballCourt />
+        <div className="flex-shrink-0 max-h-[45vh] overflow-hidden">
+          <VolleyballCourt heatmapData={awayHeatmap} liveArrows={liveArrows} />
         </div>
 
         <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
@@ -195,7 +195,7 @@ export function LiveScout() {
             </div>
           </div>
 
-          <div className="col-span-5 min-h-0 overflow-hidden">
+          <div className="col-span-6 min-h-0 overflow-hidden">
             <div className="glass rounded-xl p-4 h-full flex flex-col">
               <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
                 Inserimento Azione
@@ -207,14 +207,33 @@ export function LiveScout() {
           </div>
 
           <div className="col-span-3 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-3 h-full flex flex-col">
+            <div className="glass rounded-xl p-3 h-full flex flex-col items-center justify-center gap-3">
               {timeoutBanner && (
-                <div className="mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
-                  <span>⏸ TIME-OUT — Analisi avversario</span>
+                <div className="w-full mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
+                  <span>⏸ TIME-OUT</span>
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
-              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50 mb-2">
+              <button
+                type="button"
+                onClick={() => setPanelOpen(true)}
+                className="min-h-10 min-w-10 rounded-lg bg-secondary/80 border border-border flex items-center justify-center hover:bg-secondary transition-colors px-3 gap-2 text-xs font-bold text-muted-foreground"
+                title="Apri pannello statistiche"
+              >
+                <PanelRight className="w-4 h-4" />
+                <span>Pannello</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+          <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Pannello statistiche</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-3">
+              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
                 {TABS.map((t) => {
                   const active = tab === t.key;
                   return (
@@ -231,18 +250,15 @@ export function LiveScout() {
                   );
                 })}
               </div>
-
-              <div className="flex-1 overflow-y-auto">
-                {tab === 'log' && <ActionLog />}
-                {tab === 'stats' && <PlayerStatsPanel />}
-                {tab === 'heat' && <AttackHeatmap team="all" />}
-                {tab === 'compare' && <TeamComparison />}
-                {tab === 'sets' && <SetDistribution />}
-                {tab === 'dir' && <RotationDirections />}
-              </div>
+              {tab === 'log' && <ActionLog />}
+              {tab === 'stats' && <PlayerStatsPanel />}
+              {tab === 'heat' && <AttackHeatmap team="all" />}
+              {tab === 'compare' && <TeamComparison />}
+              {tab === 'sets' && <SetDistribution />}
+              {tab === 'dir' && <RotationDirections />}
             </div>
-          </div>
-        </div>
+          </SheetContent>
+        </Sheet>
 
         {matchState.isMatchEnded && (
           <div className="glass rounded-xl p-4 text-center">
