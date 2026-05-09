@@ -404,9 +404,31 @@ function SettingRow({ label, description, checked, onChange }: { label: string; 
   );
 }
 
-function ScoutSettingsPanel({ settings, setSetting }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void }) {
+function ScoutSettingsPanel({ settings, setSetting, setSettings }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void; setSettings: (patch: Partial<ScoutSettings>) => void }) {
+  const PRESETS = [
+    { key: 'base' as const, label: '⚡ Base', desc: 'Veloce\nniente zone' },
+    { key: 'standard' as const, label: '📊 Standard', desc: 'Con zone\ne fondamentali' },
+    { key: 'avanzato' as const, label: '🏆 Pro', desc: 'Tutto\nattivato' },
+  ];
   return (
     <div className="mt-4 space-y-5">
+      <section>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Preset rapido</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {PRESETS.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => { setSettings(SCOUT_PRESETS[p.key]); toast.success(`Preset ${p.label} applicato`); }}
+              className="min-h-16 rounded-xl border-2 border-border bg-secondary/30 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 p-2"
+            >
+              <span className="text-sm font-black text-foreground">{p.label}</span>
+              <span className="text-[10px] text-muted-foreground whitespace-pre-line text-center leading-tight">{p.desc}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Rilevazione</h3>
         <div className="space-y-3">
