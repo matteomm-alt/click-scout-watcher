@@ -657,6 +657,10 @@ export function ActionPanel() {
         </div>
       )}
 
+      {step === 'team' && !actionFlash && (
+        <StepTip id="team" text="Tocca la squadra che ha eseguito l'azione. Se hai attivato 'Segui servizio', ti sceglieremo noi la squadra dopo R/E." />
+      )}
+
       {/* Step: Team */}
       {step === 'team' && (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 relative">
