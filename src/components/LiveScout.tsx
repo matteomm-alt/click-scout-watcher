@@ -60,7 +60,7 @@ const VISUAL_ROWS = [
 
 export function LiveScout() {
   const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction } = useMatchStore();
-  const { settings, setSetting } = useScoutSettings();
+  const { settings, setSetting, setSettings } = useScoutSettings();
   const [tab, setTab] = useState<RightTab>('log');
   const [mobileTab, setMobileTab] = useState<MobileTab>('scout');
   const [showEndSetDialog, setShowEndSetDialog] = useState(false);
