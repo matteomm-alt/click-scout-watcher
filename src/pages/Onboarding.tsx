@@ -47,6 +47,7 @@ export default function Onboarding() {
         .not('society_id', 'is', null);
       if (data && data.length > 0) {
         setSkippedStep1(true);
+        setSocietyId(data[0].society_id);
         setStep((s) => (s === 1 ? 2 : s));
       }
     })();
