@@ -734,6 +734,7 @@ export function ActionPanel() {
         const visibleSkills = isLiberoSelected ? skills.filter(s => ['R', 'D', 'F'].includes(s.key)) : skills;
         return (
           <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+            <StepTip id="skill" text="Scegli il fondamentale: S battuta, R ricezione, A attacco, B muro, D difesa, E alzata, F freeball." />
             <div className="grid grid-cols-4 gap-2">
               {visibleSkills.map(s => (
                 <button key={s.key} onClick={() => handleSkillSelect(s.key)}
