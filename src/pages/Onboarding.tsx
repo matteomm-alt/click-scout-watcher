@@ -125,7 +125,10 @@ export default function Onboarding() {
 
   // ---------- STEP 2: rosa base ----------
   const generateRoster = async () => {
-    if (!societyId || !user) return;
+    if (!societyId || !user) {
+      toast.error('Sessione non valida. Ricarica la pagina e riprova.');
+      return;
+    }
     setBusy(true);
     try {
       const template = [
