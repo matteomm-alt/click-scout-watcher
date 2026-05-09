@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Zap, FileSpreadsheet, SkipForward, FileUp, BarChart3, Calendar, Activity, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
-import { parseDvw } from '@/lib/dvwImporter';
+
 import * as XLSX from 'xlsx';
 
 const CATEGORIES = ['U12', 'U14', 'U16', 'U18', 'Serie D', 'Serie C', 'Serie B', 'Serie A'];
@@ -47,6 +47,7 @@ export default function Onboarding() {
         .not('society_id', 'is', null);
       if (data && data.length > 0) {
         setSkippedStep1(true);
+        setSocietyId(data[0].society_id);
         setStep((s) => (s === 1 ? 2 : s));
       }
     })();
@@ -124,7 +125,10 @@ export default function Onboarding() {
 
   // ---------- STEP 2: rosa base ----------
   const generateRoster = async () => {
-    if (!societyId || !user) return;
+    if (!societyId || !user) {
+      toast.error('Sessione non valida. Ricarica la pagina e riprova.');
+      return;
+    }
     setBusy(true);
     try {
       const template = [
@@ -168,7 +172,10 @@ export default function Onboarding() {
 
   // ---------- STEP 2: import Excel ----------
   const handleXlsx = async (file: File) => {
-    if (!societyId || !user) return;
+    if (!societyId || !user) {
+      toast.error('Sessione non valida. Ricarica la pagina e riprova.');
+      return;
+    }
     setBusy(true);
     try {
       const buf = await file.arrayBuffer();
@@ -227,29 +234,18 @@ export default function Onboarding() {
     if (!user) return;
     setBusy(true);
     try {
-      const text = await file.text();
-      const parsed = parseDvw(text);
-      // Salva solo metadata di base in dvw_matches (riusa logica esistente in modo minimale)
-      const { error } = await supabase.from('dvw_matches').insert({
-        user_id: user.id,
-        file_name: file.name,
-        squadra_casa: parsed.teams?.home?.name ?? null,
-        avversario: parsed.teams?.away?.name ?? null,
-        data: parsed.header?.date ?? null,
-      } as never);
-      if (error) throw error;
-      toast.success('Partita DVW importata! La trovi in Archivio.');
+      await file.text();
+      toast.success(`File "${file.name}" ricevuto. Importalo dall'Archivio per l'analisi completa.`);
       setStep(4);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Errore parsing DVW';
-      toast.error(msg);
+    } catch {
+      toast.error('File DVW non leggibile');
     } finally {
       setBusy(false);
     }
   };
 
   // ---------- STEP 4: finish ----------
-  const finish = async () => {
+  const finish = async (redirectTo = '/') => {
     if (!user) return;
     setBusy(true);
     try {
@@ -259,7 +255,8 @@ export default function Onboarding() {
         .eq('id', user.id);
       if (error) throw error;
       toast.success('Tutto pronto!');
-      navigate('/', { replace: true });
+      await refreshRoles();
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Errore';
       toast.error(msg);
@@ -484,10 +481,7 @@ export default function Onboarding() {
               ].map((it) => (
                 <button
                   key={it.to}
-                  onClick={async () => {
-                    await finish();
-                    navigate(it.to);
-                  }}
+                  onClick={() => finish(it.to)}
                   disabled={busy}
                   className="w-full flex items-center gap-3 px-5 py-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left disabled:opacity-50"
                 >
@@ -498,7 +492,7 @@ export default function Onboarding() {
               ))}
             </div>
 
-            <Button className="w-full" onClick={finish} disabled={busy}>
+            <Button className="w-full" onClick={() => finish()} disabled={busy}>
               {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Inizia <ChevronRight className="w-4 h-4 ml-1" />
             </Button>

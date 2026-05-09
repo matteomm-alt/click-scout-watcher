@@ -13,7 +13,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useScoutSettings, type ScoutSettings } from '@/lib/scoutSettings';
+import { useScoutSettings, type ScoutSettings, SCOUT_PRESETS } from '@/lib/scoutSettings';
+import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
 
@@ -36,6 +37,7 @@ const MOBILE_TABS = [
 ];
 
 const RILEVAZIONE_ROWS = [
+  { key: 'followServe' as const, label: '🔄 Segui servizio', description: 'Pre-seleziona automaticamente la squadra dopo ogni azione: S→riceve avversaria, R/E→stessa squadra. Risparmia 1 tap per azione.' },
   { key: 'showServeType' as const, label: 'Tipo battuta', description: 'Mostra lo step per scegliere il tipo di servizio.' },
   { key: 'showAttackCombo' as const, label: 'Combo attacco', description: 'Mostra lo step per la combinazione di attacco.' },
   { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell’azione.' },
@@ -58,7 +60,7 @@ const VISUAL_ROWS = [
 
 export function LiveScout() {
   const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction } = useMatchStore();
-  const { settings, setSetting } = useScoutSettings();
+  const { settings, setSetting, setSettings } = useScoutSettings();
   const [tab, setTab] = useState<RightTab>('log');
   const [mobileTab, setMobileTab] = useState<MobileTab>('scout');
   const [showEndSetDialog, setShowEndSetDialog] = useState(false);
@@ -196,34 +198,36 @@ export function LiveScout() {
             </div>
           </div>
 
-          <div className="col-span-6 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-4 h-full flex flex-col">
-              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                Inserimento Azione
-              </h3>
-              <div className="flex-1 overflow-y-auto">
-                <ActionPanel />
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-3 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-3 h-full flex flex-col items-center justify-center gap-3">
+          <div className="col-span-4 min-h-0 overflow-hidden">
+            <div className="glass rounded-xl p-3 h-full flex flex-col gap-2 overflow-y-auto">
               {timeoutBanner && (
-                <div className="w-full mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
+                <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
                   <span>⏸ TIME-OUT</span>
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => setPanelOpen(true)}
-                className="min-h-10 min-w-10 rounded-lg bg-secondary/80 border border-border flex items-center justify-center hover:bg-secondary transition-colors px-3 gap-2 text-xs font-bold text-muted-foreground"
-                title="Apri pannello statistiche"
-              >
-                <PanelRight className="w-4 h-4" />
-                <span>Pannello</span>
-              </button>
+              <PlayerStatsPanel />
+            </div>
+          </div>
+
+          <div className="col-span-5 min-h-0 overflow-hidden">
+            <div className="glass rounded-xl p-4 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                  Inserimento Azione
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setPanelOpen(true)}
+                  className="min-h-9 px-3 rounded-lg bg-secondary/80 border border-border flex items-center gap-2 hover:bg-secondary transition-colors text-xs font-bold text-muted-foreground"
+                >
+                  <PanelRight className="w-4 h-4" />
+                  Statistiche
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <ActionPanel />
+              </div>
             </div>
           </div>
         </div>
@@ -303,7 +307,7 @@ export function LiveScout() {
                 <SheetHeader>
                   <SheetTitle>Impostazioni scout</SheetTitle>
                 </SheetHeader>
-                <ScoutSettingsPanel settings={settings} setSetting={setSetting} />
+                <ScoutSettingsPanel settings={settings} setSetting={setSetting} setSettings={setSettings} />
               </SheetContent>
             </Sheet>
           </div>
@@ -400,9 +404,31 @@ function SettingRow({ label, description, checked, onChange }: { label: string; 
   );
 }
 
-function ScoutSettingsPanel({ settings, setSetting }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void }) {
+function ScoutSettingsPanel({ settings, setSetting, setSettings }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void; setSettings: (patch: Partial<ScoutSettings>) => void }) {
+  const PRESETS = [
+    { key: 'base' as const, label: '⚡ Base', desc: 'Veloce\nniente zone' },
+    { key: 'standard' as const, label: '📊 Standard', desc: 'Con zone\ne fondamentali' },
+    { key: 'avanzato' as const, label: '🏆 Pro', desc: 'Tutto\nattivato' },
+  ];
   return (
     <div className="mt-4 space-y-5">
+      <section>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Preset rapido</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {PRESETS.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => { setSettings(SCOUT_PRESETS[p.key]); toast.success(`Preset ${p.label} applicato`); }}
+              className="min-h-16 rounded-xl border-2 border-border bg-secondary/30 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 p-2"
+            >
+              <span className="text-sm font-black text-foreground">{p.label}</span>
+              <span className="text-[10px] text-muted-foreground whitespace-pre-line text-center leading-tight">{p.desc}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Rilevazione</h3>
         <div className="space-y-3">
@@ -428,6 +454,13 @@ function ScoutSettingsPanel({ settings, setSetting }: { settings: ScoutSettings;
           {VISUAL_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
         </div>
       </section>
+      <button
+        type="button"
+        onClick={() => { localStorage.removeItem('scout_seen_tips'); toast.info('Suggerimenti ripristinati'); }}
+        className="w-full min-h-10 rounded-lg border border-border text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+      >
+        🔄 Ripristina suggerimenti
+      </button>
     </div>
   );
 }

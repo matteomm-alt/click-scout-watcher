@@ -55,6 +55,25 @@ export function ActionPanel() {
   const { user } = useAuth();
   const { settings } = useScoutSettings();
 
+  const [seenTips, setSeenTips] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('scout_seen_tips') || '[]'));
+    } catch { return new Set(); }
+  });
+  const markSeen = (k: string) => setSeenTips(prev => {
+    const n = new Set(prev); n.add(k);
+    try { localStorage.setItem('scout_seen_tips', JSON.stringify([...n])); } catch { /* noop */ }
+    return n;
+  });
+  const StepTip = ({ id, text }: { id: string; text: string }) =>
+    seenTips.has(id) ? null : (
+      <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs animate-in fade-in duration-200 mb-2">
+        <span>💡</span>
+        <p className="flex-1 text-foreground/80 leading-snug">{text}</p>
+        <button type="button" onClick={() => markSeen(id)} className="text-muted-foreground hover:text-foreground text-xs px-1 shrink-0">✕</button>
+      </div>
+    );
+
   useEffect(() => {
     if ((matchState as any).setOverPending && !showEndSetDialog) {
       setShowEndSetDialog(true);
@@ -257,7 +276,24 @@ export function ActionPanel() {
       flashTimerRef.current = setTimeout(() => setActionFlash(false), 280);
     }
 
+    const lastSkill = selectedSkill;
+    const lastTeam = selectedTeam;
     resetSelection();
+
+    if (settings.followServe) {
+      setTimeout(() => {
+        if (lastSkill === 'S') {
+          const receivingTeam = lastTeam === 'home' ? 'away' : 'home';
+          setSelectedTeam(receivingTeam);
+          setStep('player');
+        } else if (lastSkill === 'R' || lastSkill === 'E') {
+          if (lastTeam) {
+            setSelectedTeam(lastTeam);
+            setStep('player');
+          }
+        }
+      }, 50);
+    }
   };
 
 
@@ -621,6 +657,10 @@ export function ActionPanel() {
         </div>
       )}
 
+      {step === 'team' && !actionFlash && (
+        <StepTip id="team" text="Tocca la squadra che ha eseguito l'azione. Se hai attivato 'Segui servizio', ti sceglieremo noi la squadra dopo R/E." />
+      )}
+
       {/* Step: Team */}
       {step === 'team' && (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 relative">
@@ -658,6 +698,7 @@ export function ActionPanel() {
         const serverNumber = servingLineup[0];
         return (
           <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+            <StepTip id="player" text="Seleziona il giocatore. Il battitore corrente è evidenziato in giallo con badge SERVE." />
             <div className="grid grid-cols-3 gap-2">
               {getTeamLineup(selectedTeam).map((p) => {
                 const isServer = isServingTeam && p.number === serverNumber;
@@ -693,6 +734,7 @@ export function ActionPanel() {
         const visibleSkills = isLiberoSelected ? skills.filter(s => ['R', 'D', 'F'].includes(s.key)) : skills;
         return (
           <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+            <StepTip id="skill" text="Scegli il fondamentale: S battuta, R ricezione, A attacco, B muro, D difesa, E alzata, F freeball." />
             <div className="grid grid-cols-4 gap-2">
               {visibleSkills.map(s => (
                 <button key={s.key} onClick={() => handleSkillSelect(s.key)}
@@ -766,6 +808,7 @@ export function ActionPanel() {
       {/* Step: Evaluation */}
       {step === 'evaluation' && (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
+          <StepTip id="evaluation" text="Valuta il colpo: # perfetto/punto, + positivo, ! ok, - negativo, / murato, = errore. Tieni premuto per chiudere senza zone." />
           {autoAttack && (
             <div className="bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-3 py-2 text-sm font-bold flex items-center justify-between">
               <span>⚡ Auto: Palla Alta</span>
