@@ -698,6 +698,7 @@ export function ActionPanel() {
         const serverNumber = servingLineup[0];
         return (
           <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+            <StepTip id="player" text="Seleziona il giocatore. Il battitore corrente è evidenziato in giallo con badge SERVE." />
             <div className="grid grid-cols-3 gap-2">
               {getTeamLineup(selectedTeam).map((p) => {
                 const isServer = isServingTeam && p.number === serverNumber;
