@@ -55,6 +55,25 @@ export function ActionPanel() {
   const { user } = useAuth();
   const { settings } = useScoutSettings();
 
+  const [seenTips, setSeenTips] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('scout_seen_tips') || '[]'));
+    } catch { return new Set(); }
+  });
+  const markSeen = (k: string) => setSeenTips(prev => {
+    const n = new Set(prev); n.add(k);
+    try { localStorage.setItem('scout_seen_tips', JSON.stringify([...n])); } catch { /* noop */ }
+    return n;
+  });
+  const StepTip = ({ id, text }: { id: string; text: string }) =>
+    seenTips.has(id) ? null : (
+      <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs animate-in fade-in duration-200 mb-2">
+        <span>💡</span>
+        <p className="flex-1 text-foreground/80 leading-snug">{text}</p>
+        <button type="button" onClick={() => markSeen(id)} className="text-muted-foreground hover:text-foreground text-xs px-1 shrink-0">✕</button>
+      </div>
+    );
+
   useEffect(() => {
     if ((matchState as any).setOverPending && !showEndSetDialog) {
       setShowEndSetDialog(true);
