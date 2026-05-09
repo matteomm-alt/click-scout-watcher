@@ -172,7 +172,10 @@ export default function Onboarding() {
 
   // ---------- STEP 2: import Excel ----------
   const handleXlsx = async (file: File) => {
-    if (!societyId || !user) return;
+    if (!societyId || !user) {
+      toast.error('Sessione non valida. Ricarica la pagina e riprova.');
+      return;
+    }
     setBusy(true);
     try {
       const buf = await file.arrayBuffer();
