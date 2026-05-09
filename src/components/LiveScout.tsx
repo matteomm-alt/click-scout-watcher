@@ -454,6 +454,13 @@ function ScoutSettingsPanel({ settings, setSetting, setSettings }: { settings: S
           {VISUAL_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
         </div>
       </section>
+      <button
+        type="button"
+        onClick={() => { localStorage.removeItem('scout_seen_tips'); toast.info('Suggerimenti ripristinati'); }}
+        className="w-full min-h-10 rounded-lg border border-border text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+      >
+        🔄 Ripristina suggerimenti
+      </button>
     </div>
   );
 }
