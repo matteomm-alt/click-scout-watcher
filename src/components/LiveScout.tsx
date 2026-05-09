@@ -307,7 +307,7 @@ export function LiveScout() {
                 <SheetHeader>
                   <SheetTitle>Impostazioni scout</SheetTitle>
                 </SheetHeader>
-                <ScoutSettingsPanel settings={settings} setSetting={setSetting} />
+                <ScoutSettingsPanel settings={settings} setSetting={setSetting} setSettings={setSettings} />
               </SheetContent>
             </Sheet>
           </div>
