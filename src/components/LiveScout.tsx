@@ -196,34 +196,36 @@ export function LiveScout() {
             </div>
           </div>
 
-          <div className="col-span-6 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-4 h-full flex flex-col">
-              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                Inserimento Azione
-              </h3>
-              <div className="flex-1 overflow-y-auto">
-                <ActionPanel />
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-3 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-3 h-full flex flex-col items-center justify-center gap-3">
+          <div className="col-span-4 min-h-0 overflow-hidden">
+            <div className="glass rounded-xl p-3 h-full flex flex-col gap-2 overflow-y-auto">
+              <QuickActions />
               {timeoutBanner && (
-                <div className="w-full mb-2 flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
+                <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
                   <span>⏸ TIME-OUT</span>
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => setPanelOpen(true)}
-                className="min-h-10 min-w-10 rounded-lg bg-secondary/80 border border-border flex items-center justify-center hover:bg-secondary transition-colors px-3 gap-2 text-xs font-bold text-muted-foreground"
-                title="Apri pannello statistiche"
-              >
-                <PanelRight className="w-4 h-4" />
-                <span>Pannello</span>
-              </button>
+            </div>
+          </div>
+
+          <div className="col-span-5 min-h-0 overflow-hidden">
+            <div className="glass rounded-xl p-4 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                  Inserimento Azione
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setPanelOpen(true)}
+                  className="min-h-9 px-3 rounded-lg bg-secondary/80 border border-border flex items-center gap-2 hover:bg-secondary transition-colors text-xs font-bold text-muted-foreground"
+                >
+                  <PanelRight className="w-4 h-4" />
+                  Statistiche
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <ActionPanel />
+              </div>
             </div>
           </div>
         </div>
