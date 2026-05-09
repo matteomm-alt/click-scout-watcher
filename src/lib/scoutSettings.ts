@@ -18,6 +18,7 @@ export type ScoutSettings = {
   showAllDirections: boolean;
   posizionaPerRuolo: boolean;
   fastMode: boolean;
+  followServe: boolean;
 };
 
 const STORAGE_KEY = 'scout_settings';
