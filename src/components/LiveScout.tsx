@@ -198,13 +198,13 @@ export function LiveScout() {
 
           <div className="col-span-4 min-h-0 overflow-hidden">
             <div className="glass rounded-xl p-3 h-full flex flex-col gap-2 overflow-y-auto">
-              <QuickActions />
               {timeoutBanner && (
                 <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
                   <span>⏸ TIME-OUT</span>
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
+              <PlayerStatsPanel />
             </div>
           </div>
 
