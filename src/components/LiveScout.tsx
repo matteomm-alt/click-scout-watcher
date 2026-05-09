@@ -37,6 +37,7 @@ const MOBILE_TABS = [
 ];
 
 const RILEVAZIONE_ROWS = [
+  { key: 'followServe' as const, label: '🔄 Segui servizio', description: 'Pre-seleziona automaticamente la squadra dopo ogni azione: S→riceve avversaria, R/E→stessa squadra. Risparmia 1 tap per azione.' },
   { key: 'showServeType' as const, label: 'Tipo battuta', description: 'Mostra lo step per scegliere il tipo di servizio.' },
   { key: 'showAttackCombo' as const, label: 'Combo attacco', description: 'Mostra lo step per la combinazione di attacco.' },
   { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell’azione.' },
