@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Zap, FileSpreadsheet, SkipForward, FileUp, BarChart3, Calendar, Activity, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
-import { parseDvw } from '@/lib/dvwImporter';
+
 import * as XLSX from 'xlsx';
 
 const CATEGORIES = ['U12', 'U14', 'U16', 'U18', 'Serie D', 'Serie C', 'Serie B', 'Serie A'];
