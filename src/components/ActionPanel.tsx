@@ -257,7 +257,24 @@ export function ActionPanel() {
       flashTimerRef.current = setTimeout(() => setActionFlash(false), 280);
     }
 
+    const lastSkill = selectedSkill;
+    const lastTeam = selectedTeam;
     resetSelection();
+
+    if (settings.followServe) {
+      setTimeout(() => {
+        if (lastSkill === 'S') {
+          const receivingTeam = lastTeam === 'home' ? 'away' : 'home';
+          setSelectedTeam(receivingTeam);
+          setStep('player');
+        } else if (lastSkill === 'R' || lastSkill === 'E') {
+          if (lastTeam) {
+            setSelectedTeam(lastTeam);
+            setStep('player');
+          }
+        }
+      }, 50);
+    }
   };
 
 
