@@ -51,6 +51,7 @@ export function ProtectedRoute({ children, requireSuperAdmin }: ProtectedRoutePr
   // Redirect a onboarding se l'utente non l'ha completato (eccetto se è già lì o claim super admin)
   if (
     onboarded === false &&
+    !isSuperAdmin &&
     location.pathname !== '/onboarding' &&
     location.pathname !== '/claim-super-admin'
   ) {
