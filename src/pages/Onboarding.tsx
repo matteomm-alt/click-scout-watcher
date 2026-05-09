@@ -234,29 +234,18 @@ export default function Onboarding() {
     if (!user) return;
     setBusy(true);
     try {
-      const text = await file.text();
-      const parsed = parseDvw(text);
-      // Salva solo metadata di base in dvw_matches (riusa logica esistente in modo minimale)
-      const { error } = await supabase.from('dvw_matches').insert({
-        user_id: user.id,
-        file_name: file.name,
-        squadra_casa: parsed.teams?.home?.name ?? null,
-        avversario: parsed.teams?.away?.name ?? null,
-        data: parsed.header?.date ?? null,
-      } as never);
-      if (error) throw error;
-      toast.success('Partita DVW importata! La trovi in Archivio.');
+      await file.text();
+      toast.success(`File "${file.name}" ricevuto. Importalo dall'Archivio per l'analisi completa.`);
       setStep(4);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Errore parsing DVW';
-      toast.error(msg);
+    } catch {
+      toast.error('File DVW non leggibile');
     } finally {
       setBusy(false);
     }
   };
 
   // ---------- STEP 4: finish ----------
-  const finish = async () => {
+  const finish = async (redirectTo = '/') => {
     if (!user) return;
     setBusy(true);
     try {
