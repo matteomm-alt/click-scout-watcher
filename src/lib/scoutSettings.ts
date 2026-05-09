@@ -41,7 +41,53 @@ export const defaultScoutSettings: ScoutSettings = {
   showAllDirections: true,
   posizionaPerRuolo: false,
   fastMode: false,
+  followServe: false,
 };
+
+export const SCOUT_PRESETS = {
+  base: {
+    showServeType: false,
+    showAttackCombo: false,
+    showStartZone: false,
+    showEndZone: false,
+    showAlzata: false,
+    showDifesa: false,
+    showFreeball: false,
+    autoPoint: true,
+    autoCorrelation: true,
+    showMuroVincente: false,
+    showMuroErrato: false,
+    fastMode: true,
+  } as Partial<ScoutSettings>,
+  standard: {
+    showServeType: true,
+    showAttackCombo: false,
+    showStartZone: true,
+    showEndZone: true,
+    showAlzata: true,
+    showDifesa: true,
+    showFreeball: false,
+    autoPoint: true,
+    autoCorrelation: true,
+    showMuroVincente: false,
+    showMuroErrato: false,
+    fastMode: false,
+  } as Partial<ScoutSettings>,
+  avanzato: {
+    showServeType: true,
+    showAttackCombo: true,
+    showStartZone: true,
+    showEndZone: true,
+    showAlzata: true,
+    showDifesa: true,
+    showFreeball: true,
+    autoPoint: true,
+    autoCorrelation: true,
+    showMuroVincente: true,
+    showMuroErrato: true,
+    fastMode: false,
+  } as Partial<ScoutSettings>,
+} as const;
 
 const readSettings = (): ScoutSettings => {
   if (typeof window === 'undefined') return defaultScoutSettings;
