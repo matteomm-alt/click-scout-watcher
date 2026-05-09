@@ -255,7 +255,8 @@ export default function Onboarding() {
         .eq('id', user.id);
       if (error) throw error;
       toast.success('Tutto pronto!');
-      navigate('/', { replace: true });
+      await refreshRoles();
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Errore';
       toast.error(msg);
