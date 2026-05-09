@@ -481,10 +481,7 @@ export default function Onboarding() {
               ].map((it) => (
                 <button
                   key={it.to}
-                  onClick={async () => {
-                    await finish();
-                    navigate(it.to);
-                  }}
+                  onClick={() => finish(it.to)}
                   disabled={busy}
                   className="w-full flex items-center gap-3 px-5 py-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left disabled:opacity-50"
                 >
@@ -495,7 +492,7 @@ export default function Onboarding() {
               ))}
             </div>
 
-            <Button className="w-full" onClick={finish} disabled={busy}>
+            <Button className="w-full" onClick={() => finish()} disabled={busy}>
               {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Inizia <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
