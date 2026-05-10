@@ -165,10 +165,6 @@ export const useMatchStore = create<MatchStore>()(
           const idx = positions.findIndex(pid => pid === lineup.setter);
           return idx >= 0 ? idx + 1 : 1;
         };
-          const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
-          const idx = positions.findIndex(pid => pid === lineup.setter);
-          return idx >= 0 ? idx + 1 : 1;
-        };
 
         set({
           matchState: {
