@@ -1282,3 +1282,96 @@ function ServeAnalysis({ actions, pct }: { actions: DbAction[]; pct: (n: number,
     </Card>
   );
 }
+
+function BlockAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
+  const blocks = actions.filter(a => a.skill === 'B');
+  const total = blocks.length;
+  const points = blocks.filter(a => a.evaluation === '#').length;
+  const errors = blocks.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+
+  const byPlayer = new Map<number, DbAction[]>();
+  for (const b of blocks) {
+    if (b.player_number === null) continue;
+    if (!byPlayer.has(b.player_number)) byPlayer.set(b.player_number, []);
+    byPlayer.get(b.player_number)!.push(b);
+  }
+  const playerRows = [...byPlayer.entries()]
+    .map(([num, list]) => ({
+      num,
+      tot: list.length,
+      pts: list.filter(a => a.evaluation === '#').length,
+      err: list.filter(a => a.evaluation === '=' || a.evaluation === '/').length,
+    }))
+    .sort((a, b) => b.tot - a.tot);
+
+  const byRotation = new Map<number, DbAction[]>();
+  for (let r = 1; r <= 6; r++) byRotation.set(r, []);
+  for (const b of blocks) {
+    const r = rotationOf(b, side);
+    if (r) byRotation.get(r)!.push(b);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Muri totali</p>
+          <p className="text-4xl font-black italic">{total}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Punti (#)</p>
+          <p className="text-4xl font-black italic text-success">{points} <span className="text-base text-muted-foreground">{pct(points, total)}%</span></p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Errori (= /)</p>
+          <p className="text-4xl font-black italic text-destructive">{errors} <span className="text-base text-muted-foreground">{pct(errors, total)}%</span></p>
+        </Card>
+      </div>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Per giocatore</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+              <tr><th className="text-left py-2">N°</th><th>Tot</th><th>Punti</th><th>Punti%</th><th>Errori</th><th>Errori%</th></tr>
+            </thead>
+            <tbody>
+              {playerRows.map(r => (
+                <tr key={r.num} className="border-b border-border/40">
+                  <td className="py-2 font-bold">#{r.num}</td>
+                  <td className="text-center">{r.tot}</td>
+                  <td className="text-center text-success">{r.pts}</td>
+                  <td className="text-center font-bold text-success">{pct(r.pts, r.tot)}%</td>
+                  <td className="text-center text-destructive">{r.err}</td>
+                  <td className="text-center font-bold text-destructive">{pct(r.err, r.tot)}%</td>
+                </tr>
+              ))}
+              {playerRows.length === 0 && (
+                <tr><td colSpan={6} className="text-center text-muted-foreground py-4">Nessun muro registrato</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Per rotazione</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[1,2,3,4,5,6].map(r => {
+            const list = byRotation.get(r)!;
+            const tot = list.length;
+            const pts = list.filter(a => a.evaluation === '#').length;
+            const eff = tot ? Math.round(((pts - list.filter(a => a.evaluation === '=' || a.evaluation === '/').length) / tot) * 100) : 0;
+            return (
+              <div key={r} className="p-4 border border-border rounded">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Rotazione {r}</p>
+                <p className="text-2xl font-black italic mt-1">{tot} <span className="text-xs text-muted-foreground">muri</span></p>
+                <p className="text-sm mt-1">Punti <span className="text-success font-bold">{pts}</span> · Eff <span className={`font-bold ${eff >= 0 ? 'text-success' : 'text-destructive'}`}>{eff}%</span></p>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
+  );
+}
