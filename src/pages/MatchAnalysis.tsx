@@ -275,25 +275,85 @@ export default function MatchAnalysis() {
   );
 
   const exportCsv = () => {
-    const headers = ['set', 'skill', 'player', 'evaluation', 'start_zone', 'end_zone', 'rotation'];
+    if (!match) return;
+    const headers = [
+      'set', 'rally', 'azione', 'squadra', 'giocatore', 'skill', 'tipo',
+      'valutazione', 'zona_partenza', 'zona_arrivo', 'sottozona',
+      'combo_attacco', 'rotazione_casa', 'rotazione_ospite',
+      'punteggio_casa', 'punteggio_ospite', 'chi_serve', 'fase'
+    ];
     const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const rows = filteredTeamActions.map(a => [
-      a.set_number,
-      a.skill,
+    const rows = filteredAllActions.map(a => [
+      a.set_number, a.rally_index, a.action_index,
+      a.side === 'home' ? match?.home_team?.name ?? 'Casa' : match?.away_team?.name ?? 'Ospite',
       a.player_number ?? '',
+      a.skill, a.skill_type ?? '',
       a.evaluation,
-      a.start_zone ?? '',
-      a.end_zone ?? '',
-      rotationOf(a, teamFilter) ?? '',
+      a.start_zone ?? '', a.end_zone ?? '', a.end_subzone ?? '',
+      a.attack_combo ?? '',
+      a.home_setter_pos ?? '', a.away_setter_pos ?? '',
+      a.home_score, a.away_score,
+      a.serving_side ?? '',
+      a.serving_side === a.side ? 'K2' : 'K1',
     ]);
     const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `match-analysis-${match.id}.csv`;
+    link.download = `match-analysis-${match.id}-completo.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportExcel = async () => {
+    if (!match) return;
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+
+    const actionsData = [
+      ['Set','Rally','Azione','Squadra','N°','Skill','Tipo','Eval','ZonaP','ZonaA','Rotazione','Fase','Pt Casa','Pt Ospite'],
+      ...filteredAllActions.map(a => [
+        a.set_number, a.rally_index, a.action_index,
+        a.side === 'home' ? match.home_team?.name : match.away_team?.name,
+        a.player_number ?? '',
+        a.skill, a.skill_type ?? '', a.evaluation,
+        a.start_zone ?? '', a.end_zone ?? '',
+        a.home_setter_pos ?? '',
+        a.serving_side === a.side ? 'K2' : 'K1',
+        a.home_score, a.away_score,
+      ])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(actionsData), 'Azioni');
+
+    const pct = (n: number, d: number) => d ? `${Math.round(n / d * 100)}%` : '';
+    const playersList = statsByPlayer(filteredTeamActions);
+    const playersData: (string | number)[][] = [
+      ['N°', 'Giocatore', 'Battuta Tot', 'Ace%', 'Err%', 'Ric Tot', 'Pos%', 'Prf%', 'Att Tot', 'Kill%', 'Eff%', 'Muro Tot'],
+      ...playersList.map(p => {
+        const s = p.bySkill;
+        const attEff = s.A
+          ? `${Math.round((((s.A.perfect ?? 0) - (s.A.errors ?? 0)) / (s.A.total || 1)) * 100)}%`
+          : '';
+        return [
+          p.number,
+          playerNames.get(p.number) ?? `#${p.number}`,
+          s.S?.total ?? 0,
+          s.S ? pct(s.S.perfect, s.S.total) : '',
+          s.S ? pct(s.S.errors, s.S.total) : '',
+          s.R?.total ?? 0,
+          s.R ? pct(s.R.positive, s.R.total) : '',
+          s.R ? pct(s.R.perfect, s.R.total) : '',
+          s.A?.total ?? 0,
+          s.A ? pct(s.A.perfect, s.A.total) : '',
+          attEff,
+          s.B?.total ?? 0,
+        ];
+      })
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(playersData), 'Giocatori');
+
+    XLSX.writeFile(wb, `${match.home_team?.name}_${match.away_team?.name}_${match.match_date}.xlsx`);
   };
 
   const exportScoresheetPdf = () => {
