@@ -184,6 +184,7 @@ export function LiveScout() {
   return (
     <>
       <div className="hidden lg:flex h-screen flex-col p-3 gap-3 overflow-hidden">
+        <div className="fixed right-0 top-1/4 bottom-1/4 w-5 z-40 cursor-e-resize" onPointerDown={() => setPanelOpen(true)} />
         <FullscreenToggle />
         <ScoreBoard />
 
