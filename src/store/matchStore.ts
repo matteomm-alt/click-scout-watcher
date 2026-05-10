@@ -108,6 +108,14 @@ const defaultMatchState: MatchState = {
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
 
+const getLineupNumbers = (lineup: Lineup, team: Team): number[] => {
+  const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
+  return positions.map(pid => {
+    const player = team.players.find(p => p.id === pid);
+    return player?.number ?? 0;
+  });
+};
+
 type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number };
 const lineupSnapshots: LineupSnapshot[] = [];
 
@@ -152,15 +160,11 @@ export const useMatchStore = create<MatchStore>()(
 
       startMatch: () => {
         const { homeLineup, awayLineup, homeTeam, awayTeam } = get();
-        const getLineupNumbers = (lineup: Lineup, team: Team): number[] => {
-          const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
-          return positions.map(pid => {
-            const player = team.players.find(p => p.id === pid);
-            return player?.number ?? 0;
-          });
-        };
-
         const findSetterPos = (lineup: Lineup): number => {
+          const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
+          const idx = positions.findIndex(pid => pid === lineup.setter);
+          return idx >= 0 ? idx + 1 : 1;
+        };
           const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
           const idx = positions.findIndex(pid => pid === lineup.setter);
           return idx >= 0 ? idx + 1 : 1;
