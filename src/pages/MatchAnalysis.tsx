@@ -473,6 +473,9 @@ export default function MatchAnalysis() {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Esporta CSV</span>
             </Button>
+            <Button onClick={exportExcel} variant="outline" size="sm" className="shrink-0">
+              📊<span className="hidden sm:inline ml-1">Excel</span>
+            </Button>
           </div>
         </div>
       </header>
