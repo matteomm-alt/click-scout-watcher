@@ -86,7 +86,10 @@ function TeamLineup({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {openPos !== null && (
+        <div className="fixed inset-0 z-10" onClick={() => setOpenPos(null)} />
+      )}
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-lg font-bold text-foreground">
           {team.name || (side === 'home' ? 'Casa' : 'Ospite')}
