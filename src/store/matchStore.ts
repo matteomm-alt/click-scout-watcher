@@ -358,6 +358,8 @@ export const useMatchStore = create<MatchStore>()(
               awaySubstitutionsUsed: 0,
               homeSetterPosition: 1,
               awaySetterPosition: 1,
+              homeCurrentLineup: getLineupNumbers(s.homeLineup, s.homeTeam),
+              awayCurrentLineup: getLineupNumbers(s.awayLineup, s.awayTeam),
               setOverPending: false,
             },
           };
