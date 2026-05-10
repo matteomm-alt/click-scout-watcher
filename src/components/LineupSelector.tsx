@@ -138,18 +138,18 @@ function TeamLineup({
                 ) : (
                   <div className="relative group">
                     <button
-                      onClick={() => handlePositionClick(pos.key)}
+                      onClick={() => setOpenPos(openPos === pos.key ? null : pos.key)}
                       className="w-full p-3 rounded-lg border-2 border-dashed border-court-line/30 text-court-line hover:border-primary/50 hover:text-primary transition-all min-h-[80px] flex items-center justify-center"
                     >
                       <span className="text-2xl">+</span>
                     </button>
                     {/* Dropdown */}
                     {availablePlayers.length > 0 && (
-                      <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity max-h-48 overflow-y-auto">
+                      <div className={`absolute z-20 top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl transition-opacity max-h-48 overflow-y-auto ${openPos === pos.key ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {availablePlayers.map(p => (
                           <button
                             key={p.id}
-                            onClick={(e) => { e.stopPropagation(); handlePlayerSelect(pos.key, p.id); }}
+                            onClick={(e) => { e.stopPropagation(); handlePlayerSelect(pos.key, p.id); setOpenPos(null); }}
                             className="w-full px-3 py-2 text-left hover:bg-secondary flex items-center gap-2 text-sm"
                           >
                             <span className="font-bold text-primary">{p.number}</span>
