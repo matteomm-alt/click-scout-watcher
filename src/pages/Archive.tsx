@@ -151,6 +151,13 @@ export default function Archive() {
 
           {!loading && filtered.map((m) => (
             <div key={m.id} className="flex items-stretch gap-2">
+              <div className="flex items-center px-2">
+                <Checkbox
+                  checked={selected.has(m.id)}
+                  onCheckedChange={() => toggleSelect(m.id)}
+                  aria-label="Seleziona partita"
+                />
+              </div>
               <Link to={`/match/${m.id}`} className="block flex-1">
                 <Card className="p-4 hover:border-primary transition-colors h-full">
                   <div className="flex items-baseline justify-between">
