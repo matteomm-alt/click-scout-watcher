@@ -281,18 +281,16 @@ export function ActionPanel() {
     resetSelection();
 
     if (settings.followServe) {
+      const followDelay = !settings.fastMode ? 300 : 50;
       setTimeout(() => {
         if (lastSkill === 'S') {
           const receivingTeam = lastTeam === 'home' ? 'away' : 'home';
           setSelectedTeam(receivingTeam);
           setStep('player');
         } else if (lastSkill === 'R' || lastSkill === 'E') {
-          if (lastTeam) {
-            setSelectedTeam(lastTeam);
-            setStep('player');
-          }
+          if (lastTeam) { setSelectedTeam(lastTeam); setStep('player'); }
         }
-      }, 50);
+      }, followDelay);
     }
   };
 
@@ -890,7 +888,7 @@ export function ActionPanel() {
               <SkipForward className="w-4 h-4" /> Salta
             </button>
           </div>
-          <ZoneCourt mode="select-start" onZoneClick={handleStartZone} side={selectedTeam || 'home'} skill={selectedSkill} large={true} />
+          <ZoneCourt mode="select-start" onZoneClick={handleStartZone} side={selectedTeam || 'home'} skill={selectedSkill} large={true} suggestedZone={selectedSkill === 'S' ? 1 : selectedSkill === 'R' ? 6 : selectedSkill === 'A' ? 4 : undefined} />
         </div>
       )}
 

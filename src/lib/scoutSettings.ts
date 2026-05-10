@@ -58,6 +58,7 @@ export const SCOUT_PRESETS = {
     showMuroVincente: false,
     showMuroErrato: false,
     fastMode: true,
+    followServe: true,
   } as Partial<ScoutSettings>,
   standard: {
     showServeType: true,
@@ -72,6 +73,7 @@ export const SCOUT_PRESETS = {
     showMuroVincente: false,
     showMuroErrato: false,
     fastMode: false,
+    followServe: true,
   } as Partial<ScoutSettings>,
   avanzato: {
     showServeType: true,
@@ -86,6 +88,7 @@ export const SCOUT_PRESETS = {
     showMuroVincente: true,
     showMuroErrato: true,
     fastMode: false,
+    followServe: false,
   } as Partial<ScoutSettings>,
 } as const;
 
