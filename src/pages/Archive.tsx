@@ -117,6 +117,22 @@ export default function Archive() {
             </select>
           </div>
 
+          {selected.size >= 2 && (
+            <Card className="p-3 sticky top-2 z-10 bg-primary/10 border-primary flex items-center justify-between">
+              <span className="text-sm font-bold">{selected.size} partite selezionate</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Pulisci</Button>
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/match-multi?ids=${[...selected].join(',')}`)}
+                >
+                  <BarChart3 className="w-4 h-4 mr-1" />
+                  📊 Analisi aggregata ({selected.size} partite)
+                </Button>
+              </div>
+            </Card>
+          )}
+
           {loading && [1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
 
           {!loading && filtered.length === 0 && (
