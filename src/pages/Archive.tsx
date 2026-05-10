@@ -38,6 +38,16 @@ export default function Archive() {
   const [search, setSearch] = useState('');
   const [filterLeague, setFilterLeague] = useState('');
   const [filterYear, setFilterYear] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
 
   useEffect(() => {
     (async () => {
