@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import type { Player, Team, Lineup } from '@/types/volleyball';
 import { ROLE_LABELS } from '@/types/volleyball';
@@ -42,6 +43,8 @@ function TeamLineup({
   const savedRaw = typeof window !== 'undefined' ? localStorage.getItem(savedKey) : null;
   let savedLineup: Lineup | null = null;
   try { savedLineup = savedRaw ? JSON.parse(savedRaw).lineup : null; } catch { savedLineup = null; }
+
+  const [openPos, setOpenPos] = useState<string | null>(null);
 
   const getPlayer = (id: string | null): Player | undefined =>
     id ? team.players.find(p => p.id === id) : undefined;
