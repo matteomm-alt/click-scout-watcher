@@ -1031,7 +1031,7 @@ function MiniField({ children }: { children: ReactNode }) {
 
 function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[]; allActions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
-  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve'>('base');
+  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve' | 'block'>('base');
   const [phaseFilter, setPhaseFilter] = useState<'all' | 'K1' | 'K2'>('all');
   const [dirSkill, setDirSkill] = useState<string>('A');
   const [dirType, setDirType] = useState<string>('all');
