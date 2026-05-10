@@ -9,6 +9,7 @@ interface ZoneCourtProps {
   side?: 'home' | 'away';
   skill?: string | null;
   large?: boolean;
+  suggestedZone?: number;
 }
 
 type Zone = { zone: number; col: number; row: number; label: string };
@@ -41,6 +42,7 @@ export function ZoneCourt({
   mode = 'display',
   skill,
   large = false,
+  suggestedZone,
 }: ZoneCourtProps) {
   const startIsServe = mode === 'select-start' && skill === 'S';
   const zonesSelectable = mode !== 'display' && !startIsServe;
@@ -72,7 +74,7 @@ export function ZoneCourt({
       </div>
 
       <div
-        className={`relative grid grid-cols-3 grid-rows-3 overflow-hidden border border-foreground/25 shadow-2xl ${showServiceBand ? '' : 'rounded-b-lg'} ${large ? 'aspect-[1/1]' : 'aspect-[16/10]'}`}
+        className={`relative grid grid-cols-3 grid-rows-3 overflow-hidden border border-foreground/25 shadow-2xl ${showServiceBand ? '' : 'rounded-b-lg'} ${large ? 'aspect-[1/1]' : 'aspect-square'}`}
         style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}
       >
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
@@ -95,7 +97,7 @@ export function ZoneCourt({
               disabled={!zonesSelectable}
               className={`relative flex items-center justify-center overflow-hidden transition-all duration-75 [touch-action:manipulation] ${
                 zonesSelectable ? 'cursor-pointer hover:bg-white/10 active:brightness-125 active:scale-95' : 'cursor-default'
-              } ${state === 'start' ? 'bg-primary/35 ring-2 ring-primary ring-inset' : ''} ${state === 'end' ? 'bg-accent/35 ring-2 ring-accent ring-inset' : ''} ${state === 'hl' ? 'bg-white/10' : ''}`}
+              } ${state === 'start' ? 'bg-primary/35 ring-2 ring-primary ring-inset' : ''} ${state === 'end' ? 'bg-accent/35 ring-2 ring-accent ring-inset' : ''} ${state === 'hl' ? 'bg-white/10' : ''} ${suggestedZone === z.zone ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
             >
               <span className={`select-none text-6xl md:text-7xl font-black italic leading-none ${active ? 'text-white/65' : 'text-white/22'}`}>
                 {z.zone}
@@ -300,7 +302,7 @@ export function VolleyballCourt({
 
   return (
     <div className="w-full">
-      <div className="grid overflow-hidden rounded-lg border border-foreground/20 shadow-2xl" style={{ aspectRatio: '24 / 9', gridTemplateColumns: '1fr 6fr 0.18fr 6fr 1fr' }}>
+      <div className="grid overflow-hidden rounded-lg border border-foreground/20 shadow-2xl" style={{ aspectRatio: '221 / 90', gridTemplateColumns: '1.33fr 6fr 0.07fr 6fr 1.33fr' }}>
         {renderServiceBand('away')}
         {renderHalfCourt('away')}
         <div className="relative bg-muted">
