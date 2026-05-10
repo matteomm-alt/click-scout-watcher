@@ -11,6 +11,7 @@ import Home from "./pages/Home.tsx";
 import Index from "./pages/Index.tsx";
 import ImportDvw from "./pages/ImportDvw.tsx";
 import MatchAnalysis from "./pages/MatchAnalysis.tsx";
+import MatchAnalysisMulti from "./pages/MatchAnalysisMulti.tsx";
 import Archive from "./pages/Archive.tsx";
 import Auth from "./pages/Auth.tsx";
 import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/import" element={<ImportDvw />} />
               <Route path="/match/:id" element={<MatchAnalysis />} />
+              <Route path="/match-multi" element={<MatchAnalysisMulti />} />
               <Route path="/archive" element={<Archive />} />
               <Route path="/scout" element={<Index />} />
               <Route path="/supporto" element={<Support />} />
