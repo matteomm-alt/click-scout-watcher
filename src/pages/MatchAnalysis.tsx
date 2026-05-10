@@ -1109,7 +1109,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
       <PhaseToggle value={phaseFilter} onChange={setPhaseFilter} />
       <div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/30 p-1">
         {[
-          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'],
+          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'], ['block', 'Muro'],
         ].map(([key, label]) => (
           <button key={key} onClick={() => setAdvancedTab(key as typeof advancedTab)} className={`min-h-10 px-3 rounded text-xs font-bold uppercase ${advancedTab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{label}</button>
         ))}
@@ -1118,6 +1118,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
       {advancedTab === 'distribution' && <DistributionAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'reception' && <ReceptionAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'serve' && <ServeAnalysis actions={phaseActions} pct={pct} />}
+      {advancedTab === 'block' && <BlockAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'base' && <>
       <SetProgressTab actions={phaseActions} />
       <TechTypesTab actions={phaseActions} />
