@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, FileUp, Users, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileUp, Users, Trash2, BarChart3 } from 'lucide-react';
 
 interface MatchListItem {
   id: string;
@@ -36,6 +38,16 @@ export default function Archive() {
   const [search, setSearch] = useState('');
   const [filterLeague, setFilterLeague] = useState('');
   const [filterYear, setFilterYear] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -105,6 +117,22 @@ export default function Archive() {
             </select>
           </div>
 
+          {selected.size >= 2 && (
+            <Card className="p-3 sticky top-2 z-10 bg-primary/10 border-primary flex items-center justify-between">
+              <span className="text-sm font-bold">{selected.size} partite selezionate</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Pulisci</Button>
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/match-multi?ids=${[...selected].join(',')}`)}
+                >
+                  <BarChart3 className="w-4 h-4 mr-1" />
+                  📊 Analisi aggregata ({selected.size} partite)
+                </Button>
+              </div>
+            </Card>
+          )}
+
           {loading && [1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
 
           {!loading && filtered.length === 0 && (
@@ -123,6 +151,13 @@ export default function Archive() {
 
           {!loading && filtered.map((m) => (
             <div key={m.id} className="flex items-stretch gap-2">
+              <div className="flex items-center px-2">
+                <Checkbox
+                  checked={selected.has(m.id)}
+                  onCheckedChange={() => toggleSelect(m.id)}
+                  aria-label="Seleziona partita"
+                />
+              </div>
               <Link to={`/match/${m.id}`} className="block flex-1">
                 <Card className="p-4 hover:border-primary transition-colors h-full">
                   <div className="flex items-baseline justify-between">

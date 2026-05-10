@@ -275,25 +275,85 @@ export default function MatchAnalysis() {
   );
 
   const exportCsv = () => {
-    const headers = ['set', 'skill', 'player', 'evaluation', 'start_zone', 'end_zone', 'rotation'];
+    if (!match) return;
+    const headers = [
+      'set', 'rally', 'azione', 'squadra', 'giocatore', 'skill', 'tipo',
+      'valutazione', 'zona_partenza', 'zona_arrivo', 'sottozona',
+      'combo_attacco', 'rotazione_casa', 'rotazione_ospite',
+      'punteggio_casa', 'punteggio_ospite', 'chi_serve', 'fase'
+    ];
     const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const rows = filteredTeamActions.map(a => [
-      a.set_number,
-      a.skill,
+    const rows = filteredAllActions.map(a => [
+      a.set_number, a.rally_index, a.action_index,
+      a.side === 'home' ? match?.home_team?.name ?? 'Casa' : match?.away_team?.name ?? 'Ospite',
       a.player_number ?? '',
+      a.skill, a.skill_type ?? '',
       a.evaluation,
-      a.start_zone ?? '',
-      a.end_zone ?? '',
-      rotationOf(a, teamFilter) ?? '',
+      a.start_zone ?? '', a.end_zone ?? '', a.end_subzone ?? '',
+      a.attack_combo ?? '',
+      a.home_setter_pos ?? '', a.away_setter_pos ?? '',
+      a.home_score, a.away_score,
+      a.serving_side ?? '',
+      a.serving_side === a.side ? 'K2' : 'K1',
     ]);
     const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `match-analysis-${match.id}.csv`;
+    link.download = `match-analysis-${match.id}-completo.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportExcel = async () => {
+    if (!match) return;
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+
+    const actionsData = [
+      ['Set','Rally','Azione','Squadra','N°','Skill','Tipo','Eval','ZonaP','ZonaA','Rotazione','Fase','Pt Casa','Pt Ospite'],
+      ...filteredAllActions.map(a => [
+        a.set_number, a.rally_index, a.action_index,
+        a.side === 'home' ? match.home_team?.name : match.away_team?.name,
+        a.player_number ?? '',
+        a.skill, a.skill_type ?? '', a.evaluation,
+        a.start_zone ?? '', a.end_zone ?? '',
+        a.home_setter_pos ?? '',
+        a.serving_side === a.side ? 'K2' : 'K1',
+        a.home_score, a.away_score,
+      ])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(actionsData), 'Azioni');
+
+    const pct = (n: number, d: number) => d ? `${Math.round(n / d * 100)}%` : '';
+    const playersList = statsByPlayer(filteredTeamActions);
+    const playersData: (string | number)[][] = [
+      ['N°', 'Giocatore', 'Battuta Tot', 'Ace%', 'Err%', 'Ric Tot', 'Pos%', 'Prf%', 'Att Tot', 'Kill%', 'Eff%', 'Muro Tot'],
+      ...playersList.map(p => {
+        const s = p.bySkill;
+        const attEff = s.A
+          ? `${Math.round((((s.A.perfect ?? 0) - (s.A.errors ?? 0)) / (s.A.total || 1)) * 100)}%`
+          : '';
+        return [
+          p.number,
+          playerNames.get(p.number) ?? `#${p.number}`,
+          s.S?.total ?? 0,
+          s.S ? pct(s.S.perfect, s.S.total) : '',
+          s.S ? pct(s.S.errors, s.S.total) : '',
+          s.R?.total ?? 0,
+          s.R ? pct(s.R.positive, s.R.total) : '',
+          s.R ? pct(s.R.perfect, s.R.total) : '',
+          s.A?.total ?? 0,
+          s.A ? pct(s.A.perfect, s.A.total) : '',
+          attEff,
+          s.B?.total ?? 0,
+        ];
+      })
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(playersData), 'Giocatori');
+
+    XLSX.writeFile(wb, `${match.home_team?.name}_${match.away_team?.name}_${match.match_date}.xlsx`);
   };
 
   const exportScoresheetPdf = () => {
@@ -413,6 +473,9 @@ export default function MatchAnalysis() {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Esporta CSV</span>
             </Button>
+            <Button onClick={exportExcel} variant="outline" size="sm" className="shrink-0">
+              📊<span className="hidden sm:inline ml-1">Excel</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -494,7 +557,7 @@ export default function MatchAnalysis() {
           {tab === 'overview' && <Overview actions={filteredTeamActions} setResults={match.set_results} />}
           {tab === 'charts' && <ChartsTab actions={filteredTeamActions} playerNames={playerNames} />}
           {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
-          {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} />}
+          {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} match={match} teamName={teamFilter === 'home' ? match.home_team.name : match.away_team.name} />}
           {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
           {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
           {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
@@ -606,8 +669,136 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
   );
 }
 
-function PlayersTab({ actions, playerNames }: { actions: DbAction[]; playerNames: Map<number, string> }) {
+function PlayersTab({ actions, playerNames, match, teamName }: { actions: DbAction[]; playerNames: Map<number, string>; match: MatchRow; teamName: string }) {
   const players = statsByPlayer(actions);
+
+  const exportPlayerPdf = (num: number) => {
+    const playerActions = actions.filter(a => a.player_number === num);
+    const stat = (skill: string) => {
+      const list = playerActions.filter(a => a.skill === skill);
+      const tot = list.length;
+      const perf = list.filter(a => a.evaluation === '#').length;
+      const pos = list.filter(a => a.evaluation === '#' || a.evaluation === '+').length;
+      const err = list.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+      const posPct = tot ? (pos / tot) * 100 : 0;
+      const errPct = tot ? (err / tot) * 100 : 0;
+      const eff = tot ? ((perf - err) / tot) * 100 : 0;
+      return { tot, perf, pos, err, posPct, errPct, eff };
+    };
+    const skills: { key: string; label: string }[] = [
+      { key: 'S', label: 'Battuta' }, { key: 'R', label: 'Ricezione' },
+      { key: 'A', label: 'Attacco' }, { key: 'B', label: 'Muro' }, { key: 'D', label: 'Difesa' },
+    ];
+    const stats = skills.map(s => ({ ...s, ...stat(s.key) }));
+
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const playerName = playerNames.get(num) || `#${num}`;
+    const date = match.match_date || new Date().toISOString().slice(0, 10);
+
+    doc.setFontSize(20); doc.setFont('helvetica', 'bold');
+    doc.text(`#${num} ${playerName}`, 14, 20);
+    doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+    doc.text(`${teamName}`, 14, 27);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text(`${match.home_team.name} vs ${match.away_team.name} · ${date}${match.league ? ' · ' + match.league : ''}`, 14, 33);
+    doc.setTextColor(0);
+    doc.line(14, 37, 196, 37);
+
+    // Radar chart SVG-like manual draw
+    const cx = 60, cy = 75, R = 32;
+    doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('Profilo (Pos% per skill)', 14, 47);
+    // grid
+    doc.setDrawColor(220);
+    [0.25, 0.5, 0.75, 1].forEach(f => {
+      const pts: [number, number][] = [];
+      for (let i = 0; i < 5; i++) {
+        const ang = -Math.PI / 2 + (i * 2 * Math.PI / 5);
+        pts.push([cx + Math.cos(ang) * R * f, cy + Math.sin(ang) * R * f]);
+      }
+      for (let i = 0; i < pts.length; i++) {
+        const [x1, y1] = pts[i]; const [x2, y2] = pts[(i + 1) % pts.length];
+        doc.line(x1, y1, x2, y2);
+      }
+    });
+    // axes + labels
+    doc.setDrawColor(180); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    stats.forEach((s, i) => {
+      const ang = -Math.PI / 2 + (i * 2 * Math.PI / 5);
+      const ex = cx + Math.cos(ang) * R, ey = cy + Math.sin(ang) * R;
+      doc.line(cx, cy, ex, ey);
+      const lx = cx + Math.cos(ang) * (R + 6), ly = cy + Math.sin(ang) * (R + 6);
+      doc.text(s.label, lx, ly, { align: 'center', baseline: 'middle' });
+    });
+    // polygon for values
+    doc.setDrawColor(249, 115, 22); doc.setFillColor(249, 115, 22);
+    const valPts: [number, number][] = stats.map((s, i) => {
+      const ang = -Math.PI / 2 + (i * 2 * Math.PI / 5);
+      const r = (Math.max(0, Math.min(100, s.posPct)) / 100) * R;
+      return [cx + Math.cos(ang) * r, cy + Math.sin(ang) * r];
+    });
+    for (let i = 0; i < valPts.length; i++) {
+      const [x1, y1] = valPts[i]; const [x2, y2] = valPts[(i + 1) % valPts.length];
+      doc.setLineWidth(0.6);
+      doc.line(x1, y1, x2, y2);
+    }
+    valPts.forEach(([x, y]) => doc.circle(x, y, 0.8, 'F'));
+    doc.setLineWidth(0.2); doc.setDrawColor(0);
+
+    // Table dettaglio
+    let y = 120;
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text('Dettaglio per fondamentale', 14, y); y += 6;
+    doc.setFontSize(9);
+    const headers = ['Skill', 'Tot', 'Pos%', 'Err%', 'Eff%'];
+    const colsX = [14, 60, 90, 120, 150];
+    headers.forEach((h, i) => doc.text(h, colsX[i], y));
+    y += 2; doc.line(14, y, 196, y); y += 5;
+    doc.setFont('helvetica', 'normal');
+    stats.forEach(s => {
+      doc.text(s.label, colsX[0], y);
+      doc.text(String(s.tot), colsX[1], y);
+      doc.text(`${s.posPct.toFixed(0)}%`, colsX[2], y);
+      doc.text(`${s.errPct.toFixed(0)}%`, colsX[3], y);
+      doc.text(`${s.eff.toFixed(0)}%`, colsX[4], y);
+      y += 6;
+    });
+
+    // Heatmap zone
+    y += 6;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text('Heatmap zone (volume azioni)', 14, y); y += 4;
+    const zoneCounts: Record<number, number> = {};
+    playerActions.forEach(a => {
+      const z = (a.skill === 'A') ? a.end_zone : a.start_zone;
+      if (z && z >= 1 && z <= 9) zoneCounts[z] = (zoneCounts[z] || 0) + 1;
+    });
+    const maxZ = Math.max(1, ...Object.values(zoneCounts));
+    const gridX = 14, gridY = y + 2, cellW = 20, cellH = 20;
+    const layout = [4,3,2,5,6,1,7,8,9];
+    layout.forEach((z, i) => {
+      const col = i % 3, row = Math.floor(i / 3);
+      const x = gridX + col * cellW, yy = gridY + row * cellH;
+      const c = zoneCounts[z] || 0;
+      const intensity = c / maxZ;
+      doc.setFillColor(249, 115, 22, intensity * 255 as any);
+      doc.setDrawColor(180);
+      doc.rect(x, yy, cellW - 1, cellH - 1, c > 0 ? 'FD' : 'D');
+      doc.setFontSize(7); doc.setTextColor(120);
+      doc.text(`P${z}`, x + 1.5, yy + 4);
+      doc.setFontSize(11); doc.setTextColor(0); doc.setFont('helvetica', 'bold');
+      doc.text(String(c), x + cellW / 2 - 0.5, yy + cellH / 2 + 1, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+    });
+
+    // Footer
+    doc.setFontSize(8); doc.setTextColor(150);
+    doc.text('Generato da VolleyScout Pro', 14, 290);
+
+    const safe = (s: string) => s.replace(/[^A-Za-z0-9]+/g, '_').slice(0, 20) || 'atleta';
+    doc.save(`${num}_${safe(playerName)}_${date}.pdf`);
+  };
+
   return (
     <Card className="p-5 overflow-x-auto">
       <table className="w-full text-sm">
@@ -616,6 +807,7 @@ function PlayersTab({ actions, playerNames }: { actions: DbAction[]; playerNames
             <th className="text-left py-2">Atleta</th>
             <th>Tot</th>
             {['S','R','A','B','D','E'].map(s => <th key={s}>{SKILL_NAMES[s]}</th>)}
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -638,6 +830,13 @@ function PlayersTab({ actions, playerNames }: { actions: DbAction[]; playerNames
                   </td>
                 );
               })}
+              <td className="text-center">
+                <button
+                  onClick={() => exportPlayerPdf(p.number)}
+                  className="min-h-8 px-2 text-xs font-bold rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
+                  title="Scheda PDF"
+                >📄 PDF</button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -968,7 +1167,7 @@ function MiniField({ children }: { children: ReactNode }) {
 
 function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[]; allActions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
-  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve'>('base');
+  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve' | 'block'>('base');
   const [phaseFilter, setPhaseFilter] = useState<'all' | 'K1' | 'K2'>('all');
   const [dirSkill, setDirSkill] = useState<string>('A');
   const [dirType, setDirType] = useState<string>('all');
@@ -1046,7 +1245,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
       <PhaseToggle value={phaseFilter} onChange={setPhaseFilter} />
       <div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/30 p-1">
         {[
-          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'],
+          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'], ['block', 'Muro'],
         ].map(([key, label]) => (
           <button key={key} onClick={() => setAdvancedTab(key as typeof advancedTab)} className={`min-h-10 px-3 rounded text-xs font-bold uppercase ${advancedTab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{label}</button>
         ))}
@@ -1055,6 +1254,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
       {advancedTab === 'distribution' && <DistributionAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'reception' && <ReceptionAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'serve' && <ServeAnalysis actions={phaseActions} pct={pct} />}
+      {advancedTab === 'block' && <BlockAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'base' && <>
       <SetProgressTab actions={phaseActions} />
       <TechTypesTab actions={phaseActions} />
@@ -1216,5 +1416,98 @@ function ServeAnalysis({ actions, pct }: { actions: DbAction[]; pct: (n: number,
         return <div key={n} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">#{n}</div><div className="grid gap-2 sm:grid-cols-3">{SERVE_TYPES.map(t => { const items = playerServes.filter(a => a.skill_type === t.key); if (!items.length) return null; return <div key={t.key}><div className="mb-1 text-[10px] font-bold uppercase text-muted-foreground">{t.label}</div><MiniField>{items.map(a=>{const st=zc[a.start_zone || 0], e=zc[a.end_zone || 0]; if(!st||!e)return null; return <line key={a.id} x1={st[0]} y1={st[1]} x2={e[0]} y2={e[1]} stroke={color(a.evaluation)} strokeWidth="1.5" />})}</MiniField></div>; })}</div><div className="mt-2 grid grid-cols-3 text-center text-xs"><span>Tot <b>{playerServes.length}</b></span><span>Ace% <b>{pct(playerServes.filter(a=>a.evaluation==='#').length, playerServes.length)}</b></span><span>Err% <b>{pct(playerServes.filter(a=>a.evaluation==='=').length, playerServes.length)}</b></span></div></div>;
       })}</div>
     </Card>
+  );
+}
+
+function BlockAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
+  const blocks = actions.filter(a => a.skill === 'B');
+  const total = blocks.length;
+  const points = blocks.filter(a => a.evaluation === '#').length;
+  const errors = blocks.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+
+  const byPlayer = new Map<number, DbAction[]>();
+  for (const b of blocks) {
+    if (b.player_number === null) continue;
+    if (!byPlayer.has(b.player_number)) byPlayer.set(b.player_number, []);
+    byPlayer.get(b.player_number)!.push(b);
+  }
+  const playerRows = [...byPlayer.entries()]
+    .map(([num, list]) => ({
+      num,
+      tot: list.length,
+      pts: list.filter(a => a.evaluation === '#').length,
+      err: list.filter(a => a.evaluation === '=' || a.evaluation === '/').length,
+    }))
+    .sort((a, b) => b.tot - a.tot);
+
+  const byRotation = new Map<number, DbAction[]>();
+  for (let r = 1; r <= 6; r++) byRotation.set(r, []);
+  for (const b of blocks) {
+    const r = rotationOf(b, side);
+    if (r) byRotation.get(r)!.push(b);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Muri totali</p>
+          <p className="text-4xl font-black italic">{total}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Punti (#)</p>
+          <p className="text-4xl font-black italic text-success">{points} <span className="text-base text-muted-foreground">{pct(points, total)}%</span></p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Errori (= /)</p>
+          <p className="text-4xl font-black italic text-destructive">{errors} <span className="text-base text-muted-foreground">{pct(errors, total)}%</span></p>
+        </Card>
+      </div>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Per giocatore</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+              <tr><th className="text-left py-2">N°</th><th>Tot</th><th>Punti</th><th>Punti%</th><th>Errori</th><th>Errori%</th></tr>
+            </thead>
+            <tbody>
+              {playerRows.map(r => (
+                <tr key={r.num} className="border-b border-border/40">
+                  <td className="py-2 font-bold">#{r.num}</td>
+                  <td className="text-center">{r.tot}</td>
+                  <td className="text-center text-success">{r.pts}</td>
+                  <td className="text-center font-bold text-success">{pct(r.pts, r.tot)}%</td>
+                  <td className="text-center text-destructive">{r.err}</td>
+                  <td className="text-center font-bold text-destructive">{pct(r.err, r.tot)}%</td>
+                </tr>
+              ))}
+              {playerRows.length === 0 && (
+                <tr><td colSpan={6} className="text-center text-muted-foreground py-4">Nessun muro registrato</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-4">Per rotazione</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[1,2,3,4,5,6].map(r => {
+            const list = byRotation.get(r)!;
+            const tot = list.length;
+            const pts = list.filter(a => a.evaluation === '#').length;
+            const eff = tot ? Math.round(((pts - list.filter(a => a.evaluation === '=' || a.evaluation === '/').length) / tot) * 100) : 0;
+            return (
+              <div key={r} className="p-4 border border-border rounded">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Rotazione {r}</p>
+                <p className="text-2xl font-black italic mt-1">{tot} <span className="text-xs text-muted-foreground">muri</span></p>
+                <p className="text-sm mt-1">Punti <span className="text-success font-bold">{pts}</span> · Eff <span className={`font-bold ${eff >= 0 ? 'text-success' : 'text-destructive'}`}>{eff}%</span></p>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
   );
 }
