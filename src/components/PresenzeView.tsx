@@ -83,16 +83,52 @@ export function PresenzeView() {
     })();
   }, [selectedEventId]);
 
-  const setStatus = async (athleteId: string, status: 'presente' | 'assente' | 'giustificato') => {
+  const setStatus = async (athleteId: string, status: 'presente' | 'assente' | 'giustificato', note?: string | null) => {
     if (!selectedEventId || !user || !societyId) return;
     setSaving(athleteId);
     const existing = attendances[athleteId];
+    const noteVal = note !== undefined ? note : existing?.note ?? null;
     const { error } = existing
-      ? await supabase.from('attendances').update({ status }).eq('event_id', selectedEventId).eq('athlete_id', athleteId)
-      : await supabase.from('attendances').insert({ event_id: selectedEventId, athlete_id: athleteId, society_id: societyId, status, recorded_by: user.id });
+      ? await supabase.from('attendances').update({ status, note: noteVal }).eq('event_id', selectedEventId).eq('athlete_id', athleteId)
+      : await supabase.from('attendances').insert({ event_id: selectedEventId, athlete_id: athleteId, society_id: societyId, status, note: noteVal, recorded_by: user.id });
     if (error) { toast.error('Errore salvataggio'); }
-    else { setAttendances(prev => ({ ...prev, [athleteId]: { athlete_id: athleteId, status, note: prev[athleteId]?.note || null } })); }
+    else { setAttendances(prev => ({ ...prev, [athleteId]: { athlete_id: athleteId, status, note: noteVal } })); }
     setSaving(null);
+  };
+
+  const handleStatusClick = (athleteId: string, status: 'presente' | 'assente' | 'giustificato') => {
+    if (status === 'assente' || status === 'giustificato') {
+      setNoteText(attendances[athleteId]?.note || '');
+      setNoteDialog({ athleteId, status });
+    } else {
+      setStatus(athleteId, status, null);
+    }
+  };
+
+  const exportCsv = () => {
+    if (!selectedEvent) return;
+    const rows = [
+      ['Atleta', 'Numero', 'Evento', 'Data', 'Status', 'Motivo'],
+      ...athletes.map(a => {
+        const att = attendances[a.id];
+        return [
+          `${a.last_name} ${a.first_name ?? ''}`.trim(),
+          String(a.number ?? ''),
+          selectedEvent.title ?? '',
+          selectedEvent.start_at?.slice(0, 10) ?? '',
+          att?.status ?? 'non registrato',
+          att?.note ?? '',
+        ];
+      }),
+    ];
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `presenze_${(selectedEvent.title ?? 'evento').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // ── Tab Stagione: calcolo percentuali ────────────────────────────
