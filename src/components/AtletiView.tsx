@@ -106,6 +106,7 @@ export function AtletiView() {
       phone: form.phone || null,
       email: form.email || null,
       notes: form.notes || null,
+      medical_cert_expiry: form.medical_cert_expiry || null,
     };
     if (editing) {
       const { error } = await supabase.from('athletes').update(payload).eq('id', editing.id);
