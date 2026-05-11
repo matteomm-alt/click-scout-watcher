@@ -188,6 +188,27 @@ export function AtletiView() {
         </Card>
       </div>
 
+      {/* Ricerca + ordinamento */}
+      {athletes.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cerca per nome o numero..."
+            className="flex-1 min-w-40 min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
+          >
+            <option value="number">Ordina per numero</option>
+            <option value="last_name">Ordina per cognome</option>
+            <option value="role">Ordina per ruolo</option>
+          </select>
+        </div>
+      )}
+
       {/* Lista atleti per ruolo */}
       {loading ? <p className="text-muted-foreground">Caricamento...</p> :
        athletes.length === 0 ? (
