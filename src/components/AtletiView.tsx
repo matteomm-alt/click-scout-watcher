@@ -139,8 +139,24 @@ export function AtletiView() {
     return `https://wa.me/${num.replace('+', '')}`;
   };
 
-  const byRole = ROLES.map(r => ({ role: r, athletes: athletes.filter(a => a.role === r) })).filter(g => g.athletes.length > 0);
-  const noRole = athletes.filter(a => !a.role || !ROLES.includes(a.role));
+  const filtered = athletes
+    .filter(a => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        a.last_name.toLowerCase().includes(q) ||
+        (a.first_name ?? '').toLowerCase().includes(q) ||
+        String(a.number ?? '').includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'number') return (a.number ?? 999) - (b.number ?? 999);
+      if (sortBy === 'last_name') return a.last_name.localeCompare(b.last_name);
+      return (a.role ?? '').localeCompare(b.role ?? '');
+    });
+
+  const byRole = ROLES.map(r => ({ role: r, athletes: filtered.filter(a => a.role === r) })).filter(g => g.athletes.length > 0);
+  const noRole = filtered.filter(a => !a.role || !ROLES.includes(a.role));
 
   return (
     <div className="container py-8 space-y-6">
