@@ -28,6 +28,7 @@ interface Athlete {
   phone: string | null;
   email: string | null;
   notes: string | null;
+  medical_cert_expiry: string | null;
 }
 
 const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Libero', 'Universale'];
@@ -35,7 +36,7 @@ const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Liber
 const emptyForm = {
   number: '', last_name: '', first_name: '', role: '',
   is_libero: false, is_captain: false, birth_date: '',
-  phone: '', email: '', notes: '',
+  phone: '', email: '', notes: '', medical_cert_expiry: '',
 };
 
 export function AtletiView() {
