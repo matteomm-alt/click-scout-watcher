@@ -51,6 +51,8 @@ export function AtletiView() {
   const [editing, setEditing] = useState<Athlete | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [injuriesAthlete, setInjuriesAthlete] = useState<Athlete | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'number' | 'last_name' | 'role'>('number');
 
   const load = async () => {
     if (!societyId) return;
