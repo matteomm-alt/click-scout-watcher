@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ListChecks, Plus, Trash2, UserPlus, FileDown } from 'lucide-react';
+import { ListChecks, Plus, Trash2, UserPlus, FileDown, MessageSquare, Send } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
 
 interface Convocation { id: string; title: string; match_date: string | null; meeting_time: string | null; location: string | null; notes: string | null; created_at: string; }
-interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: string; role_in_match: string | null; }
+interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: string; role_in_match: string | null; notes: string | null; }
 interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
 
 const ROLES = ['Titolare', 'Riserva', 'Libero', 'Fuori lista'];
