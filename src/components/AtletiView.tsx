@@ -239,6 +239,14 @@ export function AtletiView() {
                             <HeartPulse className="w-2.5 h-2.5" /> Infortunato
                           </Badge>
                         )}
+                        {a.medical_cert_expiry && (() => {
+                          const exp = new Date(a.medical_cert_expiry);
+                          const today = new Date();
+                          const days = Math.floor((exp.getTime() - today.getTime()) / 86400000);
+                          if (days < 0) return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">⚠️ Cert. scaduto</Badge>;
+                          if (days <= 30) return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning">⏰ Scade tra {days}gg</Badge>;
+                          return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-600 text-green-500">✅ Cert. ok</Badge>;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
