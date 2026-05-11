@@ -171,7 +171,9 @@ export function ConvocazioniView() {
       doc.text(athlete.number != null ? String(athlete.number) : '—', cols[0].x, y);
       const nome = `${athlete.last_name}${athlete.first_name ? ' ' + athlete.first_name : ''}`;
       doc.text(nome, cols[1].x, y);
-      doc.text((player.role_in_match || 'titolare').toString(), cols[2].x, y);
+      const ruolo = (player.role_in_match || 'titolare').toString();
+      const ruoloLabel = player.notes ? `${ruolo} • ${player.notes.slice(0, 30)}` : ruolo;
+      doc.text(ruoloLabel, cols[2].x, y);
       // riga firma
       doc.setDrawColor(200);
       doc.line(cols[3].x, y + 1, cols[3].x + cols[3].w, y + 1);
