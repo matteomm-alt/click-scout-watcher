@@ -109,6 +109,21 @@ export function ConvocazioniView() {
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, role_in_match: role } : p));
   };
 
+  const updateNotes = async (playerId: string, notes: string) => {
+    await supabase.from('convocation_players').update({ notes: notes || null }).eq('id', playerId);
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, notes: notes || null } : p));
+  };
+
+  const shareWhatsApp = () => {
+    if (!selected) return;
+    const list = convocati
+      .sort((a, b) => (a.athlete.number ?? 999) - (b.athlete.number ?? 999))
+      .map(({ player, athlete }) => `${athlete.number ?? '—'} ${athlete.last_name} (${player.role_in_match ?? 'Titolare'})`)
+      .join('\n');
+    const text = `📋 *CONVOCAZIONE — ${selected.title}*\n${selected.match_date ? `📅 ${new Date(selected.match_date).toLocaleDateString('it-IT')}\n` : ''}${selected.location ? `📍 ${selected.location}\n` : ''}${selected.meeting_time ? `⏰ Ritrovo: ${selected.meeting_time}\n` : ''}\n${list}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const selected = convocations.find(c => c.id === selectedId);
   const convocati = players.map(p => ({ player: p, athlete: athletes.find(a => a.id === p.athlete_id)! })).filter(x => x.athlete);
   const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
