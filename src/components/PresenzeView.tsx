@@ -343,6 +343,36 @@ export function PresenzeView() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!noteDialog} onOpenChange={(o) => !o && setNoteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Motivo {noteDialog?.status === 'giustificato' ? 'giustificazione' : 'assenza'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Select value={noteText} onValueChange={setNoteText}>
+              <SelectTrigger><SelectValue placeholder="Seleziona motivo..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nessun motivo specificato</SelectItem>
+                <SelectItem value="Malattia">Malattia</SelectItem>
+                <SelectItem value="Studio/Lavoro">Studio/Lavoro</SelectItem>
+                <SelectItem value="Infortunio">Infortunio</SelectItem>
+                <SelectItem value="Motivi familiari">Motivi familiari</SelectItem>
+                <SelectItem value="Altro">Altro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteDialog(null)}>Annulla</Button>
+            <Button onClick={async () => {
+              if (!noteDialog) return;
+              await setStatus(noteDialog.athleteId, noteDialog.status, noteText || null);
+              setNoteDialog(null);
+              setNoteText('');
+            }}>Conferma</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
