@@ -183,53 +183,49 @@ export function LiveScout() {
 
   return (
     <>
-      <div className="hidden lg:flex h-screen flex-col p-3 gap-3 overflow-hidden">
+      <div className="hidden lg:flex h-screen overflow-hidden">
         <div className="fixed right-0 top-1/4 bottom-1/4 w-5 z-40 cursor-e-resize" onPointerDown={() => setPanelOpen(true)} />
         <FullscreenToggle />
-        <ScoreBoard />
 
-        <div className="flex-shrink-0 max-h-[45vh] overflow-hidden">
-          <VolleyballCourt heatmapData={awayHeatmap} liveArrows={liveArrows} />
-        </div>
-
-        <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
-          <div className="col-span-3 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-3 h-full overflow-y-auto">
+        {/* COLONNA SINISTRA — 58% — campo + QuickActions */}
+        <div className="flex flex-col h-full flex-shrink-0 gap-3 p-3 pr-0" style={{ width: '58%' }}>
+          <ScoreBoard />
+          <div className="flex-1 min-h-0 flex items-center overflow-hidden">
+            <div className="w-full">
+              <VolleyballCourt heatmapData={awayHeatmap} liveArrows={liveArrows} />
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <div className="glass rounded-xl p-2">
               <QuickActions />
             </div>
           </div>
+        </div>
 
-          <div className="col-span-4 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-3 h-full flex flex-col gap-2 overflow-y-auto">
-              {timeoutBanner && (
-                <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
-                  <span>⏸ TIME-OUT</span>
-                  <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
-                </div>
-              )}
-              <PlayerStatsPanel />
+        {/* COLONNA DESTRA — flex-1 — ActionPanel + PlayerStats */}
+        <div className="flex-1 flex flex-col min-h-0 gap-3 p-3">
+          {timeoutBanner && (
+            <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background flex-shrink-0">
+              <span>⏸ TIME-OUT</span>
+              <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
+            </div>
+          )}
+          <div className="flex-1 glass rounded-xl p-4 flex flex-col min-h-0">
+            <div className="flex items-center justify-between mb-3 shrink-0">
+              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                Inserimento Azione
+              </h3>
+              <button type="button" onClick={() => setPanelOpen(true)}
+                className="min-h-9 px-3 rounded-lg bg-secondary/80 border border-border flex items-center gap-2 hover:bg-secondary transition-colors text-xs font-bold text-muted-foreground">
+                <PanelRight className="w-4 h-4" /> Statistiche
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <ActionPanel />
             </div>
           </div>
-
-          <div className="col-span-5 min-h-0 overflow-hidden">
-            <div className="glass rounded-xl p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Inserimento Azione
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setPanelOpen(true)}
-                  className="min-h-9 px-3 rounded-lg bg-secondary/80 border border-border flex items-center gap-2 hover:bg-secondary transition-colors text-xs font-bold text-muted-foreground"
-                >
-                  <PanelRight className="w-4 h-4" />
-                  Statistiche
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <ActionPanel />
-              </div>
-            </div>
+          <div className="glass rounded-xl p-3 flex-shrink-0 max-h-44 overflow-y-auto">
+            <PlayerStatsPanel />
           </div>
         </div>
 
@@ -243,14 +239,8 @@ export function LiveScout() {
                 {TABS.map((t) => {
                   const active = tab === t.key;
                   return (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setTab(t.key)}
-                      className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors active:scale-95 ${
-                        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
+                    <button key={t.key} type="button" onClick={() => setTab(t.key)}
+                      className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors active:scale-95 ${active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                       {t.label}
                     </button>
                   );
@@ -267,7 +257,7 @@ export function LiveScout() {
         </Sheet>
 
         {matchState.isMatchEnded && (
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="glass rounded-xl p-4 text-center absolute inset-x-0 bottom-4 mx-3">
             <h2 className="text-2xl font-bold text-primary">Partita Terminata</h2>
             <p className="text-foreground text-lg">
               {homeTeam.name} {matchState.homeSetsWon} - {matchState.awaySetsWon} {awayTeam.name}
