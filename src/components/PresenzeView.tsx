@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ClipboardCheck, Check, X, AlertCircle, HeartPulse, ClipboardList, BarChart3 } from 'lucide-react';
+import { ClipboardCheck, Check, X, AlertCircle, HeartPulse, ClipboardList, BarChart3, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   BarChart, Bar, XAxis, YAxis, ReferenceLine, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
