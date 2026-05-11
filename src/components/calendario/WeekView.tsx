@@ -54,6 +54,9 @@ export function WeekView({ anchor, events, showCreator }: Props) {
               {dayEvents.map((evt) => {
                 const meta = getEventMeta(evt.event_type);
                 const Icon = meta.icon;
+                const timeLabel = evt.end_at
+                  ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
+                  : format(new Date(evt.start_at), 'HH:mm');
                 return (
                   <button
                     key={evt.id}
@@ -67,12 +70,20 @@ export function WeekView({ anchor, events, showCreator }: Props) {
                     <div className="flex items-center gap-1.5">
                       <Icon className={cn('w-3 h-3 shrink-0', meta.textClass)} />
                       <span className={cn('font-bold truncate', meta.textClass)}>
-                        {format(new Date(evt.start_at), 'HH:mm')}
+                        {timeLabel}
                       </span>
                     </div>
                     <p className="font-semibold truncate text-foreground mt-0.5">{evt.title}</p>
                     {evt.location && (
-                      <p className="text-[10px] text-muted-foreground truncate">{evt.location}</p>
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(evt.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1 text-[10px] text-primary hover:underline truncate mt-0.5"
+                      >
+                        <MapPin className="w-2.5 h-2.5 shrink-0" /> {evt.location}
+                      </a>
                     )}
                     {showCreator && evt.creator_name && (
                       <p className="text-[10px] text-muted-foreground/70 truncate italic">
