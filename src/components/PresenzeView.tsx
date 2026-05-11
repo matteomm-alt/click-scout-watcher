@@ -36,6 +36,8 @@ export function PresenzeView() {
   const [injuredIds, setInjuredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
+  const [noteDialog, setNoteDialog] = useState<{ athleteId: string; status: 'assente' | 'giustificato' } | null>(null);
+  const [noteText, setNoteText] = useState('');
 
   // Stato tab "Stagione"
   const [seasonStats, setSeasonStats] = useState<{ athleteId: string; pct: number; presenti: number; totali: number }[]>([]);
