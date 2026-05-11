@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { MapPin } from 'lucide-react';
 import { getEventMeta } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
