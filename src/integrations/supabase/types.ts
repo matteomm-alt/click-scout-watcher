@@ -229,6 +229,7 @@ export type Database = {
           is_captain: boolean
           is_libero: boolean
           last_name: string
+          medical_cert_expiry: string | null
           notes: string | null
           number: number | null
           phone: string | null
@@ -248,6 +249,7 @@ export type Database = {
           is_captain?: boolean
           is_libero?: boolean
           last_name: string
+          medical_cert_expiry?: string | null
           notes?: string | null
           number?: number | null
           phone?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           is_captain?: boolean
           is_libero?: boolean
           last_name?: string
+          medical_cert_expiry?: string | null
           notes?: string | null
           number?: number | null
           phone?: string | null
@@ -446,6 +449,7 @@ export type Database = {
           convocation_id: string
           id: string
           note: string | null
+          notes: string | null
           role: Database["public"]["Enums"]["convocation_role"]
           shirt_number: number | null
         }
@@ -454,6 +458,7 @@ export type Database = {
           convocation_id: string
           id?: string
           note?: string | null
+          notes?: string | null
           role?: Database["public"]["Enums"]["convocation_role"]
           shirt_number?: number | null
         }
@@ -462,6 +467,7 @@ export type Database = {
           convocation_id?: string
           id?: string
           note?: string | null
+          notes?: string | null
           role?: Database["public"]["Enums"]["convocation_role"]
           shirt_number?: number | null
         }
@@ -814,9 +820,11 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          min_quantity: number
           name: string
           notes: string | null
           quantity: number
+          quantity_by_size: Json
           size: string | null
           size_distribution: Json
           society_id: string
@@ -827,9 +835,11 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          min_quantity?: number
           name: string
           notes?: string | null
           quantity?: number
+          quantity_by_size?: Json
           size?: string | null
           size_distribution?: Json
           society_id: string
@@ -840,9 +850,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          min_quantity?: number
           name?: string
           notes?: string | null
           quantity?: number
+          quantity_by_size?: Json
           size?: string | null
           size_distribution?: Json
           society_id?: string

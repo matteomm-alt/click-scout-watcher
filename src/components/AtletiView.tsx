@@ -28,6 +28,7 @@ interface Athlete {
   phone: string | null;
   email: string | null;
   notes: string | null;
+  medical_cert_expiry: string | null;
 }
 
 const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Libero', 'Universale'];
@@ -35,7 +36,7 @@ const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Liber
 const emptyForm = {
   number: '', last_name: '', first_name: '', role: '',
   is_libero: false, is_captain: false, birth_date: '',
-  phone: '', email: '', notes: '',
+  phone: '', email: '', notes: '', medical_cert_expiry: '',
 };
 
 export function AtletiView() {
@@ -50,6 +51,8 @@ export function AtletiView() {
   const [editing, setEditing] = useState<Athlete | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [injuriesAthlete, setInjuriesAthlete] = useState<Athlete | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'number' | 'last_name' | 'role'>('number');
 
   const load = async () => {
     if (!societyId) return;
@@ -87,6 +90,7 @@ export function AtletiView() {
       phone: a.phone || '',
       email: a.email || '',
       notes: a.notes || '',
+      medical_cert_expiry: a.medical_cert_expiry || '',
     });
     setDialogOpen(true);
   };
@@ -104,6 +108,7 @@ export function AtletiView() {
       phone: form.phone || null,
       email: form.email || null,
       notes: form.notes || null,
+      medical_cert_expiry: form.medical_cert_expiry || null,
     };
     if (editing) {
       const { error } = await supabase.from('athletes').update(payload).eq('id', editing.id);
@@ -134,8 +139,24 @@ export function AtletiView() {
     return `https://wa.me/${num.replace('+', '')}`;
   };
 
-  const byRole = ROLES.map(r => ({ role: r, athletes: athletes.filter(a => a.role === r) })).filter(g => g.athletes.length > 0);
-  const noRole = athletes.filter(a => !a.role || !ROLES.includes(a.role));
+  const filtered = athletes
+    .filter(a => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        a.last_name.toLowerCase().includes(q) ||
+        (a.first_name ?? '').toLowerCase().includes(q) ||
+        String(a.number ?? '').includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'number') return (a.number ?? 999) - (b.number ?? 999);
+      if (sortBy === 'last_name') return a.last_name.localeCompare(b.last_name);
+      return (a.role ?? '').localeCompare(b.role ?? '');
+    });
+
+  const byRole = ROLES.map(r => ({ role: r, athletes: filtered.filter(a => a.role === r) })).filter(g => g.athletes.length > 0);
+  const noRole = filtered.filter(a => !a.role || !ROLES.includes(a.role));
 
   return (
     <div className="container py-8 space-y-6">
@@ -167,6 +188,27 @@ export function AtletiView() {
         </Card>
       </div>
 
+      {/* Ricerca + ordinamento */}
+      {athletes.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cerca per nome o numero..."
+            className="flex-1 min-w-40 min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
+          >
+            <option value="number">Ordina per numero</option>
+            <option value="last_name">Ordina per cognome</option>
+            <option value="role">Ordina per ruolo</option>
+          </select>
+        </div>
+      )}
+
       {/* Lista atleti per ruolo */}
       {loading ? <p className="text-muted-foreground">Caricamento...</p> :
        athletes.length === 0 ? (
@@ -197,6 +239,14 @@ export function AtletiView() {
                             <HeartPulse className="w-2.5 h-2.5" /> Infortunato
                           </Badge>
                         )}
+                        {a.medical_cert_expiry && (() => {
+                          const exp = new Date(a.medical_cert_expiry);
+                          const today = new Date();
+                          const days = Math.floor((exp.getTime() - today.getTime()) / 86400000);
+                          if (days < 0) return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">⚠️ Cert. scaduto</Badge>;
+                          if (days <= 30) return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning">⏰ Scade tra {days}gg</Badge>;
+                          return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-600 text-green-500">✅ Cert. ok</Badge>;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
@@ -261,6 +311,7 @@ export function AtletiView() {
               <div><Label>Numero maglia</Label><Input type="number" value={form.number} onChange={e => setForm(f => ({ ...f, number: e.target.value }))} placeholder="es. 7" /></div>
               <div><Label>Data di nascita</Label><Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} /></div>
             </div>
+            <div><Label>Scadenza certificato medico</Label><Input type="date" value={form.medical_cert_expiry} onChange={e => setForm(f => ({ ...f, medical_cert_expiry: e.target.value }))} /></div>
             <div><Label>Ruolo</Label>
               <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v, is_libero: v === 'Libero' }))}>
                 <SelectTrigger><SelectValue placeholder="Seleziona ruolo..." /></SelectTrigger>

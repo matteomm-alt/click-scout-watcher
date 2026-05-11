@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ClipboardCheck, Check, X, AlertCircle, HeartPulse, ClipboardList, BarChart3 } from 'lucide-react';
+import { ClipboardCheck, Check, X, AlertCircle, HeartPulse, ClipboardList, BarChart3, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   BarChart, Bar, XAxis, YAxis, ReferenceLine, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
@@ -35,6 +36,8 @@ export function PresenzeView() {
   const [injuredIds, setInjuredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
+  const [noteDialog, setNoteDialog] = useState<{ athleteId: string; status: 'assente' | 'giustificato' } | null>(null);
+  const [noteText, setNoteText] = useState('');
 
   // Stato tab "Stagione"
   const [seasonStats, setSeasonStats] = useState<{ athleteId: string; pct: number; presenti: number; totali: number }[]>([]);
@@ -80,16 +83,52 @@ export function PresenzeView() {
     })();
   }, [selectedEventId]);
 
-  const setStatus = async (athleteId: string, status: 'presente' | 'assente' | 'giustificato') => {
+  const setStatus = async (athleteId: string, status: 'presente' | 'assente' | 'giustificato', note?: string | null) => {
     if (!selectedEventId || !user || !societyId) return;
     setSaving(athleteId);
     const existing = attendances[athleteId];
+    const noteVal = note !== undefined ? note : existing?.note ?? null;
     const { error } = existing
-      ? await supabase.from('attendances').update({ status }).eq('event_id', selectedEventId).eq('athlete_id', athleteId)
-      : await supabase.from('attendances').insert({ event_id: selectedEventId, athlete_id: athleteId, society_id: societyId, status, recorded_by: user.id });
+      ? await supabase.from('attendances').update({ status, note: noteVal }).eq('event_id', selectedEventId).eq('athlete_id', athleteId)
+      : await supabase.from('attendances').insert({ event_id: selectedEventId, athlete_id: athleteId, society_id: societyId, status, note: noteVal, recorded_by: user.id });
     if (error) { toast.error('Errore salvataggio'); }
-    else { setAttendances(prev => ({ ...prev, [athleteId]: { athlete_id: athleteId, status, note: prev[athleteId]?.note || null } })); }
+    else { setAttendances(prev => ({ ...prev, [athleteId]: { athlete_id: athleteId, status, note: noteVal } })); }
     setSaving(null);
+  };
+
+  const handleStatusClick = (athleteId: string, status: 'presente' | 'assente' | 'giustificato') => {
+    if (status === 'assente' || status === 'giustificato') {
+      setNoteText(attendances[athleteId]?.note || '');
+      setNoteDialog({ athleteId, status });
+    } else {
+      setStatus(athleteId, status, null);
+    }
+  };
+
+  const exportCsv = () => {
+    if (!selectedEvent) return;
+    const rows = [
+      ['Atleta', 'Numero', 'Evento', 'Data', 'Status', 'Motivo'],
+      ...athletes.map(a => {
+        const att = attendances[a.id];
+        return [
+          `${a.last_name} ${a.first_name ?? ''}`.trim(),
+          String(a.number ?? ''),
+          selectedEvent.title ?? '',
+          selectedEvent.start_at?.slice(0, 10) ?? '',
+          att?.status ?? 'non registrato',
+          att?.note ?? '',
+        ];
+      }),
+    ];
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `presenze_${(selectedEvent.title ?? 'evento').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // ── Tab Stagione: calcolo percentuali ────────────────────────────
@@ -154,17 +193,24 @@ export function PresenzeView() {
         </TabsList>
 
         <TabsContent value="registro" className="space-y-6 mt-6">
-          <div className="max-w-lg">
-            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-              <SelectTrigger><SelectValue placeholder="Seleziona evento..." /></SelectTrigger>
-              <SelectContent>
-                {events.map(e => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {new Date(e.start_at).toLocaleDateString('it-IT')} — {e.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2 items-center max-w-3xl">
+            <div className="flex-1">
+              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                <SelectTrigger><SelectValue placeholder="Seleziona evento..." /></SelectTrigger>
+                <SelectContent>
+                  {events.map(e => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {new Date(e.start_at).toLocaleDateString('it-IT')} — {e.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedEvent && (
+              <Button variant="outline" onClick={exportCsv} className="gap-2">
+                <Download className="w-4 h-4" /> Export CSV
+              </Button>
+            )}
           </div>
 
           {selectedEvent && (
@@ -208,13 +254,13 @@ export function PresenzeView() {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center justify-center gap-2">
-                              <Button size="icon" variant={status === 'presente' ? 'default' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => setStatus(a.id, 'presente')}>
+                              <Button size="icon" variant={status === 'presente' ? 'default' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'presente')}>
                                 <Check className="w-4 h-4" />
                               </Button>
-                              <Button size="icon" variant={status === 'assente' ? 'destructive' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => setStatus(a.id, 'assente')}>
+                              <Button size="icon" variant={status === 'assente' ? 'destructive' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'assente')}>
                                 <X className="w-4 h-4" />
                               </Button>
-                              <Button size="icon" variant={status === 'giustificato' ? 'secondary' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => setStatus(a.id, 'giustificato')}>
+                              <Button size="icon" variant={status === 'giustificato' ? 'secondary' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'giustificato')}>
                                 <AlertCircle className="w-4 h-4" />
                               </Button>
                             </div>
@@ -297,6 +343,36 @@ export function PresenzeView() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!noteDialog} onOpenChange={(o) => !o && setNoteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Motivo {noteDialog?.status === 'giustificato' ? 'giustificazione' : 'assenza'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Select value={noteText} onValueChange={setNoteText}>
+              <SelectTrigger><SelectValue placeholder="Seleziona motivo..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nessun motivo specificato</SelectItem>
+                <SelectItem value="Malattia">Malattia</SelectItem>
+                <SelectItem value="Studio/Lavoro">Studio/Lavoro</SelectItem>
+                <SelectItem value="Infortunio">Infortunio</SelectItem>
+                <SelectItem value="Motivi familiari">Motivi familiari</SelectItem>
+                <SelectItem value="Altro">Altro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteDialog(null)}>Annulla</Button>
+            <Button onClick={async () => {
+              if (!noteDialog) return;
+              await setStatus(noteDialog.athleteId, noteDialog.status, noteText || null);
+              setNoteDialog(null);
+              setNoteText('');
+            }}>Conferma</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

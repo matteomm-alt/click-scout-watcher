@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ListChecks, Plus, Trash2, UserPlus, FileDown } from 'lucide-react';
+import { ListChecks, Plus, Trash2, UserPlus, FileDown, MessageSquare, Send } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
 
 interface Convocation { id: string; title: string; match_date: string | null; meeting_time: string | null; location: string | null; notes: string | null; created_at: string; }
-interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: string; role_in_match: string | null; }
+interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: string; role_in_match: string | null; notes: string | null; }
 interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
 
 const ROLES = ['Titolare', 'Riserva', 'Libero', 'Fuori lista'];
@@ -108,6 +109,21 @@ export function ConvocazioniView() {
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, role_in_match: role } : p));
   };
 
+  const updateNotes = async (playerId: string, notes: string) => {
+    await supabase.from('convocation_players').update({ notes: notes || null }).eq('id', playerId);
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, notes: notes || null } : p));
+  };
+
+  const shareWhatsApp = () => {
+    if (!selected) return;
+    const list = convocati
+      .sort((a, b) => (a.athlete.number ?? 999) - (b.athlete.number ?? 999))
+      .map(({ player, athlete }) => `${athlete.number ?? '—'} ${athlete.last_name} (${player.role_in_match ?? 'Titolare'})`)
+      .join('\n');
+    const text = `📋 *CONVOCAZIONE — ${selected.title}*\n${selected.match_date ? `📅 ${new Date(selected.match_date).toLocaleDateString('it-IT')}\n` : ''}${selected.location ? `📍 ${selected.location}\n` : ''}${selected.meeting_time ? `⏰ Ritrovo: ${selected.meeting_time}\n` : ''}\n${list}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const selected = convocations.find(c => c.id === selectedId);
   const convocati = players.map(p => ({ player: p, athlete: athletes.find(a => a.id === p.athlete_id)! })).filter(x => x.athlete);
   const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
@@ -155,7 +171,9 @@ export function ConvocazioniView() {
       doc.text(athlete.number != null ? String(athlete.number) : '—', cols[0].x, y);
       const nome = `${athlete.last_name}${athlete.first_name ? ' ' + athlete.first_name : ''}`;
       doc.text(nome, cols[1].x, y);
-      doc.text((player.role_in_match || 'titolare').toString(), cols[2].x, y);
+      const ruolo = (player.role_in_match || 'titolare').toString();
+      const ruoloLabel = player.notes ? `${ruolo} • ${player.notes.slice(0, 30)}` : ruolo;
+      doc.text(ruoloLabel, cols[2].x, y);
       // riga firma
       doc.setDrawColor(200);
       doc.line(cols[3].x, y + 1, cols[3].x + cols[3].w, y + 1);
@@ -218,13 +236,19 @@ export function ConvocazioniView() {
           <Card className="p-5 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold uppercase italic">Convocati</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline">{players.length} atleti</Badge>
                 {convocati.length > 0 && (
-                  <Button onClick={generatePdf}
-                    className="min-h-9 px-3 text-xs font-bold bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg gap-1.5">
-                    <FileDown className="w-3.5 h-3.5" /> Distinta PDF
-                  </Button>
+                  <>
+                    <Button onClick={generatePdf}
+                      className="min-h-9 px-3 text-xs font-bold bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg gap-1.5">
+                      <FileDown className="w-3.5 h-3.5" /> Distinta PDF
+                    </Button>
+                    <Button onClick={shareWhatsApp}
+                      className="min-h-9 px-3 text-xs font-bold bg-green-600 text-white hover:bg-green-700 rounded-lg gap-1.5">
+                      <Send className="w-3.5 h-3.5" /> WhatsApp
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -233,12 +257,30 @@ export function ConvocazioniView() {
               <div className="space-y-2">
                 {convocati.map(({ player, athlete }) => (
                   <div key={athlete.id} className="flex items-center gap-2">
-                    <span className="text-sm font-bold w-8">#{athlete.number}</span>
-                    <span className="flex-1 text-sm truncate">{athlete.last_name}{athlete.first_name ? ` ${athlete.first_name.charAt(0)}.` : ''}</span>
+                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-black text-primary">{athlete.number ?? '—'}</span>
+                    </div>
+                    <span className="flex-1 text-sm truncate font-semibold">{athlete.last_name}{athlete.first_name ? ` ${athlete.first_name.charAt(0)}.` : ''}</span>
                     <Select value={player.role_in_match || 'Titolare'} onValueChange={v => updateRole(player.id, v)}>
                       <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                     </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button size="icon" variant="ghost" className={`h-7 w-7 ${player.notes ? 'text-primary' : 'text-muted-foreground'}`} title="Nota individuale">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72">
+                        <p className="text-xs font-bold mb-2">Nota per {athlete.last_name}</p>
+                        <textarea
+                          defaultValue={player.notes ?? ''}
+                          onBlur={(e) => updateNotes(player.id, e.target.value)}
+                          className="w-full min-h-20 rounded border border-border bg-muted/50 p-2 text-xs resize-none"
+                          placeholder="es. gioca solo primo set..."
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => togglePlayer(athlete.id)}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>

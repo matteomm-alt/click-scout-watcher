@@ -5,7 +5,7 @@ import {
   startOfWeek, endOfWeek,
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -241,6 +241,41 @@ export default function Calendario() {
           </Button>
         </Link>
         <ExcelImportDialog onConfirm={importExcelRows} disabled={!societyId || !user} />
+        <Button
+          variant="outline"
+          size="lg"
+          className="gap-2"
+          disabled={events.length === 0}
+          onClick={() => {
+            const lines = [
+              'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//VolleyScout Pro//IT',
+              ...events.map((e) => {
+                const start = e.start_at.replace(/[-:]/g, '').replace('.000Z', 'Z');
+                const end = e.end_at ? e.end_at.replace(/[-:]/g, '').replace('.000Z', 'Z') : start;
+                return [
+                  'BEGIN:VEVENT',
+                  `DTSTART:${start}`,
+                  `DTEND:${end}`,
+                  `SUMMARY:${e.title}`,
+                  e.location ? `LOCATION:${e.location}` : '',
+                  `DESCRIPTION:${e.event_type}`,
+                  `UID:${e.id}@volleyscoutpro`,
+                  'END:VEVENT',
+                ].filter(Boolean).join('\r\n');
+              }),
+              'END:VCALENDAR',
+            ];
+            const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'calendario_volley.ics';
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          <Download className="w-4 h-4" /> iCal
+        </Button>
       </div>
 
       {/* Toolbar */}

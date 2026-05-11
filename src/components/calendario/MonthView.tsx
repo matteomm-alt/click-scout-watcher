@@ -70,6 +70,9 @@ export function MonthView({ anchor, events }: Props) {
               <div className="flex flex-col gap-1 overflow-hidden">
                 {dayEvents.slice(0, 3).map((evt) => {
                   const meta = getEventMeta(evt.event_type);
+                  const timeLabel = evt.end_at
+                    ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
+                    : format(new Date(evt.start_at), 'HH:mm');
                   return (
                     <div key={evt.id} className="flex items-center gap-1">
                       <button
@@ -80,11 +83,9 @@ export function MonthView({ anchor, events }: Props) {
                           meta.borderClass,
                           meta.textClass,
                         )}
-                        title={evt.title}
+                        title={`${timeLabel} ${evt.title}${evt.location ? ' @ ' + evt.location : ''}`}
                       >
-                        <span className="font-bold mr-1">
-                          {format(new Date(evt.start_at), 'HH:mm')}
-                        </span>
+                        <span className="font-bold mr-1">{timeLabel}</span>
                         <span className="text-foreground">{evt.title}</span>
                       </button>
                       {evt.event_type === 'partita' && (
