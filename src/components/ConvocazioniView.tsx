@@ -234,13 +234,19 @@ export function ConvocazioniView() {
           <Card className="p-5 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold uppercase italic">Convocati</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline">{players.length} atleti</Badge>
                 {convocati.length > 0 && (
-                  <Button onClick={generatePdf}
-                    className="min-h-9 px-3 text-xs font-bold bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg gap-1.5">
-                    <FileDown className="w-3.5 h-3.5" /> Distinta PDF
-                  </Button>
+                  <>
+                    <Button onClick={generatePdf}
+                      className="min-h-9 px-3 text-xs font-bold bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg gap-1.5">
+                      <FileDown className="w-3.5 h-3.5" /> Distinta PDF
+                    </Button>
+                    <Button onClick={shareWhatsApp}
+                      className="min-h-9 px-3 text-xs font-bold bg-green-600 text-white hover:bg-green-700 rounded-lg gap-1.5">
+                      <Send className="w-3.5 h-3.5" /> WhatsApp
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -249,12 +255,30 @@ export function ConvocazioniView() {
               <div className="space-y-2">
                 {convocati.map(({ player, athlete }) => (
                   <div key={athlete.id} className="flex items-center gap-2">
-                    <span className="text-sm font-bold w-8">#{athlete.number}</span>
-                    <span className="flex-1 text-sm truncate">{athlete.last_name}{athlete.first_name ? ` ${athlete.first_name.charAt(0)}.` : ''}</span>
+                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-black text-primary">{athlete.number ?? '—'}</span>
+                    </div>
+                    <span className="flex-1 text-sm truncate font-semibold">{athlete.last_name}{athlete.first_name ? ` ${athlete.first_name.charAt(0)}.` : ''}</span>
                     <Select value={player.role_in_match || 'Titolare'} onValueChange={v => updateRole(player.id, v)}>
                       <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                     </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button size="icon" variant="ghost" className={`h-7 w-7 ${player.notes ? 'text-primary' : 'text-muted-foreground'}`} title="Nota individuale">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72">
+                        <p className="text-xs font-bold mb-2">Nota per {athlete.last_name}</p>
+                        <textarea
+                          defaultValue={player.notes ?? ''}
+                          onBlur={(e) => updateNotes(player.id, e.target.value)}
+                          className="w-full min-h-20 rounded border border-border bg-muted/50 p-2 text-xs resize-none"
+                          placeholder="es. gioca solo primo set..."
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => togglePlayer(athlete.id)}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
