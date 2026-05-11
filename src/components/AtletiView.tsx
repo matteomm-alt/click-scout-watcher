@@ -88,6 +88,7 @@ export function AtletiView() {
       phone: a.phone || '',
       email: a.email || '',
       notes: a.notes || '',
+      medical_cert_expiry: a.medical_cert_expiry || '',
     });
     setDialogOpen(true);
   };
