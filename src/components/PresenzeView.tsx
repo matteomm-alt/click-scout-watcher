@@ -193,17 +193,24 @@ export function PresenzeView() {
         </TabsList>
 
         <TabsContent value="registro" className="space-y-6 mt-6">
-          <div className="max-w-lg">
-            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-              <SelectTrigger><SelectValue placeholder="Seleziona evento..." /></SelectTrigger>
-              <SelectContent>
-                {events.map(e => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {new Date(e.start_at).toLocaleDateString('it-IT')} — {e.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2 items-center max-w-3xl">
+            <div className="flex-1">
+              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                <SelectTrigger><SelectValue placeholder="Seleziona evento..." /></SelectTrigger>
+                <SelectContent>
+                  {events.map(e => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {new Date(e.start_at).toLocaleDateString('it-IT')} — {e.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedEvent && (
+              <Button variant="outline" onClick={exportCsv} className="gap-2">
+                <Download className="w-4 h-4" /> Export CSV
+              </Button>
+            )}
           </div>
 
           {selectedEvent && (
