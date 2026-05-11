@@ -254,13 +254,13 @@ export function PresenzeView() {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center justify-center gap-2">
-                              <Button size="icon" variant={status === 'presente' ? 'default' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => setStatus(a.id, 'presente')}>
+                              <Button size="icon" variant={status === 'presente' ? 'default' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'presente')}>
                                 <Check className="w-4 h-4" />
                               </Button>
-                              <Button size="icon" variant={status === 'assente' ? 'destructive' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => setStatus(a.id, 'assente')}>
+                              <Button size="icon" variant={status === 'assente' ? 'destructive' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'assente')}>
                                 <X className="w-4 h-4" />
                               </Button>
-                              <Button size="icon" variant={status === 'giustificato' ? 'secondary' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => setStatus(a.id, 'giustificato')}>
+                              <Button size="icon" variant={status === 'giustificato' ? 'secondary' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'giustificato')}>
                                 <AlertCircle className="w-4 h-4" />
                               </Button>
                             </div>
