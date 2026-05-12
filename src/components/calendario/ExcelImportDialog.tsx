@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
 import { FileSpreadsheet, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -72,6 +71,7 @@ export function ExcelImportDialog({ onConfirm, disabled }: ExcelImportDialogProp
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
+    const XLSX = await import('xlsx');
     setFileName(file.name);
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });

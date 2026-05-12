@@ -16,6 +16,18 @@ export function MatchSetup() {
     });
   };
 
+  const handleContinue = () => {
+    if (!homeTeam.name.trim()) {
+      toast.error('Inserisci il nome della squadra di casa');
+      return;
+    }
+    if (!awayTeam.name.trim()) {
+      toast.error('Inserisci il nome della squadra ospite');
+      return;
+    }
+    setStep('roster');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="glass rounded-2xl p-8 w-full max-w-2xl space-y-8">
@@ -138,14 +150,14 @@ export function MatchSetup() {
         <Button
           type="button"
           variant="secondary"
-          onClick={() => setStep('roster')}
+          onClick={handleContinue}
           className="w-full h-14 text-lg font-black"
         >
           ⚡ Inizia subito
         </Button>
 
         <Button
-          onClick={() => setStep('roster')}
+          onClick={handleContinue}
           className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           Continua <ArrowRight className="ml-2 w-5 h-5" />
