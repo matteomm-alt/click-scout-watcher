@@ -180,7 +180,7 @@ export function generateDVW(
   // Scout actions
   actions.forEach((action) => {
     const code = action.code || generateScoutCode(action);
-    const timestamp = action.timestamp || '';
+    const timestamp = action.timestamp || '00:00:00';
     const lineupStr = `${action.homeLineup.join(';')};${action.awayLineup.join(';')}`;
     lines.push(`${code};;;;;;;${timestamp};${action.setNumber};${action.homeSetterPosition};${action.awaySetterPosition};;;;${lineupStr};`);
   });
@@ -191,7 +191,7 @@ export function generateDVW(
   actions.forEach((action) => {
     if (action.homeScore !== lastPointHome || action.awayScore !== lastPointAway) {
       const team = action.homeScore > lastPointHome ? '*' : 'a';
-      lines.push(`${team}p${String(action.homeScore).padStart(2, '0')}:${String(action.awayScore).padStart(2, '0')};;;;;;;${action.timestamp};${action.setNumber};${action.homeSetterPosition};${action.awaySetterPosition};;;;${action.homeLineup.join(';')};${action.awayLineup.join(';')};`);
+      lines.push(`${team}p${String(action.homeScore).padStart(2, '0')}:${String(action.awayScore).padStart(2, '0')};;;;;;;${action.timestamp || '00:00:00'};${action.setNumber};${action.homeSetterPosition};${action.awaySetterPosition};;;;${action.homeLineup.join(';')};${action.awayLineup.join(';')};`);
       lastPointHome = action.homeScore;
       lastPointAway = action.awayScore;
     }
