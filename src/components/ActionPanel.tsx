@@ -75,11 +75,11 @@ export function ActionPanel() {
     );
 
   useEffect(() => {
-    if ((matchState as any).setOverPending && !showEndSetDialog) {
+    if (matchState.setOverPending && !showEndSetDialog) {
       setShowEndSetDialog(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [(matchState as any).setOverPending]);
+  }, [matchState.setOverPending]);
 
   const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
