@@ -176,6 +176,7 @@ export default function Onboarding() {
     }
     setBusy(true);
     try {
+      const XLSX = await import('xlsx');
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
