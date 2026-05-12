@@ -33,7 +33,8 @@ export default function Auth() {
   const location = useLocation();
   const { user, loading: authLoading, refreshRoles } = useAuth();
 
-  const [mode, setMode] = useState<Mode>('signin');
+  const inviteToken = new URLSearchParams(location.search).get('invite');
+  const [mode, setMode] = useState<Mode>(inviteToken ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -46,7 +47,6 @@ export default function Auth() {
   const acceptingInviteRef = useRef(false);
 
   const from = (location.state as { from?: string })?.from ?? '/';
-  const inviteToken = new URLSearchParams(location.search).get('invite');
 
   const acceptInvite = async (token: string) => {
     if (acceptingInviteRef.current || inviteAccepted) return false;
@@ -232,6 +232,8 @@ export default function Auth() {
               placeholder="mario@esempio.it"
               required
               autoComplete="email"
+              readOnly={!!(inviteToken && inviteInfo)}
+              className={inviteToken && inviteInfo ? 'bg-muted/70 cursor-not-allowed opacity-80' : ''}
             />
           </div>
 
@@ -254,11 +256,28 @@ export default function Auth() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={submitting || inviteLoading || Boolean(inviteError) || acceptingInvite}>
+          <Button type="submit" className="w-full" disabled={submitting || inviteLoading || (Boolean(inviteError) && !inviteInfo?.is_accepted) || acceptingInvite}>
             {(submitting || acceptingInvite) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {acceptingInvite ? 'Accettazione invito…' : null}
             {!acceptingInvite && (mode === 'signin' ? 'Accedi' : 'Crea account')}
           </Button>
+
+          {mode === 'signin' && !inviteToken && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (!email) { toast.error('Inserisci prima la tua email'); return; }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: `${window.location.origin}/auth`,
+                });
+                if (error) toast.error(error.message);
+                else toast.success('Email di recupero inviata. Controlla la casella.');
+              }}
+              className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors block text-center w-full mt-1"
+            >
+              Password dimenticata?
+            </button>
+          )}
         </form>
 
         <div className="text-center text-sm">

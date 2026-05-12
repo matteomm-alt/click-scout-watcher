@@ -156,6 +156,7 @@ interface VolleyballCourtProps {
   highlightTeam?: 'home' | 'away';
   heatmapData?: Record<number, number>;
   liveArrows?: LiveArrow[];
+  compactAspect?: boolean;
 }
 
 export function VolleyballCourt({
@@ -163,6 +164,7 @@ export function VolleyballCourt({
   highlightTeam,
   heatmapData,
   liveArrows,
+  compactAspect,
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam } = useMatchStore();
 
@@ -302,7 +304,15 @@ export function VolleyballCourt({
 
   return (
     <div className="w-full">
-      <div className="grid overflow-hidden rounded-lg border border-foreground/20 shadow-2xl" style={{ aspectRatio: '221 / 90', gridTemplateColumns: '1.33fr 6fr 0.07fr 6fr 1.33fr' }}>
+      <div
+        className="grid overflow-hidden rounded-lg border border-foreground/20 shadow-2xl"
+        style={{
+          aspectRatio: compactAspect ? '2 / 1' : '221 / 90',
+          gridTemplateColumns: compactAspect
+            ? '0.1fr 3fr 0.05fr 3fr 0.1fr'
+            : '1.33fr 6fr 0.07fr 6fr 1.33fr',
+        }}
+      >
         {renderServiceBand('away')}
         {renderHalfCourt('away')}
         <div className="relative bg-muted">
