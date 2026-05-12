@@ -16,6 +16,18 @@ export function MatchSetup() {
     });
   };
 
+  const handleContinue = () => {
+    if (!homeTeam.name.trim()) {
+      toast.error('Inserisci il nome della squadra di casa');
+      return;
+    }
+    if (!awayTeam.name.trim()) {
+      toast.error('Inserisci il nome della squadra ospite');
+      return;
+    }
+    setStep('roster');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="glass rounded-2xl p-8 w-full max-w-2xl space-y-8">
