@@ -399,7 +399,6 @@ export function ActionPanel() {
       setShowAnalysisDialog(false);
       navigate(`/match/${match.id}`);
     } catch (e: any) {
-      console.error(e);
       toast.error('Errore import: ' + (e?.message || 'sconosciuto'));
     } finally {
       setImportingDvw(false);
