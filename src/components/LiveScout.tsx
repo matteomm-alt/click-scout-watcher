@@ -187,18 +187,16 @@ export function LiveScout() {
         <div className="fixed right-0 top-1/4 bottom-1/4 w-5 z-40 cursor-e-resize" onPointerDown={() => setPanelOpen(true)} />
         <FullscreenToggle />
 
-        {/* COLONNA SINISTRA — 58% — campo + QuickActions */}
-        <div className="flex flex-col h-full flex-shrink-0 gap-3 p-3 pr-0" style={{ width: '58%' }}>
+        {/* COLONNA SINISTRA 45% — campo + QuickActions */}
+        <div className="flex flex-col h-full flex-shrink-0 gap-3 p-3 pr-1" style={{ width: '45%' }}>
           <ScoreBoard />
           <div className="flex-1 min-h-0 flex items-center overflow-hidden">
             <div className="w-full">
-              <VolleyballCourt heatmapData={awayHeatmap} liveArrows={liveArrows} />
+              <VolleyballCourt compactAspect heatmapData={awayHeatmap} liveArrows={liveArrows} />
             </div>
           </div>
-          <div className="flex-shrink-0">
-            <div className="glass rounded-xl p-2">
-              <QuickActions />
-            </div>
+          <div className="flex-shrink-0 glass rounded-xl p-2">
+            <QuickActions />
           </div>
         </div>
 
