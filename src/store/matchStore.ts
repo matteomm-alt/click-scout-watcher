@@ -559,6 +559,11 @@ export const useMatchStore = create<MatchStore>()(
       name: 'volley-scout-storage-v1',
       storage: createJSONStorage(() => localStorage),
       version: 2,
+      partialize: (state: MatchStore) => {
+        const { matchState, ...rest } = state;
+        const { actions, ...matchStateWithoutActions } = matchState;
+        return { ...rest, matchState: matchStateWithoutActions } as MatchStore;
+      },
       // Backwards-compat: ensure new fields exist when loading old persisted state
       migrate: (persisted: unknown) => {
         const p = persisted as { state?: { matchState?: Partial<MatchState> } } | undefined;
