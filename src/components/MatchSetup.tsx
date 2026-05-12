@@ -150,14 +150,14 @@ export function MatchSetup() {
         <Button
           type="button"
           variant="secondary"
-          onClick={() => setStep('roster')}
+          onClick={handleContinue}
           className="w-full h-14 text-lg font-black"
         >
           ⚡ Inizia subito
         </Button>
 
         <Button
-          onClick={() => setStep('roster')}
+          onClick={handleContinue}
           className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           Continua <ArrowRight className="ml-2 w-5 h-5" />
