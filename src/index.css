@@ -46,6 +46,16 @@
     --sidebar-accent-foreground: 210 20% 85%;
     --sidebar-border: 228 18% 20%;
     --sidebar-ring: 24 95% 53%;
+
+    /* Click&Scout layout tokens — fedeli al layout originale, colori del nostro tema */
+    --cs-team-a: 320 70% 55%;        /* magenta/rosa squadra di casa */
+    --cs-team-b: 217 91% 60%;        /* blu squadra ospite */
+    --cs-rail: 220 35% 22%;          /* blu scuro pannelli laterali TO/SUB/SERVE */
+    --cs-rail-fg: 210 30% 88%;
+    --cs-court: 24 88% 58%;          /* arancio campo (variante più calda di --primary) */
+    --cs-cta: 24 95% 53%;            /* arancio CTA grande (= --primary) */
+    --cs-cta-yellow: 48 96% 56%;     /* giallo "Show Serve Directions" */
+    --cs-end-match: 142 71% 45%;     /* verde "Fine Incontro" */
   }
 }
 
