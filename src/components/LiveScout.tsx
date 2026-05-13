@@ -9,6 +9,11 @@ import { QuickActions } from '@/components/QuickActions';
 import { TeamComparison } from '@/components/TeamComparison';
 import { SetDistribution } from '@/components/SetDistribution';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
+import { CSHeader } from '@/components/scout/CSHeader';
+import { CSToolbar } from '@/components/scout/CSToolbar';
+import { CSSideRail } from '@/components/scout/CSSideRail';
+import { CSServePanel } from '@/components/scout/CSServePanel';
+import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -68,6 +73,8 @@ export function LiveScout() {
   const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
   const [timeoutBanner, setTimeoutBanner] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
   const awayHeatmap = useMemo(() => {
@@ -183,49 +190,110 @@ export function LiveScout() {
 
   return (
     <>
-      <div className="hidden lg:flex h-screen overflow-hidden">
+      <div className="hidden lg:flex h-screen overflow-hidden flex-col p-3 gap-2 bg-background">
         <div className="fixed right-0 top-1/4 bottom-1/4 w-5 z-40 cursor-e-resize" onPointerDown={() => setPanelOpen(true)} />
         <FullscreenToggle />
 
-        {/* COLONNA SINISTRA 45% — campo + QuickActions */}
-        <div className="flex flex-col h-full flex-shrink-0 gap-3 p-3 pr-1" style={{ width: '45%' }}>
-          <ScoreBoard />
-          <div className="flex-1 min-h-0 flex items-center overflow-hidden">
-            <div className="w-full">
-              <VolleyballCourt compactAspect heatmapData={awayHeatmap} liveArrows={liveArrows} />
-            </div>
-          </div>
-          <div className="flex-shrink-0 glass rounded-xl p-2">
-            <QuickActions />
-          </div>
-        </div>
+        {/* HEADER stile Click&Scout */}
+        <CSHeader />
 
-        {/* COLONNA DESTRA — flex-1 — ActionPanel + PlayerStats */}
-        <div className="flex-1 flex flex-col min-h-0 gap-3 p-3">
-          {timeoutBanner && (
-            <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background flex-shrink-0">
-              <span>⏸ TIME-OUT</span>
-              <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
+        {/* TOOLBAR Info / Modifiche / ⚙ — Fine Incontro */}
+        <CSToolbar
+          onInfo={() => toast.info(`${homeTeam.name || 'Casa'} vs ${awayTeam.name || 'Ospite'} • Set ${matchState.currentSet}`)}
+          onModify={() => setControlsOpen(true)}
+          onSettings={() => setSettingsOpen(true)}
+          onEndMatch={() => setShowEndSetDialog(true)}
+        />
+
+        {/* CORPO PRINCIPALE — 3 colonne: rail SX | center (campo+serve+action+history) | rail DX */}
+        <div className="flex-1 min-h-0 flex gap-1 overflow-hidden">
+          {/* Side rail SX (squadra di casa) */}
+          <CSSideRail
+            side="left"
+            timeoutsAvailable={2 - matchState.homeTimeoutsUsed}
+            onTimeout={() => {
+              const ok = useMatchStore.getState().callTimeout('home');
+              if (ok) toast.success(`Time-out ${homeTeam.name || 'Casa'}`);
+              else toast.error('Time-out non disponibili');
+            }}
+            onSubstitution={() => toast.info('Apri "Inserimento Azione" e tocca Sostituzione')}
+            onPoint={() => useMatchStore.getState().addPoint('home')}
+          />
+
+          {/* COLONNA CENTRALE */}
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
+            <div className="flex-1 min-h-0 flex gap-1 items-stretch">
+              <div className="flex-1 min-w-0 flex items-center">
+                <div className="w-full">
+                  <VolleyballCourt compactAspect heatmapData={awayHeatmap} liveArrows={liveArrows} />
+                </div>
+              </div>
+              {matchState.servingTeam && (
+                <CSServePanel
+                  onShowDirections={() => {
+                    setTab('dir');
+                    setPanelOpen(true);
+                  }}
+                />
+              )}
             </div>
-          )}
-          <div className="flex-1 glass rounded-xl p-4 flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-3 shrink-0">
-              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                Inserimento Azione
-              </h3>
-              <button type="button" onClick={() => setPanelOpen(true)}
-                className="min-h-9 px-3 rounded-lg bg-secondary/80 border border-border flex items-center gap-2 hover:bg-secondary transition-colors text-xs font-bold text-muted-foreground">
-                <PanelRight className="w-4 h-4" /> Statistiche
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto min-h-0">
+
+            {/* Pannello azione — riusa ActionPanel */}
+            <div className="glass rounded-xl p-3 max-h-[42vh] overflow-y-auto flex-shrink-0">
+              <div className="flex items-center justify-between mb-2 shrink-0">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Inserimento Azione
+                </h3>
+                <button type="button" onClick={() => setPanelOpen(true)}
+                  className="h-7 px-2 rounded-md bg-secondary/80 border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <PanelRight className="w-3 h-3" /> Statistiche
+                </button>
+              </div>
               <ActionPanel />
             </div>
+
+            {/* Storico rally Click&Scout */}
+            <div className="flex-shrink-0">
+              <CSRallyHistory />
+            </div>
           </div>
-          <div className="glass rounded-xl p-3 flex-shrink-0 max-h-44 overflow-y-auto">
-            <PlayerStatsPanel />
-          </div>
+
+          {/* Side rail DX (squadra ospite) */}
+          <CSSideRail
+            side="right"
+            timeoutsAvailable={2 - matchState.awayTimeoutsUsed}
+            onTimeout={() => {
+              const ok = useMatchStore.getState().callTimeout('away');
+              if (ok) toast.success(`Time-out ${awayTeam.name || 'Ospite'}`);
+              else toast.error('Time-out non disponibili');
+            }}
+            onSubstitution={() => toast.info('Apri "Inserimento Azione" e tocca Sostituzione')}
+            onPoint={() => useMatchStore.getState().addPoint('away')}
+          />
         </div>
+
+        {/* Sheet "Modifiche" — riusa ScoreBoard completo per sanzioni/correzioni/reset */}
+        <Sheet open={controlsOpen} onOpenChange={setControlsOpen}>
+          <SheetContent side="top" className="max-h-[60vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Controlli partita</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              <ScoreBoard />
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Sheet "Impostazioni scout" */}
+        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Impostazioni scout</SheetTitle>
+            </SheetHeader>
+            <ScoutSettingsPanel settings={settings} setSetting={setSetting} setSettings={setSettings} />
+          </SheetContent>
+        </Sheet>
 
         <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
           <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
@@ -263,6 +331,7 @@ export function LiveScout() {
           </div>
         )}
       </div>
+
 
       <div className="lg:hidden h-screen flex flex-col p-2 gap-2 overflow-hidden pb-20">
         <ScoreBoard />
