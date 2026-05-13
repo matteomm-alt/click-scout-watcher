@@ -73,6 +73,8 @@ export function LiveScout() {
   const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
   const [timeoutBanner, setTimeoutBanner] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
   const awayHeatmap = useMemo(() => {
