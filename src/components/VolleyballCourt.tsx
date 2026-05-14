@@ -177,21 +177,21 @@ export function VolleyballCourt({
   };
 
   const positions: Record<number, { zone: number; x: number; y: number }> = {
-    1: { zone: 1, x: 83.33, y: 50 },
-    2: { zone: 2, x: 83.33, y: 16.66 },
-    3: { zone: 3, x: 50, y: 16.66 },
-    4: { zone: 4, x: 16.66, y: 16.66 },
-    5: { zone: 5, x: 16.66, y: 50 },
-    6: { zone: 6, x: 50, y: 50 },
+    1: { zone: 1, x: 83.33, y: 75 },
+    2: { zone: 2, x: 83.33, y: 25 },
+    3: { zone: 3, x: 50,    y: 25 },
+    4: { zone: 4, x: 16.66, y: 25 },
+    5: { zone: 5, x: 16.66, y: 75 },
+    6: { zone: 6, x: 50,    y: 75 },
   };
 
   const positionsHome: Record<number, { zone: number; x: number; y: number }> = {
-    1: { zone: 1, x: 16.66, y: 50 },
-    2: { zone: 2, x: 16.66, y: 16.66 },
-    3: { zone: 3, x: 50,    y: 16.66 },
-    4: { zone: 4, x: 83.33, y: 16.66 },
-    5: { zone: 5, x: 83.33, y: 50 },
-    6: { zone: 6, x: 50,    y: 50 },
+    1: { zone: 1, x: 16.66, y: 75 },
+    2: { zone: 2, x: 16.66, y: 25 },
+    3: { zone: 3, x: 50,    y: 25 },
+    4: { zone: 4, x: 83.33, y: 25 },
+    5: { zone: 5, x: 83.33, y: 75 },
+    6: { zone: 6, x: 50,    y: 75 },
   };
 
   const zoneLabels = [
@@ -219,7 +219,7 @@ export function VolleyballCourt({
 
     return (
       <div className="relative h-full overflow-hidden" style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-1/3 bg-black/25" />
+        
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
           {[30, 60].map((p) => {
             const is3m = (team === 'away' && p === 60) || (team === 'home' && p === 30);
@@ -252,7 +252,7 @@ export function VolleyballCourt({
           );
         })}
         {(team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => (
-          <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-4xl md:text-5xl font-black italic text-white/16" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
+          <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-xl md:text-2xl font-black italic text-white/10" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
             {z.zone}
           </span>
         ))}
