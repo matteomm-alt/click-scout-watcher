@@ -185,10 +185,25 @@ export function VolleyballCourt({
     6: { zone: 6, x: 50, y: 50 },
   };
 
+  const positionsHome: Record<number, { zone: number; x: number; y: number }> = {
+    1: { zone: 1, x: 16.66, y: 50 },
+    2: { zone: 2, x: 16.66, y: 16.66 },
+    3: { zone: 3, x: 50,    y: 16.66 },
+    4: { zone: 4, x: 83.33, y: 16.66 },
+    5: { zone: 5, x: 83.33, y: 50 },
+    6: { zone: 6, x: 50,    y: 50 },
+  };
+
   const zoneLabels = [
     { zone: 4, x: 16.66, y: 16.66 }, { zone: 3, x: 50, y: 16.66 }, { zone: 2, x: 83.33, y: 16.66 },
     { zone: 5, x: 16.66, y: 50 }, { zone: 6, x: 50, y: 50 }, { zone: 1, x: 83.33, y: 50 },
     { zone: 7, x: 16.66, y: 83.33 }, { zone: 8, x: 50, y: 83.33 }, { zone: 9, x: 83.33, y: 83.33 },
+  ];
+
+  const zoneLabelsHome = [
+    { zone: 2, x: 16.66, y: 16.66 }, { zone: 3, x: 50, y: 16.66 }, { zone: 4, x: 83.33, y: 16.66 },
+    { zone: 1, x: 16.66, y: 50 },    { zone: 6, x: 50, y: 50 },    { zone: 5, x: 83.33, y: 50 },
+    { zone: 9, x: 16.66, y: 83.33 }, { zone: 8, x: 50, y: 83.33 }, { zone: 7, x: 83.33, y: 83.33 },
   ];
 
   const zonePct = (zone: number) => {
@@ -206,9 +221,16 @@ export function VolleyballCourt({
       <div className="relative h-full overflow-hidden" style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-1/3 bg-black/25" />
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
-          {[30, 60].map((p) => (
-            <line key={`v-${team}-${p}`} x1={p} y1="0" x2={p} y2="90" stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
-          ))}
+          {[30, 60].map((p) => {
+            const is3m = (team === 'away' && p === 60) || (team === 'home' && p === 30);
+            return (
+              <line key={`v-${team}-${p}`} x1={p} y1="0" x2={p} y2="90"
+                stroke={is3m ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)'}
+                strokeWidth={is3m ? 2 : 1}
+                strokeDasharray={is3m ? '0' : '4 4'}
+                vectorEffect="non-scaling-stroke" />
+            );
+          })}
           {[30, 60].map((p) => (
             <line key={`h-${team}-${p}`} x1="0" y1={p} x2="90" y2={p} stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           ))}
@@ -229,7 +251,7 @@ export function VolleyballCourt({
             />
           );
         })}
-        {zoneLabels.map((z) => (
+        {(team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => (
           <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-4xl md:text-5xl font-black italic text-white/16" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
             {z.zone}
           </span>
@@ -237,7 +259,7 @@ export function VolleyballCourt({
         {[1, 2, 3, 4, 5, 6].map((pos) => {
           const playerNum = lineup[pos - 1];
           const info = playerNum ? getPlayerInfo(playerNum, team) : null;
-          const p = positions[pos];
+          const p = team === 'home' ? positionsHome[pos] : positions[pos];
           const isSetter = pos === setterPosition;
           const isLibero = Boolean(info?.isLibero || info?.role === 'L');
           const isHighlighted = highlightTeam === team && highlightPlayerNumber === playerNum;

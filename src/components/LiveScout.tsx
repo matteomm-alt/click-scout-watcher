@@ -224,8 +224,8 @@ export function LiveScout() {
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
             <div className="flex-1 min-h-0 flex gap-1 items-stretch">
-              <div className="flex-1 min-w-0 flex items-center">
-                <div className="w-full">
+              <div className="flex-1 min-h-0 flex items-center justify-center">
+                <div style={{ height: '100%', aspectRatio: '2/1' }}>
                   <VolleyballCourt compactAspect heatmapData={awayHeatmap} liveArrows={liveArrows} />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export function LiveScout() {
             </div>
 
             {/* Pannello azione — riusa ActionPanel */}
-            <div className="glass rounded-xl p-3 max-h-[42vh] overflow-y-auto flex-shrink-0">
+            <div className="glass rounded-xl p-3 h-48 overflow-hidden flex-shrink-0">
               <div className="flex items-center justify-between mb-2 shrink-0">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Inserimento Azione
