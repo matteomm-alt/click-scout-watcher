@@ -235,7 +235,7 @@ export function VolleyballCourt({
             <line key={`h-${team}-${p}`} x1="0" y1={p} x2="90" y2={p} stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           ))}
         </svg>
-        {showHeatmap && (team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => {
+        {showHeatmap && zoneLabels.map((z) => {
           const count = heatmapData![z.zone] ?? 0;
           if (!count) return null;
           const opacity = Math.min(0.55, (count / maxHeat) * 0.55);
