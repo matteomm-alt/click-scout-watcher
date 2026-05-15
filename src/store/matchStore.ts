@@ -575,6 +575,23 @@ export const useMatchStore = create<MatchStore>()(
         }
         return p as never;
       },
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<MatchStore> | undefined;
+        const persistedMatchState = persisted?.matchState ?? {};
+
+        return {
+          ...currentState,
+          ...persisted,
+          matchState: {
+            ...defaultMatchState,
+            ...currentState.matchState,
+            ...persistedMatchState,
+            actions: Array.isArray(persistedMatchState.actions)
+              ? persistedMatchState.actions
+              : currentState.matchState.actions,
+          },
+        } as MatchStore;
+      },
     }
   )
 );
