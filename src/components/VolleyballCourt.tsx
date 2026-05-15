@@ -1,4 +1,5 @@
 import { useMatchStore } from '@/store/matchStore';
+import { getReceptionPositions } from '@/lib/receptionFormations';
 
 interface ZoneCourtProps {
   onZoneClick?: (zone: number) => void;
