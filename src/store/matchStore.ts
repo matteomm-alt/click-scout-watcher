@@ -577,7 +577,7 @@ export const useMatchStore = create<MatchStore>()(
       },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<MatchStore> | undefined;
-        const persistedMatchState = persisted?.matchState ?? {};
+        const persistedMatchState = (persisted?.matchState ?? {}) as Partial<MatchState>;
 
         return {
           ...currentState,
