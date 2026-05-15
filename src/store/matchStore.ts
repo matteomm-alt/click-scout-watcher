@@ -55,6 +55,17 @@ interface MatchStore {
 
   // Load a fully-configured demo match (for quick testing/onboarding)
   loadDemoMatch: () => void;
+
+  // Schemi di ricezione personalizzati (per setter rotation 1..6)
+  homeReceptionFormations: ReceptionFormations;
+  awayReceptionFormations: ReceptionFormations;
+  setReceptionPosition: (
+    team: 'home' | 'away',
+    setterPosition: number,
+    slot: number,
+    coord: Coord
+  ) => void;
+  resetReceptionFormations: (team: 'home' | 'away') => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
