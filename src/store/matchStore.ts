@@ -558,7 +558,7 @@ export const useMatchStore = create<MatchStore>()(
     {
       name: 'volley-scout-storage-v1',
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
       partialize: (state: MatchStore) => {
         const { matchState, ...rest } = state;
         const { actions, ...matchStateWithoutActions } = matchState;
