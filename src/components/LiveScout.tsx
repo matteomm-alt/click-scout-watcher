@@ -14,6 +14,7 @@ import { CSToolbar } from '@/components/scout/CSToolbar';
 import { CSSideRail } from '@/components/scout/CSSideRail';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
+import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
