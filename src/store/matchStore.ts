@@ -4,6 +4,11 @@ import type {
   Team, Player, MatchInfo, Lineup, MatchState, ScoutAction,
   SetResult, AppStep, SanctionType, Sanction, TimeoutRecord, Evaluation,
 } from '@/types/volleyball';
+import {
+  cloneDefaultFormations,
+  type ReceptionFormations,
+  type Coord,
+} from '@/lib/receptionFormations';
 import { toast } from 'sonner';
 
 interface MatchStore {
