@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, Pencil, Settings, Target, Zap, PanelRight } from 'lucide-react';
+import { BarChart2, Pencil, Settings, Target, Zap, PanelRight, Move } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -14,6 +14,7 @@ import { CSToolbar } from '@/components/scout/CSToolbar';
 import { CSSideRail } from '@/components/scout/CSSideRail';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
+import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -74,6 +75,7 @@ export function LiveScout() {
   const [timeoutBanner, setTimeoutBanner] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
@@ -224,8 +226,24 @@ export function LiveScout() {
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
             <div className="flex-1 min-h-0 flex gap-1 items-stretch">
-              <div className="flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden">
-                <VolleyballCourt compactAspect heatmapData={awayHeatmap} liveArrows={liveArrows} />
+              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden">
+                <VolleyballCourt
+                  compactAspect
+                  heatmapData={awayHeatmap}
+                  liveArrows={liveArrows}
+                  receptionMode={{
+                    home: matchState.servingTeam === 'away',
+                    away: matchState.servingTeam === 'home',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setReceptionEditorOpen(true)}
+                  title="Modifica schemi di ricezione 5-1"
+                  className="absolute top-2 right-2 z-30 h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
+                >
+                  <Move className="w-3 h-3" /> Schemi ricezione
+                </button>
               </div>
               {matchState.servingTeam && (
                 <CSServePanel
@@ -328,8 +346,10 @@ export function LiveScout() {
             </p>
           </div>
         )}
-      </div>
+        </div>
 
+        {/* Editor schemi di ricezione 5-1 */}
+        <ReceptionFormationEditor open={receptionEditorOpen} onOpenChange={setReceptionEditorOpen} />
 
       <div className="lg:hidden h-screen flex flex-col p-2 gap-2 overflow-hidden pb-20">
         <ScoreBoard />

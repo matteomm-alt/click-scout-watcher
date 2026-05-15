@@ -1,4 +1,5 @@
 import { useMatchStore } from '@/store/matchStore';
+import { getReceptionPositions } from '@/lib/receptionFormations';
 
 interface ZoneCourtProps {
   onZoneClick?: (zone: number) => void;
@@ -157,6 +158,11 @@ interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
   liveArrows?: LiveArrow[];
   compactAspect?: boolean;
+  /**
+   * Quando true per una squadra, sostituisce le posizioni di rotazione (P1..P6)
+   * con le posizioni di ricezione personalizzate per la rotazione del palleggiatore corrente.
+   */
+  receptionMode?: { home?: boolean; away?: boolean };
 }
 
 export function VolleyballCourt({
@@ -165,8 +171,9 @@ export function VolleyballCourt({
   heatmapData,
   liveArrows,
   compactAspect,
+  receptionMode,
 }: VolleyballCourtProps = {}) {
-  const { matchState, homeTeam, awayTeam } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
 
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
@@ -217,6 +224,14 @@ export function VolleyballCourt({
     const showHeatmap = heatmapData && team === 'away';
     const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
 
+    // Modalità ricezione: usa posizioni personalizzate per la rotazione attuale
+    const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
+    const formations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
+    // home ha la rete in basso → specchia y; away ha la rete in alto → no mirror
+    const recPositions = isReceiving
+      ? getReceptionPositions(formations, setterPosition, team === 'home')
+      : null;
+
     return (
       <div className="relative h-full overflow-hidden" style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}>
         
@@ -256,10 +271,17 @@ export function VolleyballCourt({
             {z.zone}
           </span>
         ))}
+        {isReceiving && (
+          <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-accent/90 text-[9px] font-black uppercase tracking-wider text-accent-foreground shadow-md">
+            Ricezione · S{setterPosition}
+          </span>
+        )}
         {[1, 2, 3, 4, 5, 6].map((pos) => {
           const playerNum = lineup[pos - 1];
           const info = playerNum ? getPlayerInfo(playerNum, team) : null;
-          const p = team === 'home' ? positionsHome[pos] : positions[pos];
+          const basePos = team === 'home' ? positionsHome[pos] : positions[pos];
+          const overridePos = recPositions ? recPositions[pos as 1|2|3|4|5|6] : null;
+          const p = overridePos ?? basePos;
           const isSetter = pos === setterPosition;
           const isLibero = Boolean(info?.isLibero || info?.role === 'L');
           const isHighlighted = highlightTeam === team && highlightPlayerNumber === playerNum;

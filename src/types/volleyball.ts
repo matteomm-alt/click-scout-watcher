@@ -216,4 +216,7 @@ export interface MatchState {
   setOverPending: boolean;
 }
 
+// Re-export per comodità: i tipi delle formazioni di ricezione vivono in @/lib/receptionFormations
+export type { ReceptionFormations, SlotPositions, Coord } from '@/lib/receptionFormations';
+
 export type AppStep = 'setup' | 'roster' | 'lineup' | 'scout';

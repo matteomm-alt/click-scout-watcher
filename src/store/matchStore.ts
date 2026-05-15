@@ -4,6 +4,11 @@ import type {
   Team, Player, MatchInfo, Lineup, MatchState, ScoutAction,
   SetResult, AppStep, SanctionType, Sanction, TimeoutRecord, Evaluation,
 } from '@/types/volleyball';
+import {
+  cloneDefaultFormations,
+  type ReceptionFormations,
+  type Coord,
+} from '@/lib/receptionFormations';
 import { toast } from 'sonner';
 
 interface MatchStore {
@@ -50,6 +55,17 @@ interface MatchStore {
 
   // Load a fully-configured demo match (for quick testing/onboarding)
   loadDemoMatch: () => void;
+
+  // Schemi di ricezione personalizzati (per setter rotation 1..6)
+  homeReceptionFormations: ReceptionFormations;
+  awayReceptionFormations: ReceptionFormations;
+  setReceptionPosition: (
+    team: 'home' | 'away',
+    setterPosition: number,
+    slot: number,
+    coord: Coord
+  ) => void;
+  resetReceptionFormations: (team: 'home' | 'away') => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
@@ -554,6 +570,30 @@ export const useMatchStore = create<MatchStore>()(
           },
         });
       },
+
+      // === Schemi ricezione 5-1 ===
+      homeReceptionFormations: cloneDefaultFormations(),
+      awayReceptionFormations: cloneDefaultFormations(),
+      setReceptionPosition: (team, setterPosition, slot, coord) => set((s) => {
+        const key = team === 'home' ? 'homeReceptionFormations' : 'awayReceptionFormations';
+        const sp = Math.min(6, Math.max(1, setterPosition)) as 1|2|3|4|5|6;
+        const sl = Math.min(6, Math.max(1, slot)) as 1|2|3|4|5|6;
+        const current = s[key];
+        const updated: ReceptionFormations = {
+          ...current,
+          [sp]: {
+            ...current[sp],
+            [sl]: {
+              x: Math.max(0, Math.min(100, coord.x)),
+              y: Math.max(0, Math.min(100, coord.y)),
+            },
+          },
+        };
+        return { [key]: updated } as Partial<MatchStore>;
+      }),
+      resetReceptionFormations: (team) => set(() => ({
+        [team === 'home' ? 'homeReceptionFormations' : 'awayReceptionFormations']: cloneDefaultFormations(),
+      } as Partial<MatchStore>)),
     }),
     {
       name: 'volley-scout-storage-v1',
