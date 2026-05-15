@@ -158,6 +158,11 @@ interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
   liveArrows?: LiveArrow[];
   compactAspect?: boolean;
+  /**
+   * Quando true per una squadra, sostituisce le posizioni di rotazione (P1..P6)
+   * con le posizioni di ricezione personalizzate per la rotazione del palleggiatore corrente.
+   */
+  receptionMode?: { home?: boolean; away?: boolean };
 }
 
 export function VolleyballCourt({
@@ -166,8 +171,9 @@ export function VolleyballCourt({
   heatmapData,
   liveArrows,
   compactAspect,
+  receptionMode,
 }: VolleyballCourtProps = {}) {
-  const { matchState, homeTeam, awayTeam } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
 
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
