@@ -346,8 +346,10 @@ export function LiveScout() {
             </p>
           </div>
         )}
-      </div>
+        </div>
 
+        {/* Editor schemi di ricezione 5-1 */}
+        <ReceptionFormationEditor open={receptionEditorOpen} onOpenChange={setReceptionEditorOpen} />
 
       <div className="lg:hidden h-screen flex flex-col p-2 gap-2 overflow-hidden pb-20">
         <ScoreBoard />
