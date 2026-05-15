@@ -226,8 +226,24 @@ export function LiveScout() {
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
             <div className="flex-1 min-h-0 flex gap-1 items-stretch">
-              <div className="flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden">
-                <VolleyballCourt compactAspect heatmapData={awayHeatmap} liveArrows={liveArrows} />
+              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden">
+                <VolleyballCourt
+                  compactAspect
+                  heatmapData={awayHeatmap}
+                  liveArrows={liveArrows}
+                  receptionMode={{
+                    home: matchState.servingTeam === 'away',
+                    away: matchState.servingTeam === 'home',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setReceptionEditorOpen(true)}
+                  title="Modifica schemi di ricezione 5-1"
+                  className="absolute top-2 right-2 z-30 h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
+                >
+                  <Move className="w-3 h-3" /> Schemi ricezione
+                </button>
               </div>
               {matchState.servingTeam && (
                 <CSServePanel
