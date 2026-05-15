@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, Pencil, Settings, Target, Zap, PanelRight } from 'lucide-react';
+import { BarChart2, Pencil, Settings, Target, Zap, PanelRight, Move } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
