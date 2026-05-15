@@ -75,6 +75,7 @@ export function LiveScout() {
   const [timeoutBanner, setTimeoutBanner] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
