@@ -190,6 +190,21 @@ export function ActionPanel() {
   const handleEvaluationSelect = (evaluation: Evaluation) => {
     navigator.vibrate?.(25);
     setSelectedEvaluation(evaluation);
+    // Skip contestuali (manuale Click&Scout):
+    // - Errore di servizio: nessuna traiettoria utile → finalizza
+    // - Attacco punto: la zona di destinazione è "fuori campo" → finalizza senza endZone
+    if (selectedSkill === 'S' && evaluation === '=') {
+      finalizeAction(evaluation, null, null);
+      return;
+    }
+    if (selectedSkill === 'A' && evaluation === '#') {
+      if (settings.showStartZone) {
+        setStep('startZone');
+      } else {
+        finalizeAction(evaluation, null, null);
+      }
+      return;
+    }
     if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showStartZone) {
       setStep('startZone');
     } else if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showEndZone) {
