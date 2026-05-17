@@ -228,7 +228,7 @@ export function LiveScout() {
               if (ok) toast.success(`Time-out ${homeTeam.name || 'Casa'}`);
               else toast.error('Time-out non disponibili');
             }}
-            onSubstitution={() => toast.info('Apri "Inserimento Azione" e tocca Sostituzione')}
+            onSubstitution={() => window.dispatchEvent(new CustomEvent('scout-open-sub', { detail: { team: 'home' } }))}
             onPoint={() => useMatchStore.getState().addPoint('home')}
           />
 
@@ -294,7 +294,7 @@ export function LiveScout() {
               if (ok) toast.success(`Time-out ${awayTeam.name || 'Ospite'}`);
               else toast.error('Time-out non disponibili');
             }}
-            onSubstitution={() => toast.info('Apri "Inserimento Azione" e tocca Sostituzione')}
+            onSubstitution={() => window.dispatchEvent(new CustomEvent('scout-open-sub', { detail: { team: 'away' } }))}
             onPoint={() => useMatchStore.getState().addPoint('away')}
           />
 

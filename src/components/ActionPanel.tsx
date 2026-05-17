@@ -81,6 +81,17 @@ export function ActionPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchState.setOverPending]);
 
+  useEffect(() => {
+    const onOpenSub = (e: Event) => {
+      const detail = (e as CustomEvent<{ team?: 'home' | 'away' }>).detail;
+      if (detail?.team) setSubTeam(detail.team);
+      setSubOut(null);
+      setShowSubstitution(true);
+    };
+    window.addEventListener('scout-open-sub', onOpenSub);
+    return () => window.removeEventListener('scout-open-sub', onOpenSub);
+  }, []);
+
   const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
     { key: 'R', color: 'bg-emerald-600 hover:bg-emerald-500' },
