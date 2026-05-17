@@ -19,6 +19,8 @@ export type ScoutSettings = {
   posizionaPerRuolo: boolean;
   fastMode: boolean;
   followServe: boolean;
+  singleTeamMode: boolean;
+  singleTeamSide: 'home' | 'away';
 };
 
 const STORAGE_KEY = 'scout_settings';
@@ -42,6 +44,8 @@ export const defaultScoutSettings: ScoutSettings = {
   posizionaPerRuolo: false,
   fastMode: false,
   followServe: false,
+  singleTeamMode: false,
+  singleTeamSide: 'home',
 };
 
 export const SCOUT_PRESETS = {
