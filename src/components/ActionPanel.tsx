@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
 import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
-import { Undo2, Download, ArrowLeftRight, SkipForward, Shield, BarChart3 } from 'lucide-react';
+import { Undo2, Download, ArrowLeftRight, SkipForward, Shield, BarChart3, RotateCcw, Zap } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
 import { parseDvw } from '@/lib/dvwImporter';
 import { supabase } from '@/integrations/supabase/client';
