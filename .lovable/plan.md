@@ -9,23 +9,15 @@ Riferimento: manuale Click&Scout Data Project (capp. 5.1–5.5).
 - Target primario: tablet orizzontale, desktop fallback
 
 ### Fase 1 — FATTO
-- Sidebar rotazioni collassabile a destra del rail ospite (`rotationsOpen`, default chiusa, larghezza 180px aperta / 28px chiusa). Riusa `RotationDirections` esistente.
-- Toggle chevron sempre visibile.
+- Sidebar rotazioni collassabile a destra (default chiusa, 28px / 180px).
 
-### Fase 2 — TODO (prossime iterazioni)
-- **ActionPanel contestuale per skill**: ridurre altezza fissa 192px → 72–96px, mostrare SOLO i controlli pertinenti alla skill corrente
-  - Battuta: J / F / JF + UNDO grande
-  - Ricezione: vuoto (gestita dal tap, valutazione suggerita in giallo)
-  - Attacco: MUR 0-1-2 | # + − ! / = | S Q T
-  - Muro: # + − ! / =
-- **Suggerimento valutazione "in giallo"**: stato visivo `evaluation = suggested | confirmed`. Permette tap conferma vs override.
-- **Campo + area battuta visibile**: quando skill=S, mostrare la banda di battuta dietro al servente in modo evidente (la logica `select-start`+`select-end` su `ZoneCourt` c'è già).
-
-### Fase 3 — TODO
-- **Modalità "rileva una sola squadra"** (cap. 5.8): nuovo flag in `MatchSetup` → bottone "Punto" sostituisce il tap-per-azione sulla squadra non rilevata.
-- **Densificazione finale**: rail laterali da 56 → 48 px, header da 56 → 48 px, toolbar da 40 → 36 px su breakpoint tablet (`@media (max-height: 800px)`).
-- **Schermata fine partita** con "Continua Rilevazione" (cap. 5.7).
+### Fase 2/3 — IN CORSO
+- FATTO: densificazione tablet (`max-[900px]`): padding root 3→2, gap 2→1, pannello azione 192→176px (desktop) / 144px (tablet basso).
+- FATTO: flag `singleTeamMode` + `singleTeamSide` in scoutSettings, toggle in pannello Impostazioni.
+- TODO: collegamento del flag al flusso ActionPanel (bottone "Punto" diretto sulla squadra non rilevata).
+- TODO: stato visivo "evaluation suggested in giallo" (tap conferma vs override).
+- TODO: schermata fine partita con "Continua Rilevazione" (cap. 5.7).
 
 ### Note implementative
-- Nessuna modifica a `matchStore` / DB / RLS in Fase 1.
-- `RotationDirections` resta anche nel Sheet statistiche (tab "Dir") per non perdere accessibilità.
+- Nessuna modifica a `matchStore` / DB / RLS.
+- `RotationDirections` resta anche nel Sheet statistiche (tab "Dir").

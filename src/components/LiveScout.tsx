@@ -43,11 +43,12 @@ const MOBILE_TABS = [
 ];
 
 const RILEVAZIONE_ROWS = [
+  { key: 'singleTeamMode' as const, label: '👤 Rileva una sola squadra', description: 'Riduce il carico cognitivo: rileva solo la tua squadra, l\'avversaria si gestisce con "Punto".' },
   { key: 'followServe' as const, label: '🔄 Segui servizio', description: 'Pre-seleziona automaticamente la squadra dopo ogni azione: S→riceve avversaria, R/E→stessa squadra. Risparmia 1 tap per azione.' },
   { key: 'showServeType' as const, label: 'Tipo battuta', description: 'Mostra lo step per scegliere il tipo di servizio.' },
   { key: 'showAttackCombo' as const, label: 'Combo attacco', description: 'Mostra lo step per la combinazione di attacco.' },
-  { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell’azione.' },
-  { key: 'showEndZone' as const, label: 'Zona destinazione', description: 'Richiede la zona di arrivo dell’azione.' },
+  { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell\'azione (2-tap traiettoria).' },
+  { key: 'showEndZone' as const, label: 'Zona destinazione', description: 'Richiede la zona di arrivo dell\'azione.' },
   { key: 'showAlzata' as const, label: 'Skill E', description: 'Mostra Alzata nella lista fondamentali.' },
   { key: 'showDifesa' as const, label: 'Skill D', description: 'Mostra Difesa nella lista fondamentali.' },
   { key: 'showFreeball' as const, label: 'Skill F', description: 'Mostra Freeball nella lista fondamentali.' },
