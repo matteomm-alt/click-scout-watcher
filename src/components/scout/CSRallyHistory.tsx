@@ -5,9 +5,9 @@ import type { ScoutAction } from '@/types/volleyball';
 const evalColor = (e: string): { bg: string; fg: string } => {
   switch (e) {
     case '#': return { bg: 'bg-emerald-600', fg: 'text-white' };
-    case '+': return { bg: 'bg-yellow-300', fg: 'text-black' };
-    case '!': return { bg: 'bg-amber-500', fg: 'text-black' };
-    case '-': return { bg: 'bg-orange-500', fg: 'text-white' };
+    case '+': return { bg: 'bg-[hsl(var(--cs-cta))]', fg: 'text-white' };
+    case '!': return { bg: 'bg-[hsl(var(--cs-cta)/0.55)]', fg: 'text-white' };
+    case '-': return { bg: 'bg-orange-700', fg: 'text-white' };
     case '/': return { bg: 'bg-red-500', fg: 'text-white' };
     case '=': return { bg: 'bg-red-700', fg: 'text-white' };
     default: return { bg: 'bg-secondary', fg: 'text-foreground' };
