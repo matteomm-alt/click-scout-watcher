@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, Pencil, Settings, Target, Zap, PanelRight, Move } from 'lucide-react';
+import { BarChart2, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -77,6 +77,7 @@ export function LiveScout() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [rotationsOpen, setRotationsOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
 
   const awayHeatmap = useMemo(() => {
@@ -287,6 +288,25 @@ export function LiveScout() {
             onSubstitution={() => toast.info('Apri "Inserimento Azione" e tocca Sostituzione')}
             onPoint={() => useMatchStore.getState().addPoint('away')}
           />
+
+          {/* Colonna analisi rotazioni — collassabile, default chiusa */}
+          <div className={`flex-shrink-0 transition-all duration-200 ${rotationsOpen ? 'w-[180px]' : 'w-7'} flex`}>
+            <button
+              type="button"
+              onClick={() => setRotationsOpen((v) => !v)}
+              className="w-7 flex items-center justify-center bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] hover:brightness-125 active:scale-95 rounded-md"
+              title={rotationsOpen ? 'Nascondi rotazioni' : 'Mostra rotazioni'}
+              aria-label="Toggle rotazioni"
+            >
+              {rotationsOpen ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
+            {rotationsOpen && (
+              <div className="flex-1 ml-1 overflow-y-auto rounded-md border border-border/40 bg-card/40 p-1.5">
+                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1 text-center">Rotazioni</div>
+                <RotationDirections />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sheet "Modifiche" — riusa ScoreBoard completo per sanzioni/correzioni/reset */}
