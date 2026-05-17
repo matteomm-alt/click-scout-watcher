@@ -803,9 +803,24 @@ export function ActionPanel() {
       )}
 
       {/* Step: Evaluation */}
-      {step === 'evaluation' && (
+      {step === 'evaluation' && (() => {
+        // Suggerimento valutazione default per skill (giallo, 1-tap conferma)
+        const suggested: Evaluation = selectedSkill === 'R'
+          ? settings.ricezionePredefinita
+          : selectedSkill === 'D' ? '+'
+          : selectedSkill === 'E' ? '+'
+          : selectedSkill === 'F' ? '+'
+          : '#';
+        const ringFor = (k: Evaluation) => k === suggested ? 'ring-4 ring-warning ring-offset-2 ring-offset-background shadow-[0_0_24px_hsl(var(--warning)/0.6)]' : '';
+        return (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
-          <StepTip id="evaluation" text="Valuta il colpo: # perfetto/punto, + positivo, ! ok, - negativo, / murato, = errore. Tieni premuto per chiudere senza zone." />
+          <StepTip id="evaluation" text="Valuta il colpo: tocca la valutazione in giallo per conferma rapida, oppure scegli un'altra. Tieni premuto per chiudere senza zone." />
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-warning font-bold">
+            <span>💡 Suggerito: {suggested}</span>
+            <button type="button" onClick={() => handleEvaluationSelect(suggested)} className="px-3 py-1 rounded bg-warning/15 border border-warning/40 text-warning hover:bg-warning/25 active:scale-95">
+              Conferma {suggested}
+            </button>
+          </div>
           {autoAttack && (
             <div className="bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-3 py-2 text-sm font-bold flex items-center justify-between">
               <span>⚡ Auto: Palla Alta</span>
@@ -829,7 +844,7 @@ export function ActionPanel() {
                 <button
                   onClick={() => handleEvaluationSelect('#')}
                   {...makeHold('#')}
-                  className="min-h-24 w-full rounded-xl bg-green-600 hover:bg-green-500 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 flex items-center justify-center gap-3 text-2xl"
+                  className={`min-h-24 w-full rounded-xl bg-green-600 hover:bg-green-500 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 flex items-center justify-center gap-3 text-2xl ${ringFor('#')}`}
                 >
                   <span className="text-4xl">#</span>
                   <span>Perfetto</span>
@@ -844,7 +859,7 @@ export function ActionPanel() {
                       key={e.key}
                       onClick={() => handleEvaluationSelect(e.key)}
                       {...makeHold(e.key)}
-                      className={`min-h-16 p-3 rounded-xl ${e.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}
+                      className={`min-h-16 p-3 rounded-xl ${e.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75 ${ringFor(e.key)}`}
                     >
                       <div className="text-xl font-black">{e.key}</div>
                       <div className="text-xs">{e.label}</div>
@@ -855,7 +870,7 @@ export function ActionPanel() {
                   <button
                     onClick={() => handleEvaluationSelect('/')}
                     {...makeHold('/')}
-                    className="min-h-16 p-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75"
+                    className={`min-h-16 p-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75 ${ringFor('/')}`}
                   >
                     <div className="text-xl font-black">/</div>
                     <div className="text-xs">Murato</div>
@@ -863,7 +878,7 @@ export function ActionPanel() {
                   <button
                     onClick={() => handleEvaluationSelect('=')}
                     {...makeHold('=')}
-                    className="min-h-16 p-3 rounded-xl bg-red-700 hover:bg-red-600 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 border-2 border-destructive"
+                    className={`min-h-16 p-3 rounded-xl bg-red-700 hover:bg-red-600 text-primary-foreground font-black transition-all touch-target active:scale-95 duration-75 border-2 border-destructive ${ringFor('=')}`}
                   >
                     <div className="text-xl font-black">=</div>
                     <div className="text-xs">Errore</div>
@@ -873,7 +888,8 @@ export function ActionPanel() {
             );
           })()}
         </div>
-      )}
+        );
+      })()}
 
       {/* Step: Start Zone */}
       {step === 'startZone' && (
