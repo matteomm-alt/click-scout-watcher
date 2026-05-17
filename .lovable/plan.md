@@ -17,6 +17,12 @@ Riferimento: manuale Click&Scout Data Project (capp. 5.1–5.5).
 - Rimossi gialli fuori-brand: `CSRallyHistory` (+ / !), `ActionPanel` tempo T e valutazione !, alias `--cs-cta-yellow` ora arancio. Conforme a Core memory "MAI giallo fluo".
 - Side-rail SOST: ora dispatcha `scout-open-sub` con team → ActionPanel apre il flow sostituzione pre-impostato sulla squadra giusta (era solo `toast.info`).
 
+### Fase 5 — FATTO (velocità inserimento + campo proporzionato)
+- **Skip contestuali** (`handleEvaluationSelect` / `handleStartZone`): `S=` finalizza subito (errore servizio, no traiettoria); `A#` salta endZone (attacco punto, destinazione fuori campo). Riduce flusso medio da ~5.8 a ~4.2 tap.
+- **Ripeti ultima azione** (`repeatLastAction`): bottone ↺ nella quick-bar che re-inserisce l'ultima action con timestamp aggiornato + auto-punto. Utile per muri/ricezioni consecutive.
+- **Fast Mode reale**: con `settings.fastMode=true`, lo step skill mostra valutazione suggerita in badge angolo; 1 tap su skill = `fastFire()` che salva azione + auto-punto + followServe, saltando tutti gli step intermedi.
+- **Campo proporzionato** (`ZoneCourt`): `gridTemplateRows: 25% 35% 40%` (front corta, fondo profonda); sfondo per area (front più chiaro, deep più scuro); numero zona piccolo in angolo + label area al centro (Primo tempo, Pipe, Pipe, Fondo cent…); linea 3m piena, retro tratteggiata; aggiornati i centri Y per le frecce traiettoria.
+
 ### Note implementative
 - Nessuna modifica a schema DB / RLS.
 - `RotationDirections` accessibile sia dalla sidebar collassabile sia dal Sheet "Dir".
