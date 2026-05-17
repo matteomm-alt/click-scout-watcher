@@ -326,6 +326,60 @@ export function ActionPanel() {
   };
 
 
+  // Ripeti ultima azione: re-inserisce identica con timestamp aggiornato + auto punto
+  const repeatLastAction = () => {
+    const last = matchState.actions[matchState.actions.length - 1];
+    if (!last) return;
+    navigator.vibrate?.(25);
+    const now = new Date();
+    const ts = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    addAction({ ...last, timestamp: ts });
+    if (settings.autoPoint) {
+      if ((last.skill === 'A' || last.skill === 'S' || last.skill === 'B') && last.evaluation === '#') {
+        addPoint(last.team);
+      } else if (last.evaluation === '=' && (last.skill === 'S' || last.skill === 'A')) {
+        addPoint(last.team === 'home' ? 'away' : 'home');
+      }
+    }
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    setActionFlash(true);
+    flashTimerRef.current = setTimeout(() => setActionFlash(false), 280);
+    toast.success(`↺ Ripetuta: #${last.playerNumber} ${last.skill}${last.evaluation}`);
+  };
+
+  // Fast mode: valutazione suggerita per skill
+  const suggestedEvalFor = (skill: Skill): Evaluation =>
+    skill === 'R' ? settings.ricezionePredefinita
+    : skill === 'D' || skill === 'E' || skill === 'F' ? '+'
+    : '#';
+
+  const fastFire = (skill: Skill) => {
+    if (!selectedTeam || selectedPlayer === null) return;
+    const ev = suggestedEvalFor(skill);
+    setSelectedSkill(skill);
+    setSelectedEvaluation(ev);
+    // chiama finalize in modo sincrono usando i parametri (selectedSkill è async)
+    navigator.vibrate?.(25);
+    const now = new Date();
+    const ts = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    const teamPrefix = selectedTeam === 'home' ? '*' : 'a';
+    const playerStr = String(selectedPlayer).padStart(2, '0');
+    const code = `${teamPrefix}${playerStr}${skill}H${ev}~~~~~`;
+    addAction({ timestamp: ts, team: selectedTeam, playerNumber: selectedPlayer, skill, skillType: 'H', evaluation: ev, code });
+    if (settings.autoPoint) {
+      if ((skill === 'A' || skill === 'S' || skill === 'B') && ev === '#') addPoint(selectedTeam);
+      else if (ev === '=' && (skill === 'S' || skill === 'A')) addPoint(selectedTeam === 'home' ? 'away' : 'home');
+    }
+    const lastSkill = skill; const lastTeam = selectedTeam;
+    resetSelection();
+    if (settings.followServe) {
+      setTimeout(() => {
+        if (lastSkill === 'S') { setSelectedTeam(lastTeam === 'home' ? 'away' : 'home'); setStep('player'); }
+        else if (lastSkill === 'R' || lastSkill === 'E') { setSelectedTeam(lastTeam); setStep('player'); }
+      }, 50);
+    }
+  };
+
   const goBack = () => {
     if (step === 'endZone') {
       setEndZone(null);
