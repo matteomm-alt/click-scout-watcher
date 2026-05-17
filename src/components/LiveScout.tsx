@@ -66,7 +66,7 @@ const VISUAL_ROWS = [
 ];
 
 export function LiveScout() {
-  const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction, setSingleTeamMode, resetMatch } = useMatchStore();
   const { settings, setSetting, setSettings } = useScoutSettings();
   const [tab, setTab] = useState<RightTab>('log');
   const [mobileTab, setMobileTab] = useState<MobileTab>('scout');
@@ -80,6 +80,14 @@ export function LiveScout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rotationsOpen, setRotationsOpen] = useState(false);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
+
+  // Sync setting → store (singleTeamMode è già nel matchState, riusiamolo)
+  useEffect(() => {
+    if (matchState.singleTeamMode !== settings.singleTeamMode) {
+      setSingleTeamMode(settings.singleTeamMode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.singleTeamMode]);
 
   const awayHeatmap = useMemo(() => {
     const data: Record<number, number> = {};
@@ -360,11 +368,38 @@ export function LiveScout() {
         </Sheet>
 
         {matchState.isMatchEnded && (
-          <div className="glass rounded-xl p-4 text-center absolute inset-x-0 bottom-4 mx-3">
-            <h2 className="text-2xl font-bold text-primary">Partita Terminata</h2>
-            <p className="text-foreground text-lg">
-              {homeTeam.name} {matchState.homeSetsWon} - {matchState.awaySetsWon} {awayTeam.name}
-            </p>
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
+            <div className="glass rounded-2xl p-8 max-w-md w-full text-center space-y-5 border border-primary/30">
+              <div className="text-xs font-black uppercase tracking-widest text-primary">Partita Terminata</div>
+              <div className="text-5xl font-black italic">
+                {matchState.homeSetsWon} <span className="text-muted-foreground/40">—</span> {matchState.awaySetsWon}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="text-foreground font-bold">{homeTeam.name || 'Casa'}</span>
+                {' vs '}
+                <span className="text-foreground font-bold">{awayTeam.name || 'Ospite'}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    useMatchStore.setState((s) => ({ matchState: { ...s.matchState, isMatchEnded: false } }));
+                    toast.info('Rilevazione ripresa — set extra/scrimmage');
+                  }}
+                  className="min-h-14 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-95 transition-transform"
+                >
+                  ▶ Continua Rilevazione
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (confirm('Iniziare una nuova partita? I dati attuali andranno persi se non esportati.')) resetMatch(); }}
+                  className="min-h-14 rounded-xl bg-secondary text-foreground font-black uppercase tracking-wider text-sm active:scale-95 transition-transform border border-border"
+                >
+                  ✕ Nuova Partita
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground/70">Esporta in DVW dal pannello azione prima di uscire.</p>
+            </div>
           </div>
         )}
         </div>
