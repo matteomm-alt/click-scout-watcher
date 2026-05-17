@@ -1015,6 +1015,11 @@ export function ActionPanel() {
             className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95">
             <Undo2 className="w-3.5 h-3.5" /> Annulla
           </button>
+          <button onClick={repeatLastAction} disabled={matchState.actions.length === 0}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-[hsl(var(--cs-cta)/0.15)] border border-[hsl(var(--cs-cta)/0.4)] text-[hsl(var(--cs-cta))] hover:bg-[hsl(var(--cs-cta)/0.25)] text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95"
+            title="Ripeti ultima azione">
+            <RotateCcw className="w-3.5 h-3.5" /> Ripeti
+          </button>
           <button onClick={() => addPoint('home')}
             className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
             +1 {homeTeam.name || 'Casa'}
