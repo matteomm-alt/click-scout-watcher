@@ -13,18 +13,26 @@ interface ZoneCourtProps {
   suggestedZone?: number;
 }
 
-type Zone = { zone: number; col: number; row: number; label: string };
+type Zone = { zone: number; col: number; row: number; label: string; areaLabel: string };
 const ZONES: Zone[] = [
-  { zone: 4, col: 0, row: 0, label: 'Front Left' },
-  { zone: 3, col: 1, row: 0, label: 'Front Middle' },
-  { zone: 2, col: 2, row: 0, label: 'Front Right' },
-  { zone: 5, col: 0, row: 1, label: 'Back Left' },
-  { zone: 6, col: 1, row: 1, label: 'Back Middle' },
-  { zone: 1, col: 2, row: 1, label: 'Back Right' },
-  { zone: 7, col: 0, row: 2, label: 'Deep Left' },
-  { zone: 8, col: 1, row: 2, label: 'Deep Middle' },
-  { zone: 9, col: 2, row: 2, label: 'Deep Right' },
+  { zone: 4, col: 0, row: 0, label: 'Front Left',   areaLabel: 'Palla alta sx' },
+  { zone: 3, col: 1, row: 0, label: 'Front Middle', areaLabel: 'Primo tempo' },
+  { zone: 2, col: 2, row: 0, label: 'Front Right',  areaLabel: 'Palla alta dx' },
+  { zone: 5, col: 0, row: 1, label: 'Back Left',    areaLabel: 'Back sx' },
+  { zone: 6, col: 1, row: 1, label: 'Back Middle',  areaLabel: 'Pipe' },
+  { zone: 1, col: 2, row: 1, label: 'Back Right',   areaLabel: 'Back dx' },
+  { zone: 7, col: 0, row: 2, label: 'Deep Left',    areaLabel: 'Fondo sx' },
+  { zone: 8, col: 1, row: 2, label: 'Deep Middle',  areaLabel: 'Fondo cent.' },
+  { zone: 9, col: 2, row: 2, label: 'Deep Right',   areaLabel: 'Fondo dx' },
 ];
+
+// Proporzioni reali: front row corta (vicino rete), back e fondo più profondi
+const ROW_TEMPLATE = '25% 35% 40%';
+const ROW_BG: Record<number, string> = {
+  0: 'rgba(255,255,255,0.06)',   // front (4,3,2) — leggermente più chiaro
+  1: 'rgba(0,0,0,0.00)',         // back  (5,6,1) — neutro
+  2: 'rgba(0,0,0,0.12)',         // deep  (7,8,9) — leggermente più scuro
+};
 
 const SERVICE_ZONES = [
   { zone: 7, label: 'Sinistra' },
