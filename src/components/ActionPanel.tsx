@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType, ServeType, AttackCombo } from '@/types/volleyball';
 import { SKILL_LABELS, SERVE_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
-import { Undo2, Download, ArrowLeftRight, SkipForward, Shield, BarChart3 } from 'lucide-react';
+import { Undo2, Download, ArrowLeftRight, SkipForward, Shield, BarChart3, RotateCcw, Zap } from 'lucide-react';
 import { generateDVW } from '@/lib/dvwExporter';
 import { parseDvw } from '@/lib/dvwImporter';
 import { supabase } from '@/integrations/supabase/client';
@@ -190,6 +190,21 @@ export function ActionPanel() {
   const handleEvaluationSelect = (evaluation: Evaluation) => {
     navigator.vibrate?.(25);
     setSelectedEvaluation(evaluation);
+    // Skip contestuali (manuale Click&Scout):
+    // - Errore di servizio: nessuna traiettoria utile → finalizza
+    // - Attacco punto: la zona di destinazione è "fuori campo" → finalizza senza endZone
+    if (selectedSkill === 'S' && evaluation === '=') {
+      finalizeAction(evaluation, null, null);
+      return;
+    }
+    if (selectedSkill === 'A' && evaluation === '#') {
+      if (settings.showStartZone) {
+        setStep('startZone');
+      } else {
+        finalizeAction(evaluation, null, null);
+      }
+      return;
+    }
     if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showStartZone) {
       setStep('startZone');
     } else if (selectedSkill && TRAJECTORY_SKILLS.includes(selectedSkill) && settings.showEndZone) {
@@ -201,6 +216,11 @@ export function ActionPanel() {
 
   const handleStartZone = (zone: number) => {
     setStartZone(zone);
+    // Attacco punto: niente endZone (destinazione = fuori campo)
+    if (selectedSkill === 'A' && selectedEvaluation === '#') {
+      finalizeAction(selectedEvaluation, zone, null);
+      return;
+    }
     if (settings.showEndZone) {
       setStep('endZone');
     } else if (selectedEvaluation) {
@@ -305,6 +325,60 @@ export function ActionPanel() {
     }
   };
 
+
+  // Ripeti ultima azione: re-inserisce identica con timestamp aggiornato + auto punto
+  const repeatLastAction = () => {
+    const last = matchState.actions[matchState.actions.length - 1];
+    if (!last) return;
+    navigator.vibrate?.(25);
+    const now = new Date();
+    const ts = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    addAction({ ...last, timestamp: ts });
+    if (settings.autoPoint) {
+      if ((last.skill === 'A' || last.skill === 'S' || last.skill === 'B') && last.evaluation === '#') {
+        addPoint(last.team);
+      } else if (last.evaluation === '=' && (last.skill === 'S' || last.skill === 'A')) {
+        addPoint(last.team === 'home' ? 'away' : 'home');
+      }
+    }
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    setActionFlash(true);
+    flashTimerRef.current = setTimeout(() => setActionFlash(false), 280);
+    toast.success(`↺ Ripetuta: #${last.playerNumber} ${last.skill}${last.evaluation}`);
+  };
+
+  // Fast mode: valutazione suggerita per skill
+  const suggestedEvalFor = (skill: Skill): Evaluation =>
+    skill === 'R' ? settings.ricezionePredefinita
+    : skill === 'D' || skill === 'E' || skill === 'F' ? '+'
+    : '#';
+
+  const fastFire = (skill: Skill) => {
+    if (!selectedTeam || selectedPlayer === null) return;
+    const ev = suggestedEvalFor(skill);
+    setSelectedSkill(skill);
+    setSelectedEvaluation(ev);
+    // chiama finalize in modo sincrono usando i parametri (selectedSkill è async)
+    navigator.vibrate?.(25);
+    const now = new Date();
+    const ts = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    const teamPrefix = selectedTeam === 'home' ? '*' : 'a';
+    const playerStr = String(selectedPlayer).padStart(2, '0');
+    const code = `${teamPrefix}${playerStr}${skill}H${ev}~~~~~`;
+    addAction({ timestamp: ts, team: selectedTeam, playerNumber: selectedPlayer, skill, skillType: 'H', evaluation: ev, code });
+    if (settings.autoPoint) {
+      if ((skill === 'A' || skill === 'S' || skill === 'B') && ev === '#') addPoint(selectedTeam);
+      else if (ev === '=' && (skill === 'S' || skill === 'A')) addPoint(selectedTeam === 'home' ? 'away' : 'home');
+    }
+    const lastSkill = skill; const lastTeam = selectedTeam;
+    resetSelection();
+    if (settings.followServe) {
+      setTimeout(() => {
+        if (lastSkill === 'S') { setSelectedTeam(lastTeam === 'home' ? 'away' : 'home'); setStep('player'); }
+        else if (lastSkill === 'R' || lastSkill === 'E') { setSelectedTeam(lastTeam); setStep('player'); }
+      }, 50);
+    }
+  };
 
   const goBack = () => {
     if (step === 'endZone') {
@@ -741,16 +815,27 @@ export function ActionPanel() {
         })();
         const visibleSkills = isLiberoSelected ? skills.filter(s => ['R', 'D', 'F'].includes(s.key)) : skills;
         return (
-          <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+          <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
             <StepTip id="skill" text="Scegli il fondamentale: S battuta, R ricezione, A attacco, B muro, D difesa, E alzata, F freeball." />
+            {settings.fastMode && (
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-black text-[hsl(var(--cs-cta))]">
+                <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> Fast Mode — 1 tap = azione + valutazione suggerita</span>
+              </div>
+            )}
             <div className="grid grid-cols-4 gap-2">
-              {visibleSkills.map(s => (
-                <button key={s.key} onClick={() => handleSkillSelect(s.key)}
-                  className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}>
-                  <div className="text-2xl font-black">{s.key}</div>
-                  <div className="text-sm">{SKILL_LABELS[s.key]}</div>
-                </button>
-              ))}
+              {visibleSkills.map(s => {
+                const ev = suggestedEvalFor(s.key);
+                return (
+                  <button key={s.key} onClick={() => settings.fastMode ? fastFire(s.key) : handleSkillSelect(s.key)}
+                    className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75 relative`}>
+                    <div className="text-2xl font-black">{s.key}</div>
+                    <div className="text-sm">{SKILL_LABELS[s.key]}</div>
+                    {settings.fastMode && (
+                      <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/40 text-[10px] font-black">{ev}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             {isLiberoSelected && (
               <p className="text-xs text-muted-foreground text-center mt-1">Libero — solo ricezione, difesa, freeball</p>
@@ -940,6 +1025,11 @@ export function ActionPanel() {
           <button onClick={undoLastAction} disabled={matchState.actions.length === 0}
             className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95">
             <Undo2 className="w-3.5 h-3.5" /> Annulla
+          </button>
+          <button onClick={repeatLastAction} disabled={matchState.actions.length === 0}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-[hsl(var(--cs-cta)/0.15)] border border-[hsl(var(--cs-cta)/0.4)] text-[hsl(var(--cs-cta))] hover:bg-[hsl(var(--cs-cta)/0.25)] text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95"
+            title="Ripeti ultima azione">
+            <RotateCcw className="w-3.5 h-3.5" /> Ripeti
           </button>
           <button onClick={() => addPoint('home')}
             className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
