@@ -216,6 +216,11 @@ export function ActionPanel() {
 
   const handleStartZone = (zone: number) => {
     setStartZone(zone);
+    // Attacco punto: niente endZone (destinazione = fuori campo)
+    if (selectedSkill === 'A' && selectedEvaluation === '#') {
+      finalizeAction(selectedEvaluation, zone, null);
+      return;
+    }
     if (settings.showEndZone) {
       setStep('endZone');
     } else if (selectedEvaluation) {
