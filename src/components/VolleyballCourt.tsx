@@ -68,7 +68,9 @@ export function ZoneCourt({
   const zonePos = (zone: number) => {
     const z = ZONES.find((zz) => zz.zone === zone);
     if (!z) return null;
-    return { x: (z.col + 0.5) * (100 / 3), y: (z.row + 0.5) * (100 / 3) };
+    // Centri Y in base alle nuove proporzioni 25/35/40
+    const yCenters = [12.5, 42.5, 80];
+    return { x: (z.col + 0.5) * (100 / 3), y: yCenters[z.row] };
   };
 
   const startPos = startZone ? zonePos(startZone) : null;
@@ -83,15 +85,16 @@ export function ZoneCourt({
       </div>
 
       <div
-        className={`relative grid grid-cols-3 grid-rows-3 overflow-hidden border border-foreground/25 shadow-2xl ${showServiceBand ? '' : 'rounded-b-lg'} ${large ? 'aspect-[1/1]' : 'aspect-square'}`}
-        style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)' }}
+        className={`relative grid grid-cols-3 overflow-hidden border border-foreground/25 shadow-2xl ${showServiceBand ? '' : 'rounded-b-lg'} ${large ? 'aspect-[1/1]' : 'aspect-square'}`}
+        style={{ background: courtBg, boxShadow: 'inset 0 0 70px rgba(0,0,0,0.22)', gridTemplateRows: ROW_TEMPLATE }}
       >
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
           {[30, 60].map((p) => (
             <line key={`v-${p}`} x1={p} y1="0" x2={p} y2="90" stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           ))}
-          {[30, 60].map((p) => (
-            <line key={`h-${p}`} x1="0" y1={p} x2="90" y2={p} stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+          {/* Linee orizzontali alle nuove proporzioni: 25% e 60% (front/back/deep) */}
+          {[22.5, 54].map((p, i) => (
+            <line key={`h-${i}`} x1="0" y1={p} x2="90" y2={p} stroke={i === 0 ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.5)'} strokeWidth={i === 0 ? 1.6 : 1} strokeDasharray={i === 0 ? '0' : '4 4'} vectorEffect="non-scaling-stroke" />
           ))}
         </svg>
 
@@ -104,14 +107,19 @@ export function ZoneCourt({
               key={z.zone}
               onClick={() => zonesSelectable && onZoneClick?.(z.zone)}
               disabled={!zonesSelectable}
+              style={{ backgroundColor: ROW_BG[z.row] }}
               className={`relative flex items-center justify-center overflow-hidden transition-all duration-75 [touch-action:manipulation] ${
                 zonesSelectable ? 'cursor-pointer hover:bg-white/10 active:brightness-125 active:scale-95' : 'cursor-default'
               } ${state === 'start' ? 'bg-primary/35 ring-2 ring-primary ring-inset' : ''} ${state === 'end' ? 'bg-accent/35 ring-2 ring-accent ring-inset' : ''} ${state === 'hl' ? 'bg-white/10' : ''} ${suggestedZone === z.zone ? 'ring-2 ring-primary/60 animate-pulse' : ''}`}
             >
-              <span className={`select-none text-6xl md:text-7xl font-black italic leading-none ${active ? 'text-white/65' : 'text-white/22'}`}>
+              {/* Numero zona piccolo in angolo */}
+              <span className={`absolute left-1.5 top-1 text-[11px] font-black leading-none ${active ? 'text-white/85' : 'text-white/60'}`}>
                 {z.zone}
               </span>
-              <span className="absolute left-2 top-1.5 text-xs font-black uppercase tracking-widest text-white/40">{z.label}</span>
+              {/* Label area al centro */}
+              <span className={`select-none text-[10px] md:text-[11px] uppercase tracking-wider font-bold text-center px-1 leading-tight ${active ? 'text-white/90' : 'text-white/40'}`}>
+                {z.areaLabel}
+              </span>
             </button>
           );
         })}
