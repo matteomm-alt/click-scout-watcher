@@ -815,16 +815,27 @@ export function ActionPanel() {
         })();
         const visibleSkills = isLiberoSelected ? skills.filter(s => ['R', 'D', 'F'].includes(s.key)) : skills;
         return (
-          <div className="animate-in fade-in slide-in-from-right-2 duration-150">
+          <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
             <StepTip id="skill" text="Scegli il fondamentale: S battuta, R ricezione, A attacco, B muro, D difesa, E alzata, F freeball." />
+            {settings.fastMode && (
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-black text-[hsl(var(--cs-cta))]">
+                <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> Fast Mode — 1 tap = azione + valutazione suggerita</span>
+              </div>
+            )}
             <div className="grid grid-cols-4 gap-2">
-              {visibleSkills.map(s => (
-                <button key={s.key} onClick={() => handleSkillSelect(s.key)}
-                  className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75`}>
-                  <div className="text-2xl font-black">{s.key}</div>
-                  <div className="text-sm">{SKILL_LABELS[s.key]}</div>
-                </button>
-              ))}
+              {visibleSkills.map(s => {
+                const ev = suggestedEvalFor(s.key);
+                return (
+                  <button key={s.key} onClick={() => settings.fastMode ? fastFire(s.key) : handleSkillSelect(s.key)}
+                    className={`min-h-16 p-3 rounded-xl ${s.color} text-primary-foreground font-bold transition-all touch-target active:scale-95 duration-75 relative`}>
+                    <div className="text-2xl font-black">{s.key}</div>
+                    <div className="text-sm">{SKILL_LABELS[s.key]}</div>
+                    {settings.fastMode && (
+                      <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/40 text-[10px] font-black">{ev}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             {isLiberoSelected && (
               <p className="text-xs text-muted-foreground text-center mt-1">Libero — solo ricezione, difesa, freeball</p>
