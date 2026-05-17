@@ -54,7 +54,7 @@
     --cs-rail-fg: 210 30% 88%;
     --cs-court: 24 88% 58%;          /* arancio campo (variante più calda di --primary) */
     --cs-cta: 24 95% 53%;            /* arancio CTA grande (= --primary) */
-    --cs-cta-yellow: 48 96% 56%;     /* giallo "Show Serve Directions" */
+    --cs-cta-yellow: 24 95% 53%;     /* legacy alias → arancio (mai giallo per regola brand) */
     --cs-end-match: 142 71% 45%;     /* verde "Fine Incontro" */
   }
 }

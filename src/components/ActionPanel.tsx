@@ -588,7 +588,7 @@ export function ActionPanel() {
   const tempoColors: Record<string, string> = {
     Q: 'border-red-500/40 bg-red-500/10',
     M: 'border-orange-500/40 bg-orange-500/10',
-    T: 'border-yellow-500/40 bg-yellow-500/10',
+    T: 'border-[hsl(var(--cs-cta))]/40 bg-[hsl(var(--cs-cta))]/10',
     H: 'border-blue-500/40 bg-blue-500/10',
     O: 'border-muted-foreground/30 bg-muted/30',
     N: 'border-muted-foreground/30 bg-muted/30',
@@ -852,7 +852,7 @@ export function ActionPanel() {
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { key: '+' as Evaluation, color: 'bg-emerald-600 hover:bg-emerald-500', label: 'Positivo' },
-                    { key: '!' as Evaluation, color: 'bg-yellow-600 hover:bg-yellow-500', label: 'OK' },
+                    { key: '!' as Evaluation, color: 'bg-[hsl(var(--cs-cta)/0.7)] hover:bg-[hsl(var(--cs-cta)/0.85)]', label: 'OK' },
                     { key: '-' as Evaluation, color: 'bg-orange-600 hover:bg-orange-500', label: 'Negativo' },
                   ].map(e => (
                     <button
