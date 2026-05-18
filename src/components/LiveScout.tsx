@@ -294,7 +294,7 @@ export function LiveScout() {
             )}
 
             {/* Pannello azione — riusa ActionPanel */}
-            <div className="glass rounded-xl p-3 h-44 overflow-hidden flex-shrink-0 max-[900px]:p-2 max-[900px]:h-36">
+            <div className="glass rounded-xl p-3 h-44 overflow-hidden flex-shrink-0 max-[900px]:p-2 max-[900px]:h-36 max-xl:h-40">
               <div className="flex items-center justify-between mb-2 shrink-0 max-[900px]:mb-1">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Inserimento Azione
