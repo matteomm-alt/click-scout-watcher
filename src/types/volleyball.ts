@@ -214,6 +214,9 @@ export interface MatchState {
   timeouts: TimeoutRecord[];
   sanctions: Sanction[];
   setOverPending: boolean;
+  // Auto-swap libero: numero del centrale in panchina sostituito dal libero (per squadra)
+  homeBenchedMb?: number | null;
+  awayBenchedMb?: number | null;
 }
 
 // Re-export per comodità: i tipi delle formazioni di ricezione vivono in @/lib/receptionFormations

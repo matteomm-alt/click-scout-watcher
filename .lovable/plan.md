@@ -36,3 +36,14 @@ Riferimento: manuale Click&Scout Data Project (capp. 5.1–5.5).
 ### Note implementative
 - Nessuna modifica a schema DB / RLS.
 - `RotationDirections` accessibile sia dalla sidebar collassabile sia dal Sheet "Dir".
+
+### Fase 8 — FATTO (parità rotazioni & posizioni Click&Scout)
+- **Libero auto-swap** (`applyLiberoAutoSwap` in store): a ogni rotazione (`addPoint`/`rotateTeam`/`startMatch`/`endSet`) il libero entra al posto del centrale di seconda linea (P1/P5/P6) ed esce quando il MB ruota in prima linea. Tracking persistente via `matchState.home/awayBenchedMb`, incluso negli snapshot per `undoLastAction`.
+- **Animazione rotazione**: `transition-all duration-300 ease-out` sui cerchi giocatori in `VolleyballCourt` → spostamenti fluidi su sideout/rotazione manuale.
+- **Validazione lineup** (`validateLineup`): controllo duplicati/posizioni vuote eseguito a `startMatch` con toast warning.
+- **Badge front/back row**: marker F (arancio) / B (grigio) in alto-sx dei cerchi → distingue prima linea (attaccanti) da seconda linea (no attacco da dentro 3m).
+- **Doppio cambio 5-1** (`doubleSwitch51(team)`): bottone "5-1" nella quick-bar di `ActionPanel`. Trova S+OP in campo e riserve in panchina, esegue lo scambio incrociato (S→OP-riserva, OP→S-riserva), consuma 2 sostituzioni (0 in modalità libere).
+
+Note:
+- FIVB alignment P1-P6 visivo: skip (internamente coerente, eventuale fix futuro impatta anche `zoneLabels` e frecce).
+- Nessuna modifica DB.

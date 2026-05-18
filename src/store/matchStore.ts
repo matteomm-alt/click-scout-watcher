@@ -45,6 +45,8 @@ interface MatchStore {
   undoLastAction: () => void;
   undoRally: () => number;
   substitutePlayer: (team: 'home' | 'away', outNumber: number, inNumber: number) => void;
+  doubleSwitch51: (team: 'home' | 'away') => void;
+  validateLineup: (team: 'home' | 'away') => string[];
 
   // New: time-outs and sanctions
   callTimeout: (team: 'home' | 'away') => boolean;
@@ -121,9 +123,43 @@ const defaultMatchState: MatchState = {
   timeouts: [],
   sanctions: [],
   setOverPending: false,
+  homeBenchedMb: null,
+  awayBenchedMb: null,
 };
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
+
+// Auto-swap libero ↔ centrale di seconda linea.
+// Ritorna nuovo lineup + il numero del centrale "in panchina" (null se libero non in campo).
+const applyLiberoAutoSwap = (
+  lineup: number[],
+  team: Team,
+  liberoNum: number | null | undefined,
+  benchedMb: number | null | undefined,
+): { lineup: number[]; benchedMb: number | null } => {
+  if (!liberoNum) return { lineup: [...lineup], benchedMb: benchedMb ?? null };
+  const roleOf = (n: number) => team.players.find((p) => p.number === n)?.role;
+  const out = [...lineup];
+  let benched: number | null = benchedMb ?? null;
+  // Step 1: se il libero è in posizione di prima linea (P2/P3/P4 = idx 1,2,3) → ripristina MB
+  const liberoIdx = out.indexOf(liberoNum);
+  if (benched != null && liberoIdx >= 0 && [1, 2, 3].includes(liberoIdx)) {
+    out[liberoIdx] = benched;
+    benched = null;
+  }
+  // Step 2: se nessun MB in panchina, scambia il MB di seconda linea (P1/P5/P6 = idx 0,4,5) col libero
+  if (benched == null) {
+    for (const idx of [0, 4, 5]) {
+      const num = out[idx];
+      if (num && num !== liberoNum && roleOf(num) === 'M') {
+        benched = num;
+        out[idx] = liberoNum;
+        break;
+      }
+    }
+  }
+  return { lineup: out, benchedMb: benched };
+};
 
 const getLineupNumbers = (lineup: Lineup, team: Team): number[] => {
   const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
@@ -133,7 +169,7 @@ const getLineupNumbers = (lineup: Lineup, team: Team): number[] => {
   });
 };
 
-type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number };
+type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number; homeBenchedMb: number | null; awayBenchedMb: number | null };
 const lineupSnapshots: LineupSnapshot[] = [];
 
 export const useMatchStore = create<MatchStore>()(
@@ -183,17 +219,34 @@ export const useMatchStore = create<MatchStore>()(
           return idx >= 0 ? idx + 1 : 1;
         };
 
+        const homeBase = getLineupNumbers(homeLineup, homeTeam);
+        const awayBase = getLineupNumbers(awayLineup, awayTeam);
+        const homeLib = homeTeam.players.find((p) => p.id === homeLineup.libero1)?.number ?? null;
+        const awayLib = awayTeam.players.find((p) => p.id === awayLineup.libero1)?.number ?? null;
+        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null);
+        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null);
+
         set({
           matchState: {
             ...defaultMatchState,
             isMatchStarted: true,
-            homeCurrentLineup: getLineupNumbers(homeLineup, homeTeam),
-            awayCurrentLineup: getLineupNumbers(awayLineup, awayTeam),
+            homeCurrentLineup: home.lineup,
+            awayCurrentLineup: away.lineup,
+            homeBenchedMb: home.benchedMb,
+            awayBenchedMb: away.benchedMb,
             homeSetterPosition: findSetterPos(homeLineup),
             awaySetterPosition: findSetterPos(awayLineup),
             servingTeam: 'home',
           },
         });
+        // Validazione post-start
+        try {
+          const errs = [
+            ...get().validateLineup('home').map((e) => `Casa: ${e}`),
+            ...get().validateLineup('away').map((e) => `Ospite: ${e}`),
+          ];
+          errs.forEach((e) => toast.warning(e, { duration: 4000 }));
+        } catch {}
       },
 
       addAction: (actionData) => {
@@ -270,7 +323,7 @@ export const useMatchStore = create<MatchStore>()(
       setServingTeam: (team) => set((s) => ({ matchState: { ...s.matchState, servingTeam: team } })),
 
       addPoint: (team) => {
-        const { matchState, matchInfo } = get();
+        const { matchState, matchInfo, homeTeam, awayTeam, homeLineup, awayLineup } = get();
         lineupSnapshots.push({
           homeCurrentLineup: [...matchState.homeCurrentLineup],
           awayCurrentLineup: [...matchState.awayCurrentLineup],
@@ -279,6 +332,8 @@ export const useMatchStore = create<MatchStore>()(
           servingTeam: matchState.servingTeam,
           homeScore: matchState.homeScore,
           awayScore: matchState.awayScore,
+          homeBenchedMb: matchState.homeBenchedMb ?? null,
+          awayBenchedMb: matchState.awayBenchedMb ?? null,
           actionCount: matchState.actions.length,
         });
         const newHomeScore = team === 'home' ? matchState.homeScore + 1 : matchState.homeScore;
@@ -315,6 +370,9 @@ export const useMatchStore = create<MatchStore>()(
           if (needsRotation) {
             const lineupKey = scoringTeam === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
             const setterPosKey = scoringTeam === 'home' ? 'homeSetterPosition' : 'awaySetterPosition';
+            const benchedKey = scoringTeam === 'home' ? 'homeBenchedMb' : 'awayBenchedMb';
+            const teamData = scoringTeam === 'home' ? homeTeam : awayTeam;
+            const teamLineup = scoringTeam === 'home' ? homeLineup : awayLineup;
             const lineup = [...newState[lineupKey]];
             const first = lineup[0];
             for (let i = 0; i < 5; i++) lineup[i] = lineup[i + 1];
@@ -323,7 +381,11 @@ export const useMatchStore = create<MatchStore>()(
             const currentSetterPos = newState[setterPosKey];
             const newSetterPos = currentSetterPos === 1 ? 6 : currentSetterPos - 1;
 
-            newState[lineupKey] = lineup;
+            const liberoNum = teamData.players.find((p) => p.id === teamLineup.libero1)?.number ?? null;
+            const swapped = applyLiberoAutoSwap(lineup, teamData, liberoNum, newState[benchedKey] ?? null);
+
+            newState[lineupKey] = swapped.lineup;
+            newState[benchedKey] = swapped.benchedMb;
             newState[setterPosKey] = newSetterPos;
           }
 
@@ -334,14 +396,24 @@ export const useMatchStore = create<MatchStore>()(
       rotateTeam: (team) => set((s) => {
         const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
         const setterPosKey = team === 'home' ? 'homeSetterPosition' : 'awaySetterPosition';
+        const benchedKey = team === 'home' ? 'homeBenchedMb' : 'awayBenchedMb';
+        const teamData = team === 'home' ? s.homeTeam : s.awayTeam;
+        const teamLineup = team === 'home' ? s.homeLineup : s.awayLineup;
         const lineup = [...s.matchState[lineupKey]];
         const first = lineup[0];
         for (let i = 0; i < 5; i++) lineup[i] = lineup[i + 1];
         lineup[5] = first;
         const currentSetterPos = s.matchState[setterPosKey];
         const newSetterPos = currentSetterPos === 1 ? 6 : currentSetterPos - 1;
+        const liberoNum = teamData.players.find((p) => p.id === teamLineup.libero1)?.number ?? null;
+        const swapped = applyLiberoAutoSwap(lineup, teamData, liberoNum, s.matchState[benchedKey] ?? null);
         return {
-          matchState: { ...s.matchState, [lineupKey]: lineup, [setterPosKey]: newSetterPos },
+          matchState: {
+            ...s.matchState,
+            [lineupKey]: swapped.lineup,
+            [benchedKey]: swapped.benchedMb,
+            [setterPosKey]: newSetterPos,
+          },
         };
       }),
 
@@ -359,6 +431,12 @@ export const useMatchStore = create<MatchStore>()(
           const maxSets = Math.ceil(s.matchInfo.totalSets / 2);
           const isMatchOver = newHomeSetsWon >= maxSets || newAwaySetsWon >= maxSets;
 
+          const homeBase = getLineupNumbers(s.homeLineup, s.homeTeam);
+          const awayBase = getLineupNumbers(s.awayLineup, s.awayTeam);
+          const homeLib = s.homeTeam.players.find((p) => p.id === s.homeLineup.libero1)?.number ?? null;
+          const awayLib = s.awayTeam.players.find((p) => p.id === s.awayLineup.libero1)?.number ?? null;
+          const home = applyLiberoAutoSwap(homeBase, s.homeTeam, homeLib, null);
+          const away = applyLiberoAutoSwap(awayBase, s.awayTeam, awayLib, null);
           return {
             matchState: {
               ...s.matchState,
@@ -375,8 +453,10 @@ export const useMatchStore = create<MatchStore>()(
               awaySubstitutionsUsed: 0,
               homeSetterPosition: 1,
               awaySetterPosition: 1,
-              homeCurrentLineup: getLineupNumbers(s.homeLineup, s.homeTeam),
-              awayCurrentLineup: getLineupNumbers(s.awayLineup, s.awayTeam),
+              homeCurrentLineup: home.lineup,
+              awayCurrentLineup: away.lineup,
+              homeBenchedMb: home.benchedMb,
+              awayBenchedMb: away.benchedMb,
               setOverPending: false,
             },
           };
@@ -402,6 +482,8 @@ export const useMatchStore = create<MatchStore>()(
               servingTeam: snapshot.servingTeam,
               homeScore: snapshot.homeScore,
               awayScore: snapshot.awayScore,
+              homeBenchedMb: snapshot.homeBenchedMb,
+              awayBenchedMb: snapshot.awayBenchedMb,
             } : {}),
             actions: s.matchState.actions.slice(0, -1),
           },
@@ -448,6 +530,62 @@ export const useMatchStore = create<MatchStore>()(
           if (idx >= 0) lineup[idx] = inNumber;
           return { matchState: { ...s.matchState, [lineupKey]: lineup, [usedKey]: s.matchState[usedKey] + 1 } };
         });
+      },
+
+      doubleSwitch51: (team) => {
+        const { matchState, homeTeam, awayTeam, homeLineup, awayLineup } = get();
+        const teamData = team === 'home' ? homeTeam : awayTeam;
+        const teamLineup = team === 'home' ? homeLineup : awayLineup;
+        const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+        const usedKey = team === 'home' ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
+        const onCourt = matchState[lineupKey];
+
+        const setterOnCourt = onCourt.find((n) => teamData.players.find((p) => p.number === n)?.role === 'S');
+        const oppOnCourt = onCourt.find((n) => teamData.players.find((p) => p.number === n)?.role === 'OP');
+
+        // Riserva: ruolo opposto a chi è in campo (S↔OP) e non già in lineup
+        const reserveOpp = teamData.players.find((p) => p.role === 'OP' && !onCourt.includes(p.number));
+        const reserveSetter = teamData.players.find((p) => p.role === 'S' && !onCourt.includes(p.number));
+
+        if (!setterOnCourt || !oppOnCourt || !reserveOpp || !reserveSetter) {
+          toast.error('Doppio cambio: servono S e OP in campo + riserve S/OP in panchina');
+          return;
+        }
+        let libere = false;
+        try { libere = !!JSON.parse(localStorage.getItem('scout_settings') || '{}').sostituzioniLibere; } catch {}
+        if (!libere && matchState[usedKey] >= 5) {
+          toast.error('Sostituzioni insufficienti per doppio cambio');
+          return;
+        }
+        set((s) => {
+          const lineup = [...s.matchState[lineupKey]];
+          const sIdx = lineup.indexOf(setterOnCourt);
+          const oIdx = lineup.indexOf(oppOnCourt);
+          if (sIdx >= 0) lineup[sIdx] = reserveOpp.number;
+          if (oIdx >= 0) lineup[oIdx] = reserveSetter.number;
+          return {
+            matchState: {
+              ...s.matchState,
+              [lineupKey]: lineup,
+              [usedKey]: s.matchState[usedKey] + (libere ? 0 : 2),
+            },
+          };
+        });
+        toast.success(`Doppio cambio: #${setterOnCourt}→#${reserveOpp.number}, #${oppOnCourt}→#${reserveSetter.number}`);
+      },
+
+      validateLineup: (team) => {
+        const { matchState } = get();
+        const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+        const errors: string[] = [];
+        if (lineup.length !== 6) errors.push('Formazione incompleta (servono 6 giocatori)');
+        const seen = new Set<number>();
+        for (const n of lineup) {
+          if (!n) { errors.push('Posizione vuota nella formazione'); continue; }
+          if (seen.has(n)) errors.push(`#${n} presente in più posizioni`);
+          seen.add(n);
+        }
+        return errors;
       },
 
       callTimeout: (team) => {
