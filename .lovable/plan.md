@@ -57,3 +57,7 @@ Note:
 - **FIVB overlap validation** (`validateLineup`): controlla coppie opposte P1↔P4 / P2↔P5 / P3↔P6 per S+OP (5-1), 2×S (5-2), 2×M e 2×O. Toast warning a `startMatch` per ogni violazione.
 - **Combo chain** (`settings.comboChain`): dopo un'azione NON terminale (terminale = S=, A#/=//, B#/=//) mantiene team+player e salta direttamente allo step skill. Cumulabile con followServe (chain ha priorità).
 - **Scorciatoie tastiera** (`settings.keyboardShortcuts`, default ON): H/V = home/away, cifre 1-99 con commit auto a 600ms o 2 cifre / Enter = giocatore, S/R/A/B/D/E/F = skill, #/+/-/=//! = valutazione, 1-9 = zone, Esc = indietro. Ignora input quando il focus è su INPUT/TEXTAREA/SELECT.
+
+### Fase 11 — FATTO (snapshot completo + layout FIVB)
+- **Snapshot 6 giocatori per azione** (`ScoutAction`): aggiunti campi `servingTeam`, `homeBenchedMb`, `awayBenchedMb`, `rallyId` (`${set}-${homeScore}-${awayScore}`), `phase` (K1 sideout / K2 break). Popolati in `addAction`. Sblocca mappe ricezione retrospettive corrette, raggruppamento per rally, calcolo efficienza K1/K2.
+- **Layout FIVB / DataVolley** (`VolleyballCourt`): riscritte `positions` (away) e `positionsHome` per usare l'asse X come front/back row (vicino/lontano dalla rete) invece di Y. Convenzione FIVB rispettata: P2=front-right, P3=front-center, P4=front-left, P1=back-right (battitore), P6=back-center, P5=back-left. Watermark zone (`zoneLabels` / `zoneLabelsHome`) aggiornati di conseguenza con zona 1/5/6 in back-row e 7/8/9 in area servizio.
