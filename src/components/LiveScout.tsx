@@ -254,7 +254,7 @@ export function LiveScout() {
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
             <div className="flex-1 min-h-0 flex gap-1 items-stretch">
-              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden">
+              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden max-xl:max-h-[320px]">
                 <VolleyballCourt
                   compactAspect
                   heatmapData={awayHeatmap}
