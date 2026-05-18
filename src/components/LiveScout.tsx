@@ -25,11 +25,12 @@ import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
 
-type RightTab = 'log' | 'stats' | 'heat' | 'compare' | 'sets' | 'dir';
-type MobileTab = 'scout' | 'quick' | 'live';
+type RightTab = 'log' | 'live' | 'stats' | 'heat' | 'compare' | 'sets' | 'dir';
+type MobileTab = 'scout' | 'quick' | 'stats' | 'log';
 
 const TABS: { key: RightTab; label: string }[] = [
   { key: 'log', label: 'Log' },
+  { key: 'live', label: 'Live' },
   { key: 'stats', label: 'Stats' },
   { key: 'heat', label: 'Heat' },
   { key: 'compare', label: 'VS' },
@@ -40,7 +41,8 @@ const TABS: { key: RightTab; label: string }[] = [
 const MOBILE_TABS = [
   { key: 'scout' as const, label: 'Scout', icon: Target },
   { key: 'quick' as const, label: 'Quick', icon: Zap },
-  { key: 'live' as const, label: 'Live', icon: BarChart2 },
+  { key: 'stats' as const, label: 'Stats', icon: BarChart2 },
+  { key: 'log' as const, label: 'Log', icon: List },
 ];
 
 const RILEVAZIONE_ROWS = [
