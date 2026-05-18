@@ -21,6 +21,8 @@ export type ScoutSettings = {
   followServe: boolean;
   singleTeamMode: boolean;
   singleTeamSide: 'home' | 'away';
+  showServeStartZone: boolean;
+  showRallyHistory: boolean;
 };
 
 const STORAGE_KEY = 'scout_settings';
@@ -46,6 +48,8 @@ export const defaultScoutSettings: ScoutSettings = {
   followServe: false,
   singleTeamMode: false,
   singleTeamSide: 'home',
+  showServeStartZone: false,
+  showRallyHistory: true,
 };
 
 export const SCOUT_PRESETS = {

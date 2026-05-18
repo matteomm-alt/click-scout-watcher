@@ -43,6 +43,7 @@ interface MatchStore {
   rotateTeam: (team: 'home' | 'away') => void;
   endSet: () => void;
   undoLastAction: () => void;
+  undoRally: () => number;
   substitutePlayer: (team: 'home' | 'away', outNumber: number, inNumber: number) => void;
 
   // New: time-outs and sanctions
@@ -407,10 +408,36 @@ export const useMatchStore = create<MatchStore>()(
         };
       }),
 
+      undoRally: () => {
+        const { matchState } = get();
+        const acts = matchState.actions;
+        // Trova l'inizio del rally corrente: dopo l'ultima azione "terminale"
+        // (S/A/B con # = punto, o evaluation = errore, o / murato).
+        let startIdx = 0;
+        for (let i = acts.length - 1; i >= 0; i--) {
+          const a = acts[i];
+          const terminal =
+            (a.evaluation === '#' && (a.skill === 'S' || a.skill === 'A' || a.skill === 'B')) ||
+            a.evaluation === '=' ||
+            a.evaluation === '/';
+          if (terminal) { startIdx = i + 1; break; }
+        }
+        const removed = acts.length - startIdx;
+        if (removed === 0) return 0;
+        for (let k = 0; k < removed; k++) {
+          // riusa undoLastAction per ripristinare lineup snapshots correttamente
+          get().undoLastAction();
+        }
+        return removed;
+      },
+
       substitutePlayer: (team, outNumber, inNumber) => {
         const { matchState } = get();
         const usedKey = team === 'home' ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
-        if (matchState[usedKey] >= 6) {
+        // Lettura runtime di sostituzioniLibere (evita dipendenza da hook)
+        let libere = false;
+        try { libere = !!JSON.parse(localStorage.getItem('scout_settings') || '{}').sostituzioniLibere; } catch {}
+        if (!libere && matchState[usedKey] >= 6) {
           toast.error('Limite sostituzioni raggiunto (6/6)');
           return;
         }

@@ -20,7 +20,7 @@ const TRAJECTORY_SKILLS: Skill[] = ['S', 'R', 'A', 'D'];
 export function ActionPanel() {
   const {
     homeTeam, awayTeam, matchState,
-    addAction, addPoint, undoLastAction,
+    addAction, addPoint, undoLastAction, undoRally,
     substitutePlayer, endSet,
     matchInfo, homeLineup, awayLineup,
   } = useMatchStore();
@@ -88,9 +88,25 @@ export function ActionPanel() {
       setSubOut(null);
       setShowSubstitution(true);
     };
+    const onUndoRally = () => {
+      const removed = undoRally();
+      if (removed > 0) toast.success(`↩ Rally annullato (${removed} azioni)`);
+      else toast.info('Nessuna azione nel rally corrente');
+      resetSelection();
+    };
     window.addEventListener('scout-open-sub', onOpenSub);
-    return () => window.removeEventListener('scout-open-sub', onOpenSub);
+    window.addEventListener('scout-undo-rally', onUndoRally);
+    return () => {
+      window.removeEventListener('scout-open-sub', onOpenSub);
+      window.removeEventListener('scout-undo-rally', onUndoRally);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Indicatore "attendendo input" sotto al campo
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('scout-waiting', { detail: { step, active: step !== 'team' } }));
+  }, [step]);
 
   const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
@@ -168,6 +184,11 @@ export function ActionPanel() {
         return;
       }
     }
+    // Area di battuta 2-tap: zona partenza servizio (1/5/6) prima del tipo
+    if (skill === 'S' && settings.showServeStartZone) {
+      setStep('startZone');
+      return;
+    }
     if (skill === 'S' && settings.showServeType) {
       setStep('serveType');
     } else if (skill === 'A' && settings.showAttackCombo) {
@@ -216,6 +237,12 @@ export function ActionPanel() {
 
   const handleStartZone = (zone: number) => {
     setStartZone(zone);
+    // Servizio con area di battuta 2-tap: dopo zona origine → tipo battuta / valutazione
+    if (selectedSkill === 'S' && !selectedEvaluation) {
+      if (settings.showServeType) setStep('serveType');
+      else setStep('evaluation');
+      return;
+    }
     // Attacco punto: niente endZone (destinazione = fuori campo)
     if (selectedSkill === 'A' && selectedEvaluation === '#') {
       finalizeAction(selectedEvaluation, zone, null);
@@ -911,6 +938,21 @@ export function ActionPanel() {
         return (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
           <StepTip id="evaluation" text="Valuta il colpo: tocca la valutazione in giallo per conferma rapida, oppure scegli un'altra. Tieni premuto per chiudere senza zone." />
+          {settings.autoCorrelation && selectedSkill && (
+            <div className="text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--cs-cta))] flex items-center gap-1.5 px-2 py-1 rounded bg-[hsl(var(--cs-cta)/0.08)] border border-[hsl(var(--cs-cta)/0.25)]">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[hsl(var(--cs-cta))] animate-pulse" />
+              <span>Auto-correlazione:</span>
+              <span className="text-foreground/80 normal-case tracking-normal">
+                {selectedSkill === 'S' && 'S → ricezione avversaria'}
+                {selectedSkill === 'R' && 'R → alzata stessa squadra'}
+                {selectedSkill === 'E' && 'E → attacco stessa squadra'}
+                {selectedSkill === 'A' && 'A → muro/difesa avversaria'}
+                {selectedSkill === 'B' && 'B → freeball/contrattacco'}
+                {selectedSkill === 'D' && 'D → alzata stessa squadra'}
+                {selectedSkill === 'F' && 'F → alzata stessa squadra'}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-warning font-bold">
             <span>💡 Suggerito: {suggested}</span>
             <button type="button" onClick={() => handleEvaluationSelect(suggested)} className="px-3 py-1 rounded bg-warning/15 border border-warning/40 text-warning hover:bg-warning/25 active:scale-95">
@@ -1030,6 +1072,12 @@ export function ActionPanel() {
             className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-[hsl(var(--cs-cta)/0.15)] border border-[hsl(var(--cs-cta)/0.4)] text-[hsl(var(--cs-cta))] hover:bg-[hsl(var(--cs-cta)/0.25)] text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95"
             title="Ripeti ultima azione">
             <RotateCcw className="w-3.5 h-3.5" /> Ripeti
+          </button>
+          <button onClick={() => window.dispatchEvent(new CustomEvent('scout-undo-rally'))}
+            disabled={matchState.actions.length === 0}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95"
+            title="Annulla intero rally corrente">
+            <Undo2 className="w-3.5 h-3.5" /> Rally
           </button>
           <button onClick={() => addPoint('home')}
             className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
