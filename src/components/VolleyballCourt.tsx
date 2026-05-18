@@ -192,6 +192,19 @@ export function VolleyballCourt({
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
 
+  // Highlight pulsante del server: si attiva al cambio di squadra al servizio e si spegne dopo 3s
+  const [serverPulseActive, setServerPulseActive] = useState(true);
+  const lastServingRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = `${matchState.servingTeam}-${matchState.homeScore}-${matchState.awayScore}`;
+    if (lastServingRef.current !== key) {
+      lastServingRef.current = key;
+      setServerPulseActive(true);
+      const t = setTimeout(() => setServerPulseActive(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [matchState.servingTeam, matchState.homeScore, matchState.awayScore]);
+
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
     const player = teamData.players.find((p) => p.number === num);
