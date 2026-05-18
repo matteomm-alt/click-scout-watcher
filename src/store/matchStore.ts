@@ -579,6 +579,8 @@ export const useMatchStore = create<MatchStore>()(
         }
         return errors;
       },
+
+      callTimeout: (team) => {
         const { matchState } = get();
         const usedKey = team === 'home' ? 'homeTimeoutsUsed' : 'awayTimeoutsUsed';
         if (matchState[usedKey] >= 2) return false;
