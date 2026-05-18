@@ -47,3 +47,9 @@ Riferimento: manuale Click&Scout Data Project (capp. 5.1–5.5).
 Note:
 - FIVB alignment P1-P6 visivo: skip (internamente coerente, eventuale fix futuro impatta anche `zoneLabels` e frecce).
 - Nessuna modifica DB.
+
+### Fase 9 — FATTO (rifinitura parità C&S)
+- **Validazione ruoli/overlap** (`validateLineup`): libero in prima linea = errore; nessun S in campo = errore. Toast warning a `startMatch`.
+- **Cartellini Y/R nel rail laterale** (`CSSideRail`): bottoni giallo/rosso (cartellino squadra, playerNumber=null) collegati a `addSanction`. Toast feedback.
+- **Pallina animata ultima azione**: cerchio arancio che traccia start→end via `<animateMotion>` sull'ultima azione con traiettoria (durata 0.7s + fade), key cambiata a ogni nuova action per re-trigger.
+- **Top giocatori live** in `InSetStatsPanel`: breakdown per (team × giocatore × skill) con #/=/eff%, filtro tot≥2, top 6 per volume nel set corrente.
