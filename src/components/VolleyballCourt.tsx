@@ -213,34 +213,50 @@ export function VolleyballCourt({
       : { number: num, name: `#${num}`, role: undefined, isLibero: false };
   };
 
+  // === Layout FIVB / DataVolley (Phase 11) ===
+  // Il campo è renderizzato orizzontalmente con la NET verticale al centro.
+  // AWAY: half sinistro, net sul lato destro (x=100). Coach @ x=0 guarda verso +x.
+  //   → Front row vicino alla rete (x≈78), back row lontano (x≈28).
+  //   → Asse y: coach guarda +x quindi la sua DESTRA è in basso (y=100) e la SINISTRA in alto.
+  // HOME: half destro, net sul lato sinistro (x=0). Coach @ x=100 guarda verso -x.
+  //   → Front row vicino alla rete (x≈22), back row lontano (x≈72).
+  //   → Asse y: coach guarda -x quindi la sua DESTRA è in alto (y=0) e la SINISTRA in basso.
+  // Convenzione FIVB: P2=front-right, P3=front-center, P4=front-left,
+  //                   P1=back-right (battitore), P6=back-center, P5=back-left.
   const positions: Record<number, { zone: number; x: number; y: number }> = {
-    1: { zone: 1, x: 83.33, y: 75 },
-    2: { zone: 2, x: 83.33, y: 25 },
-    3: { zone: 3, x: 50,    y: 25 },
-    4: { zone: 4, x: 16.66, y: 25 },
-    5: { zone: 5, x: 16.66, y: 75 },
-    6: { zone: 6, x: 50,    y: 75 },
+    // AWAY
+    2: { zone: 2, x: 78, y: 78 },   // front-right (coach destro = basso schermo)
+    3: { zone: 3, x: 78, y: 50 },   // front-center
+    4: { zone: 4, x: 78, y: 22 },   // front-left
+    1: { zone: 1, x: 28, y: 78 },   // back-right (battitore)
+    6: { zone: 6, x: 28, y: 50 },   // back-center
+    5: { zone: 5, x: 28, y: 22 },   // back-left
   };
 
   const positionsHome: Record<number, { zone: number; x: number; y: number }> = {
-    1: { zone: 1, x: 16.66, y: 75 },
-    2: { zone: 2, x: 16.66, y: 25 },
-    3: { zone: 3, x: 50,    y: 25 },
-    4: { zone: 4, x: 83.33, y: 25 },
-    5: { zone: 5, x: 83.33, y: 75 },
-    6: { zone: 6, x: 50,    y: 75 },
+    // HOME
+    2: { zone: 2, x: 22, y: 22 },   // front-right (coach destro = alto schermo)
+    3: { zone: 3, x: 22, y: 50 },   // front-center
+    4: { zone: 4, x: 22, y: 78 },   // front-left
+    1: { zone: 1, x: 72, y: 22 },   // back-right (battitore)
+    6: { zone: 6, x: 72, y: 50 },   // back-center
+    5: { zone: 5, x: 72, y: 78 },   // back-left
   };
 
+  // Watermark zone numeriche: stesse coordinate dei giocatori per le 6 di rotazione,
+  // più 7/8/9 nell'area di servizio (dietro la back row).
   const zoneLabels = [
-    { zone: 4, x: 16.66, y: 16.66 }, { zone: 3, x: 50, y: 16.66 }, { zone: 2, x: 83.33, y: 16.66 },
-    { zone: 5, x: 16.66, y: 50 }, { zone: 6, x: 50, y: 50 }, { zone: 1, x: 83.33, y: 50 },
-    { zone: 7, x: 16.66, y: 83.33 }, { zone: 8, x: 50, y: 83.33 }, { zone: 9, x: 83.33, y: 83.33 },
+    // AWAY (front x=78, back x=48, deep x=18)
+    { zone: 4, x: 78, y: 16 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 84 },
+    { zone: 5, x: 48, y: 16 }, { zone: 6, x: 48, y: 50 }, { zone: 1, x: 48, y: 84 },
+    { zone: 7, x: 18, y: 16 }, { zone: 8, x: 18, y: 50 }, { zone: 9, x: 18, y: 84 },
   ];
 
   const zoneLabelsHome = [
-    { zone: 2, x: 16.66, y: 16.66 }, { zone: 3, x: 50, y: 16.66 }, { zone: 4, x: 83.33, y: 16.66 },
-    { zone: 1, x: 16.66, y: 50 },    { zone: 6, x: 50, y: 50 },    { zone: 5, x: 83.33, y: 50 },
-    { zone: 9, x: 16.66, y: 83.33 }, { zone: 8, x: 50, y: 83.33 }, { zone: 7, x: 83.33, y: 83.33 },
+    // HOME (front x=22, back x=52, deep x=82)
+    { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
+    { zone: 5, x: 52, y: 78 }, { zone: 6, x: 52, y: 50 }, { zone: 1, x: 52, y: 22 },
+    { zone: 7, x: 82, y: 78 }, { zone: 8, x: 82, y: 50 }, { zone: 9, x: 82, y: 22 },
   ];
 
   const zonePct = (zone: number) => {
