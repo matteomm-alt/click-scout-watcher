@@ -554,6 +554,106 @@ export function LiveScout() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Info partita / rally corrente */}
+      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Info partita</DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const acts = matchState.actions;
+            // Rally corrente: dalle ultime azioni fino a un terminale escluso
+            let startIdx = 0;
+            for (let i = acts.length - 1; i >= 0; i--) {
+              const a = acts[i];
+              const terminal =
+                (a.evaluation === '#' && (a.skill === 'S' || a.skill === 'A' || a.skill === 'B')) ||
+                a.evaluation === '=' || a.evaluation === '/';
+              if (terminal) { startIdx = i + 1; break; }
+            }
+            const rally = acts.slice(startIdx);
+            return (
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-secondary/40 p-3">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Set</div>
+                    <div className="text-2xl font-black">{matchState.currentSet}</div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 p-3">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Punteggio</div>
+                    <div className="text-2xl font-black">{matchState.homeScore} – {matchState.awayScore}</div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 p-3">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Set vinti</div>
+                    <div className="text-2xl font-black">{matchState.homeSetsWon} – {matchState.awaySetsWon}</div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 p-3">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Al servizio</div>
+                    <div className="text-base font-black">{matchState.servingTeam === 'home' ? (homeTeam.name || 'Casa') : matchState.servingTeam === 'away' ? (awayTeam.name || 'Ospite') : '—'}</div>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Rally corrente ({rally.length} azioni)</div>
+                  {rally.length === 0 ? (
+                    <div className="text-xs text-muted-foreground italic py-2">Rally vuoto — in attesa del prossimo punto.</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {rally.map((a) => (
+                        <span key={a.id} className={`px-2 py-1 rounded text-[11px] font-mono font-bold ${a.team === 'home' ? 'bg-[hsl(var(--cs-team-a)/0.25)]' : 'bg-[hsl(var(--cs-team-b)/0.25)]'}`}>
+                          #{a.playerNumber}{a.skill}{a.evaluation}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent('scout-undo-rally')); setInfoOpen(false); }}
+                  disabled={rally.length === 0}
+                  className="min-h-12 w-full rounded-lg bg-destructive/10 border border-destructive/30 text-destructive font-bold disabled:opacity-30">
+                  ↩ Annulla rally corrente
+                </button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modifiche: ultime azioni + edit/delete + controlli avanzati */}
+      <Dialog open={modifyOpen} onOpenChange={setModifyOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifiche azioni</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Ultime 20 azioni — tocca per modificare</div>
+            <div className="space-y-1 max-h-[40vh] overflow-y-auto">
+              {recentActions.slice(0, 20).map((a) => (
+                <div key={a.id} className="flex items-center gap-2 px-2 py-2 rounded-md bg-secondary/40 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${a.team === 'home' ? 'bg-[hsl(var(--cs-team-a))]' : 'bg-[hsl(var(--cs-team-b))]'}`} />
+                  <span className="font-mono font-bold text-primary">#{a.playerNumber}</span>
+                  <span className="text-muted-foreground">{SKILL_LABELS[a.skill]}</span>
+                  <span className="font-bold ml-1">{a.evaluation}</span>
+                  {(a.startZone || a.endZone) && (
+                    <span className="text-primary/60 text-[10px] font-mono">{a.startZone || '?'}→{a.endZone || '?'}</span>
+                  )}
+                  <span className="ml-auto text-[10px] text-muted-foreground/60">{a.timestamp}</span>
+                  <button type="button" onClick={() => { openEditAction(a); setModifyOpen(false); }}
+                    className="min-h-8 px-2 rounded bg-secondary text-xs font-bold hover:bg-secondary/70 active:scale-95">Modifica</button>
+                  <button type="button" onClick={() => { if (confirm('Eliminare questa azione?')) deleteAction(a.id); }}
+                    className="min-h-8 px-2 rounded bg-destructive/15 text-destructive text-xs font-bold hover:bg-destructive/25 active:scale-95">✕</button>
+                </div>
+              ))}
+              {recentActions.length === 0 && (
+                <div className="text-xs text-muted-foreground italic text-center py-4">Nessuna azione</div>
+              )}
+            </div>
+            <button type="button" onClick={() => { setModifyOpen(false); setControlsOpen(true); }}
+              className="min-h-12 w-full rounded-lg bg-secondary border border-border text-sm font-bold text-foreground">
+              ⚙ Controlli avanzati (sanzioni / reset / score manuale)
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
