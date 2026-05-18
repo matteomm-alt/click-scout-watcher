@@ -20,7 +20,7 @@ const TRAJECTORY_SKILLS: Skill[] = ['S', 'R', 'A', 'D'];
 export function ActionPanel() {
   const {
     homeTeam, awayTeam, matchState,
-    addAction, addPoint, undoLastAction,
+    addAction, addPoint, undoLastAction, undoRally,
     substitutePlayer, endSet,
     matchInfo, homeLineup, awayLineup,
   } = useMatchStore();
