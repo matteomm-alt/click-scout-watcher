@@ -53,3 +53,7 @@ Note:
 - **Cartellini Y/R nel rail laterale** (`CSSideRail`): bottoni giallo/rosso (cartellino squadra, playerNumber=null) collegati a `addSanction`. Toast feedback.
 - **Pallina animata ultima azione**: cerchio arancio che traccia start→end via `<animateMotion>` sull'ultima azione con traiettoria (durata 0.7s + fade), key cambiata a ogni nuova action per re-trigger.
 - **Top giocatori live** in `InSetStatsPanel`: breakdown per (team × giocatore × skill) con #/=/eff%, filtro tot≥2, top 6 per volume nel set corrente.
+### Fase 10 — FATTO (velocità operatore + correttezza dati)
+- **FIVB overlap validation** (`validateLineup`): controlla coppie opposte P1↔P4 / P2↔P5 / P3↔P6 per S+OP (5-1), 2×S (5-2), 2×M e 2×O. Toast warning a `startMatch` per ogni violazione.
+- **Combo chain** (`settings.comboChain`): dopo un'azione NON terminale (terminale = S=, A#/=//, B#/=//) mantiene team+player e salta direttamente allo step skill. Cumulabile con followServe (chain ha priorità).
+- **Scorciatoie tastiera** (`settings.keyboardShortcuts`, default ON): H/V = home/away, cifre 1-99 con commit auto a 600ms o 2 cifre / Enter = giocatore, S/R/A/B/D/E/F = skill, #/+/-/=//! = valutazione, 1-9 = zone, Esc = indietro. Ignora input quando il focus è su INPUT/TEXTAREA/SELECT.
