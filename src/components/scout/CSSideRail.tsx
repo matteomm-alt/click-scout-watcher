@@ -45,19 +45,19 @@ export interface CSSideRailProps {
   onTimeout?: () => void;
   onSubstitution?: () => void;
   onPoint?: () => void;
-  timeoutsAvailable?: number; // 0..2
+  onYellowCard?: () => void;
+  onRedCard?: () => void;
+  timeoutsAvailable?: number;
   showPoint?: boolean;
 }
 
-/**
- * Colonna laterale verticale stile Click&Scout: TO / SOST / Punto.
- * Larghezza fissa 56px. Etichette ruotate a 90°.
- */
 export function CSSideRail({
   side,
   onTimeout,
   onSubstitution,
   onPoint,
+  onYellowCard,
+  onRedCard,
   timeoutsAvailable = 2,
   showPoint = true,
 }: CSSideRailProps) {
@@ -74,6 +74,28 @@ export function CSSideRail({
         disabled={!onTimeout}
       />
       <RailButton label="SOST" onClick={onSubstitution} disabled={!onSubstitution} />
+      {onYellowCard && (
+        <button
+          type="button"
+          onClick={onYellowCard}
+          className="h-9 w-full flex items-center justify-center transition active:scale-95 bg-yellow-500/85 text-black hover:brightness-110"
+          aria-label="Cartellino giallo"
+          title="Cartellino giallo"
+        >
+          <span className="text-xs font-black tracking-widest">Y</span>
+        </button>
+      )}
+      {onRedCard && (
+        <button
+          type="button"
+          onClick={onRedCard}
+          className="h-9 w-full flex items-center justify-center transition active:scale-95 bg-red-600 text-white hover:brightness-110"
+          aria-label="Cartellino rosso"
+          title="Cartellino rosso"
+        >
+          <span className="text-xs font-black tracking-widest">R</span>
+        </button>
+      )}
       {showPoint && (
         <RailButton label="Punto" onClick={onPoint} highlight="point" disabled={!onPoint} />
       )}
