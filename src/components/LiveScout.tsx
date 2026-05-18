@@ -383,7 +383,7 @@ export function LiveScout() {
               <SheetTitle>Pannello statistiche</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-3">
-              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+              <div className="grid grid-cols-7 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
                 {TABS.map((t) => {
                   const active = tab === t.key;
                   return (
