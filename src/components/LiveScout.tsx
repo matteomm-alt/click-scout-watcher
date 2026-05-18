@@ -56,7 +56,9 @@ const RILEVAZIONE_ROWS = [
   { key: 'autoCorrelation' as const, label: 'Correlazione automatica', description: 'Aggiorna automaticamente battuta/ricezione e attacco/muro' },
   { key: 'showMuroVincente' as const, label: 'Muro vincente', description: 'Rileva chi fa muro punto' },
   { key: 'showMuroErrato' as const, label: 'Muro errato', description: 'Rileva chi commette errore a muro' },
-  { key: 'sostituzioniLibere' as const, label: 'Sostituzioni libere', description: 'Senza vincoli regolamento' },
+  { key: 'sostituzioniLibere' as const, label: 'Sostituzioni libere', description: 'Senza vincoli regolamento (beach/giovanili).' },
+  { key: 'showServeStartZone' as const, label: 'Area di battuta (2-tap)', description: 'Chiedi zona di partenza del servizio (1/5/6) prima del tipo battuta.' },
+  { key: 'showRallyHistory' as const, label: 'Mostra storico rally', description: 'Striscia orizzontale con le ultime azioni sotto al campo.' },
 ];
 
 const VISUAL_ROWS = [
