@@ -336,7 +336,7 @@ export function LiveScout() {
           />
 
           {/* Colonna analisi rotazioni — collassabile, default chiusa */}
-          <div className={`flex-shrink-0 transition-all duration-200 ${rotationsOpen ? 'w-[180px]' : 'w-7'} flex`}>
+          <div className={`hidden xl:flex flex-shrink-0 transition-all duration-200 ${rotationsOpen ? 'w-[180px]' : 'w-7'}`}>
             <button
               type="button"
               onClick={() => setRotationsOpen((v) => !v)}
