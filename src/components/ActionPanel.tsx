@@ -221,6 +221,12 @@ export function ActionPanel() {
 
   const handleStartZone = (zone: number) => {
     setStartZone(zone);
+    // Servizio con area di battuta 2-tap: dopo zona origine → tipo battuta / valutazione
+    if (selectedSkill === 'S' && !selectedEvaluation) {
+      if (settings.showServeType) setStep('serveType');
+      else setStep('evaluation');
+      return;
+    }
     // Attacco punto: niente endZone (destinazione = fuori campo)
     if (selectedSkill === 'A' && selectedEvaluation === '#') {
       finalizeAction(selectedEvaluation, zone, null);
