@@ -43,6 +43,7 @@ interface MatchStore {
   rotateTeam: (team: 'home' | 'away') => void;
   endSet: () => void;
   undoLastAction: () => void;
+  undoRally: () => number;
   substitutePlayer: (team: 'home' | 'away', outNumber: number, inNumber: number) => void;
 
   // New: time-outs and sanctions
