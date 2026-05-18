@@ -473,6 +473,8 @@ export function ActionPanel() {
     URL.revokeObjectURL(url);
     toast.success('File CSV scaricato');
   };
+
+  const importAndAnalyze = async () => {
     if (!user || !lastDvwText) return;
     setImportingDvw(true);
     try {
