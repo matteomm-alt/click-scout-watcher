@@ -423,6 +423,12 @@ export const useMatchStore = create<MatchStore>()(
           const maxSets = Math.ceil(s.matchInfo.totalSets / 2);
           const isMatchOver = newHomeSetsWon >= maxSets || newAwaySetsWon >= maxSets;
 
+          const homeBase = getLineupNumbers(s.homeLineup, s.homeTeam);
+          const awayBase = getLineupNumbers(s.awayLineup, s.awayTeam);
+          const homeLib = s.homeTeam.players.find((p) => p.id === s.homeLineup.libero1)?.number ?? null;
+          const awayLib = s.awayTeam.players.find((p) => p.id === s.awayLineup.libero1)?.number ?? null;
+          const home = applyLiberoAutoSwap(homeBase, s.homeTeam, homeLib, null);
+          const away = applyLiberoAutoSwap(awayBase, s.awayTeam, awayLib, null);
           return {
             matchState: {
               ...s.matchState,
@@ -439,8 +445,10 @@ export const useMatchStore = create<MatchStore>()(
               awaySubstitutionsUsed: 0,
               homeSetterPosition: 1,
               awaySetterPosition: 1,
-              homeCurrentLineup: getLineupNumbers(s.homeLineup, s.homeTeam),
-              awayCurrentLineup: getLineupNumbers(s.awayLineup, s.awayTeam),
+              homeCurrentLineup: home.lineup,
+              awayCurrentLineup: away.lineup,
+              homeBenchedMb: home.benchedMb,
+              awayBenchedMb: away.benchedMb,
               setOverPending: false,
             },
           };
@@ -466,6 +474,8 @@ export const useMatchStore = create<MatchStore>()(
               servingTeam: snapshot.servingTeam,
               homeScore: snapshot.homeScore,
               awayScore: snapshot.awayScore,
+              homeBenchedMb: snapshot.homeBenchedMb,
+              awayBenchedMb: snapshot.awayBenchedMb,
             } : {}),
             actions: s.matchState.actions.slice(0, -1),
           },
