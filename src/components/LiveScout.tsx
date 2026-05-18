@@ -81,7 +81,20 @@ export function LiveScout() {
   const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rotationsOpen, setRotationsOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [modifyOpen, setModifyOpen] = useState(false);
+  const [waitingStep, setWaitingStep] = useState<string | null>(null);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
+
+  // Indicatore "attendendo input" emesso da ActionPanel
+  useEffect(() => {
+    const onWait = (e: Event) => {
+      const d = (e as CustomEvent<{ step: string; active: boolean }>).detail;
+      setWaitingStep(d.active ? d.step : null);
+    };
+    window.addEventListener('scout-waiting', onWait);
+    return () => window.removeEventListener('scout-waiting', onWait);
+  }, []);
 
   // Sync setting → store (singleTeamMode è già nel matchState, riusiamolo)
   useEffect(() => {
