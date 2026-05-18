@@ -20,6 +20,9 @@ interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: st
 interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
 
 const ROLES = ['Titolare', 'Riserva', 'Libero', 'Fuori lista'];
+const ROLE_TO_DB: Record<string, 'titolare' | 'riserva' | 'libero' | 'non_convocato'> = {
+  Titolare: 'titolare', Riserva: 'riserva', Libero: 'libero', 'Fuori lista': 'non_convocato',
+};
 const ROLE_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   Titolare: 'default', Riserva: 'secondary', Libero: 'outline', 'Fuori lista': 'destructive',
 };
@@ -104,7 +107,7 @@ export function ConvocazioniView() {
   };
 
   const updateRole = async (playerId: string, role: string) => {
-    const dbRole = role.toLowerCase() as 'titolare' | 'riserva' | 'libero' | 'non_convocato';
+    const dbRole = ROLE_TO_DB[role] ?? 'titolare';
     await supabase.from('convocation_players').update({ role: dbRole }).eq('id', playerId);
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, role_in_match: role } : p));
   };
