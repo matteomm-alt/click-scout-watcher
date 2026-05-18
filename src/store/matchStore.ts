@@ -239,6 +239,14 @@ export const useMatchStore = create<MatchStore>()(
             servingTeam: 'home',
           },
         });
+        // Validazione post-start
+        try {
+          const errs = [
+            ...get().validateLineup('home').map((e) => `Casa: ${e}`),
+            ...get().validateLineup('away').map((e) => `Ospite: ${e}`),
+          ];
+          errs.forEach((e) => toast.warning(e, { duration: 4000 }));
+        } catch {}
       },
 
       addAction: (actionData) => {
