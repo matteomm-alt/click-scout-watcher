@@ -315,7 +315,7 @@ export const useMatchStore = create<MatchStore>()(
       setServingTeam: (team) => set((s) => ({ matchState: { ...s.matchState, servingTeam: team } })),
 
       addPoint: (team) => {
-        const { matchState, matchInfo } = get();
+        const { matchState, matchInfo, homeTeam, awayTeam, homeLineup, awayLineup } = get();
         lineupSnapshots.push({
           homeCurrentLineup: [...matchState.homeCurrentLineup],
           awayCurrentLineup: [...matchState.awayCurrentLineup],
@@ -324,6 +324,8 @@ export const useMatchStore = create<MatchStore>()(
           servingTeam: matchState.servingTeam,
           homeScore: matchState.homeScore,
           awayScore: matchState.awayScore,
+          homeBenchedMb: matchState.homeBenchedMb ?? null,
+          awayBenchedMb: matchState.awayBenchedMb ?? null,
           actionCount: matchState.actions.length,
         });
         const newHomeScore = team === 'home' ? matchState.homeScore + 1 : matchState.homeScore;
@@ -360,6 +362,9 @@ export const useMatchStore = create<MatchStore>()(
           if (needsRotation) {
             const lineupKey = scoringTeam === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
             const setterPosKey = scoringTeam === 'home' ? 'homeSetterPosition' : 'awaySetterPosition';
+            const benchedKey = scoringTeam === 'home' ? 'homeBenchedMb' : 'awayBenchedMb';
+            const teamData = scoringTeam === 'home' ? homeTeam : awayTeam;
+            const teamLineup = scoringTeam === 'home' ? homeLineup : awayLineup;
             const lineup = [...newState[lineupKey]];
             const first = lineup[0];
             for (let i = 0; i < 5; i++) lineup[i] = lineup[i + 1];
@@ -368,7 +373,11 @@ export const useMatchStore = create<MatchStore>()(
             const currentSetterPos = newState[setterPosKey];
             const newSetterPos = currentSetterPos === 1 ? 6 : currentSetterPos - 1;
 
-            newState[lineupKey] = lineup;
+            const liberoNum = teamData.players.find((p) => p.id === teamLineup.libero1)?.number ?? null;
+            const swapped = applyLiberoAutoSwap(lineup, teamData, liberoNum, newState[benchedKey] ?? null);
+
+            newState[lineupKey] = swapped.lineup;
+            newState[benchedKey] = swapped.benchedMb;
             newState[setterPosKey] = newSetterPos;
           }
 
@@ -379,14 +388,24 @@ export const useMatchStore = create<MatchStore>()(
       rotateTeam: (team) => set((s) => {
         const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
         const setterPosKey = team === 'home' ? 'homeSetterPosition' : 'awaySetterPosition';
+        const benchedKey = team === 'home' ? 'homeBenchedMb' : 'awayBenchedMb';
+        const teamData = team === 'home' ? s.homeTeam : s.awayTeam;
+        const teamLineup = team === 'home' ? s.homeLineup : s.awayLineup;
         const lineup = [...s.matchState[lineupKey]];
         const first = lineup[0];
         for (let i = 0; i < 5; i++) lineup[i] = lineup[i + 1];
         lineup[5] = first;
         const currentSetterPos = s.matchState[setterPosKey];
         const newSetterPos = currentSetterPos === 1 ? 6 : currentSetterPos - 1;
+        const liberoNum = teamData.players.find((p) => p.id === teamLineup.libero1)?.number ?? null;
+        const swapped = applyLiberoAutoSwap(lineup, teamData, liberoNum, s.matchState[benchedKey] ?? null);
         return {
-          matchState: { ...s.matchState, [lineupKey]: lineup, [setterPosKey]: newSetterPos },
+          matchState: {
+            ...s.matchState,
+            [lineupKey]: swapped.lineup,
+            [benchedKey]: swapped.benchedMb,
+            [setterPosKey]: newSetterPos,
+          },
         };
       }),
 
