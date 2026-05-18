@@ -575,8 +575,9 @@ export const useMatchStore = create<MatchStore>()(
       },
 
       validateLineup: (team) => {
-        const { matchState } = get();
+        const { matchState, homeTeam, awayTeam } = get();
         const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+        const teamData = team === 'home' ? homeTeam : awayTeam;
         const errors: string[] = [];
         if (lineup.length !== 6) errors.push('Formazione incompleta (servono 6 giocatori)');
         const seen = new Set<number>();
@@ -585,6 +586,16 @@ export const useMatchStore = create<MatchStore>()(
           if (seen.has(n)) errors.push(`#${n} presente in più posizioni`);
           seen.add(n);
         }
+        // Overlap/ruoli FIVB: libero MAI in prima linea (P2/P3/P4 = idx 1,2,3)
+        const roleOf = (n: number) => teamData.players.find((p) => p.number === n)?.role;
+        const liberoFront = [1, 2, 3].some((idx) => {
+          const r = roleOf(lineup[idx] ?? 0);
+          return r === 'L';
+        });
+        if (liberoFront) errors.push('Libero in prima linea (illegale)');
+        // Roster minimo per 5-1: almeno 1 setter e 1 opposto fra i 6 in campo
+        const onCourtRoles = lineup.map((n) => roleOf(n)).filter(Boolean);
+        if (!onCourtRoles.includes('S')) errors.push('Nessun palleggiatore in campo');
         return errors;
       },
 

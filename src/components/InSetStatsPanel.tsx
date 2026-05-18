@@ -28,6 +28,28 @@ export function InSetStatsPanel() {
     [matchState.actions, matchState.currentSet]
   );
 
+  // Breakdown per giocatore (set corrente)
+  const playerBreakdown = useMemo(() => {
+    type Row = { team: 'home' | 'away'; num: number; name: string; skill: Skill; tot: number; pts: number; err: number; eff: number };
+    const map = new Map<string, Omit<Row, 'eff'>>();
+    for (const a of setActions) {
+      if (!['S', 'R', 'A', 'B'].includes(a.skill)) continue;
+      const key = `${a.team}-${a.playerNumber}-${a.skill}`;
+      const td = a.team === 'home' ? homeTeam : awayTeam;
+      const pl = td.players.find(p => p.number === a.playerNumber);
+      const cur = map.get(key) ?? { team: a.team, num: a.playerNumber, name: pl?.lastName ?? `#${a.playerNumber}`, skill: a.skill, tot: 0, pts: 0, err: 0 };
+      cur.tot++;
+      if (a.evaluation === '#') cur.pts++;
+      if (a.evaluation === '=') cur.err++;
+      map.set(key, cur);
+    }
+    return Array.from(map.values())
+      .map((v): Row => ({ ...v, eff: v.tot > 0 ? Math.round(((v.pts - v.err) / v.tot) * 100) : 0 }))
+      .filter(r => r.tot >= 2)
+      .sort((a, b) => b.tot - a.tot)
+      .slice(0, 6);
+  }, [setActions, homeTeam, awayTeam]);
+
   const { sideoutHome, breakHome, sideoutAway, breakAway } = useMemo(() => {
     // Conta rally per fase: serving = chi batte; side-out = punto del ricevente
     const points = setActions.filter(a => (a.skill === 'S' || a.skill === 'A' || a.skill === 'B') && (a.evaluation === '#' || a.evaluation === '='));
@@ -110,6 +132,32 @@ export function InSetStatsPanel() {
           {renderRow('away')}
         </div>
       </div>
+
+      {/* Breakdown per giocatore — set corrente */}
+      {playerBreakdown.length > 0 && (
+        <div className="rounded-xl border border-border/40 bg-secondary/30 p-2">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1.5 text-center">
+            Top giocatori · set {matchState.currentSet}
+          </div>
+          <div className="space-y-1">
+            {playerBreakdown.map((r) => {
+              const skMeta = SKILL_META.find(s => s.key === r.skill)!;
+              const effPos = r.eff >= 0;
+              return (
+                <div key={`${r.team}-${r.num}-${r.skill}`} className="flex items-center gap-2 text-[11px]">
+                  <span className={`w-1.5 h-1.5 rounded-full ${r.team === 'home' ? 'bg-blue-400' : 'bg-red-400'}`} />
+                  <span className="font-mono font-black tabular-nums w-7 text-right">#{r.num}</span>
+                  <span className="truncate flex-1 font-bold">{r.name}</span>
+                  <span className={`inline-flex items-center justify-center min-w-5 h-4 px-1 rounded text-[9px] font-black ${skMeta.color}`}>{r.skill}</span>
+                  <span className="text-emerald-400 font-bold tabular-nums w-6 text-right">#{r.pts}</span>
+                  <span className="text-destructive font-bold tabular-nums w-6 text-right">={r.err}</span>
+                  <span className={`font-black tabular-nums w-12 text-right ${effPos ? 'text-emerald-400' : 'text-destructive'}`}>{r.eff > 0 ? '+' : ''}{r.eff}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
