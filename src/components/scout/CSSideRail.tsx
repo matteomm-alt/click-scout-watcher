@@ -63,7 +63,7 @@ export function CSSideRail({
 }: CSSideRailProps) {
   return (
     <div
-      className={`w-14 flex flex-col gap-[2px] rounded-md overflow-hidden border border-border/40 ${
+      className={`w-14 max-xl:w-12 xl:w-14 flex flex-col gap-[2px] rounded-md overflow-hidden border border-border/40 ${
         side === 'left' ? 'mr-1' : 'ml-1'
       }`}
     >
