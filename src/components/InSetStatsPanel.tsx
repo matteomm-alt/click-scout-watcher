@@ -132,6 +132,36 @@ export function InSetStatsPanel() {
           {renderRow('away')}
         </div>
       </div>
+
+      {/* Breakdown per giocatore — set corrente */}
+      {playerBreakdown.length > 0 && (
+        <div className="rounded-xl border border-border/40 bg-secondary/30 p-2">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1.5 text-center">
+            Top giocatori · set {matchState.currentSet}
+          </div>
+          <div className="space-y-1">
+            {playerBreakdown.map((r) => {
+              const skMeta = SKILL_META.find(s => s.key === r.skill)!;
+              const effPos = r.eff >= 0;
+              return (
+                <div key={`${r.team}-${r.num}-${r.skill}`} className="flex items-center gap-2 text-[11px]">
+                  <span className={`w-1.5 h-1.5 rounded-full ${r.team === 'home' ? 'bg-blue-400' : 'bg-red-400'}`} />
+                  <span className="font-mono font-black tabular-nums w-7 text-right">#{r.num}</span>
+                  <span className="truncate flex-1 font-bold">{r.name}</span>
+                  <span className={`inline-flex items-center justify-center min-w-5 h-4 px-1 rounded text-[9px] font-black ${skMeta.color}`}>{r.skill}</span>
+                  <span className="text-emerald-400 font-bold tabular-nums w-6 text-right">#{r.pts}</span>
+                  <span className="text-destructive font-bold tabular-nums w-6 text-right">={r.err}</span>
+                  <span className={`font-black tabular-nums w-12 text-right ${effPos ? 'text-emerald-400' : 'text-destructive'}`}>{r.eff > 0 ? '+' : ''}{r.eff}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+      </div>
     </div>
   );
 }
