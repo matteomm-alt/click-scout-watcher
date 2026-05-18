@@ -524,7 +524,61 @@ export const useMatchStore = create<MatchStore>()(
         });
       },
 
-      callTimeout: (team) => {
+      doubleSwitch51: (team) => {
+        const { matchState, homeTeam, awayTeam, homeLineup, awayLineup } = get();
+        const teamData = team === 'home' ? homeTeam : awayTeam;
+        const teamLineup = team === 'home' ? homeLineup : awayLineup;
+        const lineupKey = team === 'home' ? 'homeCurrentLineup' : 'awayCurrentLineup';
+        const usedKey = team === 'home' ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
+        const onCourt = matchState[lineupKey];
+
+        const setterOnCourt = onCourt.find((n) => teamData.players.find((p) => p.number === n)?.role === 'S');
+        const oppOnCourt = onCourt.find((n) => teamData.players.find((p) => p.number === n)?.role === 'OP');
+
+        // Riserva: ruolo opposto a chi è in campo (S↔OP) e non già in lineup
+        const reserveOpp = teamData.players.find((p) => p.role === 'OP' && !onCourt.includes(p.number));
+        const reserveSetter = teamData.players.find((p) => p.role === 'S' && !onCourt.includes(p.number));
+
+        if (!setterOnCourt || !oppOnCourt || !reserveOpp || !reserveSetter) {
+          toast.error('Doppio cambio: servono S e OP in campo + riserve S/OP in panchina');
+          return;
+        }
+        let libere = false;
+        try { libere = !!JSON.parse(localStorage.getItem('scout_settings') || '{}').sostituzioniLibere; } catch {}
+        if (!libere && matchState[usedKey] >= 5) {
+          toast.error('Sostituzioni insufficienti per doppio cambio');
+          return;
+        }
+        set((s) => {
+          const lineup = [...s.matchState[lineupKey]];
+          const sIdx = lineup.indexOf(setterOnCourt);
+          const oIdx = lineup.indexOf(oppOnCourt);
+          if (sIdx >= 0) lineup[sIdx] = reserveOpp.number;
+          if (oIdx >= 0) lineup[oIdx] = reserveSetter.number;
+          return {
+            matchState: {
+              ...s.matchState,
+              [lineupKey]: lineup,
+              [usedKey]: s.matchState[usedKey] + (libere ? 0 : 2),
+            },
+          };
+        });
+        toast.success(`Doppio cambio: #${setterOnCourt}→#${reserveOpp.number}, #${oppOnCourt}→#${reserveSetter.number}`);
+      },
+
+      validateLineup: (team) => {
+        const { matchState } = get();
+        const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+        const errors: string[] = [];
+        if (lineup.length !== 6) errors.push('Formazione incompleta (servono 6 giocatori)');
+        const seen = new Set<number>();
+        for (const n of lineup) {
+          if (!n) { errors.push('Posizione vuota nella formazione'); continue; }
+          if (seen.has(n)) errors.push(`#${n} presente in più posizioni`);
+          seen.add(n);
+        }
+        return errors;
+      },
         const { matchState } = get();
         const usedKey = team === 'home' ? 'homeTimeoutsUsed' : 'awayTimeoutsUsed';
         if (matchState[usedKey] >= 2) return false;
