@@ -226,8 +226,8 @@ export function LiveScout() {
 
         {/* TOOLBAR Info / Modifiche / ⚙ — Fine Incontro */}
         <CSToolbar
-          onInfo={() => toast.info(`${homeTeam.name || 'Casa'} vs ${awayTeam.name || 'Ospite'} • Set ${matchState.currentSet}`)}
-          onModify={() => setControlsOpen(true)}
+          onInfo={() => setInfoOpen(true)}
+          onModify={() => setModifyOpen(true)}
           onSettings={() => setSettingsOpen(true)}
           onEndMatch={() => setShowEndSetDialog(true)}
         />
