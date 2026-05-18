@@ -334,6 +334,8 @@ export function LiveScout() {
               else toast.error('Time-out non disponibili');
             }}
             onSubstitution={() => window.dispatchEvent(new CustomEvent('scout-open-sub', { detail: { team: 'away' } }))}
+            onYellowCard={() => { useMatchStore.getState().addSanction('away', 'yellow', null); toast.warning('🟨 Giallo Ospite'); }}
+            onRedCard={() => { useMatchStore.getState().addSanction('away', 'red', null); toast.error('🟥 Rosso Ospite'); }}
             onPoint={() => useMatchStore.getState().addPoint('away')}
           />
 
