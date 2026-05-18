@@ -181,8 +181,9 @@ export function ComunicazioniView() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="urgente">Urgente</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
                   <SelectItem value="normale">Normale</SelectItem>
-                  <SelectItem value="info">Info</SelectItem>
+                  <SelectItem value="bassa">Bassa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
