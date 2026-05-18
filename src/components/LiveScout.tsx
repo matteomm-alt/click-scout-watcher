@@ -485,7 +485,7 @@ export function LiveScout() {
         <div className="min-h-0 flex-1 overflow-y-auto glass rounded-xl p-3">
           {mobileTab === 'scout' && <ActionPanel />}
           {mobileTab === 'quick' && <QuickActions />}
-          {mobileTab === 'live' && (
+          {mobileTab === 'stats' && (
             <div className="space-y-4">
               {timeoutBanner && (
                 <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
@@ -493,8 +493,13 @@ export function LiveScout() {
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
-              <ActionLog />
+              <InSetStatsPanel />
               <PlayerStatsPanel />
+            </div>
+          )}
+          {mobileTab === 'log' && (
+            <div className="space-y-4">
+              <ActionLog />
               <AttackHeatmap team="all" />
             </div>
           )}
