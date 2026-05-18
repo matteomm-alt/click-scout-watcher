@@ -1120,6 +1120,10 @@ export function ActionPanel() {
             className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto transition-transform duration-75 active:scale-95 border border-primary/20">
             <Download className="w-3.5 h-3.5" /> DVW
           </button>
+          <button onClick={handleExportCSV}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 text-sm font-bold transition-transform duration-75 active:scale-95 border border-border">
+            <Download className="w-3.5 h-3.5" /> CSV
+          </button>
         </div>
       )}
     <Dialog open={showEndSetDialog} onOpenChange={setShowEndSetDialog}>
