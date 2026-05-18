@@ -21,7 +21,7 @@ export function ActionPanel() {
   const {
     homeTeam, awayTeam, matchState,
     addAction, addPoint, undoLastAction, undoRally,
-    substitutePlayer, endSet,
+    substitutePlayer, endSet, doubleSwitch51,
     matchInfo, homeLineup, awayLineup,
   } = useMatchStore();
 
@@ -1111,6 +1111,14 @@ export function ActionPanel() {
           <button onClick={() => setShowLibero(true)}
             className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-sm font-bold transition-transform duration-75 active:scale-95">
             <Shield className="w-3.5 h-3.5" /> Libero
+          </button>
+          <button onClick={() => {
+              const t: 'home' | 'away' = matchState.servingTeam === 'home' ? 'home' : 'away';
+              doubleSwitch51(t);
+            }}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-[hsl(var(--cs-cta)/0.1)] border border-[hsl(var(--cs-cta)/0.3)] text-[hsl(var(--cs-cta))] hover:bg-[hsl(var(--cs-cta)/0.2)] text-sm font-bold transition-transform duration-75 active:scale-95"
+            title="Doppio cambio 5-1 (S↔OP con riserve)">
+            <ArrowLeftRight className="w-3.5 h-3.5" /> 5-1
           </button>
           <button onClick={() => setShowEndSetDialog(true)}
             className="min-h-14 px-4 rounded-lg bg-warning/10 border border-warning/30 text-warning hover:bg-warning/20 text-sm font-black transition-transform duration-75 active:scale-95">
