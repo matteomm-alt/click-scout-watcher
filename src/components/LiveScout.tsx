@@ -280,24 +280,43 @@ export function LiveScout() {
               )}
             </div>
 
+            {/* Barra "attendendo input" — indicatore step in corso */}
+            {waitingStep && (
+              <div className="h-0.5 w-full rounded-full overflow-hidden bg-[hsl(var(--cs-cta)/0.15)] shrink-0">
+                <div
+                  className="h-full bg-[hsl(var(--cs-cta))] animate-pulse"
+                  style={{ width: `${Math.min(100, ['team','player','skill','serveType','attackCombo','evaluation','startZone','endZone'].indexOf(waitingStep) * 14 + 14)}%` }}
+                />
+              </div>
+            )}
+
             {/* Pannello azione — riusa ActionPanel */}
             <div className="glass rounded-xl p-3 h-44 overflow-hidden flex-shrink-0 max-[900px]:p-2 max-[900px]:h-36">
               <div className="flex items-center justify-between mb-2 shrink-0 max-[900px]:mb-1">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Inserimento Azione
                 </h3>
-                <button type="button" onClick={() => setPanelOpen(true)}
-                  className="h-7 px-2 rounded-md bg-secondary/80 border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <PanelRight className="w-3 h-3" /> Statistiche
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button type="button" onClick={() => setSetting('showRallyHistory', !settings.showRallyHistory)}
+                    className="h-7 px-2 rounded-md bg-secondary/80 border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
+                    title={settings.showRallyHistory ? 'Nascondi storico rally' : 'Mostra storico rally'}>
+                    {settings.showRallyHistory ? '▾' : '▴'} Storico
+                  </button>
+                  <button type="button" onClick={() => setPanelOpen(true)}
+                    className="h-7 px-2 rounded-md bg-secondary/80 border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <PanelRight className="w-3 h-3" /> Statistiche
+                  </button>
+                </div>
               </div>
               <ActionPanel />
             </div>
 
-            {/* Storico rally Click&Scout */}
-            <div className="flex-shrink-0">
-              <CSRallyHistory />
-            </div>
+            {/* Storico rally Click&Scout — collassabile */}
+            {settings.showRallyHistory && (
+              <div className="flex-shrink-0">
+                <CSRallyHistory />
+              </div>
+            )}
           </div>
 
           {/* Side rail DX (squadra ospite) */}
