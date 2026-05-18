@@ -395,6 +395,7 @@ export function LiveScout() {
                 })}
               </div>
               {tab === 'log' && <ActionLog />}
+              {tab === 'live' && <InSetStatsPanel />}
               {tab === 'stats' && <PlayerStatsPanel />}
               {tab === 'heat' && <AttackHeatmap team="all" />}
               {tab === 'compare' && <TeamComparison />}
