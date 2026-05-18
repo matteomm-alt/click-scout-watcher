@@ -161,7 +161,3 @@ export function InSetStatsPanel() {
     </div>
   );
 }
-      </div>
-    </div>
-  );
-}
