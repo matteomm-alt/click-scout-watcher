@@ -457,6 +457,23 @@ export function ActionPanel() {
     setShowAnalysisDialog(true);
   };
 
+  const handleExportCSV = () => {
+    const header = ['id','timestamp','set','team','player','skill','skillType','evaluation','startZone','endZone','attackCode','homeScore','awayScore'];
+    const rows = matchState.actions.map(a => [
+      a.id, a.timestamp, a.setNumber, a.team, a.playerNumber, a.skill, a.skillType, a.evaluation,
+      a.startZone ?? '', a.endZone ?? '', a.attackCode ?? '', a.homeScore, a.awayScore,
+    ].join(','));
+    const csv = [header.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${homeTeam.code || 'HOME'}_${awayTeam.code || 'AWAY'}_${matchInfo.date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('File CSV scaricato');
+  };
+
   const importAndAnalyze = async () => {
     if (!user || !lastDvwText) return;
     setImportingDvw(true);
@@ -1102,6 +1119,10 @@ export function ActionPanel() {
           <button onClick={handleExportDVW}
             className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold ml-auto transition-transform duration-75 active:scale-95 border border-primary/20">
             <Download className="w-3.5 h-3.5" /> DVW
+          </button>
+          <button onClick={handleExportCSV}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 text-sm font-bold transition-transform duration-75 active:scale-95 border border-border">
+            <Download className="w-3.5 h-3.5" /> CSV
           </button>
         </div>
       )}

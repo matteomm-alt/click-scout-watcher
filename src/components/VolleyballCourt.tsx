@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getReceptionPositions } from '@/lib/receptionFormations';
 
@@ -191,6 +192,19 @@ export function VolleyballCourt({
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
 
+  // Highlight pulsante del server: si attiva al cambio di squadra al servizio e si spegne dopo 3s
+  const [serverPulseActive, setServerPulseActive] = useState(true);
+  const lastServingRef = useRef<string | null>(null);
+  useEffect(() => {
+    const key = `${matchState.servingTeam}-${matchState.homeScore}-${matchState.awayScore}`;
+    if (lastServingRef.current !== key) {
+      lastServingRef.current = key;
+      setServerPulseActive(true);
+      const t = setTimeout(() => setServerPulseActive(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [matchState.servingTeam, matchState.homeScore, matchState.awayScore]);
+
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
     const player = teamData.players.find((p) => p.number === num);
@@ -304,12 +318,12 @@ export function VolleyballCourt({
 
           return (
             <div key={`${team}-p-${pos}`} className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
-              <span className={`mb-0.5 text-[11px] font-black tracking-wider ${isSetter ? 'text-warning' : 'text-white/55'}`}>P{pos}</span>
               {info && (
                 <>
-                  <div className={`relative flex size-10 md:size-12 items-center justify-center rounded-full text-sm md:text-base font-black text-white shadow-lg ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
+                  <div className={`relative flex size-11 md:size-[52px] items-center justify-center rounded-full text-base md:text-lg font-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${pos === 1 && matchState.servingTeam === team && serverPulseActive && !isSetter ? 'ring-2 ring-[hsl(var(--cs-cta))] animate-pulse' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
                     {info.number}
-                    {isSetter && <span className="absolute -right-2 -top-2 rounded bg-warning px-1.5 py-0.5 text-xs font-black text-background">S</span>}
+                    <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black bg-black/70 text-white rounded px-1 leading-tight">P{pos}</span>
+                    {isSetter && <span className="absolute -right-2 -bottom-2 rounded bg-warning px-1.5 py-0.5 text-[10px] font-black text-background">S</span>}
                   </div>
                   <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
                 </>
@@ -347,14 +361,24 @@ export function VolleyballCourt({
     );
   };
 
-  const renderServiceBand = (team: 'home' | 'away') => (
-    <div className="relative flex h-full items-center justify-center border-x border-white/15" style={{ background: serviceBg }}>
-      <span className="rotate-180 [writing-mode:vertical-rl] text-xs md:text-sm font-black uppercase tracking-[0.35em] text-white/45">BATTUTA</span>
-      <span className={`absolute top-2 text-[10px] font-black uppercase tracking-wider ${team === 'home' ? 'text-blue-200' : 'text-red-200'}`}>
-        {team === 'home' ? homeTeam.name || 'CASA' : awayTeam.name || 'OSPITE'}
-      </span>
-    </div>
-  );
+  const renderServiceBand = (team: 'home' | 'away') => {
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const serverNum = lineup?.[0];
+    const isServing = matchState.servingTeam === team;
+    return (
+      <div className="relative flex h-full items-center justify-center border-x border-white/15" style={{ background: serviceBg }}>
+        <span className="rotate-180 [writing-mode:vertical-rl] text-xs md:text-sm font-black uppercase tracking-[0.35em] text-white/45">BATTUTA</span>
+        <span className={`absolute top-2 text-[10px] font-black uppercase tracking-wider ${team === 'home' ? 'text-blue-200' : 'text-red-200'}`}>
+          {team === 'home' ? homeTeam.name || 'CASA' : awayTeam.name || 'OSPITE'}
+        </span>
+        {isServing && serverNum != null && (
+          <span className="absolute bottom-2 px-2 py-0.5 rounded-full bg-[hsl(var(--cs-cta))] text-white text-[10px] font-black shadow-md">
+            #{serverNum} · Z1
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const LegendDot = ({ className, label }: { className: string; label: string }) => (
     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">

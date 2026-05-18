@@ -26,7 +26,7 @@ function RailButton({ label, badge, onClick, highlight = 'default', disabled }: 
       aria-label={label}
     >
       <span
-        className="text-sm font-black uppercase tracking-[0.3em]"
+        className="text-sm max-xl:text-[10px] font-black uppercase tracking-[0.3em]"
         style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
       >
         {label}
@@ -63,7 +63,7 @@ export function CSSideRail({
 }: CSSideRailProps) {
   return (
     <div
-      className={`w-14 flex flex-col gap-[2px] rounded-md overflow-hidden border border-border/40 ${
+      className={`w-14 max-xl:w-12 xl:w-14 flex flex-col gap-[2px] rounded-md overflow-hidden border border-border/40 ${
         side === 'left' ? 'mr-1' : 'ml-1'
       }`}
     >

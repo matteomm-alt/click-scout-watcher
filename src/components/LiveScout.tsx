@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart2, List, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
+import { InSetStatsPanel } from '@/components/InSetStatsPanel';
 import { QuickActions } from '@/components/QuickActions';
 import { TeamComparison } from '@/components/TeamComparison';
 import { SetDistribution } from '@/components/SetDistribution';
@@ -24,11 +25,12 @@ import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
 
-type RightTab = 'log' | 'stats' | 'heat' | 'compare' | 'sets' | 'dir';
-type MobileTab = 'scout' | 'quick' | 'live';
+type RightTab = 'log' | 'live' | 'stats' | 'heat' | 'compare' | 'sets' | 'dir';
+type MobileTab = 'scout' | 'quick' | 'stats' | 'log';
 
 const TABS: { key: RightTab; label: string }[] = [
   { key: 'log', label: 'Log' },
+  { key: 'live', label: 'Live' },
   { key: 'stats', label: 'Stats' },
   { key: 'heat', label: 'Heat' },
   { key: 'compare', label: 'VS' },
@@ -39,7 +41,8 @@ const TABS: { key: RightTab; label: string }[] = [
 const MOBILE_TABS = [
   { key: 'scout' as const, label: 'Scout', icon: Target },
   { key: 'quick' as const, label: 'Quick', icon: Zap },
-  { key: 'live' as const, label: 'Live', icon: BarChart2 },
+  { key: 'stats' as const, label: 'Stats', icon: BarChart2 },
+  { key: 'log' as const, label: 'Log', icon: List },
 ];
 
 const RILEVAZIONE_ROWS = [
@@ -251,7 +254,7 @@ export function LiveScout() {
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
             <div className="flex-1 min-h-0 flex gap-1 items-stretch">
-              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden">
+              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden max-xl:max-h-[320px]">
                 <VolleyballCourt
                   compactAspect
                   heatmapData={awayHeatmap}
@@ -291,7 +294,7 @@ export function LiveScout() {
             )}
 
             {/* Pannello azione — riusa ActionPanel */}
-            <div className="glass rounded-xl p-3 h-44 overflow-hidden flex-shrink-0 max-[900px]:p-2 max-[900px]:h-36">
+            <div className="glass rounded-xl p-3 h-44 overflow-hidden flex-shrink-0 max-[900px]:p-2 max-[900px]:h-36 max-xl:h-40">
               <div className="flex items-center justify-between mb-2 shrink-0 max-[900px]:mb-1">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Inserimento Azione
@@ -333,7 +336,7 @@ export function LiveScout() {
           />
 
           {/* Colonna analisi rotazioni — collassabile, default chiusa */}
-          <div className={`flex-shrink-0 transition-all duration-200 ${rotationsOpen ? 'w-[180px]' : 'w-7'} flex`}>
+          <div className={`hidden xl:flex flex-shrink-0 transition-all duration-200 ${rotationsOpen ? 'w-[180px]' : 'w-7'}`}>
             <button
               type="button"
               onClick={() => setRotationsOpen((v) => !v)}
@@ -380,7 +383,7 @@ export function LiveScout() {
               <SheetTitle>Pannello statistiche</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-3">
-              <div className="grid grid-cols-6 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+              <div className="grid grid-cols-7 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
                 {TABS.map((t) => {
                   const active = tab === t.key;
                   return (
@@ -392,6 +395,7 @@ export function LiveScout() {
                 })}
               </div>
               {tab === 'log' && <ActionLog />}
+              {tab === 'live' && <InSetStatsPanel />}
               {tab === 'stats' && <PlayerStatsPanel />}
               {tab === 'heat' && <AttackHeatmap team="all" />}
               {tab === 'compare' && <TeamComparison />}
@@ -482,7 +486,7 @@ export function LiveScout() {
         <div className="min-h-0 flex-1 overflow-y-auto glass rounded-xl p-3">
           {mobileTab === 'scout' && <ActionPanel />}
           {mobileTab === 'quick' && <QuickActions />}
-          {mobileTab === 'live' && (
+          {mobileTab === 'stats' && (
             <div className="space-y-4">
               {timeoutBanner && (
                 <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
@@ -490,14 +494,19 @@ export function LiveScout() {
                   <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
                 </div>
               )}
-              <ActionLog />
+              <InSetStatsPanel />
               <PlayerStatsPanel />
+            </div>
+          )}
+          {mobileTab === 'log' && (
+            <div className="space-y-4">
+              <ActionLog />
               <AttackHeatmap team="all" />
             </div>
           )}
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 gap-1 border-t border-border bg-background/95 p-2 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 gap-1 border-t border-border bg-background/95 p-2 backdrop-blur">
           {MOBILE_TABS.map((item) => {
             const Icon = item.icon;
             const active = mobileTab === item.key;
