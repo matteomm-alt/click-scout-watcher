@@ -160,6 +160,12 @@ export interface ScoutAction {
   homeLineup: number[]; // 6 player numbers in rotation order
   awayLineup: number[]; // 6 player numbers in rotation order
   code: string; // raw DVW code
+  // === Snapshot completo per analisi retrospettiva (Phase 11) ===
+  servingTeam?: 'home' | 'away';       // chi serviva (deriva K1/K2)
+  homeBenchedMb?: number | null;       // centrale home sostituito dal libero
+  awayBenchedMb?: number | null;       // centrale away sostituito dal libero
+  rallyId?: string;                    // id rally: `${setN}-${homeScore}-${awayScore}`
+  phase?: 'K1' | 'K2';                 // K1=sideout (team riceve), K2=break (team serve)
 }
 
 export interface SetResult {
