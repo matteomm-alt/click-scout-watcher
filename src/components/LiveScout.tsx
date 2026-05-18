@@ -5,6 +5,7 @@ import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
+import { InSetStatsPanel } from '@/components/InSetStatsPanel';
 import { QuickActions } from '@/components/QuickActions';
 import { TeamComparison } from '@/components/TeamComparison';
 import { SetDistribution } from '@/components/SetDistribution';
