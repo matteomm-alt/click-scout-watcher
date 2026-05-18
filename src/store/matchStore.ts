@@ -169,7 +169,7 @@ const getLineupNumbers = (lineup: Lineup, team: Team): number[] => {
   });
 };
 
-type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number };
+type LineupSnapshot = Pick<MatchState, 'homeCurrentLineup' | 'awayCurrentLineup' | 'homeSetterPosition' | 'awaySetterPosition' | 'servingTeam' | 'homeScore' | 'awayScore'> & { actionCount: number; homeBenchedMb: number | null; awayBenchedMb: number | null };
 const lineupSnapshots: LineupSnapshot[] = [];
 
 export const useMatchStore = create<MatchStore>()(
@@ -219,12 +219,21 @@ export const useMatchStore = create<MatchStore>()(
           return idx >= 0 ? idx + 1 : 1;
         };
 
+        const homeBase = getLineupNumbers(homeLineup, homeTeam);
+        const awayBase = getLineupNumbers(awayLineup, awayTeam);
+        const homeLib = homeTeam.players.find((p) => p.id === homeLineup.libero1)?.number ?? null;
+        const awayLib = awayTeam.players.find((p) => p.id === awayLineup.libero1)?.number ?? null;
+        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null);
+        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null);
+
         set({
           matchState: {
             ...defaultMatchState,
             isMatchStarted: true,
-            homeCurrentLineup: getLineupNumbers(homeLineup, homeTeam),
-            awayCurrentLineup: getLineupNumbers(awayLineup, awayTeam),
+            homeCurrentLineup: home.lineup,
+            awayCurrentLineup: away.lineup,
+            homeBenchedMb: home.benchedMb,
+            awayBenchedMb: away.benchedMb,
             homeSetterPosition: findSetterPos(homeLineup),
             awaySetterPosition: findSetterPos(awayLineup),
             servingTeam: 'home',
