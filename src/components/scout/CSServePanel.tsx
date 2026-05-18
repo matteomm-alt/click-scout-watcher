@@ -16,7 +16,7 @@ export function CSServePanel({ onShowDirections }: CSServePanelProps) {
   if (!matchState.servingTeam) return null;
 
   return (
-    <div className="w-20 h-full flex flex-col rounded-md overflow-hidden border border-border/40 shadow-lg">
+    <div className="w-20 max-xl:w-16 h-full flex flex-col rounded-md overflow-hidden border border-border/40 shadow-lg">
       <div className="flex-1 bg-[hsl(var(--cs-rail))] flex items-center justify-center text-[hsl(var(--cs-rail-fg))]">
         <span
           className="text-2xl font-black italic uppercase tracking-[0.4em]"
