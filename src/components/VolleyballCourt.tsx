@@ -318,12 +318,12 @@ export function VolleyballCourt({
 
           return (
             <div key={`${team}-p-${pos}`} className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
-              <span className={`mb-0.5 text-[11px] font-black tracking-wider ${isSetter ? 'text-warning' : 'text-white/55'}`}>P{pos}</span>
               {info && (
                 <>
-                  <div className={`relative flex size-10 md:size-12 items-center justify-center rounded-full text-sm md:text-base font-black text-white shadow-lg ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
+                  <div className={`relative flex size-11 md:size-[52px] items-center justify-center rounded-full text-base md:text-lg font-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${pos === 1 && matchState.servingTeam === team && serverPulseActive && !isSetter ? 'ring-2 ring-[hsl(var(--cs-cta))] animate-pulse' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
                     {info.number}
-                    {isSetter && <span className="absolute -right-2 -top-2 rounded bg-warning px-1.5 py-0.5 text-xs font-black text-background">S</span>}
+                    <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black bg-black/70 text-white rounded px-1 leading-tight">P{pos}</span>
+                    {isSetter && <span className="absolute -right-2 -bottom-2 rounded bg-warning px-1.5 py-0.5 text-[10px] font-black text-background">S</span>}
                   </div>
                   <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
                 </>
