@@ -251,6 +251,8 @@ export const useMatchStore = create<MatchStore>()(
 
       addAction: (actionData) => {
         const { matchState } = get();
+        const rallyId = `${matchState.currentSet}-${matchState.homeScore}-${matchState.awayScore}`;
+        const phase: 'K1' | 'K2' = matchState.servingTeam === actionData.team ? 'K2' : 'K1';
         const action: ScoutAction = {
           ...actionData,
           id: crypto.randomUUID(),
@@ -261,6 +263,12 @@ export const useMatchStore = create<MatchStore>()(
           awaySetterPosition: matchState.awaySetterPosition,
           homeLineup: [...matchState.homeCurrentLineup],
           awayLineup: [...matchState.awayCurrentLineup],
+          // Snapshot retrospettivo (Phase 11)
+          servingTeam: matchState.servingTeam,
+          homeBenchedMb: matchState.homeBenchedMb ?? null,
+          awayBenchedMb: matchState.awayBenchedMb ?? null,
+          rallyId,
+          phase,
         };
         set((s) => {
           const actions = [...s.matchState.actions, action];
