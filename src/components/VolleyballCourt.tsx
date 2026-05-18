@@ -366,6 +366,22 @@ export function VolleyballCourt({
                 />
               );
             })}
+            {(() => {
+              const last = liveArrows[liveArrows.length - 1];
+              if (!last) return null;
+              const from = zonePct(last.startZone);
+              const to = zonePct(last.endZone);
+              if (!from || !to || last.startZone === last.endZone) return null;
+              const pathD = `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+              return (
+                <g key={`ball-${liveArrows.length}-${last.startZone}-${last.endZone}`}>
+                  <circle r="1.7" fill="hsl(24 95% 53%)" stroke="white" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
+                    <animateMotion dur="0.7s" repeatCount="1" fill="freeze" path={pathD} />
+                    <animate attributeName="opacity" from="1" to="0" begin="0.7s" dur="0.5s" fill="freeze" />
+                  </circle>
+                </g>
+              );
+            })()}
           </svg>
         )}
       </div>
