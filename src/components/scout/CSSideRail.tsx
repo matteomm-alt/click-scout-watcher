@@ -26,7 +26,7 @@ function RailButton({ label, badge, onClick, highlight = 'default', disabled }: 
       aria-label={label}
     >
       <span
-        className="text-sm font-black uppercase tracking-[0.3em]"
+        className="text-sm max-xl:text-[10px] font-black uppercase tracking-[0.3em]"
         style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
       >
         {label}
