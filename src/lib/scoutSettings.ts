@@ -23,6 +23,8 @@ export type ScoutSettings = {
   singleTeamSide: 'home' | 'away';
   showServeStartZone: boolean;
   showRallyHistory: boolean;
+  comboChain: boolean;
+  keyboardShortcuts: boolean;
 };
 
 const STORAGE_KEY = 'scout_settings';
@@ -50,6 +52,8 @@ export const defaultScoutSettings: ScoutSettings = {
   singleTeamSide: 'home',
   showServeStartZone: false,
   showRallyHistory: true,
+  comboChain: false,
+  keyboardShortcuts: true,
 };
 
 export const SCOUT_PRESETS = {

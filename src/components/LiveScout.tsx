@@ -62,6 +62,8 @@ const RILEVAZIONE_ROWS = [
   { key: 'sostituzioniLibere' as const, label: 'Sostituzioni libere', description: 'Senza vincoli regolamento (beach/giovanili).' },
   { key: 'showServeStartZone' as const, label: 'Area di battuta (2-tap)', description: 'Chiedi zona di partenza del servizio (1/5/6) prima del tipo battuta.' },
   { key: 'showRallyHistory' as const, label: 'Mostra storico rally', description: 'Striscia orizzontale con le ultime azioni sotto al campo.' },
+  { key: 'comboChain' as const, label: '🔗 Combo chain', description: 'Dopo un\'azione non terminale mantiene squadra+giocatore selezionati → salta direttamente alla scelta del fondamentale.' },
+  { key: 'keyboardShortcuts' as const, label: '⌨ Scorciatoie tastiera', description: 'Numeri = giocatore/zona, S R A B D E F = skill, # + - = / ! = valutazione, H/V = squadra, Esc = indietro.' },
 ];
 
 const VISUAL_ROWS = [
