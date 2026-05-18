@@ -596,6 +596,33 @@ export const useMatchStore = create<MatchStore>()(
         // Roster minimo per 5-1: almeno 1 setter e 1 opposto fra i 6 in campo
         const onCourtRoles = lineup.map((n) => roleOf(n)).filter(Boolean);
         if (!onCourtRoles.includes('S')) errors.push('Nessun palleggiatore in campo');
+
+        // FIVB overlap rotazionale: ruoli "speculari" devono stare in posizioni opposte.
+        // Coppie opposte: P1↔P4 (idx 0↔3), P2↔P5 (idx 1↔4), P3↔P6 (idx 2↔5).
+        const opposites: [number, number][] = [[0, 3], [1, 4], [2, 5]];
+        const findIdxByRole = (role: string) =>
+          lineup.map((n, i) => (roleOf(n) === role ? i : -1)).filter((i) => i >= 0);
+        const isOppositePair = (a: number, b: number) =>
+          opposites.some(([x, y]) => (a === x && b === y) || (a === y && b === x));
+        // 2 Setter (5-2) o 1 S + 1 OP (5-1): devono essere in posizioni opposte
+        const sIdx = findIdxByRole('S');
+        const opIdx = findIdxByRole('OP');
+        if (sIdx.length === 2 && !isOppositePair(sIdx[0], sIdx[1])) {
+          errors.push('I due palleggiatori non sono in posizioni opposte');
+        }
+        if (sIdx.length === 1 && opIdx.length === 1 && !isOppositePair(sIdx[0], opIdx[0])) {
+          errors.push('Palleggiatore e opposto non in posizioni opposte');
+        }
+        // 2 centrali devono essere opposti
+        const mIdx = findIdxByRole('M');
+        if (mIdx.length === 2 && !isOppositePair(mIdx[0], mIdx[1])) {
+          errors.push('I due centrali non sono in posizioni opposte');
+        }
+        // 2 schiacciatori (OH) devono essere opposti
+        const oIdx = findIdxByRole('O');
+        if (oIdx.length === 2 && !isOppositePair(oIdx[0], oIdx[1])) {
+          errors.push('I due schiacciatori non sono in posizioni opposte');
+        }
         return errors;
       },
 
