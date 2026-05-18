@@ -48,6 +48,8 @@ export const defaultScoutSettings: ScoutSettings = {
   followServe: false,
   singleTeamMode: false,
   singleTeamSide: 'home',
+  showServeStartZone: false,
+  showRallyHistory: true,
 };
 
 export const SCOUT_PRESETS = {
