@@ -361,14 +361,24 @@ export function VolleyballCourt({
     );
   };
 
-  const renderServiceBand = (team: 'home' | 'away') => (
-    <div className="relative flex h-full items-center justify-center border-x border-white/15" style={{ background: serviceBg }}>
-      <span className="rotate-180 [writing-mode:vertical-rl] text-xs md:text-sm font-black uppercase tracking-[0.35em] text-white/45">BATTUTA</span>
-      <span className={`absolute top-2 text-[10px] font-black uppercase tracking-wider ${team === 'home' ? 'text-blue-200' : 'text-red-200'}`}>
-        {team === 'home' ? homeTeam.name || 'CASA' : awayTeam.name || 'OSPITE'}
-      </span>
-    </div>
-  );
+  const renderServiceBand = (team: 'home' | 'away') => {
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const serverNum = lineup?.[0];
+    const isServing = matchState.servingTeam === team;
+    return (
+      <div className="relative flex h-full items-center justify-center border-x border-white/15" style={{ background: serviceBg }}>
+        <span className="rotate-180 [writing-mode:vertical-rl] text-xs md:text-sm font-black uppercase tracking-[0.35em] text-white/45">BATTUTA</span>
+        <span className={`absolute top-2 text-[10px] font-black uppercase tracking-wider ${team === 'home' ? 'text-blue-200' : 'text-red-200'}`}>
+          {team === 'home' ? homeTeam.name || 'CASA' : awayTeam.name || 'OSPITE'}
+        </span>
+        {isServing && serverNum != null && (
+          <span className="absolute bottom-2 px-2 py-0.5 rounded-full bg-[hsl(var(--cs-cta))] text-white text-[10px] font-black shadow-md">
+            #{serverNum} · Z1
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const LegendDot = ({ className, label }: { className: string; label: string }) => (
     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
