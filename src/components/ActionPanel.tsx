@@ -88,9 +88,25 @@ export function ActionPanel() {
       setSubOut(null);
       setShowSubstitution(true);
     };
+    const onUndoRally = () => {
+      const removed = undoRally();
+      if (removed > 0) toast.success(`↩ Rally annullato (${removed} azioni)`);
+      else toast.info('Nessuna azione nel rally corrente');
+      resetSelection();
+    };
     window.addEventListener('scout-open-sub', onOpenSub);
-    return () => window.removeEventListener('scout-open-sub', onOpenSub);
+    window.addEventListener('scout-undo-rally', onUndoRally);
+    return () => {
+      window.removeEventListener('scout-open-sub', onOpenSub);
+      window.removeEventListener('scout-undo-rally', onUndoRally);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Indicatore "attendendo input" sotto al campo
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('scout-waiting', { detail: { step, active: step !== 'team' } }));
+  }, [step]);
 
   const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
