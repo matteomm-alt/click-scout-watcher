@@ -1058,6 +1058,12 @@ export function ActionPanel() {
             title="Ripeti ultima azione">
             <RotateCcw className="w-3.5 h-3.5" /> Ripeti
           </button>
+          <button onClick={() => window.dispatchEvent(new CustomEvent('scout-undo-rally'))}
+            disabled={matchState.actions.length === 0}
+            className="flex items-center gap-1 min-h-14 px-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-bold disabled:opacity-30 transition-transform duration-75 active:scale-95"
+            title="Annulla intero rally corrente">
+            <Undo2 className="w-3.5 h-3.5" /> Rally
+          </button>
           <button onClick={() => addPoint('home')}
             className="min-h-14 px-4 rounded-lg bg-secondary border border-blue-700/20 text-foreground hover:border-blue-500/40 text-sm font-bold transition-transform duration-75 active:scale-95">
             +1 {homeTeam.name || 'Casa'}
