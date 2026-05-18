@@ -336,9 +336,21 @@ export function ActionPanel() {
 
     const lastSkill = selectedSkill;
     const lastTeam = selectedTeam;
+    const lastPlayer = selectedPlayer;
+    // Terminale = chiude il rally (no chain dopo)
+    const isTerminal =
+      (lastSkill === 'S' && evaluation === '=') ||
+      ((lastSkill === 'A' || lastSkill === 'B') && (evaluation === '#' || evaluation === '=' || evaluation === '/'));
     resetSelection();
 
-    if (settings.followServe) {
+    // Combo chain: mantieni stesso team+player, salta a skill (solo se non terminale)
+    if (settings.comboChain && !isTerminal && lastTeam && lastPlayer !== null) {
+      setTimeout(() => {
+        setSelectedTeam(lastTeam);
+        setSelectedPlayer(lastPlayer);
+        setStep('skill');
+      }, 50);
+    } else if (settings.followServe) {
       const followDelay = !settings.fastMode ? 300 : 50;
       setTimeout(() => {
         if (lastSkill === 'S') {
