@@ -938,6 +938,21 @@ export function ActionPanel() {
         return (
         <div className="animate-in fade-in slide-in-from-right-2 duration-150 space-y-2">
           <StepTip id="evaluation" text="Valuta il colpo: tocca la valutazione in giallo per conferma rapida, oppure scegli un'altra. Tieni premuto per chiudere senza zone." />
+          {settings.autoCorrelation && selectedSkill && (
+            <div className="text-[10px] uppercase tracking-widest font-bold text-[hsl(var(--cs-cta))] flex items-center gap-1.5 px-2 py-1 rounded bg-[hsl(var(--cs-cta)/0.08)] border border-[hsl(var(--cs-cta)/0.25)]">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[hsl(var(--cs-cta))] animate-pulse" />
+              <span>Auto-correlazione:</span>
+              <span className="text-foreground/80 normal-case tracking-normal">
+                {selectedSkill === 'S' && 'S → ricezione avversaria'}
+                {selectedSkill === 'R' && 'R → alzata stessa squadra'}
+                {selectedSkill === 'E' && 'E → attacco stessa squadra'}
+                {selectedSkill === 'A' && 'A → muro/difesa avversaria'}
+                {selectedSkill === 'B' && 'B → freeball/contrattacco'}
+                {selectedSkill === 'D' && 'D → alzata stessa squadra'}
+                {selectedSkill === 'F' && 'F → alzata stessa squadra'}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-warning font-bold">
             <span>💡 Suggerito: {suggested}</span>
             <button type="button" onClick={() => handleEvaluationSelect(suggested)} className="px-3 py-1 rounded bg-warning/15 border border-warning/40 text-warning hover:bg-warning/25 active:scale-95">
