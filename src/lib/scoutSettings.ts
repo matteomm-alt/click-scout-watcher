@@ -52,6 +52,8 @@ export const defaultScoutSettings: ScoutSettings = {
   singleTeamSide: 'home',
   showServeStartZone: false,
   showRallyHistory: true,
+  comboChain: false,
+  keyboardShortcuts: true,
 };
 
 export const SCOUT_PRESETS = {
