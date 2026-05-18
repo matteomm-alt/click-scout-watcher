@@ -168,6 +168,11 @@ export function ActionPanel() {
         return;
       }
     }
+    // Area di battuta 2-tap: zona partenza servizio (1/5/6) prima del tipo
+    if (skill === 'S' && settings.showServeStartZone) {
+      setStep('startZone');
+      return;
+    }
     if (skill === 'S' && settings.showServeType) {
       setStep('serveType');
     } else if (skill === 'A' && settings.showAttackCombo) {
