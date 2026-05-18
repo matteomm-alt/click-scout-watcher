@@ -108,6 +108,75 @@ export function ActionPanel() {
     window.dispatchEvent(new CustomEvent('scout-waiting', { detail: { step, active: step !== 'team' } }));
   }, [step]);
 
+  // ⌨ Scorciatoie tastiera (Click&Scout-style)
+  const digitBufferRef = useRef<string>('');
+  const digitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!settings.keyboardShortcuts) return;
+    const isEditableTarget = (el: EventTarget | null) => {
+      if (!(el instanceof HTMLElement)) return false;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+    };
+    const commitPlayer = () => {
+      const buf = digitBufferRef.current;
+      digitBufferRef.current = '';
+      if (digitTimerRef.current) { clearTimeout(digitTimerRef.current); digitTimerRef.current = null; }
+      if (!buf || !selectedTeam) return;
+      const num = parseInt(buf, 10);
+      const lineup = selectedTeam === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+      if (lineup.includes(num)) handlePlayerSelect(num);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isEditableTarget(e.target)) return;
+      const k = e.key;
+      // Escape = indietro globale
+      if (k === 'Escape') { e.preventDefault(); goBack(); return; }
+      // Enter = commit player buffer
+      if (k === 'Enter' && step === 'player') { e.preventDefault(); commitPlayer(); return; }
+      // Team
+      if (step === 'team') {
+        if (k === 'h' || k === 'H') { e.preventDefault(); handleTeamSelect('home'); return; }
+        if (k === 'v' || k === 'V' || k === 'a' || k === 'A') { e.preventDefault(); handleTeamSelect('away'); return; }
+      }
+      // Player: cumulazione cifre 1-99
+      if (step === 'player' && /^[0-9]$/.test(k)) {
+        e.preventDefault();
+        digitBufferRef.current += k;
+        if (digitTimerRef.current) clearTimeout(digitTimerRef.current);
+        // Se buffer 2 cifre o "01..09" non possibile → commit immediato
+        if (digitBufferRef.current.length >= 2) commitPlayer();
+        else digitTimerRef.current = setTimeout(commitPlayer, 600);
+        return;
+      }
+      // Skill
+      if (step === 'skill' && /^[srabdef]$/i.test(k)) {
+        const sk = k.toUpperCase() as Skill;
+        if (skills.some((s) => s.key === sk)) { e.preventDefault(); handleSkillSelect(sk); return; }
+      }
+      // Evaluation
+      if (step === 'evaluation' && ['#', '+', '!', '-', '/', '='].includes(k)) {
+        e.preventDefault();
+        handleEvaluationSelect(k as Evaluation);
+        return;
+      }
+      // Zone
+      if (step === 'startZone' && /^[1-9]$/.test(k)) {
+        e.preventDefault(); handleStartZone(parseInt(k, 10)); return;
+      }
+      if (step === 'endZone' && /^[1-9]$/.test(k)) {
+        e.preventDefault(); handleEndZone(parseInt(k, 10)); return;
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (digitTimerRef.current) clearTimeout(digitTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.keyboardShortcuts, step, selectedTeam, selectedPlayer, selectedSkill, selectedEvaluation, matchState.homeCurrentLineup, matchState.awayCurrentLineup]);
+
   const allSkills: { key: Skill; color: string }[] = [
     { key: 'S', color: 'bg-blue-600 hover:bg-blue-500' },
     { key: 'R', color: 'bg-emerald-600 hover:bg-emerald-500' },
