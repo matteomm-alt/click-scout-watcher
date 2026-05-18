@@ -45,6 +45,8 @@ interface MatchStore {
   undoLastAction: () => void;
   undoRally: () => number;
   substitutePlayer: (team: 'home' | 'away', outNumber: number, inNumber: number) => void;
+  doubleSwitch51: (team: 'home' | 'away') => void;
+  validateLineup: (team: 'home' | 'away') => string[];
 
   // New: time-outs and sanctions
   callTimeout: (team: 'home' | 'away') => boolean;
@@ -121,9 +123,43 @@ const defaultMatchState: MatchState = {
   timeouts: [],
   sanctions: [],
   setOverPending: false,
+  homeBenchedMb: null,
+  awayBenchedMb: null,
 };
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
+
+// Auto-swap libero ↔ centrale di seconda linea.
+// Ritorna nuovo lineup + il numero del centrale "in panchina" (null se libero non in campo).
+const applyLiberoAutoSwap = (
+  lineup: number[],
+  team: Team,
+  liberoNum: number | null | undefined,
+  benchedMb: number | null | undefined,
+): { lineup: number[]; benchedMb: number | null } => {
+  if (!liberoNum) return { lineup: [...lineup], benchedMb: benchedMb ?? null };
+  const roleOf = (n: number) => team.players.find((p) => p.number === n)?.role;
+  const out = [...lineup];
+  let benched: number | null = benchedMb ?? null;
+  // Step 1: se il libero è in posizione di prima linea (P2/P3/P4 = idx 1,2,3) → ripristina MB
+  const liberoIdx = out.indexOf(liberoNum);
+  if (benched != null && liberoIdx >= 0 && [1, 2, 3].includes(liberoIdx)) {
+    out[liberoIdx] = benched;
+    benched = null;
+  }
+  // Step 2: se nessun MB in panchina, scambia il MB di seconda linea (P1/P5/P6 = idx 0,4,5) col libero
+  if (benched == null) {
+    for (const idx of [0, 4, 5]) {
+      const num = out[idx];
+      if (num && num !== liberoNum && roleOf(num) === 'M') {
+        benched = num;
+        out[idx] = liberoNum;
+        break;
+      }
+    }
+  }
+  return { lineup: out, benchedMb: benched };
+};
 
 const getLineupNumbers = (lineup: Lineup, team: Team): number[] => {
   const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
