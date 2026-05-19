@@ -95,11 +95,21 @@ export function AppSidebar() {
   const { societyId, societyName, features, isAdmin } = useActiveSociety();
   const counts = useNotifications(societyId, user?.id ?? null);
   const [bellOpen, setBellOpen] = useState(false);
+  const [scoutMode, setScoutMode] = useState<boolean>(() => localStorage.getItem(SCOUT_MODE_KEY) === 'true');
+  const toggleScoutMode = () => {
+    setScoutMode((prev) => {
+      const next = !prev;
+      localStorage.setItem(SCOUT_MODE_KEY, String(next));
+      return next;
+    });
+  };
 
   const totalNotifs = counts.comunicazioni + counts.presenze + counts.convocazioni;
 
-  const visible = (items: NavItem[]) =>
-    items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
+  const visible = (items: NavItem[]) => {
+    const filtered = items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
+    return scoutMode ? filtered.filter((i) => SCOUT_MODE_URLS.has(i.url)) : filtered;
+  };
 
   const renderItems = (items: NavItem[]) =>
     items.map((item) => (
