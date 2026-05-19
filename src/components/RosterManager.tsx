@@ -125,6 +125,48 @@ function PlayerForm({ onAdd }: { onAdd: (p: Omit<Player, 'id'>) => void }) {
 function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
   const { addPlayer, removePlayer, setHomeTeam, setAwayTeam } = useMatchStore();
   const setTeam = side === 'home' ? setHomeTeam : setAwayTeam;
+  const { user } = useAuth();
+  const { societyId } = useActiveSociety();
+  const [loadingFromDb, setLoadingFromDb] = useState(false);
+
+  const handleImportFromDb = async () => {
+    if (!societyId || !user) {
+      toast.error('Società non disponibile', { description: 'Verifica di essere loggato.' });
+      return;
+    }
+    setLoadingFromDb(true);
+    try {
+      const { data, error } = await supabase
+        .from('athletes')
+        .select('id, number, last_name, first_name, role, is_libero, is_captain')
+        .eq('society_id', societyId)
+        .order('number', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        toast.error('Nessun atleta trovato', { description: 'Aggiungi prima gli atleti in /atleti' });
+        return;
+      }
+      const players: Player[] = data.map((a) => ({
+        id: a.id,
+        number: a.number ?? 0,
+        lastName: (a.last_name ?? '').toUpperCase(),
+        firstName: a.first_name ?? '',
+        role: ROLE_MAP[a.role ?? ''] ?? 'O',
+        isLibero: a.is_libero ?? false,
+        isCaptain: a.is_captain ?? false,
+      }));
+      if (side === 'home') useMatchStore.getState().setHomeTeam({ players });
+      else useMatchStore.getState().setAwayTeam({ players });
+      toast.success(`${players.length} atleti importati`, {
+        description: 'Usa Auto 5-1 per la formazione automatica',
+      });
+    } catch (e) {
+      toast.error('Errore import', { description: String(e) });
+    } finally {
+      setLoadingFromDb(false);
+    }
+  };
+
   const fillTeam = () => {
     const template = [
       { number: 1, lastName: 'Giocatore 1', role: 'S' as PlayerRole, isLibero: false, isCaptain: false }, { number: 2, lastName: 'Giocatore 2', role: 'OP' as PlayerRole, isLibero: false, isCaptain: false },
