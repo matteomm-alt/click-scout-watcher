@@ -63,7 +63,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <ClaimSuperAdminBadge />
+          
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
