@@ -26,6 +26,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
 } from 'recharts';
 import jsPDF from 'jspdf';
+import { downloadMatchReport } from '@/lib/pdfReport';
 
 interface MatchRow {
   id: string;
@@ -426,6 +427,27 @@ export default function MatchAnalysis() {
     doc.save(`${safe(match.home_team.name)}_${safe(match.away_team.name)}_${date}.pdf`);
   };
 
+  const exportReportPdf = () => {
+    if (!match) return;
+    downloadMatchReport(
+      {
+        homeName: match.home_team.name,
+        awayName: match.away_team.name,
+        homeSetsWon: match.home_sets_won,
+        awaySetsWon: match.away_sets_won,
+        date: match.match_date,
+        league: match.league,
+        venue: match.venue,
+        setResults: Array.isArray(match.set_results) ? (match.set_results as any) : [],
+        homeTeamId: match.home_team.id,
+        awayTeamId: match.away_team.id,
+      },
+      filteredAllActions,
+      players,
+    );
+    toast.success('Report PDF generato');
+  };
+
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
   }
@@ -464,6 +486,10 @@ export default function MatchAnalysis() {
             <Button onClick={exportScoresheetPdf} variant="secondary" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Tabellino</span>
+            </Button>
+            <Button onClick={exportReportPdf} size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Report PDF</span>
             </Button>
             <Button onClick={handleShare} variant="secondary" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
               <Share2 className="w-4 h-4" />
