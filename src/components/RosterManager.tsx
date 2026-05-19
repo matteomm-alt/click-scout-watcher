@@ -184,10 +184,23 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
   return (
     <div className="space-y-4">
       <div className="glass rounded-xl p-4 space-y-3">
-        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          {side === 'home' ? 'Squadra Casa' : 'Squadra Ospite'}
-        </h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            {side === 'home' ? 'Squadra Casa' : 'Squadra Ospite'}
+          </h3>
+          {side === 'home' && (
+            <button
+              type="button"
+              onClick={handleImportFromDb}
+              disabled={loadingFromDb}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider bg-primary/15 text-primary hover:bg-primary/25 border border-primary/30 transition-colors disabled:opacity-50"
+            >
+              <Download className="w-3 h-3" />
+              {loadingFromDb ? 'Caricamento…' : 'Importa da Atleti'}
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Nome Squadra</Label>
