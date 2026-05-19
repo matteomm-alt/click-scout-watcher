@@ -120,6 +120,7 @@ export default function Home() {
       </section>
 
       {/* DASHBOARD OPERATIVA */}
+      <GettingStarted />
       <HomeDashboard />
     </div>
   );
