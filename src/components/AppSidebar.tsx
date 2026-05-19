@@ -129,11 +129,11 @@ export function AppSidebar() {
       </SidebarMenuItem>
     ));
 
-  const mainItems = useMemo(() => visible(MAIN), [features]);
-  const gestionaleItems = useMemo(() => visible(GESTIONALE), [features]);
-  const coachingItems = useMemo(() => visible(COACHING), [features]);
-  const analisiItems = useMemo(() => visible(ANALISI), [features]);
-  const atletaItems = useMemo(() => visible(ATLETA), [features]);
+  const mainItems = useMemo(() => visible(MAIN), [features, scoutMode]);
+  const gestionaleItems = useMemo(() => visible(GESTIONALE), [features, scoutMode]);
+  const coachingItems = useMemo(() => visible(COACHING), [features, scoutMode]);
+  const analisiItems = useMemo(() => visible(ANALISI), [features, scoutMode]);
+  const atletaItems = useMemo(() => visible(ATLETA), [features, scoutMode]);
 
   return (
     <Sidebar collapsible="icon">
