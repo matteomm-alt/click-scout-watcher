@@ -8,8 +8,8 @@ interface PublicMatch {
   league: string | null;
   home_sets_won: number;
   away_sets_won: number;
-  home_team: { name: string } | null;
-  away_team: { name: string } | null;
+  home_team_name: string | null;
+  away_team_name: string | null;
 }
 
 export default function AnalisiPubblica() {
