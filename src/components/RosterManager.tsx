@@ -5,8 +5,20 @@ import { ROLE_LABELS } from '@/types/volleyball';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, ArrowRight, ArrowLeft, Users, UserPlus } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, ArrowLeft, Users, UserPlus, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
+
+const ROLE_MAP: Record<string, PlayerRole> = {
+  Palleggiatore: 'S', palleggiatore: 'S',
+  Opposto: 'OP', opposto: 'OP',
+  Schiacciatore: 'O', schiacciatore: 'O', Schiacciatrice: 'O',
+  Centrale: 'M', centrale: 'M',
+  Libero: 'L', libero: 'L',
+  S: 'S', O: 'O', OP: 'OP', M: 'M', L: 'L',
+};
 
 function PlayerForm({ onAdd }: { onAdd: (p: Omit<Player, 'id'>) => void }) {
   const [number, setNumber] = useState('');
