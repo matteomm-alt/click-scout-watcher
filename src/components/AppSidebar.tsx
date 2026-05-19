@@ -24,8 +24,11 @@ import {
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
   PieChart, UserCircle, Star, HeartPulse,
-  LogOut, Shield, Boxes, Settings, HelpCircle, Bell,
+  LogOut, Shield, Boxes, Settings, HelpCircle, Bell, Zap,
 } from 'lucide-react';
+
+const SCOUT_MODE_KEY = 'sidebar_scout_mode';
+const SCOUT_MODE_URLS = new Set(['/', '/scout', '/archive', '/import', '/atleti', '/calendario', '/presenze']);
 
 interface NavItem {
   title: string;
