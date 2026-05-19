@@ -50,7 +50,7 @@ export default function AnalisiPubblica() {
           <div>
             <p className="text-xs uppercase tracking-widest text-primary font-bold mb-2">Report condiviso</p>
             <h1 className="text-3xl md:text-4xl font-black italic uppercase leading-tight">
-              {match.home_team?.name} vs {match.away_team?.name}
+              {match.home_team_name} vs {match.away_team_name}
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
               {match.match_date} {match.league ? `· ${match.league}` : ''}
