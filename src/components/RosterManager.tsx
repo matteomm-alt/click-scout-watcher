@@ -5,8 +5,20 @@ import { ROLE_LABELS } from '@/types/volleyball';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, ArrowRight, ArrowLeft, Users, UserPlus } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, ArrowLeft, Users, UserPlus, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
+
+const ROLE_MAP: Record<string, PlayerRole> = {
+  Palleggiatore: 'S', palleggiatore: 'S',
+  Opposto: 'OP', opposto: 'OP',
+  Schiacciatore: 'O', schiacciatore: 'O', Schiacciatrice: 'O',
+  Centrale: 'M', centrale: 'M',
+  Libero: 'L', libero: 'L',
+  S: 'S', O: 'O', OP: 'OP', M: 'M', L: 'L',
+};
 
 function PlayerForm({ onAdd }: { onAdd: (p: Omit<Player, 'id'>) => void }) {
   const [number, setNumber] = useState('');
@@ -113,6 +125,48 @@ function PlayerForm({ onAdd }: { onAdd: (p: Omit<Player, 'id'>) => void }) {
 function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
   const { addPlayer, removePlayer, setHomeTeam, setAwayTeam } = useMatchStore();
   const setTeam = side === 'home' ? setHomeTeam : setAwayTeam;
+  const { user } = useAuth();
+  const { societyId } = useActiveSociety();
+  const [loadingFromDb, setLoadingFromDb] = useState(false);
+
+  const handleImportFromDb = async () => {
+    if (!societyId || !user) {
+      toast.error('Società non disponibile', { description: 'Verifica di essere loggato.' });
+      return;
+    }
+    setLoadingFromDb(true);
+    try {
+      const { data, error } = await supabase
+        .from('athletes')
+        .select('id, number, last_name, first_name, role, is_libero, is_captain')
+        .eq('society_id', societyId)
+        .order('number', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        toast.error('Nessun atleta trovato', { description: 'Aggiungi prima gli atleti in /atleti' });
+        return;
+      }
+      const players: Player[] = data.map((a) => ({
+        id: a.id,
+        number: a.number ?? 0,
+        lastName: (a.last_name ?? '').toUpperCase(),
+        firstName: a.first_name ?? '',
+        role: ROLE_MAP[a.role ?? ''] ?? 'O',
+        isLibero: a.is_libero ?? false,
+        isCaptain: a.is_captain ?? false,
+      }));
+      if (side === 'home') useMatchStore.getState().setHomeTeam({ players });
+      else useMatchStore.getState().setAwayTeam({ players });
+      toast.success(`${players.length} atleti importati`, {
+        description: 'Usa Auto 5-1 per la formazione automatica',
+      });
+    } catch (e) {
+      toast.error('Errore import', { description: String(e) });
+    } finally {
+      setLoadingFromDb(false);
+    }
+  };
+
   const fillTeam = () => {
     const template = [
       { number: 1, lastName: 'Giocatore 1', role: 'S' as PlayerRole, isLibero: false, isCaptain: false }, { number: 2, lastName: 'Giocatore 2', role: 'OP' as PlayerRole, isLibero: false, isCaptain: false },
@@ -130,10 +184,23 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
   return (
     <div className="space-y-4">
       <div className="glass rounded-xl p-4 space-y-3">
-        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          {side === 'home' ? 'Squadra Casa' : 'Squadra Ospite'}
-        </h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            {side === 'home' ? 'Squadra Casa' : 'Squadra Ospite'}
+          </h3>
+          {side === 'home' && (
+            <button
+              type="button"
+              onClick={handleImportFromDb}
+              disabled={loadingFromDb}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider bg-primary/15 text-primary hover:bg-primary/25 border border-primary/30 transition-colors disabled:opacity-50"
+            >
+              <Download className="w-3 h-3" />
+              {loadingFromDb ? 'Caricamento…' : 'Importa da Atleti'}
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Nome Squadra</Label>

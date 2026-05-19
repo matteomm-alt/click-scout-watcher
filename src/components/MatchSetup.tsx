@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useMatchStore } from '@/store/matchStore';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -8,6 +10,27 @@ import { toast } from 'sonner';
 
 export function MatchSetup() {
   const { matchInfo, setMatchInfo, setStep, loadDemoMatch, homeTeam, awayTeam, setHomeTeam, setAwayTeam, matchState, setSingleTeamMode } = useMatchStore();
+  const { seasonStart, societyName } = useActiveSociety();
+
+  // Pre-popola data, stagione, e ultimi nomi squadra (Prompt 26)
+  useEffect(() => {
+    if (!matchInfo.date) {
+      setMatchInfo({ date: new Date().toISOString().split('T')[0] });
+    }
+    if (seasonStart && !matchInfo.season) {
+      const y = new Date(seasonStart).getFullYear();
+      setMatchInfo({ season: `${y}/${y + 1}` });
+    }
+    if (!homeTeam.name) {
+      const last = localStorage.getItem('last_home_team_name') ?? (societyName ?? '');
+      if (last) setHomeTeam({ name: last });
+    }
+    if (!awayTeam.name) {
+      const last = localStorage.getItem('last_away_team_name');
+      if (last) setAwayTeam({ name: last });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seasonStart, societyName]);
 
   const handleDemo = () => {
     loadDemoMatch();
@@ -25,6 +48,8 @@ export function MatchSetup() {
       toast.error('Inserisci il nome della squadra ospite');
       return;
     }
+    localStorage.setItem('last_home_team_name', homeTeam.name);
+    localStorage.setItem('last_away_team_name', awayTeam.name);
     setStep('roster');
   };
 

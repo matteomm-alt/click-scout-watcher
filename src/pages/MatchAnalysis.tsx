@@ -471,6 +471,39 @@ export default function MatchAnalysis() {
           </div>
         </div>
         <div className="container">
+          {availableSets.length > 1 && (
+            <div className="flex items-center gap-2 pt-2 pb-1 overflow-x-auto">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground shrink-0">Set:</span>
+              <button
+                type="button"
+                onClick={() => setFilters(f => ({ ...f, setNumbers: [] }))}
+                className={`min-h-8 px-3 rounded-full text-xs font-bold transition-colors ${
+                  filters.setNumbers.length === 0
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Tutti
+              </button>
+              {availableSets.map((s) => {
+                const active = filters.setNumbers.length === 1 && filters.setNumbers.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setFilters(f => ({ ...f, setNumbers: [s] }))}
+                    className={`min-h-8 px-3 rounded-full text-xs font-bold transition-colors shrink-0 ${
+                      active
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {s}° set
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <div className="flex-1 flex gap-1 overflow-x-auto">
             {TABS.map(t => (

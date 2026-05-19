@@ -24,8 +24,11 @@ import {
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
   PieChart, UserCircle, Star, HeartPulse,
-  LogOut, Shield, Boxes, Settings, HelpCircle, Bell,
+  LogOut, Shield, Boxes, Settings, HelpCircle, Bell, Zap,
 } from 'lucide-react';
+
+const SCOUT_MODE_KEY = 'sidebar_scout_mode';
+const SCOUT_MODE_URLS = new Set(['/', '/scout', '/archive', '/import', '/atleti', '/calendario', '/presenze']);
 
 interface NavItem {
   title: string;
@@ -92,11 +95,21 @@ export function AppSidebar() {
   const { societyId, societyName, features, isAdmin } = useActiveSociety();
   const counts = useNotifications(societyId, user?.id ?? null);
   const [bellOpen, setBellOpen] = useState(false);
+  const [scoutMode, setScoutMode] = useState<boolean>(() => localStorage.getItem(SCOUT_MODE_KEY) === 'true');
+  const toggleScoutMode = () => {
+    setScoutMode((prev) => {
+      const next = !prev;
+      localStorage.setItem(SCOUT_MODE_KEY, String(next));
+      return next;
+    });
+  };
 
   const totalNotifs = counts.comunicazioni + counts.presenze + counts.convocazioni;
 
-  const visible = (items: NavItem[]) =>
-    items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
+  const visible = (items: NavItem[]) => {
+    const filtered = items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
+    return scoutMode ? filtered.filter((i) => SCOUT_MODE_URLS.has(i.url)) : filtered;
+  };
 
   const renderItems = (items: NavItem[]) =>
     items.map((item) => (
@@ -116,11 +129,11 @@ export function AppSidebar() {
       </SidebarMenuItem>
     ));
 
-  const mainItems = useMemo(() => visible(MAIN), [features]);
-  const gestionaleItems = useMemo(() => visible(GESTIONALE), [features]);
-  const coachingItems = useMemo(() => visible(COACHING), [features]);
-  const analisiItems = useMemo(() => visible(ANALISI), [features]);
-  const atletaItems = useMemo(() => visible(ATLETA), [features]);
+  const mainItems = useMemo(() => visible(MAIN), [features, scoutMode]);
+  const gestionaleItems = useMemo(() => visible(GESTIONALE), [features, scoutMode]);
+  const coachingItems = useMemo(() => visible(COACHING), [features, scoutMode]);
+  const analisiItems = useMemo(() => visible(ANALISI), [features, scoutMode]);
+  const atletaItems = useMemo(() => visible(ATLETA), [features, scoutMode]);
 
   return (
     <Sidebar collapsible="icon">
@@ -194,6 +207,21 @@ export function AppSidebar() {
             </Popover>
           )}
         </div>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={toggleScoutMode}
+            className={`mx-2 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors ${
+              scoutMode
+                ? 'bg-primary/15 text-primary border border-primary/30'
+                : 'bg-secondary text-muted-foreground hover:text-foreground border border-transparent'
+            }`}
+            title={scoutMode ? 'Modalità Scout attiva: solo voci essenziali' : 'Mostra tutte le sezioni'}
+          >
+            <Zap className="w-3 h-3" />
+            {scoutMode ? 'Modalità Scout' : 'Tutte le sezioni'}
+          </button>
+        )}
       </SidebarHeader>
 
       <SidebarContent>
