@@ -207,6 +207,21 @@ export function AppSidebar() {
             </Popover>
           )}
         </div>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={toggleScoutMode}
+            className={`mx-2 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors ${
+              scoutMode
+                ? 'bg-primary/15 text-primary border border-primary/30'
+                : 'bg-secondary text-muted-foreground hover:text-foreground border border-transparent'
+            }`}
+            title={scoutMode ? 'Modalità Scout attiva: solo voci essenziali' : 'Mostra tutte le sezioni'}
+          >
+            <Zap className="w-3 h-3" />
+            {scoutMode ? 'Modalità Scout' : 'Tutte le sezioni'}
+          </button>
+        )}
       </SidebarHeader>
 
       <SidebarContent>
