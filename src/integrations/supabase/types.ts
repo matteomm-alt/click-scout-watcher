@@ -2018,6 +2018,18 @@ export type Database = {
           society_name: string
         }[]
       }
+      get_public_shared_match: {
+        Args: { _match_id: string; _token: string }
+        Returns: {
+          away_sets_won: number
+          away_team_name: string
+          home_sets_won: number
+          home_team_name: string
+          id: string
+          league: string
+          match_date: string
+        }[]
+      }
       get_user_societies: {
         Args: { _user_id: string }
         Returns: {
