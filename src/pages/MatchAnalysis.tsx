@@ -427,6 +427,27 @@ export default function MatchAnalysis() {
     doc.save(`${safe(match.home_team.name)}_${safe(match.away_team.name)}_${date}.pdf`);
   };
 
+  const exportReportPdf = () => {
+    if (!match) return;
+    downloadMatchReport(
+      {
+        homeName: match.home_team.name,
+        awayName: match.away_team.name,
+        homeSetsWon: match.home_sets_won,
+        awaySetsWon: match.away_sets_won,
+        date: match.match_date,
+        league: match.league,
+        venue: match.venue,
+        setResults: Array.isArray(match.set_results) ? (match.set_results as any) : [],
+        homeTeamId: match.home_team.id,
+        awayTeamId: match.away_team.id,
+      },
+      filteredAllActions,
+      players,
+    );
+    toast.success('Report PDF generato');
+  };
+
   if (loading || !match) {
     return <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">Caricamento…</div>;
   }
