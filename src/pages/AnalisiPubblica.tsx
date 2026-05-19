@@ -27,14 +27,11 @@ export default function AnalisiPubblica() {
       return;
     }
     supabase
-      .from('scout_matches')
-      .select('id, match_date, league, home_sets_won, away_sets_won, home_team:home_team_id(name), away_team:away_team_id(name)')
-      .eq('id', matchId)
-      .eq('share_token', token)
-      .maybeSingle()
+      .rpc('get_public_shared_match', { _match_id: matchId, _token: token })
       .then(({ data, error: e }) => {
-        if (e || !data) setError('Link non valido o scaduto.');
-        else setMatch(data as any);
+        const row = Array.isArray(data) ? data[0] : null;
+        if (e || !row) setError('Link non valido o scaduto.');
+        else setMatch(row as PublicMatch);
         setLoading(false);
       });
   }, [matchId, token]);
