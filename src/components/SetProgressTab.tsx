@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type DbAction, SKILL_NAMES } from '@/lib/scoutAnalysis';
+import { type DbAction, SKILL_NAMES, setsTimeline } from '@/lib/scoutAnalysis';
 import { Card } from '@/components/ui/card';
 
 interface Props {
