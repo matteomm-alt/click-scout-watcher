@@ -267,6 +267,16 @@ function parseScout(sections: Record<string, string[]>): {
     const homeScore = toInt(c[9], 0) ?? 0;
     const awayScore = toInt(c[10], 0) ?? 0;
 
+    // Coordinate x,y reali (DataVolley 4 / VolleyStation — vuote in Click&Scout)
+    const parseCoord = (s: string | undefined): number | null => {
+      const v = parseFloat(s ?? '');
+      return isNaN(v) || v === 0 ? null : Math.min(1, Math.max(0, v));
+    };
+    const startX = parseCoord(c[11]);
+    const startY = parseCoord(c[12]);
+    const endX   = parseCoord(c[13]);
+    const endY   = parseCoord(c[14]);
+
     const homeRot = [c[15], c[16], c[17], c[18], c[19], c[20]].map(s => toInt(s, 0) ?? 0);
     const awayRot = [c[21], c[22], c[23], c[24], c[25], c[26]].map(s => toInt(s, 0) ?? 0);
 
