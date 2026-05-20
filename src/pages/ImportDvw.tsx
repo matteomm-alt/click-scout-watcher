@@ -100,6 +100,7 @@ export default function ImportDvw() {
         home_score: a.homeScore, away_score: a.awayScore,
         home_rotation: a.homeRotation, away_rotation: a.awayRotation,
         serving_side: a.servingSide, raw_code: a.rawCode, timestamp_clock: a.timestampClock,
+        start_x: a.startX, start_y: a.startY, end_x: a.endX, end_y: a.endY,
       }));
       const BATCH = 500;
       for (let i = 0; i < allActions.length; i += BATCH) {

@@ -1087,6 +1087,8 @@ export type Database = {
           away_setter_pos: number | null
           created_at: string
           end_subzone: string | null
+          end_x: number | null
+          end_y: number | null
           end_zone: number | null
           evaluation: string
           home_rotation: number[] | null
@@ -1104,6 +1106,8 @@ export type Database = {
           side: string
           skill: string
           skill_type: string | null
+          start_x: number | null
+          start_y: number | null
           start_zone: number | null
           timestamp_clock: string | null
         }
@@ -1115,6 +1119,8 @@ export type Database = {
           away_setter_pos?: number | null
           created_at?: string
           end_subzone?: string | null
+          end_x?: number | null
+          end_y?: number | null
           end_zone?: number | null
           evaluation: string
           home_rotation?: number[] | null
@@ -1132,6 +1138,8 @@ export type Database = {
           side: string
           skill: string
           skill_type?: string | null
+          start_x?: number | null
+          start_y?: number | null
           start_zone?: number | null
           timestamp_clock?: string | null
         }
@@ -1143,6 +1151,8 @@ export type Database = {
           away_setter_pos?: number | null
           created_at?: string
           end_subzone?: string | null
+          end_x?: number | null
+          end_y?: number | null
           end_zone?: number | null
           evaluation?: string
           home_rotation?: number[] | null
@@ -1160,6 +1170,8 @@ export type Database = {
           side?: string
           skill?: string
           skill_type?: string | null
+          start_x?: number | null
+          start_y?: number | null
           start_zone?: number | null
           timestamp_clock?: string | null
         }
