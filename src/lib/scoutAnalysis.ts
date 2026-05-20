@@ -26,6 +26,10 @@ export interface DbAction {
   home_setter_pos: number | null;
   away_setter_pos: number | null;
   serving_side: 'home' | 'away' | null;
+  start_x?: number | null;
+  start_y?: number | null;
+  end_x?: number | null;
+  end_y?: number | null;
 }
 
 /**
