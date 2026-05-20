@@ -32,18 +32,29 @@ export function SetProgressTab({ actions }: Props) {
 
   return (
     <Card className="p-5 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-bold uppercase italic">Andamento per Set</h3>
-        <div className="flex gap-1">
-          {SKILLS.map(sk => (
-            <button key={sk} onClick={() => setSkill(sk)}
-              className={`px-3 py-1 rounded text-xs font-bold uppercase transition-colors ${skill === sk ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-              {SKILL_NAMES[sk] || sk}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 bg-muted rounded p-0.5">
+            <button onClick={() => setView('efficiency')}
+              className={`min-h-7 px-2 rounded text-[11px] font-bold uppercase ${view === 'efficiency' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Efficienza</button>
+            <button onClick={() => setView('momentum')}
+              className={`min-h-7 px-2 rounded text-[11px] font-bold uppercase ${view === 'momentum' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Momentum</button>
+          </div>
+          {view === 'efficiency' && (
+            <div className="flex gap-1">
+              {SKILLS.map(sk => (
+                <button key={sk} onClick={() => setSkill(sk)}
+                  className={`px-3 py-1 rounded text-xs font-bold uppercase transition-colors ${skill === sk ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                  {SKILL_NAMES[sk] || sk}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+      {view === 'efficiency' && (<>
       {sets.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-4">Nessun dato per {SKILL_NAMES[skill]}</p>
       ) : (
