@@ -10,6 +10,7 @@ const SKILLS = ['R', 'A', 'S', 'B', 'D'];
 
 export function SetProgressTab({ actions }: Props) {
   const [skill, setSkill] = useState('R');
+  const [view, setView] = useState<'efficiency' | 'momentum'>('efficiency');
 
   // Raggruppa per set
   const bySet = new Map<number, DbAction[]>();
