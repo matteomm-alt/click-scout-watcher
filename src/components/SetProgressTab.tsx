@@ -108,6 +108,101 @@ export function SetProgressTab({ actions }: Props) {
           </div>
         </>
       )}
+      </>)}
+
+      {view === 'momentum' && (() => {
+        const timeline = setsTimeline(actions);
+        if (timeline.length === 0) {
+          return <p className="text-sm text-muted-foreground text-center py-6">Nessun dato disponibile</p>;
+        }
+        const computeRuns = (points: { home: number; away: number }[]) => {
+          const runs: { team: 'home' | 'away'; length: number; startIdx: number }[] = [];
+          if (points.length < 2) return runs;
+          let currentTeam: 'home' | 'away' | null = null;
+          let runStart = 0;
+          let runLength = 0;
+          for (let i = 1; i < points.length; i++) {
+            const prevH = points[i - 1].home, prevA = points[i - 1].away;
+            const currH = points[i].home, currA = points[i].away;
+            const scorer: 'home' | 'away' | null = currH > prevH ? 'home' : currA > prevA ? 'away' : null;
+            if (!scorer) continue;
+            if (scorer === currentTeam) {
+              runLength++;
+            } else {
+              if (currentTeam && runLength >= 3) runs.push({ team: currentTeam, length: runLength, startIdx: runStart });
+              currentTeam = scorer;
+              runStart = i - runLength;
+              runLength = 1;
+            }
+          }
+          if (currentTeam && runLength >= 3) runs.push({ team: currentTeam, length: runLength, startIdx: runStart });
+          return runs;
+        };
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ background: 'hsl(var(--primary) / 0.6)' }} />Casa</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ background: 'rgba(239,68,68,0.5)' }} />Ospite</span>
+              <span>Run evidenziati = 3+ punti consecutivi</span>
+            </div>
+            {timeline.map(({ setNumber, points }) => {
+              const totalPoints = points.length - 1;
+              if (totalPoints < 1) return null;
+              const runs = computeRuns(points);
+              const finalScore = points[points.length - 1];
+              return (
+                <div key={setNumber} className="space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-bold">Set {setNumber}</span>
+                    <span className="text-sm font-black italic">{finalScore.home} – {finalScore.away}</span>
+                  </div>
+                  <div className="relative">
+                    <svg viewBox="0 0 300 40" className="w-full">
+                      <rect x="0" y="14" width="300" height="12" fill="hsl(var(--muted))" />
+                      {points.slice(1).map((pt, i) => {
+                        const prev = points[i];
+                        const scorer = pt.home > prev.home ? 'home' : pt.away > prev.away ? 'away' : null;
+                        if (!scorer) return null;
+                        const xw = 300 / totalPoints;
+                        const color = scorer === 'home' ? 'hsl(var(--primary) / 0.6)' : 'rgba(239,68,68,0.5)';
+                        return <rect key={i} x={i * xw} y={scorer === 'home' ? 14 : 20} width={xw} height={6} fill={color} />;
+                      })}
+                      <line x1="0" y1="20" x2="300" y2="20" stroke="hsl(var(--background))" strokeWidth="0.5" />
+                      {runs.map((run, i) => {
+                        const xw = 300 / totalPoints;
+                        const xStart = run.startIdx * xw;
+                        const width = run.length * xw;
+                        const isHome = run.team === 'home';
+                        return (
+                          <g key={i}>
+                            <rect x={xStart} y={isHome ? 8 : 26} width={width} height={6}
+                              fill="none" stroke={isHome ? 'hsl(var(--primary))' : '#dc2626'} strokeWidth="1.5" rx="2" />
+                            <text x={xStart + width / 2} y={isHome ? 6 : 38} textAnchor="middle"
+                              fontSize="6" fontWeight="bold" fill={isHome ? 'hsl(var(--primary))' : '#dc2626'}>+{run.length}</text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                  {runs.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {runs.sort((a, b) => b.length - a.length).slice(0, 5).map((run, i) => {
+                        const startPt = points[run.startIdx];
+                        const isHome = run.team === 'home';
+                        return (
+                          <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-bold ${isHome ? 'bg-primary/15 text-primary' : 'bg-destructive/15 text-destructive'}`}>
+                            {isHome ? 'Casa' : 'Ospite'} +{run.length}{startPt ? ` (da ${startPt.home}-${startPt.away})` : ''}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </Card>
   );
 }
