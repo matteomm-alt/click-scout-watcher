@@ -82,6 +82,10 @@ export interface DvwAction {
   servingSide: DvwSide | null;
   rawCode: string;
   timestampClock: string | null;
+  startX: number | null;
+  startY: number | null;
+  endX: number | null;
+  endY: number | null;
 }
 
 export interface DvwSubstitution {
