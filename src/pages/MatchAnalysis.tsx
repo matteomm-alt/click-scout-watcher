@@ -691,6 +691,14 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
   const cells = zoneStats(filtered, side);
   const maxTotal = Math.max(1, ...cells.map(c => c.total));
 
+  // Coordinate reali disponibili?
+  const coordKeyX = side === 'start' ? 'start_x' : 'end_x';
+  const coordKeyY = side === 'start' ? 'start_y' : 'end_y';
+  const pointsWithCoords = filtered.filter(
+    a => (a as any)[coordKeyX] != null && (a as any)[coordKeyY] != null
+  );
+  const hasRealCoords = filtered.length > 0 && pointsWithCoords.length > filtered.length * 0.5;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
@@ -723,7 +731,42 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
           })}
         </div>
         <p className="text-xs text-muted-foreground mt-4">Intensità del colore = volume azioni. Numero = totale, eff% = (perfette − errori) / totale.</p>
+        {!hasRealCoords && (
+          <p className="text-xs text-muted-foreground mt-2 italic">
+            Scatter non disponibile — il file DVW non contiene coordinate precise. Disponibile con file DataVolley 4 o VolleyStation.
+          </p>
+        )}
       </Card>
+      {hasRealCoords && (
+        <Card className="p-6">
+          <h3 className="text-sm font-bold uppercase italic">Scatter — coordinate reali</h3>
+          <p className="text-xs text-muted-foreground mb-3">{pointsWithCoords.length} azioni con coordinate precise</p>
+          <div className="w-full max-w-xl">
+            <svg viewBox="0 0 300 165" className="w-full border border-border rounded bg-muted/20">
+              <line x1="0" y1="82.5" x2="300" y2="82.5" stroke="hsl(var(--foreground))" strokeWidth="1.2" strokeDasharray="4 3" />
+              <text x="295" y="79" textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">RETE</text>
+              {pointsWithCoords.map((a, i) => {
+                const xVal = (a as any)[coordKeyX] as number;
+                const yVal = (a as any)[coordKeyY] as number;
+                const cx = 10 + xVal * 280;
+                const cy = 5 + yVal * 155;
+                const color =
+                  a.evaluation === '#' ? '#16a34a'
+                  : a.evaluation === '=' || a.evaluation === '/' ? '#dc2626'
+                  : a.evaluation === '+' ? '#2563eb'
+                  : '#ca8a04';
+                return <circle key={a.id || i} cx={cx} cy={cy} r="2.5" fill={color} fillOpacity="0.75" />;
+              })}
+            </svg>
+          </div>
+          <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-muted-foreground">
+            <span><span style={{ color: '#16a34a' }}>●</span> Perfetto (#)</span>
+            <span><span style={{ color: '#2563eb' }}>●</span> Positivo (+)</span>
+            <span><span style={{ color: '#ca8a04' }}>●</span> OK/Scarso</span>
+            <span><span style={{ color: '#dc2626' }}>●</span> Errore (= /)</span>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
