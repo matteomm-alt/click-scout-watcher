@@ -386,6 +386,7 @@ function parseScout(sections: Record<string, string[]>): {
         homeRotation: homeRot, awayRotation: awayRot,
         homeSetterPos, awaySetterPos,
         servingSide, rawCode: code, timestampClock,
+        startX, startY, endX, endY,
       });
       continue;
     }
