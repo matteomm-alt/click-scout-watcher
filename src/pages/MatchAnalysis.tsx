@@ -1435,6 +1435,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
 
 function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 'home' | 'away'; pct: (n: number, d: number) => number }) {
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [distTab, setDistTab] = useState<'attack' | 'setter'>('attack');
   const zoneGroup = (z: number | null) => z === 2 ? 'sinistra' : z === 3 ? 'centro' : z === 4 ? 'destra' : [1, 5, 6].includes(z || 0) ? 'seconda linea' : 'altro';
   const rows = [1, 2, 3, 4, 5, 6].flatMap((rot) => ['sinistra', 'centro', 'destra', 'seconda linea'].map((zg) => {
     const atts = actions.filter((a) => a.skill === 'A' && rotationOf(a, side) === rot && zoneGroup(a.start_zone) === zg && (selectedType === 'all' || a.skill_type === selectedType));
@@ -1442,19 +1443,127 @@ function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; sid
     const err = atts.filter((a) => a.evaluation === '=' || a.evaluation === '/').length;
     return { rot, zg, total: atts.length, kill, eff: pct(kill - err, atts.length), killPct: pct(kill, atts.length) };
   })).filter((r) => r.total > 0);
+
+  // Setter distribution data
+  const ZONE_LABELS: Record<number, string> = {
+    4: 'Ala Sx', 3: 'Centro', 2: 'Ala Dx',
+    1: 'P.Dx', 5: 'P.Sx', 6: 'Retro',
+  };
+  const ZONE_ORDER = [4, 3, 2, 6, 5, 1];
+  const sets = actions.filter(a => a.skill === 'E');
+  const byRot: Record<number, DbAction[]> = { 1:[],2:[],3:[],4:[],5:[],6:[] };
+  sets.forEach(a => {
+    const r = rotationOf(a, side);
+    if (r) byRot[r].push(a);
+  });
+  const getNextAttack = (s: DbAction): DbAction | null =>
+    actions.find(a => a.skill === 'A' && a.set_number === s.set_number && a.rally_index === s.rally_index && a.action_index === s.action_index + 1) ?? null;
+  const rotationsWithSets = [1,2,3,4,5,6].filter(r => byRot[r].length > 0);
+  const totalSets = sets.length;
+
   return (
     <Card className="p-5">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h3 className="text-sm font-bold uppercase italic">Distribuzione</h3>
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Tipo attacco" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti</SelectItem>
-            {ATTACK_TYPES.map(t => <SelectItem key={t.key} value={t.key}>{t.key} — {t.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        {distTab === 'attack' && (
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Tipo attacco" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti</SelectItem>
+              {ATTACK_TYPES.map(t => <SelectItem key={t.key} value={t.key}>{t.key} — {t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
-      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 text-left">Rot</th><th>Zona</th><th>Tot</th><th>Eff%</th><th>Kill%</th></tr></thead><tbody>{rows.map((r) => <tr key={`${r.rot}-${r.zg}`} className="border-b border-border/40"><td className="py-2 font-bold">P{r.rot}</td><td className="text-center">{r.zg}</td><td className="text-center">{r.total}</td><td className={`text-center font-black ${r.eff > 30 ? 'text-success' : r.eff >= 0 ? 'text-warning' : 'text-destructive'}`}>{r.eff}</td><td className="text-center">{r.killPct}</td></tr>)}</tbody></table></div>
+
+      <div className="mb-4 flex gap-1 p-1 bg-muted rounded">
+        {[
+          { key: 'attack', label: 'Attacchi' },
+          { key: 'setter', label: 'Alzate' },
+        ].map(t => (
+          <button key={t.key} onClick={() => setDistTab(t.key as typeof distTab)}
+            className={`flex-1 min-h-9 rounded text-xs font-bold uppercase transition-colors ${distTab === t.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {distTab === 'attack' && (
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 text-left">Rot</th><th>Zona</th><th>Tot</th><th>Eff%</th><th>Kill%</th></tr></thead><tbody>{rows.map((r) => <tr key={`${r.rot}-${r.zg}`} className="border-b border-border/40"><td className="py-2 font-bold">P{r.rot}</td><td className="text-center">{r.zg}</td><td className="text-center">{r.total}</td><td className={`text-center font-black ${r.eff > 30 ? 'text-success' : r.eff >= 0 ? 'text-warning' : 'text-destructive'}`}>{r.eff}</td><td className="text-center">{r.killPct}</td></tr>)}</tbody></table></div>
+      )}
+
+      {distTab === 'setter' && (
+        totalSets === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">Nessuna alzata trovata — potrebbero non essere state registrate nel file DVW.</p>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3 border border-border rounded">
+                <p className="text-2xl font-black italic">{totalSets}</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Alzate totali</p>
+              </div>
+              <div className="p-3 border border-border rounded">
+                <p className="text-2xl font-black italic">{pct(sets.filter(a=>[4,3,2].includes(a.end_zone??0)).length, totalSets)}%</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verso prima linea</p>
+              </div>
+              <div className="p-3 border border-border rounded">
+                <p className="text-2xl font-black italic">{pct(sets.filter(a=>[1,5,6].includes(a.end_zone??0)).length, totalSets)}%</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verso seconda linea</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {rotationsWithSets.map(rot => {
+                const rotSets = byRot[rot];
+                const total = rotSets.length;
+                const zoneData = ZONE_ORDER.map(z => {
+                  const zSets = rotSets.filter(a => a.end_zone === z);
+                  const attacks = zSets.map(getNextAttack).filter(Boolean) as DbAction[];
+                  const kills = attacks.filter(a => a.evaluation === '#').length;
+                  const errors = attacks.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+                  return {
+                    zone: z,
+                    label: ZONE_LABELS[z] ?? `Z${z}`,
+                    count: zSets.length,
+                    pctOfTotal: pct(zSets.length, total),
+                    killPct: attacks.length > 0 ? pct(kills, attacks.length) : null,
+                    eff: attacks.length > 0 ? pct(kills - errors, attacks.length) : null,
+                  };
+                }).filter(d => d.count > 0);
+                const topZone = zoneData.reduce((a, b) => b.count > a.count ? b : a, zoneData[0]);
+                return (
+                  <div key={rot} className="rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="flex items-baseline justify-between mb-3">
+                      <div>
+                        <span className="font-black">Rotazione P{rot}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">({total} alzate)</span>
+                      </div>
+                      {topZone && <span className="text-xs text-primary font-bold">→ {topZone.label} ({topZone.pctOfTotal}%)</span>}
+                    </div>
+                    <div className="space-y-2">
+                      {zoneData.map(d => (
+                        <div key={d.zone} className="grid grid-cols-[60px_1fr_40px_60px] gap-2 items-center text-xs">
+                          <span className="font-bold">{d.label}</span>
+                          <div className="relative h-4 bg-background rounded overflow-hidden">
+                            <div className="absolute inset-y-0 left-0 bg-primary/40" style={{ width: `${d.pctOfTotal}%` }} />
+                            <span className="absolute inset-0 flex items-center justify-end pr-1 text-[10px] font-bold">{d.count}</span>
+                          </div>
+                          <span className="text-right text-muted-foreground">{d.pctOfTotal}%</span>
+                          {d.killPct !== null ? (
+                            <span className={`text-right font-bold ${d.killPct >= 50 ? 'text-success' : d.killPct >= 30 ? 'text-warning' : 'text-destructive'}`}>kill {d.killPct}%</span>
+                          ) : <span className="text-right text-muted-foreground/60">—</span>}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[10px] text-muted-foreground">kill% = % di # sull'azione successiva alla alzata</p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">Mostra solo le rotazioni con almeno 1 alzata. I valori kill% richiedono che gli attacchi siano stati scoutizzati.</p>
+          </div>
+        )
+      )}
     </Card>
   );
 }
