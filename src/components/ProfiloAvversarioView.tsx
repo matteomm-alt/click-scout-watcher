@@ -9,6 +9,7 @@ import { SKILL_NAMES, statsBySkill, zoneStats, type DbAction } from '@/lib/scout
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
+  LineChart, Line,
 } from 'recharts';
 
 interface Team {
@@ -40,7 +41,7 @@ export function ProfiloAvversarioView() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingActions, setLoadingActions] = useState(false);
-  const [expanded, setExpanded] = useState<'stats' | 'heatmap' | 'radar' | null>('stats');
+  const [expanded, setExpanded] = useState<'stats' | 'heatmap' | 'radar' | 'trend' | null>('stats');
 
   useEffect(() => {
     if (!user) return;
@@ -97,6 +98,28 @@ export function ProfiloAvversarioView() {
 
   const attackZones = useMemo(() => zoneStats(actions.filter(a => a.skill === 'A'), 'end'), [actions]);
   const maxZone = Math.max(1, ...attackZones.map(z => z.total));
+
+  // Trend per-partita: efficienza attacco e ricezione positiva per ciascuna partita
+  const trendData = useMemo(() => {
+    const sorted = [...teamMatches].sort((a, b) =>
+      (a.match_date || '').localeCompare(b.match_date || '')
+    );
+    return sorted.map((m) => {
+      const acts = actions.filter((a) => a.scout_match_id === m.id);
+      const att = acts.filter((a) => a.skill === 'A');
+      const rec = acts.filter((a) => a.skill === 'R');
+      const attTotal = att.length;
+      const attPerfect = att.filter((a) => a.evaluation === '#').length;
+      const attErr = att.filter((a) => a.evaluation === '=').length;
+      const recTotal = rec.length;
+      const recPos = rec.filter((a) => a.evaluation === '#' || a.evaluation === '+').length;
+      return {
+        label: m.match_date?.slice(5) || '—',
+        AttEff: attTotal > 0 ? Math.round(((attPerfect - attErr) / attTotal) * 100) : 0,
+        RicPos: recTotal > 0 ? Math.round((recPos / recTotal) * 100) : 0,
+      };
+    });
+  }, [teamMatches, actions]);
 
   // Record H2H
   const ownTeamIds = new Set(teams.filter(t => t.is_own_team).map(t => t.id));
@@ -252,6 +275,26 @@ export function ProfiloAvversarioView() {
                       </ResponsiveContainer>
                     </div>
                   </Section>
+
+                  {/* Trend per partita */}
+                  {trendData.length >= 2 && (
+                    <Section id="trend" label="Trend multi-partita">
+                      <div className="h-56">
+                        <ResponsiveContainer>
+                          <LineChart data={trendData} margin={{ left: 4, right: 16, top: 8, bottom: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                            <YAxis domain={[-50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Line type="monotone" dataKey="AttEff" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                            <Line type="monotone" dataKey="RicPos" stroke="#1D9E75" strokeWidth={2} dot={{ r: 3 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">Andamento efficienza attacco e ricezione positiva sulle {trendData.length} partite analizzate.</p>
+                    </Section>
+                  )}
                 </div>
               )}
             </div>
