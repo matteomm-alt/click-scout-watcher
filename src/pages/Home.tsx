@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FileUp, Activity, BarChart3, Library, LogOut } from 'lucide-react';
 import { HomeDashboard } from '@/components/home/HomeDashboard';
 import { GettingStarted } from '@/components/home/GettingStarted';
+import { InstallPrompt } from '@/components/home/InstallPrompt';
 
 /**
  * Home dell'app: due entry point principali — Importa DVW e Scout Live —
@@ -120,6 +121,7 @@ export default function Home() {
       </section>
 
       {/* DASHBOARD OPERATIVA */}
+      <InstallPrompt />
       <GettingStarted />
       <HomeDashboard />
     </div>
