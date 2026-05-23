@@ -135,7 +135,7 @@ export function ValutazioniView() {
   };
 
   // Radar data: una entry per fondamentale, una serie per fase con dati
-  const radarData = useMemo(() => FONDAMENTALI.map(f => {
+  const radarData = useMemo(() => fondamentaliAttivi.map(f => {
     const entry: any = { fondamentale: f.nome };
     PHASES.forEach(p => {
       const m = mediaFond(f.id, f.subAspetti, p.id);
@@ -184,7 +184,7 @@ export function ValutazioniView() {
     cols.forEach(c => doc.text(c.t, c.x, y));
     y += 1; doc.line(12, y, W - 12, y); y += 4;
     doc.setFont('helvetica', 'normal');
-    FONDAMENTALI.forEach(f => {
+    fondamentaliAttivi.forEach(f => {
       const mi = mediaFond(f.id, f.subAspetti, 'inizio');
       const mm = mediaFond(f.id, f.subAspetti, 'meta');
       const mf = mediaFond(f.id, f.subAspetti, 'fine');
@@ -204,7 +204,7 @@ export function ValutazioniView() {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
     doc.text('Dettaglio sub-aspetti', 12, y); y += 5;
     doc.setFontSize(9);
-    FONDAMENTALI.forEach(f => {
+    fondamentaliAttivi.forEach(f => {
       if (y > 265) { doc.addPage(); y = 14; }
       doc.setFont('helvetica', 'bold');
       doc.text(f.nome, 12, y); y += 4;
@@ -290,7 +290,7 @@ export function ValutazioniView() {
       {/* Panoramica globale */}
       {selectedAthleteId && !loading && (
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-          {FONDAMENTALI.map(f => {
+          {fondamentaliAttivi.map(f => {
             const media = mediaFond(f.id, f.subAspetti, phase);
             const tappa = getTappa(media);
             return (
@@ -327,7 +327,7 @@ export function ValutazioniView() {
       {/* Dettaglio per fondamentale */}
       {selectedAthleteId && !loading && (
         <div className="space-y-3">
-          {FONDAMENTALI.map(f => {
+          {fondamentaliAttivi.map(f => {
             const media = mediaFond(f.id, f.subAspetti, phase);
             const tappa = getTappa(media);
             const isOpen = expanded === f.id;
