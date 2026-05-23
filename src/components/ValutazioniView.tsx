@@ -44,6 +44,21 @@ interface Evaluation {
 export function ValutazioniView() {
   const { user } = useAuth();
   const { societyId, societyName } = useActiveSociety();
+  const { template, loading: templateLoading, saving: templateSaving, save: saveTemplate, reset: resetTemplate } = useEvalTemplate();
+  const [editingTemplate, setEditingTemplate] = useState(false);
+  const fondamentaliAttivi = useMemo(() => {
+    const standard = FONDAMENTALI_DEFAULT.filter(f =>
+      template.visibleFundamentals === null || template.visibleFundamentals.includes(f.id)
+    ).map(f => ({
+      id: f.id,
+      nome: f.nome,
+      subAspetti: [...f.subAspetti, ...(template.extraSubAspects[f.id] ?? [])],
+    }));
+    const custom = template.customFundamentals.map(f => ({
+      id: f.id, nome: f.nome, subAspetti: f.subAspetti,
+    }));
+    return [...standard, ...custom];
+  }, [template]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [selectedAthleteId, setSelectedAthleteId] = useState('');
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
