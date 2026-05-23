@@ -239,9 +239,16 @@ export function ValutazioniView() {
     <div className="container py-8 space-y-6">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Atleta & Valutazioni</p>
-        <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center gap-3 mb-1 flex-wrap">
           <Star className="w-8 h-8 text-primary" />
           <h1 className="text-4xl font-black italic uppercase leading-none">Valutazioni Tecniche</h1>
+          <button
+            type="button"
+            onClick={() => setEditingTemplate(true)}
+            className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg px-3 py-1.5 transition-colors"
+          >
+            <Settings className="w-3.5 h-3.5" /> Personalizza
+          </button>
         </div>
         <p className="text-muted-foreground">Valutazione 1→5 per ogni fondamentale e sub-aspetto, divisa per fase stagionale.</p>
       </div>
