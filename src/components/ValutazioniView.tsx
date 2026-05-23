@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Star, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { Star, ChevronDown, ChevronUp, FileDown, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -12,50 +13,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
+import { FONDAMENTALI_DEFAULT } from '@/lib/evalFondamentali';
+import { useEvalTemplate } from '@/hooks/useEvalTemplate';
+import { EvalTemplateEditor } from '@/components/EvalTemplateEditor';
 
-// ── Fondamentali con sub-aspetti ─────────────────────────────────────
-const FONDAMENTALI = [
-  { id: 'f1', nome: 'Palleggio', subAspetti: [
-    'Posizione delle mani e delle dita', 'Posizione del corpo sotto la palla',
-    'Precisione della direzione', 'Gestione del ritmo e del tempo', 'Palleggio in salto',
-  ]},
-  { id: 'f2', nome: 'Bagher di appoggio', subAspetti: [
-    'Piano di rimbalzo (superficie piatta)', 'Postura e baricentro basso',
-    'Estensione delle braccia al contatto', 'Direzione verso alzatrice',
-  ]},
-  { id: 'f3', nome: 'Bagher di difesa', subAspetti: [
-    'Lettura della traiettoria d\'attacco', 'Reattività e velocità di spostamento',
-    'Gestione degli angoli (diagonale/lungolinea)', 'Difesa in tuffo / pancata',
-    'Recupero posturale post-difesa',
-  ]},
-  { id: 'f4', nome: 'Ricezione', subAspetti: [
-    'Posizione di attesa e lettura del servizio', 'Spostamento in anticipo',
-    'Piano di rimbalzo sulla traiettoria', 'Precisione verso zona alzata (2-3)',
-    'Gestione del float / topspin',
-  ]},
-  { id: 'f5', nome: 'Bagher di alzata', subAspetti: [
-    'Utilizzo in emergenza', 'Qualità del palleggio di seconda intenzione',
-    'Direzione verso l\'attaccante',
-  ]},
-  { id: 'f6', nome: 'Rincorsa e stacco', subAspetti: [
-    'Ritmo dei passi (3 o 4 passi)', 'Velocità di approccio',
-    'Stacco e caricamento delle braccia', 'Timing rispetto all\'alzata',
-  ]},
-  { id: 'f7', nome: 'Attacco', subAspetti: [
-    'Coordinazione braccio-corpo in salto', 'Potenza del colpo',
-    'Gestione palla (posto 4 / posto 2 / pipe)', 'Varianti (pallonetto, pipe, buca)',
-    'Mano aperta e chiusura del polso',
-  ]},
-  { id: 'f8', nome: 'Battuta', subAspetti: [
-    'Float da fondo (precisione zona)', 'Float in salto', 'Topspin',
-    'Consistenza e % errore', 'Capacità tattica (zona debole)',
-  ]},
-  { id: 'f9', nome: 'Muro', subAspetti: [
-    'Lettura dell\'alzata', 'Timing di stacco',
-    'Penetrazione delle mani oltre la rete', 'Copertura laterale (muro di ala)',
-    'Comunicazione con i compagni',
-  ]},
-];
 
 type Phase = 'inizio' | 'meta' | 'fine';
 const PHASES: { id: Phase; label: string; short: string; color: string; hex: string }[] = [
