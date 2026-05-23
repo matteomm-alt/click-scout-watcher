@@ -364,6 +364,36 @@ export type Database = {
           },
         ]
       }
+      coach_eval_templates: {
+        Row: {
+          coach_id: string
+          created_at: string
+          custom_fundamentals: Json
+          extra_sub_aspects: Json
+          id: string
+          updated_at: string
+          visible_fundamentals: string[] | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          custom_fundamentals?: Json
+          extra_sub_aspects?: Json
+          id?: string
+          updated_at?: string
+          visible_fundamentals?: string[] | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          custom_fundamentals?: Json
+          extra_sub_aspects?: Json
+          id?: string
+          updated_at?: string
+          visible_fundamentals?: string[] | null
+        }
+        Relationships: []
+      }
       communication_reads: {
         Row: {
           communication_id: string

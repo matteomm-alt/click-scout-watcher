@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Star, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { Star, ChevronDown, ChevronUp, FileDown, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -12,50 +13,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
+import { FONDAMENTALI_DEFAULT } from '@/lib/evalFondamentali';
+import { useEvalTemplate } from '@/hooks/useEvalTemplate';
+import { EvalTemplateEditor } from '@/components/EvalTemplateEditor';
 
-// ── Fondamentali con sub-aspetti ─────────────────────────────────────
-const FONDAMENTALI = [
-  { id: 'f1', nome: 'Palleggio', subAspetti: [
-    'Posizione delle mani e delle dita', 'Posizione del corpo sotto la palla',
-    'Precisione della direzione', 'Gestione del ritmo e del tempo', 'Palleggio in salto',
-  ]},
-  { id: 'f2', nome: 'Bagher di appoggio', subAspetti: [
-    'Piano di rimbalzo (superficie piatta)', 'Postura e baricentro basso',
-    'Estensione delle braccia al contatto', 'Direzione verso alzatrice',
-  ]},
-  { id: 'f3', nome: 'Bagher di difesa', subAspetti: [
-    'Lettura della traiettoria d\'attacco', 'Reattività e velocità di spostamento',
-    'Gestione degli angoli (diagonale/lungolinea)', 'Difesa in tuffo / pancata',
-    'Recupero posturale post-difesa',
-  ]},
-  { id: 'f4', nome: 'Ricezione', subAspetti: [
-    'Posizione di attesa e lettura del servizio', 'Spostamento in anticipo',
-    'Piano di rimbalzo sulla traiettoria', 'Precisione verso zona alzata (2-3)',
-    'Gestione del float / topspin',
-  ]},
-  { id: 'f5', nome: 'Bagher di alzata', subAspetti: [
-    'Utilizzo in emergenza', 'Qualità del palleggio di seconda intenzione',
-    'Direzione verso l\'attaccante',
-  ]},
-  { id: 'f6', nome: 'Rincorsa e stacco', subAspetti: [
-    'Ritmo dei passi (3 o 4 passi)', 'Velocità di approccio',
-    'Stacco e caricamento delle braccia', 'Timing rispetto all\'alzata',
-  ]},
-  { id: 'f7', nome: 'Attacco', subAspetti: [
-    'Coordinazione braccio-corpo in salto', 'Potenza del colpo',
-    'Gestione palla (posto 4 / posto 2 / pipe)', 'Varianti (pallonetto, pipe, buca)',
-    'Mano aperta e chiusura del polso',
-  ]},
-  { id: 'f8', nome: 'Battuta', subAspetti: [
-    'Float da fondo (precisione zona)', 'Float in salto', 'Topspin',
-    'Consistenza e % errore', 'Capacità tattica (zona debole)',
-  ]},
-  { id: 'f9', nome: 'Muro', subAspetti: [
-    'Lettura dell\'alzata', 'Timing di stacco',
-    'Penetrazione delle mani oltre la rete', 'Copertura laterale (muro di ala)',
-    'Comunicazione con i compagni',
-  ]},
-];
 
 type Phase = 'inizio' | 'meta' | 'fine';
 const PHASES: { id: Phase; label: string; short: string; color: string; hex: string }[] = [
@@ -83,6 +44,21 @@ interface Evaluation {
 export function ValutazioniView() {
   const { user } = useAuth();
   const { societyId, societyName } = useActiveSociety();
+  const { template, loading: templateLoading, saving: templateSaving, save: saveTemplate, reset: resetTemplate } = useEvalTemplate();
+  const [editingTemplate, setEditingTemplate] = useState(false);
+  const fondamentaliAttivi = useMemo(() => {
+    const standard = FONDAMENTALI_DEFAULT.filter(f =>
+      template.visibleFundamentals === null || template.visibleFundamentals.includes(f.id)
+    ).map(f => ({
+      id: f.id,
+      nome: f.nome,
+      subAspetti: [...f.subAspetti, ...(template.extraSubAspects[f.id] ?? [])],
+    }));
+    const custom = template.customFundamentals.map(f => ({
+      id: f.id, nome: f.nome, subAspetti: f.subAspetti,
+    }));
+    return [...standard, ...custom];
+  }, [template]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [selectedAthleteId, setSelectedAthleteId] = useState('');
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -159,7 +135,7 @@ export function ValutazioniView() {
   };
 
   // Radar data: una entry per fondamentale, una serie per fase con dati
-  const radarData = useMemo(() => FONDAMENTALI.map(f => {
+  const radarData = useMemo(() => fondamentaliAttivi.map(f => {
     const entry: any = { fondamentale: f.nome };
     PHASES.forEach(p => {
       const m = mediaFond(f.id, f.subAspetti, p.id);
@@ -208,7 +184,7 @@ export function ValutazioniView() {
     cols.forEach(c => doc.text(c.t, c.x, y));
     y += 1; doc.line(12, y, W - 12, y); y += 4;
     doc.setFont('helvetica', 'normal');
-    FONDAMENTALI.forEach(f => {
+    fondamentaliAttivi.forEach(f => {
       const mi = mediaFond(f.id, f.subAspetti, 'inizio');
       const mm = mediaFond(f.id, f.subAspetti, 'meta');
       const mf = mediaFond(f.id, f.subAspetti, 'fine');
@@ -228,7 +204,7 @@ export function ValutazioniView() {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
     doc.text('Dettaglio sub-aspetti', 12, y); y += 5;
     doc.setFontSize(9);
-    FONDAMENTALI.forEach(f => {
+    fondamentaliAttivi.forEach(f => {
       if (y > 265) { doc.addPage(); y = 14; }
       doc.setFont('helvetica', 'bold');
       doc.text(f.nome, 12, y); y += 4;
@@ -263,9 +239,16 @@ export function ValutazioniView() {
     <div className="container py-8 space-y-6">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Atleta & Valutazioni</p>
-        <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center gap-3 mb-1 flex-wrap">
           <Star className="w-8 h-8 text-primary" />
           <h1 className="text-4xl font-black italic uppercase leading-none">Valutazioni Tecniche</h1>
+          <button
+            type="button"
+            onClick={() => setEditingTemplate(true)}
+            className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg px-3 py-1.5 transition-colors"
+          >
+            <Settings className="w-3.5 h-3.5" /> Personalizza
+          </button>
         </div>
         <p className="text-muted-foreground">Valutazione 1→5 per ogni fondamentale e sub-aspetto, divisa per fase stagionale.</p>
       </div>
@@ -314,7 +297,7 @@ export function ValutazioniView() {
       {/* Panoramica globale */}
       {selectedAthleteId && !loading && (
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-          {FONDAMENTALI.map(f => {
+          {fondamentaliAttivi.map(f => {
             const media = mediaFond(f.id, f.subAspetti, phase);
             const tappa = getTappa(media);
             return (
@@ -351,7 +334,7 @@ export function ValutazioniView() {
       {/* Dettaglio per fondamentale */}
       {selectedAthleteId && !loading && (
         <div className="space-y-3">
-          {FONDAMENTALI.map(f => {
+          {fondamentaliAttivi.map(f => {
             const media = mediaFond(f.id, f.subAspetti, phase);
             const tappa = getTappa(media);
             const isOpen = expanded === f.id;
@@ -428,6 +411,28 @@ export function ValutazioniView() {
       )}
 
       {loading && <p className="text-muted-foreground">Caricamento...</p>}
+
+      <Sheet open={editingTemplate} onOpenChange={setEditingTemplate}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Personalizza fondamentali</SheetTitle>
+          </SheetHeader>
+          <p className="text-xs text-muted-foreground mt-2 mb-4">
+            La configurazione è personale — si applica solo al tuo account.
+            Usa Esporta/Importa per condividerla con altri coach della società.
+          </p>
+          {templateLoading ? (
+            <p className="text-sm text-muted-foreground">Caricamento...</p>
+          ) : (
+            <EvalTemplateEditor
+              template={template}
+              saving={templateSaving}
+              onSave={saveTemplate}
+              onReset={resetTemplate}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
