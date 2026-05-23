@@ -411,6 +411,28 @@ export function ValutazioniView() {
       )}
 
       {loading && <p className="text-muted-foreground">Caricamento...</p>}
+
+      <Sheet open={editingTemplate} onOpenChange={setEditingTemplate}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Personalizza fondamentali</SheetTitle>
+          </SheetHeader>
+          <p className="text-xs text-muted-foreground mt-2 mb-4">
+            La configurazione è personale — si applica solo al tuo account.
+            Usa Esporta/Importa per condividerla con altri coach della società.
+          </p>
+          {templateLoading ? (
+            <p className="text-sm text-muted-foreground">Caricamento...</p>
+          ) : (
+            <EvalTemplateEditor
+              template={template}
+              saving={templateSaving}
+              onSave={saveTemplate}
+              onReset={resetTemplate}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
