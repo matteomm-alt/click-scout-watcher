@@ -242,8 +242,30 @@ export function generateDVW(
     lines.push(`aP${String(setterPos).padStart(2, '0')}>LUp;;;;;;;;1;${setterPos};${setterPos};;;;${homeLineupNums.join(';')};${awayLineupNums.join(';')};`);
   }
 
-  // Scout actions
+  // Scout actions con sostituzioni inline
+  const subs = extractSubstitutions(actions);
+  let subIdx = 0;
+
   actions.forEach((action) => {
+    while (
+      subIdx < subs.length &&
+      subs[subIdx].setNumber === action.setNumber &&
+      (
+        subs[subIdx].homeScore < action.homeScore ||
+        (subs[subIdx].homeScore === action.homeScore && subs[subIdx].awayScore <= action.awayScore)
+      )
+    ) {
+      const sub = subs[subIdx];
+      const teamPrefix = sub.team === 'home' ? '*' : 'a';
+      const lineupStr = `${action.homeLineup.join(';')};${action.awayLineup.join(';')}`;
+      lines.push(
+        `${teamPrefix}c${String(sub.playerIn).padStart(2, '0')}:${String(sub.playerOut).padStart(2, '0')}` +
+        `;;;;;;;${sub.timestamp};${sub.setNumber};${action.homeSetterPosition};${action.awaySetterPosition}` +
+        `;;;;${lineupStr};`
+      );
+      subIdx++;
+    }
+
     const code = action.code || generateScoutCode(action);
     const timestamp = action.timestamp || '00:00:00';
     const lineupStr = `${action.homeLineup.join(';')};${action.awayLineup.join(';')}`;
