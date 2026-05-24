@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
   rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
+  gameSpeedStats,
 } from '@/lib/scoutAnalysis';
 import { ArrowLeft, BarChart3, Download, FileText, SlidersHorizontal, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -683,21 +684,55 @@ function KpiCard({ label, value }: { label: string; value: number | string }) {
   );
 }
 
+function computeKDE(
+  points: { x: number; y: number }[],
+  gridW = 30,
+  gridH = 15,
+  bandwidth = 0.08,
+): number[][] {
+  const grid: number[][] = Array.from({ length: gridH }, () => new Array(gridW).fill(0));
+  if (points.length === 0) return grid;
+  for (let gy = 0; gy < gridH; gy++) {
+    for (let gx = 0; gx < gridW; gx++) {
+      const cx = (gx + 0.5) / gridW;
+      const cy = (gy + 0.5) / gridH;
+      let sum = 0;
+      for (const p of points) {
+        const dx = (p.x - cx) / bandwidth;
+        const dy = (p.y - cy) / bandwidth;
+        sum += Math.exp(-0.5 * (dx * dx + dy * dy));
+      }
+      grid[gy][gx] = sum;
+    }
+  }
+  const max = Math.max(...grid.flat(), 1);
+  return grid.map(row => row.map(v => v / max));
+}
+
 function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkills: string[] }) {
   const initialSkill = forcedSkills.length === 1 ? forcedSkills[0] : 'A';
   const [skill, setSkill] = useState<string>(initialSkill);
   const [side, setSide] = useState<'start' | 'end'>('end');
+  const [showKde, setShowKde] = useState(true);
   const filtered = actions.filter(a => a.skill === skill);
   const cells = zoneStats(filtered, side);
   const maxTotal = Math.max(1, ...cells.map(c => c.total));
 
-  // Coordinate reali disponibili?
   const coordKeyX = side === 'start' ? 'start_x' : 'end_x';
   const coordKeyY = side === 'start' ? 'start_y' : 'end_y';
   const pointsWithCoords = filtered.filter(
     a => (a as any)[coordKeyX] != null && (a as any)[coordKeyY] != null
   );
   const hasRealCoords = filtered.length > 0 && pointsWithCoords.length > filtered.length * 0.5;
+
+  const kdeGrid = useMemo(() => {
+    if (!hasRealCoords) return null;
+    const pts = pointsWithCoords.map(a => ({
+      x: (a as any)[coordKeyX] as number,
+      y: (a as any)[coordKeyY] as number,
+    }));
+    return computeKDE(pts);
+  }, [pointsWithCoords, hasRealCoords, coordKeyX, coordKeyY]);
 
   return (
     <div className="space-y-4">
@@ -708,9 +743,12 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
           >{name}</button>
         ))}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button onClick={() => setSide('start')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'start' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona partenza</button>
         <button onClick={() => setSide('end')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'end' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona arrivo</button>
+        {hasRealCoords && (
+          <button onClick={() => setShowKde(v => !v)} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${showKde ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Density</button>
+        )}
       </div>
       <Card className="p-6">
         <h3 className="text-sm font-bold uppercase italic mb-4">{SKILL_NAMES[skill]} — {side === 'start' ? 'partenza' : 'arrivo'}</h3>
@@ -743,6 +781,17 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
           <p className="text-xs text-muted-foreground mb-3">{pointsWithCoords.length} azioni con coordinate precise</p>
           <div className="w-full max-w-xl">
             <svg viewBox="0 0 300 165" className="w-full border border-border rounded bg-muted/20">
+              {showKde && kdeGrid && kdeGrid.map((row, gy) =>
+                row.map((v, gx) => {
+                  if (v < 0.05) return null;
+                  const cellW = 300 / 30;
+                  const cellH = 165 / 15;
+                  return (
+                    <rect key={`k-${gy}-${gx}`} x={gx * cellW} y={gy * cellH} width={cellW} height={cellH}
+                      fill="#f97316" fillOpacity={v * 0.55} />
+                  );
+                })
+              )}
               <line x1="0" y1="82.5" x2="300" y2="82.5" stroke="hsl(var(--foreground))" strokeWidth="1.2" strokeDasharray="4 3" />
               <text x="295" y="79" textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">RETE</text>
               {pointsWithCoords.map((a, i) => {
@@ -980,6 +1029,36 @@ function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: 
     const row = raw.get(rot)!;
     if (winner === side) row.made++; else row.conceded++;
   });
+
+
+
+  const GRID_SKILLS = ['S', 'R', 'A', 'B', 'D'] as const;
+  type GridSkill = typeof GRID_SKILLS[number];
+
+  const skillRotGrid = useMemo(() => {
+    const grid: Record<number, Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>> = {} as any;
+    for (let r = 1; r <= 6; r++) {
+      grid[r] = {} as any;
+      for (const sk of GRID_SKILLS) grid[r][sk] = { total: 0, perfect: 0, errors: 0, eff: 0 };
+    }
+    for (const a of actions) {
+      if (!(GRID_SKILLS as readonly string[]).includes(a.skill)) continue;
+      const rot = rotationOf(a, side);
+      if (!rot) continue;
+      const cell = grid[rot][a.skill as GridSkill];
+      cell.total++;
+      if (a.evaluation === '#') cell.perfect++;
+      if (a.evaluation === '=' || a.evaluation === '/') cell.errors++;
+    }
+    for (let r = 1; r <= 6; r++) {
+      for (const sk of GRID_SKILLS) {
+        const c = grid[r][sk];
+        c.eff = c.total >= 3 ? Math.round(((c.perfect - c.errors) / c.total) * 100) : NaN;
+      }
+    }
+    return grid;
+  }, [actions, side]);
+
   return (
     <div className="space-y-4">
       <Card className="p-5">
@@ -1012,9 +1091,54 @@ function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: 
           Side-out% = % rally vinti quando la squadra è in ricezione. Point-win% = % rally vinti quando è in battuta.
         </p>
       </Card>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-2">Efficienza per fondamentale × rotazione</h3>
+        <p className="text-xs text-muted-foreground mb-4">Celle grigie = meno di 3 azioni (non significativo)</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr>
+                <th className="text-left text-xs uppercase text-muted-foreground p-2">Rot.</th>
+                {GRID_SKILLS.map(sk => (
+                  <th key={sk} className="text-center text-xs uppercase text-muted-foreground p-2">{SKILL_NAMES[sk] || sk}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[1,2,3,4,5,6].map(rot => (
+                <tr key={rot} className="border-t border-border">
+                  <td className="font-bold p-2">P{rot}</td>
+                  {GRID_SKILLS.map(sk => {
+                    const cell = skillRotGrid[rot][sk];
+                    const invalid = isNaN(cell.eff);
+                    const color = invalid ? 'hsl(var(--muted-foreground))'
+                      : cell.eff >= 30 ? '#16a34a'
+                      : cell.eff >= 0 ? '#d97706'
+                      : '#dc2626';
+                    return (
+                      <td key={sk} className="text-center p-2">
+                        {invalid ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <span className="font-bold" style={{ color }}>
+                            {cell.eff > 0 ? '+' : ''}{cell.eff}%
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">Verde ≥ +30% · Arancio 0–29% · Rosso &lt; 0% · — = meno di 3 azioni</p>
+      </Card>
     </div>
   );
 }
+
 
 function BarRow({ label, value, sub }: { label: string; value: number; sub: string }) {
   return (
@@ -1267,9 +1391,181 @@ function MiniField({ children }: { children: ReactNode }) {
   );
 }
 
+function GameSpeedPanel({ actions }: { actions: DbAction[] }) {
+  const stats = gameSpeedStats(actions);
+  const hasData = stats.some(s => s.pointsPerMinute !== null);
+
+  if (!hasData) {
+    return (
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-2">Velocità di gioco</h3>
+        <p className="text-sm text-muted-foreground italic">
+          Non disponibile — il file DVW non contiene timestamp delle azioni.
+          I timestamp sono presenti nei file prodotti da DataVolley 4 e Click&amp;Scout.
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-5">
+      <h3 className="text-sm font-bold uppercase italic mb-4">Velocità di gioco</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {stats.map(s => (
+          <div key={s.setNumber} className="p-4 border border-border rounded">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Set {s.setNumber}</p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Punti/minuto</span>
+                <span className="font-bold">{s.pointsPerMinute !== null ? s.pointsPerMinute : '—'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Durata media rally</span>
+                <span className="font-bold">{s.avgRallySeconds !== null ? `${s.avgRallySeconds}s` : '—'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Durata set stimata</span>
+                <span className="font-bold">{s.totalMinutes !== null ? `~${s.totalMinutes} min` : '—'}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground mt-3">
+        Basato su {stats.reduce((s, r) => s + r.ralliesWithTime, 0)} rally con timestamp.
+      </p>
+    </Card>
+  );
+}
+
+function SequenceTab({ actions }: { actions: DbAction[] }) {
+  const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
+  const rallyMap = new Map<string, DbAction[]>();
+  for (const a of actions) {
+    const key = `${a.set_number}-${a.rally_index}`;
+    if (!rallyMap.has(key)) rallyMap.set(key, []);
+    rallyMap.get(key)!.push(a);
+  }
+  const rallies = [...rallyMap.values()].filter(r => r.length > 0);
+
+  const lenDist: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5+': 0 };
+  const winBySkill: Record<string, number> = {};
+  const errBySkill: Record<string, number> = {};
+
+  for (const rally of rallies) {
+    const sorted = [...rally].sort((a, b) => a.action_index - b.action_index);
+    const len = sorted.length;
+    const key = len >= 5 ? '5+' : String(len);
+    lenDist[key] = (lenDist[key] || 0) + 1;
+    const terminal = [...sorted].reverse().find(a =>
+      a.evaluation === '#' || a.evaluation === '=' || a.evaluation === '/'
+    );
+    if (terminal) {
+      if (terminal.evaluation === '#') {
+        winBySkill[terminal.skill] = (winBySkill[terminal.skill] || 0) + 1;
+      } else {
+        errBySkill[terminal.skill] = (errBySkill[terminal.skill] || 0) + 1;
+      }
+    }
+  }
+
+  const totalRallies = rallies.length;
+  const maxLen = Math.max(...Object.values(lenDist), 1);
+  const avgLen = totalRallies
+    ? (rallies.reduce((s, r) => s + r.length, 0) / totalRallies).toFixed(1)
+    : '—';
+
+  if (totalRallies === 0) {
+    return (
+      <Card className="p-5">
+        <p className="text-sm text-muted-foreground italic">Nessun dato disponibile per l'analisi sequenze.</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5">
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="text-center">
+            <p className="text-3xl font-black italic">{totalRallies}</p>
+            <p className="text-xs text-muted-foreground">Rally totali</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-black italic">{avgLen}</p>
+            <p className="text-xs text-muted-foreground">Azioni medie</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-black italic">{pct(lenDist['1'], totalRallies)}%</p>
+            <p className="text-xs text-muted-foreground">Punti diretti</p>
+          </div>
+        </div>
+
+        <h3 className="text-sm font-bold uppercase italic mb-3">Lunghezza rally</h3>
+        <div className="space-y-2">
+          {Object.entries(lenDist).map(([label, count]) => {
+            const barPct = Math.round(count / maxLen * 100);
+            const rallyPct = pct(count, totalRallies);
+            return (
+              <div key={label} className="flex items-center gap-3 text-sm">
+                <span className="w-8 font-bold">{label}</span>
+                <span className="w-32 text-xs text-muted-foreground">
+                  {label === '1' ? 'Ace/errore'
+                    : label === '2' ? '2 contatti'
+                    : label === '3' ? 'S-R-A'
+                    : label === '4' ? 'S-R-E-A'
+                    : '5+ contatti'}
+                </span>
+                <div className="flex-1 h-3 bg-muted rounded overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${barPct}%` }} />
+                </div>
+                <span className="w-20 text-right text-xs">{count} ({rallyPct}%)</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h3 className="text-sm font-bold uppercase italic mb-3">Punti vinti (#)</h3>
+          <div className="space-y-2">
+            {Object.entries(winBySkill).sort((a, b) => b[1] - a[1]).map(([sk, n]) => (
+              <div key={sk} className="flex items-center gap-3 text-sm">
+                <span className="w-24 font-bold">{SKILL_NAMES[sk] || sk}</span>
+                <div className="flex-1 h-2 bg-muted rounded overflow-hidden">
+                  <div className="h-full bg-success" style={{ width: `${pct(n, totalRallies)}%` }} />
+                </div>
+                <span className="w-20 text-right text-xs">{n} ({pct(n, totalRallies)}%)</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card className="p-5">
+          <h3 className="text-sm font-bold uppercase italic mb-3">Punti persi (= /)</h3>
+          <div className="space-y-2">
+            {Object.entries(errBySkill).sort((a, b) => b[1] - a[1]).map(([sk, n]) => (
+              <div key={sk} className="flex items-center gap-3 text-sm">
+                <span className="w-24 font-bold">{SKILL_NAMES[sk] || sk}</span>
+                <div className="flex-1 h-2 bg-muted rounded overflow-hidden">
+                  <div className="h-full bg-destructive" style={{ width: `${pct(n, totalRallies)}%` }} />
+                </div>
+                <span className="w-20 text-right text-xs">{n} ({pct(n, totalRallies)}%)</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Fondamentale determinante = ultima azione terminale del rally (# = punto diretto, =/ = errore).
+      </p>
+    </div>
+  );
+}
+
 function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[]; allActions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const pct = (n: number, d: number) => d ? Math.round(n / d * 100) : 0;
-  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve' | 'block'>('base');
+  const [advancedTab, setAdvancedTab] = useState<'base' | 'distribution' | 'reception' | 'serve' | 'block' | 'sequence'>('base');
   const [phaseFilter, setPhaseFilter] = useState<'all' | 'K1' | 'K2'>('all');
   const [dirSkill, setDirSkill] = useState<string>('A');
   const [dirType, setDirType] = useState<string>('all');
@@ -1347,7 +1643,7 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
       <PhaseToggle value={phaseFilter} onChange={setPhaseFilter} />
       <div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/30 p-1">
         {[
-          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'], ['block', 'Muro'],
+          ['base', 'Base'], ['distribution', 'Distribuzione'], ['reception', 'Ricezione'], ['serve', 'Battuta'], ['block', 'Muro'], ['sequence', 'Sequenze'],
         ].map(([key, label]) => (
           <button key={key} onClick={() => setAdvancedTab(key as typeof advancedTab)} className={`min-h-10 px-3 rounded text-xs font-bold uppercase ${advancedTab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{label}</button>
         ))}
@@ -1357,11 +1653,14 @@ function AdvancedTab({ actions, allActions, teamId, side }: { actions: DbAction[
       {advancedTab === 'reception' && <ReceptionAnalysis actions={phaseActions} side={side} pct={pct} />}
       {advancedTab === 'serve' && <ServeAnalysis actions={phaseActions} pct={pct} />}
       {advancedTab === 'block' && <BlockAnalysis actions={phaseActions} side={side} pct={pct} />}
+      {advancedTab === 'sequence' && <SequenceTab actions={phaseActions} />}
       {advancedTab === 'base' && <>
       <SetProgressTab actions={phaseActions} />
+      <GameSpeedPanel actions={phaseActions} />
       <TechTypesTab actions={phaseActions} />
       <RotationsDetailTab actions={phaseActions} side={side} />
       <SetDistributionTab actions={phaseActions} />
+
 
       <Card className="p-5">
         <h3 className="text-sm font-bold uppercase italic mb-4">Sistema — FBSO / SO / PS / FBPS</h3>
