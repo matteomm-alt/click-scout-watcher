@@ -781,6 +781,17 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
           <p className="text-xs text-muted-foreground mb-3">{pointsWithCoords.length} azioni con coordinate precise</p>
           <div className="w-full max-w-xl">
             <svg viewBox="0 0 300 165" className="w-full border border-border rounded bg-muted/20">
+              {showKde && kdeGrid && kdeGrid.map((row, gy) =>
+                row.map((v, gx) => {
+                  if (v < 0.05) return null;
+                  const cellW = 300 / 30;
+                  const cellH = 165 / 15;
+                  return (
+                    <rect key={`k-${gy}-${gx}`} x={gx * cellW} y={gy * cellH} width={cellW} height={cellH}
+                      fill="#f97316" fillOpacity={v * 0.55} />
+                  );
+                })
+              )}
               <line x1="0" y1="82.5" x2="300" y2="82.5" stroke="hsl(var(--foreground))" strokeWidth="1.2" strokeDasharray="4 3" />
               <text x="295" y="79" textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">RETE</text>
               {pointsWithCoords.map((a, i) => {
