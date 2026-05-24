@@ -297,3 +297,77 @@ export function setsTimeline(actions: DbAction[]): SetTimeline[] {
   }
   return out;
 }
+
+export interface GameSpeedStats {
+  setNumber: number;
+  pointsPerMinute: number | null;
+  avgRallySeconds: number | null;
+  totalMinutes: number | null;
+  ralliesWithTime: number;
+}
+
+/**
+ * Calcola velocità di gioco per set usando timestamp_clock.
+ */
+export function gameSpeedStats(actions: DbAction[]): GameSpeedStats[] {
+  const parseSeconds = (ts: string | null | undefined): number | null => {
+    if (!ts) return null;
+    const parts = ts.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return null;
+  };
+
+  const bySet = new Map<number, DbAction[]>();
+  for (const a of actions) {
+    if (!bySet.has(a.set_number)) bySet.set(a.set_number, []);
+    bySet.get(a.set_number)!.push(a);
+  }
+
+  const out: GameSpeedStats[] = [];
+  for (const [setNum, setActions] of [...bySet.entries()].sort((a, b) => a[0] - b[0])) {
+    const withTime = setActions.filter(a => a.timestamp_clock);
+    if (withTime.length < 2) {
+      out.push({ setNumber: setNum, pointsPerMinute: null, avgRallySeconds: null, totalMinutes: null, ralliesWithTime: 0 });
+      continue;
+    }
+    const times = withTime.map(a => parseSeconds(a.timestamp_clock)).filter((v): v is number => v !== null);
+    if (times.length < 2) {
+      out.push({ setNumber: setNum, pointsPerMinute: null, avgRallySeconds: null, totalMinutes: null, ralliesWithTime: 0 });
+      continue;
+    }
+    const totalSec = Math.abs(Math.max(...times) - Math.min(...times));
+    const totalMin = totalSec / 60;
+
+    const rallyGroups = new Map<string, number[]>();
+    for (const a of withTime) {
+      const key = `${a.set_number}-${a.rally_index}`;
+      const sec = parseSeconds(a.timestamp_clock);
+      if (sec !== null) {
+        if (!rallyGroups.has(key)) rallyGroups.set(key, []);
+        rallyGroups.get(key)!.push(sec);
+      }
+    }
+    const rallyDurations: number[] = [];
+    for (const ts of rallyGroups.values()) {
+      if (ts.length >= 2) rallyDurations.push(Math.abs(Math.max(...ts) - Math.min(...ts)));
+    }
+    const avgRallySeconds = rallyDurations.length
+      ? Math.round(rallyDurations.reduce((s, v) => s + v, 0) / rallyDurations.length)
+      : null;
+
+    const maxH = Math.max(...setActions.map(a => a.home_score));
+    const maxA = Math.max(...setActions.map(a => a.away_score));
+    const totalPoints = maxH + maxA;
+    const ppm = totalMin > 0 ? Math.round((totalPoints / totalMin) * 10) / 10 : null;
+
+    out.push({
+      setNumber: setNum,
+      pointsPerMinute: ppm,
+      avgRallySeconds,
+      totalMinutes: Math.round(totalMin),
+      ralliesWithTime: rallyGroups.size,
+    });
+  }
+  return out;
+}
