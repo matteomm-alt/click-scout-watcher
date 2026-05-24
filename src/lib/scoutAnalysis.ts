@@ -30,6 +30,7 @@ export interface DbAction {
   start_y?: number | null;
   end_x?: number | null;
   end_y?: number | null;
+  timestamp_clock?: string | null;
 }
 
 /**
