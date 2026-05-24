@@ -1028,7 +1028,34 @@ function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: 
     if (!rot || !winner) return;
     const row = raw.get(rot)!;
     if (winner === side) row.made++; else row.conceded++;
-  });
+
+  const GRID_SKILLS = ['S', 'R', 'A', 'B', 'D'] as const;
+  type GridSkill = typeof GRID_SKILLS[number];
+
+  const skillRotGrid = useMemo(() => {
+    const grid: Record<number, Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>> = {} as any;
+    for (let r = 1; r <= 6; r++) {
+      grid[r] = {} as any;
+      for (const sk of GRID_SKILLS) grid[r][sk] = { total: 0, perfect: 0, errors: 0, eff: 0 };
+    }
+    for (const a of actions) {
+      if (!(GRID_SKILLS as readonly string[]).includes(a.skill)) continue;
+      const rot = rotationOf(a, side);
+      if (!rot) continue;
+      const cell = grid[rot][a.skill as GridSkill];
+      cell.total++;
+      if (a.evaluation === '#') cell.perfect++;
+      if (a.evaluation === '=' || a.evaluation === '/') cell.errors++;
+    }
+    for (let r = 1; r <= 6; r++) {
+      for (const sk of GRID_SKILLS) {
+        const c = grid[r][sk];
+        c.eff = c.total >= 3 ? Math.round(((c.perfect - c.errors) / c.total) * 100) : NaN;
+      }
+    }
+    return grid;
+  }, [actions, side]);
+
   return (
     <div className="space-y-4">
       <Card className="p-5">
@@ -1061,9 +1088,54 @@ function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: 
           Side-out% = % rally vinti quando la squadra è in ricezione. Point-win% = % rally vinti quando è in battuta.
         </p>
       </Card>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-bold uppercase italic mb-2">Efficienza per fondamentale × rotazione</h3>
+        <p className="text-xs text-muted-foreground mb-4">Celle grigie = meno di 3 azioni (non significativo)</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr>
+                <th className="text-left text-xs uppercase text-muted-foreground p-2">Rot.</th>
+                {GRID_SKILLS.map(sk => (
+                  <th key={sk} className="text-center text-xs uppercase text-muted-foreground p-2">{SKILL_NAMES[sk] || sk}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[1,2,3,4,5,6].map(rot => (
+                <tr key={rot} className="border-t border-border">
+                  <td className="font-bold p-2">P{rot}</td>
+                  {GRID_SKILLS.map(sk => {
+                    const cell = skillRotGrid[rot][sk];
+                    const invalid = isNaN(cell.eff);
+                    const color = invalid ? 'hsl(var(--muted-foreground))'
+                      : cell.eff >= 30 ? '#16a34a'
+                      : cell.eff >= 0 ? '#d97706'
+                      : '#dc2626';
+                    return (
+                      <td key={sk} className="text-center p-2">
+                        {invalid ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <span className="font-bold" style={{ color }}>
+                            {cell.eff > 0 ? '+' : ''}{cell.eff}%
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">Verde ≥ +30% · Arancio 0–29% · Rosso &lt; 0% · — = meno di 3 azioni</p>
+      </Card>
     </div>
   );
 }
+
 
 function BarRow({ label, value, sub }: { label: string; value: number; sub: string }) {
   return (
