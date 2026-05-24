@@ -62,6 +62,71 @@ function generateScoutCode(action: ScoutAction): string {
   return `${teamPrefix}${playerNum}${skill}${skillType}${evaluation}${extended}`;
 }
 
+/**
+ * Deduce le sostituzioni confrontando homeLineup/awayLineup consecutive.
+ */
+function extractSubstitutions(actions: ScoutAction[]): {
+  team: 'home' | 'away';
+  playerOut: number;
+  playerIn: number;
+  setNumber: number;
+  homeScore: number;
+  awayScore: number;
+  timestamp: string;
+}[] {
+  const subs: {
+    team: 'home' | 'away';
+    playerOut: number;
+    playerIn: number;
+    setNumber: number;
+    homeScore: number;
+    awayScore: number;
+    timestamp: string;
+  }[] = [];
+  const seenKeys = new Set<string>();
+
+  for (let i = 1; i < actions.length; i++) {
+    const prev = actions[i - 1];
+    const curr = actions[i];
+
+    for (let pos = 0; pos < 6; pos++) {
+      if (prev.homeLineup[pos] !== curr.homeLineup[pos]) {
+        const key = `h-${curr.setNumber}-${prev.homeLineup[pos]}-${curr.homeLineup[pos]}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          subs.push({
+            team: 'home',
+            playerOut: prev.homeLineup[pos],
+            playerIn: curr.homeLineup[pos],
+            setNumber: curr.setNumber,
+            homeScore: curr.homeScore,
+            awayScore: curr.awayScore,
+            timestamp: curr.timestamp,
+          });
+        }
+      }
+    }
+    for (let pos = 0; pos < 6; pos++) {
+      if (prev.awayLineup[pos] !== curr.awayLineup[pos]) {
+        const key = `a-${curr.setNumber}-${prev.awayLineup[pos]}-${curr.awayLineup[pos]}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          subs.push({
+            team: 'away',
+            playerOut: prev.awayLineup[pos],
+            playerIn: curr.awayLineup[pos],
+            setNumber: curr.setNumber,
+            homeScore: curr.homeScore,
+            awayScore: curr.awayScore,
+            timestamp: curr.timestamp,
+          });
+        }
+      }
+    }
+  }
+  return subs;
+}
+
 export function generateDVW(
   matchInfo: MatchInfo,
   homeTeam: Team,
