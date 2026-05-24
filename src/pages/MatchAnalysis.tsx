@@ -743,9 +743,12 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
           >{name}</button>
         ))}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button onClick={() => setSide('start')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'start' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona partenza</button>
         <button onClick={() => setSide('end')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'end' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona arrivo</button>
+        {hasRealCoords && (
+          <button onClick={() => setShowKde(v => !v)} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${showKde ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Density</button>
+        )}
       </div>
       <Card className="p-6">
         <h3 className="text-sm font-bold uppercase italic mb-4">{SKILL_NAMES[skill]} — {side === 'start' ? 'partenza' : 'arrivo'}</h3>
