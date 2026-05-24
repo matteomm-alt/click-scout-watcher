@@ -1028,6 +1028,9 @@ function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: 
     if (!rot || !winner) return;
     const row = raw.get(rot)!;
     if (winner === side) row.made++; else row.conceded++;
+  });
+
+
 
   const GRID_SKILLS = ['S', 'R', 'A', 'B', 'D'] as const;
   type GridSkill = typeof GRID_SKILLS[number];
