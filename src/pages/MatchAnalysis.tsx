@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   type DbAction, statsBySkill, statsByPlayer, zoneStats,
   rotationStats, setsTimeline, SKILL_NAMES, rotationOf, phaseOf,
+  gameSpeedStats,
 } from '@/lib/scoutAnalysis';
 import { ArrowLeft, BarChart3, Download, FileText, SlidersHorizontal, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
