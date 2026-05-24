@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateDVW } from '@/lib/dvwExporter';
+import { parseDvw } from '@/lib/dvwImporter';
 import type { MatchInfo, Team, Lineup, ScoutAction, SetResult } from '@/types/volleyball';
 
 const matchInfo: MatchInfo = {
