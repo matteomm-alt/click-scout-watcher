@@ -287,6 +287,7 @@ function parseScout(sections: Record<string, string[]>): {
       homeSetterPos = null;
       awaySetterPos = null;
       lastServingSide = null;
+      hasSeenZoneThisRally = false;
       continue;
     }
 

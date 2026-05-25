@@ -116,3 +116,36 @@ describe('dvwImporter', () => {
     });
   });
 });
+
+describe('dvwImporter — fallback *p senza *z', () => {
+  it('incrementa rallyIndex su *p quando non ci sono righe *z', () => {
+    const NO_Z_SAMPLE = `[3DATAVOLLEYSCOUT]
+GENERATOR-PRG: TestNoZ
+[3MATCH]
+18/05/2026;20.30;2025/2026;Serie A;Regular;
+[3MORE]
+;;PalaTest;Roma
+[3TEAMS]
+HOM;Casa;2;Coach;
+AWY;Ospite;1;Coach;
+[3SET]
+True;25-20;;;;25
+[3PLAYERS-H]
+;1;;1;*;*;*;*;ext1;Rossi;Mario;;;5;false
+[3PLAYERS-V]
+;3;;1;*;*;*;*;extA3;Neri;Tom;;;5;false
+[3SCOUT]
+**1set
+*P01>LUp
+aP01>LUp
+*01SH#;;;;;;;12:00;1;0;0
+*p01:00;;;;;;;12:00;1;1;0
+*01SH#;;;;;;;12:01;1;1;0
+*p02:00;;;;;;;12:01;1;2;0
+`;
+    const parsed = parseDvw(NO_Z_SAMPLE);
+    const actions = parsed.actions;
+    expect(actions.length).toBe(2);
+    expect(actions[0].rallyIndex).not.toBe(actions[1].rallyIndex);
+  });
+});
