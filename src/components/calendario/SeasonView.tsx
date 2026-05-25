@@ -75,7 +75,7 @@ export function SeasonView({ start, end, events }: Props) {
                         return (
                           <div key={evt.id} className="flex items-center gap-1">
                             <button
-                              onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
+                              onClick={() => navigate(`/calendario?id=${evt.id}`)}
                               className={cn(
                                 'flex-1 flex items-center gap-1.5 text-xs px-2 py-1 rounded border-l-2 hover:bg-muted/50 transition-colors text-left',
                                 meta.bgClass,

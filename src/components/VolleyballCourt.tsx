@@ -180,6 +180,9 @@ interface VolleyballCourtProps {
    * con le posizioni di ricezione personalizzate per la rotazione del palleggiatore corrente.
    */
   receptionMode?: { home?: boolean; away?: boolean };
+  /** Nasconde label, watermark zone, badge P{pos} e frecce vecchie.
+   *  Lascia solo cerchi numerati — massima leggibilità su tablet. */
+  simplifiedView?: boolean;
 }
 
 export function VolleyballCourt({
@@ -189,6 +192,7 @@ export function VolleyballCourt({
   liveArrows,
   compactAspect,
   receptionMode,
+  simplifiedView = false,
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
 
@@ -341,10 +345,14 @@ export function VolleyballCourt({
                 <>
                   <div className={`relative flex size-11 md:size-[52px] items-center justify-center rounded-full text-base md:text-lg font-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${pos === 1 && matchState.servingTeam === team && serverPulseActive && !isSetter ? 'ring-2 ring-[hsl(var(--cs-cta))] animate-pulse' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
                     {info.number}
-                    <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black bg-black/70 text-white rounded px-1 leading-tight">P{pos}</span>
+                    {!simplifiedView && (
+                      <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black bg-black/70 text-white rounded px-1 leading-tight">P{pos}</span>
+                    )}
                     {isSetter && <span className="absolute -right-2 -bottom-2 rounded bg-warning px-1.5 py-0.5 text-[10px] font-black text-background">S</span>}
                   </div>
-                  <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
+                  {!simplifiedView && (
+                    <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
+                  )}
                 </>
               )}
             </div>
@@ -357,7 +365,7 @@ export function VolleyballCourt({
                 <path d="M0,0 L0,6 L6,3 z" fill="currentColor" />
               </marker>
             </defs>
-            {liveArrows.slice(-5).map((arr, i, arrs) => {
+            {liveArrows.slice(simplifiedView ? -1 : -5).map((arr, i, arrs) => {
               const from = zonePct(arr.startZone);
               const to = zonePct(arr.endZone);
               if (!from || !to || arr.startZone === arr.endZone) return null;

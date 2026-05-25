@@ -60,7 +60,7 @@ export function WeekView({ anchor, events, showCreator }: Props) {
                 return (
                   <button
                     key={evt.id}
-                    onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
+                    onClick={() => navigate(`/calendario?id=${evt.id}`)}
                     className={cn(
                       'text-left text-xs p-2 rounded-md border-l-2 hover:bg-muted/50 transition-colors',
                       meta.bgClass,

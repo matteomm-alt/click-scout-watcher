@@ -76,7 +76,7 @@ export function MonthView({ anchor, events }: Props) {
                   return (
                     <div key={evt.id} className="flex items-center gap-1">
                       <button
-                        onClick={() => navigate(`/calendario/nuovo?id=${evt.id}`)}
+                        onClick={() => navigate(`/calendario?id=${evt.id}`)}
                         className={cn(
                           'flex-1 text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:bg-muted/50 transition-colors',
                           meta.bgClass,
