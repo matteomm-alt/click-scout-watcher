@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, List, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart2, List, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight, Download, Eye, EyeOff } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -621,6 +621,18 @@ export function LiveScout() {
                       ))}
                     </div>
                   )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button"
+                    onClick={() => { window.dispatchEvent(new CustomEvent('scout-export-dvw')); setInfoOpen(false); }}
+                    className="min-h-12 w-full rounded-lg bg-primary/10 border border-primary/30 text-primary font-bold flex items-center justify-center gap-2">
+                    <Download className="w-4 h-4" /> Export DVW
+                  </button>
+                  <button type="button"
+                    onClick={() => { window.dispatchEvent(new CustomEvent('scout-export-csv')); setInfoOpen(false); }}
+                    className="min-h-12 w-full rounded-lg bg-secondary border border-border text-foreground font-bold flex items-center justify-center gap-2">
+                    <Download className="w-4 h-4" /> Export CSV
+                  </button>
                 </div>
                 <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent('scout-undo-rally')); setInfoOpen(false); }}
                   disabled={rally.length === 0}
