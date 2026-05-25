@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, List, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart2, List, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight, Download, Eye, EyeOff } from 'lucide-react';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
@@ -16,11 +16,11 @@ import { CSSideRail } from '@/components/scout/CSSideRail';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
 import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
+import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { useScoutSettings, type ScoutSettings, SCOUT_PRESETS } from '@/lib/scoutSettings';
+import { useScoutSettings, type ScoutSettings } from '@/lib/scoutSettings';
 import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
@@ -45,32 +45,6 @@ const MOBILE_TABS = [
   { key: 'log' as const, label: 'Log', icon: List },
 ];
 
-const RILEVAZIONE_ROWS = [
-  { key: 'singleTeamMode' as const, label: '👤 Rileva una sola squadra', description: 'Riduce il carico cognitivo: rileva solo la tua squadra, l\'avversaria si gestisce con "Punto".' },
-  { key: 'followServe' as const, label: '🔄 Segui servizio', description: 'Pre-seleziona automaticamente la squadra dopo ogni azione: S→riceve avversaria, R/E→stessa squadra. Risparmia 1 tap per azione.' },
-  { key: 'showServeType' as const, label: 'Tipo battuta', description: 'Mostra lo step per scegliere il tipo di servizio.' },
-  { key: 'showAttackCombo' as const, label: 'Combo attacco', description: 'Mostra lo step per la combinazione di attacco.' },
-  { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell\'azione (2-tap traiettoria).' },
-  { key: 'showEndZone' as const, label: 'Zona destinazione', description: 'Richiede la zona di arrivo dell\'azione.' },
-  { key: 'showAlzata' as const, label: 'Skill E', description: 'Mostra Alzata nella lista fondamentali.' },
-  { key: 'showDifesa' as const, label: 'Skill D', description: 'Mostra Difesa nella lista fondamentali.' },
-  { key: 'showFreeball' as const, label: 'Skill F', description: 'Mostra Freeball nella lista fondamentali.' },
-  { key: 'autoPoint' as const, label: 'Punto automatico', description: 'Aggiunge punto automatico su # per A/S/B e su errore.' },
-  { key: 'autoCorrelation' as const, label: 'Correlazione automatica', description: 'Aggiorna automaticamente battuta/ricezione e attacco/muro' },
-  { key: 'showMuroVincente' as const, label: 'Muro vincente', description: 'Rileva chi fa muro punto' },
-  { key: 'showMuroErrato' as const, label: 'Muro errato', description: 'Rileva chi commette errore a muro' },
-  { key: 'sostituzioniLibere' as const, label: 'Sostituzioni libere', description: 'Senza vincoli regolamento (beach/giovanili).' },
-  { key: 'showServeStartZone' as const, label: 'Area di battuta (2-tap)', description: 'Chiedi zona di partenza del servizio (1/5/6) prima del tipo battuta.' },
-  { key: 'showRallyHistory' as const, label: 'Mostra storico rally', description: 'Striscia orizzontale con le ultime azioni sotto al campo.' },
-  { key: 'comboChain' as const, label: '🔗 Combo chain', description: 'Dopo un\'azione non terminale mantiene squadra+giocatore selezionati → salta direttamente alla scelta del fondamentale.' },
-  { key: 'keyboardShortcuts' as const, label: '⌨ Scorciatoie tastiera', description: 'Numeri = giocatore/zona, S R A B D E F = skill, # + - = / ! = valutazione, H/V = squadra, Esc = indietro.' },
-];
-
-const VISUAL_ROWS = [
-  { key: 'showAllDirections' as const, label: 'Tutte le direzioni', description: 'Mostra tutte le direzioni disponibili.' },
-  { key: 'posizionaPerRuolo' as const, label: 'Posiziona per ruolo', description: 'Giocatori in posizione tattica dopo ricezione' },
-  { key: 'fastMode' as const, label: '⚡ Fast Mode', description: 'Ritorno immediato dopo ogni azione' },
-];
 
 export function LiveScout() {
   const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction, setSingleTeamMode, resetMatch } = useMatchStore();
@@ -87,6 +61,7 @@ export function LiveScout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rotationsOpen, setRotationsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [simplifiedField, setSimplifiedField] = useState(false);
   const [modifyOpen, setModifyOpen] = useState(false);
   const [waitingStep, setWaitingStep] = useState<string | null>(null);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
@@ -267,15 +242,30 @@ export function LiveScout() {
                     home: matchState.servingTeam === 'away',
                     away: matchState.servingTeam === 'home',
                   }}
+                  simplifiedView={simplifiedField}
                 />
-                <button
-                  type="button"
-                  onClick={() => setReceptionEditorOpen(true)}
-                  title="Modifica schemi di ricezione 5-1"
-                  className="absolute top-2 right-2 z-30 h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
-                >
-                  <Move className="w-3 h-3" /> Schemi ricezione
-                </button>
+                <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSimplifiedField((v) => !v)}
+                    className={`h-8 px-2.5 rounded-md backdrop-blur border flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider shadow-md transition-colors ${
+                      simplifiedField
+                        ? 'bg-primary/80 border-primary text-primary-foreground'
+                        : 'bg-secondary/80 border-border text-foreground hover:bg-secondary'
+                    }`}
+                    title={simplifiedField ? 'Mostra tutto' : 'Campo pulito'}
+                  >
+                    {simplifiedField ? <><EyeOff className="w-3 h-3" /> Dettagli</> : <><Eye className="w-3 h-3" /> Pulito</>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReceptionEditorOpen(true)}
+                    title="Modifica schemi di ricezione 5-1"
+                    className="h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
+                  >
+                    <Move className="w-3 h-3" /> Schemi ricezione
+                  </button>
+                </div>
               </div>
               {matchState.servingTeam && (
                 <CSServePanel
@@ -622,6 +612,18 @@ export function LiveScout() {
                     </div>
                   )}
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button"
+                    onClick={() => { window.dispatchEvent(new CustomEvent('scout-export-dvw')); setInfoOpen(false); }}
+                    className="min-h-12 w-full rounded-lg bg-primary/10 border border-primary/30 text-primary font-bold flex items-center justify-center gap-2">
+                    <Download className="w-4 h-4" /> Export DVW
+                  </button>
+                  <button type="button"
+                    onClick={() => { window.dispatchEvent(new CustomEvent('scout-export-csv')); setInfoOpen(false); }}
+                    className="min-h-12 w-full rounded-lg bg-secondary border border-border text-foreground font-bold flex items-center justify-center gap-2">
+                    <Download className="w-4 h-4" /> Export CSV
+                  </button>
+                </div>
                 <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent('scout-undo-rally')); setInfoOpen(false); }}
                   disabled={rally.length === 0}
                   className="min-h-12 w-full rounded-lg bg-destructive/10 border border-destructive/30 text-destructive font-bold disabled:opacity-30">
@@ -673,78 +675,6 @@ export function LiveScout() {
   );
 }
 
-function SettingRow({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-secondary/40 p-4">
-      <div>
-        <div className="text-sm font-black text-foreground">{label}</div>
-        <div className="text-xs text-muted-foreground">{description}</div>
-      </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
-    </div>
-  );
-}
-
-function ScoutSettingsPanel({ settings, setSetting, setSettings }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void; setSettings: (patch: Partial<ScoutSettings>) => void }) {
-  const PRESETS = [
-    { key: 'base' as const, label: '⚡ Base', desc: 'Veloce\nniente zone' },
-    { key: 'standard' as const, label: '📊 Standard', desc: 'Con zone\ne fondamentali' },
-    { key: 'avanzato' as const, label: '🏆 Pro', desc: 'Tutto\nattivato' },
-  ];
-  return (
-    <div className="mt-4 space-y-5">
-      <section>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Preset rapido</h3>
-        <div className="grid grid-cols-3 gap-2">
-          {PRESETS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => { setSettings(SCOUT_PRESETS[p.key]); toast.success(`Preset ${p.label} applicato`); }}
-              className="min-h-16 rounded-xl border-2 border-border bg-secondary/30 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 p-2"
-            >
-              <span className="text-sm font-black text-foreground">{p.label}</span>
-              <span className="text-[10px] text-muted-foreground whitespace-pre-line text-center leading-tight">{p.desc}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Rilevazione</h3>
-        <div className="space-y-3">
-          {RILEVAZIONE_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
-        </div>
-      </section>
-      <section>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Valori predefiniti</h3>
-        <div className="grid gap-3 rounded-xl border border-border bg-secondary/40 p-4">
-          <Select value={settings.attaccoPredefinito} onValueChange={(v) => setSetting('attaccoPredefinito', v as ScoutSettings['attaccoPredefinito'])}>
-            <SelectTrigger><SelectValue placeholder="Attacco predefinito" /></SelectTrigger>
-            <SelectContent><SelectItem value="H">H — Alta</SelectItem><SelectItem value="Q">Q — Veloce</SelectItem><SelectItem value="T">T — Tesa</SelectItem></SelectContent>
-          </Select>
-          <Select value={settings.ricezionePredefinita} onValueChange={(v) => setSetting('ricezionePredefinita', v as ScoutSettings['ricezionePredefinita'])}>
-            <SelectTrigger><SelectValue placeholder="Ricezione predefinita" /></SelectTrigger>
-            <SelectContent>{(['#', '+', '!', '-', '/', '='] as const).map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-      </section>
-      <section>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Visualizzazione</h3>
-        <div className="space-y-3">
-          {VISUAL_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
-        </div>
-      </section>
-      <button
-        type="button"
-        onClick={() => { localStorage.removeItem('scout_seen_tips'); toast.info('Suggerimenti ripristinati'); }}
-        className="w-full min-h-10 rounded-lg border border-border text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
-      >
-        🔄 Ripristina suggerimenti
-      </button>
-    </div>
-  );
-}
 
 function EndSetDialog({ open, onOpenChange, stats, onConfirm, currentSet, homeName, awayName, homeScore, awayScore }: { open: boolean; onOpenChange: (v: boolean) => void; stats: Record<string, number>; onConfirm: () => void; currentSet: number; homeName: string; awayName: string; homeScore: number; awayScore: number }) {
   const rows = [['Ace Casa', stats.homeAce], ['Ace Ospite', stats.awayAce], ['Errori Casa', stats.homeErr], ['Errori Ospite', stats.awayErr], ['Kill Casa', stats.homeKill], ['Kill Ospite', stats.awayKill]];

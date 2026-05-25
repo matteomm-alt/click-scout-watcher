@@ -21,6 +21,7 @@ interface DvwKpi {
   wins: number;
   winRate: number;
   lastResult: { won: boolean; opponent: string; date: string | null } | null;
+  lastMatchId: string | null;
 }
 
 interface RecentTraining {
@@ -41,7 +42,7 @@ export function HomeDashboard() {
   const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const [nextEvent, setNextEvent] = useState<NextEvent | null>(null);
-  const [dvw, setDvw] = useState<DvwKpi>({ total: 0, wins: 0, winRate: 0, lastResult: null });
+  const [dvw, setDvw] = useState<DvwKpi>({ total: 0, wins: 0, winRate: 0, lastResult: null, lastMatchId: null });
   const [trainings, setTrainings] = useState<RecentTraining[]>([]);
   const [alerts, setAlerts] = useState<AttendanceAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +97,7 @@ export function HomeDashboard() {
         opponent: lastRow.away_team?.name ?? '—',
         date: lastRow.match_date,
       } : null;
-      setDvw({ total, wins, winRate, lastResult });
+      setDvw({ total, wins, winRate, lastResult, lastMatchId: lastRow?.id ?? null });
 
       setTrainings((trainingsRes.data as RecentTraining[]) ?? []);
 
@@ -164,14 +165,15 @@ export function HomeDashboard() {
       </div>
 
       {!isAdmin && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {[
+            { icon: '🏐', label: 'Nuova partita', href: '/scout' },
             { icon: '✅', label: 'Presenze oggi', href: '/presenze' },
             { icon: '📋', label: 'Nuova convocazione', href: '/convocazioni?new=1' },
             { icon: '🔴', label: 'Scout Live', href: '/scout' },
           ].map((a) => (
             <button
-              key={a.href}
+              key={a.label}
               onClick={() => navigate(a.href)}
               className="min-h-16 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors active:scale-95"
             >
@@ -247,7 +249,10 @@ export function HomeDashboard() {
             </p>
             <p className="text-3xl font-black">{dvw.winRate}<span className="text-lg">%</span></p>
           </Card>
-          <Card className="p-4">
+          <Card
+            className={`p-4 ${dvw.lastMatchId ? 'cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors' : ''}`}
+            onClick={() => dvw.lastMatchId && navigate(`/match/${dvw.lastMatchId}`)}
+          >
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
               <Trophy className="w-3 h-3" /> Ultima
             </p>
@@ -259,6 +264,9 @@ export function HomeDashboard() {
                 <p className="text-[11px] text-muted-foreground truncate">
                   vs {dvw.lastResult.opponent || '—'}
                 </p>
+                {dvw.lastMatchId && (
+                  <p className="text-[10px] text-primary font-bold mt-1">Analizza →</p>
+                )}
               </>
             ) : (
               <p className="text-muted-foreground text-sm">—</p>

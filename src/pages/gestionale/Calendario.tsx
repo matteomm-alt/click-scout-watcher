@@ -235,7 +235,7 @@ export default function Calendario() {
             </Badge>
           )}
         </div>
-        <Link to="/calendario/nuovo">
+        <Link to="/calendario">
           <Button size="lg" className="gap-2">
             <Plus className="w-4 h-4" /> Nuovo evento
           </Button>

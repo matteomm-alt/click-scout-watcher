@@ -10,7 +10,7 @@ interface RailButtonProps {
 
 function RailButton({ label, badge, onClick, highlight = 'default', disabled }: RailButtonProps) {
   const base =
-    'flex-1 w-full flex items-center justify-center relative transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
+    'flex-1 w-full min-h-[44px] flex items-center justify-center relative transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
   const colorByHl = {
     default: 'bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] hover:brightness-125',
     cta: 'bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] hover:brightness-125',
@@ -78,7 +78,7 @@ export function CSSideRail({
         <button
           type="button"
           onClick={onYellowCard}
-          className="h-9 w-full flex items-center justify-center transition active:scale-95 bg-yellow-500/85 text-black hover:brightness-110"
+          className="min-h-[44px] w-full flex items-center justify-center transition active:scale-95 bg-yellow-500/85 text-black hover:brightness-110"
           aria-label="Cartellino giallo"
           title="Cartellino giallo"
         >
@@ -89,7 +89,7 @@ export function CSSideRail({
         <button
           type="button"
           onClick={onRedCard}
-          className="h-9 w-full flex items-center justify-center transition active:scale-95 bg-red-600 text-white hover:brightness-110"
+          className="min-h-[44px] w-full flex items-center justify-center transition active:scale-95 bg-red-600 text-white hover:brightness-110"
           aria-label="Cartellino rosso"
           title="Cartellino rosso"
         >

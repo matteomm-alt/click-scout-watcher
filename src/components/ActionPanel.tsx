@@ -96,9 +96,15 @@ export function ActionPanel() {
     };
     window.addEventListener('scout-open-sub', onOpenSub);
     window.addEventListener('scout-undo-rally', onUndoRally);
+    const onExportDvw = () => handleExportDVW();
+    const onExportCsv = () => handleExportCSV();
+    window.addEventListener('scout-export-dvw', onExportDvw);
+    window.addEventListener('scout-export-csv', onExportCsv);
     return () => {
       window.removeEventListener('scout-open-sub', onOpenSub);
       window.removeEventListener('scout-undo-rally', onUndoRally);
+      window.removeEventListener('scout-export-dvw', onExportDvw);
+      window.removeEventListener('scout-export-csv', onExportCsv);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

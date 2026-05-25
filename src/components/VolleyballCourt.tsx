@@ -180,6 +180,9 @@ interface VolleyballCourtProps {
    * con le posizioni di ricezione personalizzate per la rotazione del palleggiatore corrente.
    */
   receptionMode?: { home?: boolean; away?: boolean };
+  /** Nasconde label, watermark zone, badge P{pos} e frecce vecchie.
+   *  Lascia solo cerchi numerati — massima leggibilità su tablet. */
+  simplifiedView?: boolean;
 }
 
 export function VolleyballCourt({
@@ -189,6 +192,7 @@ export function VolleyballCourt({
   liveArrows,
   compactAspect,
   receptionMode,
+  simplifiedView = false,
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
 
@@ -246,17 +250,15 @@ export function VolleyballCourt({
   // Watermark zone numeriche: stesse coordinate dei giocatori per le 6 di rotazione,
   // più 7/8/9 nell'area di servizio (dietro la back row).
   const zoneLabels = [
-    // AWAY (front x=78, back x=48, deep x=18)
-    { zone: 4, x: 78, y: 16 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 84 },
-    { zone: 5, x: 48, y: 16 }, { zone: 6, x: 48, y: 50 }, { zone: 1, x: 48, y: 84 },
-    { zone: 7, x: 18, y: 16 }, { zone: 8, x: 18, y: 50 }, { zone: 9, x: 18, y: 84 },
+    { zone: 4, x: 6,  y: 8  }, { zone: 3, x: 50, y: 8  }, { zone: 2, x: 94, y: 8  },
+    { zone: 5, x: 6,  y: 50 }, { zone: 6, x: 50, y: 50 }, { zone: 1, x: 94, y: 50 },
+    { zone: 7, x: 6,  y: 92 }, { zone: 8, x: 50, y: 92 }, { zone: 9, x: 94, y: 92 },
   ];
 
   const zoneLabelsHome = [
-    // HOME (front x=22, back x=52, deep x=82)
-    { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
-    { zone: 5, x: 52, y: 78 }, { zone: 6, x: 52, y: 50 }, { zone: 1, x: 52, y: 22 },
-    { zone: 7, x: 82, y: 78 }, { zone: 8, x: 82, y: 50 }, { zone: 9, x: 82, y: 22 },
+    { zone: 2, x: 6,  y: 8  }, { zone: 3, x: 50, y: 8  }, { zone: 4, x: 94, y: 8  },
+    { zone: 1, x: 6,  y: 50 }, { zone: 6, x: 50, y: 50 }, { zone: 5, x: 94, y: 50 },
+    { zone: 9, x: 6,  y: 92 }, { zone: 8, x: 50, y: 92 }, { zone: 7, x: 94, y: 92 },
   ];
 
   const zonePct = (zone: number) => {
@@ -312,8 +314,8 @@ export function VolleyballCourt({
             />
           );
         })}
-        {(team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => (
-          <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-xl md:text-2xl font-black italic text-white/10" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
+        {!simplifiedView && (team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => (
+          <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-xl md:text-2xl font-black italic text-white/15" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
             {z.zone}
           </span>
         ))}
@@ -343,10 +345,14 @@ export function VolleyballCourt({
                 <>
                   <div className={`relative flex size-11 md:size-[52px] items-center justify-center rounded-full text-base md:text-lg font-black text-white shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${isSetter ? 'ring-2 ring-warning ring-offset-2 ring-offset-transparent' : ''} ${pos === 1 && matchState.servingTeam === team && serverPulseActive && !isSetter ? 'ring-2 ring-[hsl(var(--cs-cta))] animate-pulse' : ''} ${isHighlighted ? 'ring-4 ring-primary animate-pulse' : ''} ${isLibero ? 'bg-yellow-700 border-2 border-yellow-400' : team === 'home' ? 'bg-blue-700 border-2 border-blue-300' : 'bg-red-700 border-2 border-red-300'}`}>
                     {info.number}
-                    <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black bg-black/70 text-white rounded px-1 leading-tight">P{pos}</span>
+                    {!simplifiedView && (
+                      <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black bg-black/70 text-white rounded px-1 leading-tight">P{pos}</span>
+                    )}
                     {isSetter && <span className="absolute -right-2 -bottom-2 rounded bg-warning px-1.5 py-0.5 text-[10px] font-black text-background">S</span>}
                   </div>
-                  <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
+                  {!simplifiedView && (
+                    <span className="mt-0.5 max-w-16 truncate text-[11px] md:text-xs font-bold text-white/95 drop-shadow">{info.name}</span>
+                  )}
                 </>
               )}
             </div>
@@ -359,7 +365,7 @@ export function VolleyballCourt({
                 <path d="M0,0 L0,6 L6,3 z" fill="currentColor" />
               </marker>
             </defs>
-            {liveArrows.slice(-5).map((arr, i, arrs) => {
+            {liveArrows.slice(simplifiedView ? -1 : -5).map((arr, i, arrs) => {
               const from = zonePct(arr.startZone);
               const to = zonePct(arr.endZone);
               if (!from || !to || arr.startZone === arr.endZone) return null;

@@ -25,13 +25,14 @@ export function useNotifications(societyId: string | null, userId: string | null
         // 1. Comunicazioni urgenti non lette dall'utente corrente
         const { data: comms } = await supabase
           .from('communications')
-          .select('id, communication_reads(user_id)')
+          .select('id, is_urgent, communication_reads(user_id)')
           .eq('society_id', societyId)
-          .eq('is_urgent' as never, true);
+          .eq('is_urgent', true);
 
         const comunNonLette =
           (comms ?? []).filter(
-            (c: { communication_reads?: Array<{ user_id: string }> }) =>
+            (c: { is_urgent: boolean; communication_reads?: Array<{ user_id: string }> }) =>
+              c.is_urgent === true &&
               !c.communication_reads?.some((r) => r.user_id === userId)
           ).length || 0;
 
