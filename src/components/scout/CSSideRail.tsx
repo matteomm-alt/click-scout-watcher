@@ -10,7 +10,7 @@ interface RailButtonProps {
 
 function RailButton({ label, badge, onClick, highlight = 'default', disabled }: RailButtonProps) {
   const base =
-    'flex-1 w-full flex items-center justify-center relative transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
+    'flex-1 w-full min-h-[44px] flex items-center justify-center relative transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed';
   const colorByHl = {
     default: 'bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] hover:brightness-125',
     cta: 'bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] hover:brightness-125',

@@ -246,17 +246,15 @@ export function VolleyballCourt({
   // Watermark zone numeriche: stesse coordinate dei giocatori per le 6 di rotazione,
   // più 7/8/9 nell'area di servizio (dietro la back row).
   const zoneLabels = [
-    // AWAY (front x=78, back x=48, deep x=18)
-    { zone: 4, x: 78, y: 16 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 84 },
-    { zone: 5, x: 48, y: 16 }, { zone: 6, x: 48, y: 50 }, { zone: 1, x: 48, y: 84 },
-    { zone: 7, x: 18, y: 16 }, { zone: 8, x: 18, y: 50 }, { zone: 9, x: 18, y: 84 },
+    { zone: 4, x: 6,  y: 8  }, { zone: 3, x: 50, y: 8  }, { zone: 2, x: 94, y: 8  },
+    { zone: 5, x: 6,  y: 50 }, { zone: 6, x: 50, y: 50 }, { zone: 1, x: 94, y: 50 },
+    { zone: 7, x: 6,  y: 92 }, { zone: 8, x: 50, y: 92 }, { zone: 9, x: 94, y: 92 },
   ];
 
   const zoneLabelsHome = [
-    // HOME (front x=22, back x=52, deep x=82)
-    { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
-    { zone: 5, x: 52, y: 78 }, { zone: 6, x: 52, y: 50 }, { zone: 1, x: 52, y: 22 },
-    { zone: 7, x: 82, y: 78 }, { zone: 8, x: 82, y: 50 }, { zone: 9, x: 82, y: 22 },
+    { zone: 2, x: 6,  y: 8  }, { zone: 3, x: 50, y: 8  }, { zone: 4, x: 94, y: 8  },
+    { zone: 1, x: 6,  y: 50 }, { zone: 6, x: 50, y: 50 }, { zone: 5, x: 94, y: 50 },
+    { zone: 9, x: 6,  y: 92 }, { zone: 8, x: 50, y: 92 }, { zone: 7, x: 94, y: 92 },
   ];
 
   const zonePct = (zone: number) => {
