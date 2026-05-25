@@ -256,6 +256,7 @@ function parseScout(sections: Record<string, string[]>): {
   let homeSetterPos: number | null = null;
   let awaySetterPos: number | null = null;
   let lastServingSide: DvwSide | null = null;
+  let hasSeenZoneThisRally = false;
 
   for (const line of lines) {
     const c = line.split(';');
@@ -314,10 +315,31 @@ function parseScout(sections: Record<string, string[]>): {
       lastServingSide = newServingSide;
       rallyIndex++;
       actionIndexInRally = 0;
+      hasSeenZoneThisRally = true;
       continue;
     }
 
-    if (code.match(/^([*a])p\d/)) continue;
+    const scoreMatch = code.match(/^([*a])p(\d{2}):(\d{2})/);
+    if (scoreMatch) {
+      const scoringTeam: DvwSide = scoreMatch[1] === '*' ? 'home' : 'away';
+      if (!hasSeenZoneThisRally) {
+        // File senza marker *z: usa il punteggio per incrementare il rally
+        if (lastServingSide !== null && lastServingSide !== scoringTeam) {
+          const newServingSide = scoringTeam;
+          if (newServingSide === 'home' && homeSetterPos !== null) {
+            homeSetterPos = homeSetterPos === 1 ? 6 : homeSetterPos - 1;
+          } else if (newServingSide === 'away' && awaySetterPos !== null) {
+            awaySetterPos = awaySetterPos === 1 ? 6 : awaySetterPos - 1;
+          }
+          servingSide = newServingSide;
+          lastServingSide = newServingSide;
+        }
+        rallyIndex++;
+        actionIndexInRally = 0;
+      }
+      hasSeenZoneThisRally = false;
+      continue;
+    }
 
     const subMatch = code.match(/^([*a])c(\d+):(\d+)/);
     if (subMatch) {
