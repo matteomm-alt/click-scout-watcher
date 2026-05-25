@@ -310,8 +310,8 @@ export function VolleyballCourt({
             />
           );
         })}
-        {(team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => (
-          <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-xl md:text-2xl font-black italic text-white/10" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
+        {!simplifiedView && (team === 'home' ? zoneLabelsHome : zoneLabels).map((z) => (
+          <span key={`${team}-z-${z.zone}`} className="pointer-events-none absolute z-0 -translate-x-1/2 -translate-y-1/2 select-none text-xl md:text-2xl font-black italic text-white/15" style={{ left: `${z.x}%`, top: `${z.y}%` }}>
             {z.zone}
           </span>
         ))}
