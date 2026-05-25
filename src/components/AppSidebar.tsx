@@ -96,12 +96,12 @@ export function AppSidebar() {
   const { societyId, societyName, features, isAdmin } = useActiveSociety();
   const counts = useNotifications(societyId, user?.id ?? null);
   const [bellOpen, setBellOpen] = useState(false);
-  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from('profiles')
-      .select('display_name, avatar_url')
+      .select('full_name, avatar_url')
       .eq('id', user.id)
       .single()
       .then(({ data }) => { if (data) setProfile(data); });
@@ -315,13 +315,13 @@ export function AppSidebar() {
             <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
           ) : (
             <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-black text-sm shrink-0">
-              {(profile?.display_name ?? user?.email ?? '?')[0]?.toUpperCase()}
+              {(profile?.full_name ?? user?.email ?? '?')[0]?.toUpperCase()}
             </div>
           )}
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold truncate">
-                {profile?.display_name ?? user?.email?.split('@')[0] ?? 'Coach'}
+                {profile?.full_name ?? user?.email?.split('@')[0] ?? 'Coach'}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
             </div>
