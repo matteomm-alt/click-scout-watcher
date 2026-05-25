@@ -1,3 +1,4 @@
+import { getTooltipStyle } from '@/lib/chartTheme';
 import { useEffect, useState, useMemo } from 'react';
 import { Shield, ChevronDown, ChevronUp, TrendingUp, Target } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -29,7 +30,7 @@ interface Match {
   away_team_id: string;
 }
 
-const TOOLTIP_STYLE = { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 };
+const TOOLTIP_STYLE = getTooltipStyle();
 const ZONE_LAYOUT = [4, 3, 2, 7, 8, 9, 5, 6, 1];
 const ZONE_LABELS: Record<number, string> = { 1:'P1',2:'P2',3:'P3',4:'P4',5:'P5',6:'P6',7:'DP4',8:'DP6',9:'DP2' };
 

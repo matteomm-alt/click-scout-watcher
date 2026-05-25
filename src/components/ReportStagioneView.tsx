@@ -1,3 +1,4 @@
+import { getTooltipStyle } from '@/lib/chartTheme';
 import { useEffect, useState, useMemo } from 'react';
 import { PieChart as PieIcon, TrendingUp, Users, Dumbbell, Trophy } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -15,7 +16,7 @@ import {
 const FONDAMENTALI = ['Palleggio','Bagher di appoggio','Bagher di difesa','Ricezione','Bagher di alzata','Rincorsa e stacco','Attacco','Battuta','Muro'];
 const FASE_LABEL: Record<string, string> = { inizio: 'Inizio stagione', meta: 'Metà stagione', fine: 'Fine stagione' };
 const FASE_ORDER = ['inizio', 'meta', 'fine'];
-const TOOLTIP_STYLE = { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 };
+const TOOLTIP_STYLE = getTooltipStyle();
 
 interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
 interface Evaluation { athlete_id: string; fundamental: string; score: number; season_phase: string | null; evaluated_at: string; }

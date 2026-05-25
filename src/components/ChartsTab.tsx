@@ -1,3 +1,4 @@
+import { getTooltipStyle } from '@/lib/chartTheme';
 import { useEffect, useMemo, useState } from 'react';
 import {
   type DbAction, SKILL_NAMES, EVAL_NAMES, EVAL_COLORS,
@@ -19,7 +20,7 @@ interface Props {
 }
 
 const COLORS = ['#2563EB','#16A34A','#DC2626','#D97706','#7C3AED','#0891B2','#BE185D'];
-const TOOLTIP = { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12, borderRadius: 8, padding: '10px 14px' };
+const TOOLTIP = getTooltipStyle();
 
 // Zone layout campo (9 zone FIVB, disposizione visiva 3x3)
 const ZONE_LAYOUT = [4, 3, 2, 7, 8, 9, 5, 6, 1]; // top-left → bottom-right
