@@ -16,6 +16,7 @@ import { CSSideRail } from '@/components/scout/CSSideRail';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
 import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
+import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -45,32 +46,6 @@ const MOBILE_TABS = [
   { key: 'log' as const, label: 'Log', icon: List },
 ];
 
-const RILEVAZIONE_ROWS = [
-  { key: 'singleTeamMode' as const, label: '👤 Rileva una sola squadra', description: 'Riduce il carico cognitivo: rileva solo la tua squadra, l\'avversaria si gestisce con "Punto".' },
-  { key: 'followServe' as const, label: '🔄 Segui servizio', description: 'Pre-seleziona automaticamente la squadra dopo ogni azione: S→riceve avversaria, R/E→stessa squadra. Risparmia 1 tap per azione.' },
-  { key: 'showServeType' as const, label: 'Tipo battuta', description: 'Mostra lo step per scegliere il tipo di servizio.' },
-  { key: 'showAttackCombo' as const, label: 'Combo attacco', description: 'Mostra lo step per la combinazione di attacco.' },
-  { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell\'azione (2-tap traiettoria).' },
-  { key: 'showEndZone' as const, label: 'Zona destinazione', description: 'Richiede la zona di arrivo dell\'azione.' },
-  { key: 'showAlzata' as const, label: 'Skill E', description: 'Mostra Alzata nella lista fondamentali.' },
-  { key: 'showDifesa' as const, label: 'Skill D', description: 'Mostra Difesa nella lista fondamentali.' },
-  { key: 'showFreeball' as const, label: 'Skill F', description: 'Mostra Freeball nella lista fondamentali.' },
-  { key: 'autoPoint' as const, label: 'Punto automatico', description: 'Aggiunge punto automatico su # per A/S/B e su errore.' },
-  { key: 'autoCorrelation' as const, label: 'Correlazione automatica', description: 'Aggiorna automaticamente battuta/ricezione e attacco/muro' },
-  { key: 'showMuroVincente' as const, label: 'Muro vincente', description: 'Rileva chi fa muro punto' },
-  { key: 'showMuroErrato' as const, label: 'Muro errato', description: 'Rileva chi commette errore a muro' },
-  { key: 'sostituzioniLibere' as const, label: 'Sostituzioni libere', description: 'Senza vincoli regolamento (beach/giovanili).' },
-  { key: 'showServeStartZone' as const, label: 'Area di battuta (2-tap)', description: 'Chiedi zona di partenza del servizio (1/5/6) prima del tipo battuta.' },
-  { key: 'showRallyHistory' as const, label: 'Mostra storico rally', description: 'Striscia orizzontale con le ultime azioni sotto al campo.' },
-  { key: 'comboChain' as const, label: '🔗 Combo chain', description: 'Dopo un\'azione non terminale mantiene squadra+giocatore selezionati → salta direttamente alla scelta del fondamentale.' },
-  { key: 'keyboardShortcuts' as const, label: '⌨ Scorciatoie tastiera', description: 'Numeri = giocatore/zona, S R A B D E F = skill, # + - = / ! = valutazione, H/V = squadra, Esc = indietro.' },
-];
-
-const VISUAL_ROWS = [
-  { key: 'showAllDirections' as const, label: 'Tutte le direzioni', description: 'Mostra tutte le direzioni disponibili.' },
-  { key: 'posizionaPerRuolo' as const, label: 'Posiziona per ruolo', description: 'Giocatori in posizione tattica dopo ricezione' },
-  { key: 'fastMode' as const, label: '⚡ Fast Mode', description: 'Ritorno immediato dopo ogni azione' },
-];
 
 export function LiveScout() {
   const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction, setSingleTeamMode, resetMatch } = useMatchStore();
