@@ -87,6 +87,7 @@ export function LiveScout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rotationsOpen, setRotationsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [simplifiedField, setSimplifiedField] = useState(false);
   const [modifyOpen, setModifyOpen] = useState(false);
   const [waitingStep, setWaitingStep] = useState<string | null>(null);
   const recentActions = [...matchState.actions].reverse().slice(0, 100);
@@ -267,15 +268,30 @@ export function LiveScout() {
                     home: matchState.servingTeam === 'away',
                     away: matchState.servingTeam === 'home',
                   }}
+                  simplifiedView={simplifiedField}
                 />
-                <button
-                  type="button"
-                  onClick={() => setReceptionEditorOpen(true)}
-                  title="Modifica schemi di ricezione 5-1"
-                  className="absolute top-2 right-2 z-30 h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
-                >
-                  <Move className="w-3 h-3" /> Schemi ricezione
-                </button>
+                <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSimplifiedField((v) => !v)}
+                    className={`h-8 px-2.5 rounded-md backdrop-blur border flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider shadow-md transition-colors ${
+                      simplifiedField
+                        ? 'bg-primary/80 border-primary text-primary-foreground'
+                        : 'bg-secondary/80 border-border text-foreground hover:bg-secondary'
+                    }`}
+                    title={simplifiedField ? 'Mostra tutto' : 'Campo pulito'}
+                  >
+                    {simplifiedField ? <><EyeOff className="w-3 h-3" /> Dettagli</> : <><Eye className="w-3 h-3" /> Pulito</>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReceptionEditorOpen(true)}
+                    title="Modifica schemi di ricezione 5-1"
+                    className="h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
+                  >
+                    <Move className="w-3 h-3" /> Schemi ricezione
+                  </button>
+                </div>
               </div>
               {matchState.servingTeam && (
                 <CSServePanel
