@@ -22,7 +22,7 @@ type InviteInfo = {
   is_accepted: boolean;
 };
 
-const roleLabels: Record<InviteInfo['role'], string> = {
+const roleLabels: Record<InviteInfo['invited_role'], string> = {
   super_admin: 'Super Admin',
   society_admin: 'Admin società',
   coach: 'Coach',
