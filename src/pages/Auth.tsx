@@ -13,7 +13,7 @@ type Mode = 'signin' | 'signup';
 type InviteInfo = {
   id: string;
   email: string;
-  role: 'super_admin' | 'society_admin' | 'coach';
+  invited_role: 'super_admin' | 'society_admin' | 'coach';
   society_id: string;
   society_name: string;
   expires_at: string;
