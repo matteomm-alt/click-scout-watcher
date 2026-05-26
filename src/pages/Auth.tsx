@@ -198,7 +198,7 @@ export default function Auth() {
                 <p className="font-medium text-foreground">Invito società</p>
                 <p>
                   Sei stato invitato a unirti a <span className="font-medium text-foreground">{inviteInfo.society_name}</span> come{' '}
-                  <span className="font-medium text-foreground">{roleLabels[inviteInfo.role]}</span>.
+                  <span className="font-medium text-foreground">{roleLabels[inviteInfo.invited_role]}</span>.
                 </p>
                 {acceptingInvite && <p className="text-primary">Accettazione invito in corso…</p>}
               </div>
