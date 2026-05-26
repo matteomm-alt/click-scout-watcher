@@ -1,37 +1,33 @@
 import { useMatchStore } from '@/store/matchStore';
 
-interface CSServePanelProps {
-  onShowDirections?: () => void;
-}
-
 /**
- * Pannello verticale "SERVE" stile Click&Scout — appare SOLO per la squadra al servizio.
- * Pannello blu scuro + grande etichetta verticale + bottone giallo "Direzioni servizio".
- * Da posizionare a destra del campo, larghezza ~80px.
+ * Pannello compatto che indica chi è al servizio + n° del battitore.
  */
-export function CSServePanel({ onShowDirections }: CSServePanelProps) {
-  const { matchState } = useMatchStore();
-
-  // Mostra solo se la partita è iniziata e c'è una squadra al servizio definita.
+export function CSServePanel({ onShowDirections }: { onShowDirections?: () => void } = {}) {
+  const { matchState, homeTeam, awayTeam } = useMatchStore();
   if (!matchState.servingTeam) return null;
 
+  const server = matchState.servingTeam === 'home'
+    ? matchState.homeCurrentLineup[0]
+    : matchState.awayCurrentLineup[0];
+  const teamName = matchState.servingTeam === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite');
+
   return (
-    <div className="w-20 max-xl:w-16 h-full flex flex-col rounded-md overflow-hidden border border-border/40 shadow-lg">
-      <div className="flex-1 bg-[hsl(var(--cs-rail))] flex items-center justify-center text-[hsl(var(--cs-rail-fg))]">
-        <span
-          className="text-2xl font-black italic uppercase tracking-[0.4em]"
-          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-        >
-          SERVE
+    <div className="flex items-center gap-2 rounded-md border border-border/40 bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] px-3 py-1.5">
+      <span className="text-[9px] font-black uppercase tracking-widest opacity-70">Al servizio</span>
+      <span className="text-sm font-black truncate max-w-[120px]">{teamName}</span>
+      {server != null && (
+        <span className="px-2 py-0.5 rounded bg-[hsl(var(--cs-cta))] text-white text-xs font-black tabular-nums">
+          #{server}
         </span>
-      </div>
+      )}
       {onShowDirections && (
         <button
           type="button"
           onClick={onShowDirections}
-          className="px-2 py-2 bg-[hsl(var(--cs-cta-yellow))] text-black text-[10px] font-black leading-tight uppercase tracking-wider hover:brightness-110 active:scale-95 transition border-t border-black/20"
+          className="ml-auto px-2 py-1 rounded bg-[hsl(var(--cs-cta-yellow))] text-black text-[10px] font-black uppercase tracking-wider hover:brightness-110 active:scale-95"
         >
-          Direzioni servizio
+          Direzioni
         </button>
       )}
     </div>

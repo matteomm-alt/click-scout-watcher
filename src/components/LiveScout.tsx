@@ -1,716 +1,466 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, List, Pencil, Settings, Target, Zap, PanelRight, Move, ChevronLeft, ChevronRight, Download, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
+import { useMatchStore } from '@/store/matchStore';
+import { useScoutSettings } from '@/lib/scoutSettings';
+import { generateDVW } from '@/lib/dvwExporter';
+import { SKILL_LABELS } from '@/types/volleyball';
+import type { Skill, ScoutAction } from '@/types/volleyball';
+
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
 import { InSetStatsPanel } from '@/components/InSetStatsPanel';
-import { QuickActions } from '@/components/QuickActions';
-import { TeamComparison } from '@/components/TeamComparison';
-import { SetDistribution } from '@/components/SetDistribution';
-import { FullscreenToggle } from '@/components/FullscreenToggle';
-import { CSHeader } from '@/components/scout/CSHeader';
 import { CSToolbar } from '@/components/scout/CSToolbar';
-import { CSSideRail } from '@/components/scout/CSSideRail';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
-import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { FullscreenToggle } from '@/components/FullscreenToggle';
+
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useScoutSettings, type ScoutSettings } from '@/lib/scoutSettings';
-import { toast } from 'sonner';
-import { useMatchStore } from '@/store/matchStore';
-import { SKILL_LABELS, SERVE_TYPES, type Evaluation, type ScoutAction } from '@/types/volleyball';
 
-type RightTab = 'log' | 'live' | 'stats' | 'heat' | 'compare' | 'sets' | 'dir';
-type MobileTab = 'scout' | 'quick' | 'stats' | 'log';
+type RightTab = 'log' | 'stats' | 'heat';
 
-const TABS: { key: RightTab; label: string }[] = [
-  { key: 'log', label: 'Log' },
-  { key: 'live', label: 'Live' },
-  { key: 'stats', label: 'Stats' },
-  { key: 'heat', label: 'Heat' },
-  { key: 'compare', label: 'VS' },
-  { key: 'sets', label: 'Alz.' },
-  { key: 'dir', label: 'Dir' },
-];
-
-const MOBILE_TABS = [
-  { key: 'scout' as const, label: 'Scout', icon: Target },
-  { key: 'quick' as const, label: 'Quick', icon: Zap },
-  { key: 'stats' as const, label: 'Stats', icon: BarChart2 },
-  { key: 'log' as const, label: 'Log', icon: List },
-];
-
+const SKILLS_WITH_ZONE: Skill[] = ['A', 'S', 'R', 'D'];
 
 export function LiveScout() {
-  const { matchState, homeTeam, awayTeam, endSet, updateAction, deleteAction, setSingleTeamMode, resetMatch } = useMatchStore();
+  const {
+    matchState, homeTeam, awayTeam, matchInfo, homeLineup, awayLineup,
+    endSet, updateAction, addPoint, undoLastAction, undoRally,
+    callTimeout, substitutePlayer,
+  } = useMatchStore();
   const { settings, setSetting, setSettings } = useScoutSettings();
-  const [tab, setTab] = useState<RightTab>('log');
-  const [mobileTab, setMobileTab] = useState<MobileTab>('scout');
-  const [showEndSetDialog, setShowEndSetDialog] = useState(false);
-  const [editingAction, setEditingAction] = useState<ScoutAction | null>(null);
-  const [editDraft, setEditDraft] = useState<{ playerNumber: string; evaluation: Evaluation; startZone: string; endZone: string }>({ playerNumber: '', evaluation: '#', startZone: 'none', endZone: 'none' });
-  const [timeoutBanner, setTimeoutBanner] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [controlsOpen, setControlsOpen] = useState(false);
-  const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
+
+  // Stato interno
+  const [selectedPlayer, setSelectedPlayer] = useState<{ number: number; team: 'home' | 'away' } | null>(null);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [zoneSelectMode, setZoneSelectMode] = useState(false);
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
+
+  const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [rotationsOpen, setRotationsOpen] = useState(false);
-  const [infoOpen, setInfoOpen] = useState(false);
-  const [simplifiedField, setSimplifiedField] = useState(false);
-  const [modifyOpen, setModifyOpen] = useState(false);
-  const [waitingStep, setWaitingStep] = useState<string | null>(null);
-  const recentActions = [...matchState.actions].reverse().slice(0, 100);
+  const [endSetDialog, setEndSetDialog] = useState(false);
+  const [subDialog, setSubDialog] = useState<{ open: boolean; team: 'home' | 'away'; out: number | null }>({ open: false, team: 'home', out: null });
+  const [simplified, setSimplified] = useState(false);
 
-  // Indicatore "attendendo input" emesso da ActionPanel
+  // Apri dialog fine set quando setOverPending
   useEffect(() => {
-    const onWait = (e: Event) => {
-      const d = (e as CustomEvent<{ step: string; active: boolean }>).detail;
-      setWaitingStep(d.active ? d.step : null);
-    };
-    window.addEventListener('scout-waiting', onWait);
-    return () => window.removeEventListener('scout-waiting', onWait);
-  }, []);
+    if (matchState.setOverPending) setEndSetDialog(true);
+  }, [matchState.setOverPending]);
 
-  // Sync setting → store (singleTeamMode è già nel matchState, riusiamolo)
-  useEffect(() => {
-    if (matchState.singleTeamMode !== settings.singleTeamMode) {
-      setSingleTeamMode(settings.singleTeamMode);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.singleTeamMode]);
-
-  const awayHeatmap = useMemo(() => {
+  // Heatmap & live arrows (basati su attacchi home)
+  const homeHeatmap = useMemo(() => {
     const data: Record<number, number> = {};
     matchState.actions
-      .filter(a => a.skill === 'A' && a.team === 'away' && a.endZone)
-      .forEach(a => { data[a.endZone!] = (data[a.endZone!] || 0) + 1; });
+      .filter((a) => a.skill === 'A' && a.team === 'home' && a.endZone)
+      .forEach((a) => { data[a.endZone!] = (data[a.endZone!] || 0) + 1; });
     return Object.keys(data).length > 0 ? data : undefined;
   }, [matchState.actions]);
 
   const liveArrows = useMemo(() =>
     matchState.actions
-      .filter(a => a.skill === 'A' && a.startZone != null && a.endZone != null)
+      .filter((a) => a.skill === 'A' && a.startZone != null && a.endZone != null)
       .slice(-5)
-      .map(a => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation })),
+      .map((a) => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation })),
     [matchState.actions]
   );
 
-
-  useEffect(() => {
-    const handler = () => {
-      setTab('dir');
-      setTimeoutBanner(true);
-      window.setTimeout(() => setTimeoutBanner(false), 4000);
-    };
-    window.addEventListener('scout-timeout', handler);
-    return () => window.removeEventListener('scout-timeout', handler);
-  }, []);
-
-  const openEditAction = (action: ScoutAction) => {
-    setEditingAction(action);
-    setEditDraft({
-      playerNumber: String(action.playerNumber),
-      evaluation: action.evaluation,
-      startZone: action.startZone ? String(action.startZone) : 'none',
-      endZone: action.endZone ? String(action.endZone) : 'none',
-    });
+  // === Handlers ===
+  const handlePlayerClick = (num: number, team: 'home' | 'away') => {
+    // Se siamo in zoneSelectMode, ignora il click sul giocatore
+    if (zoneSelectMode) return;
+    setSelectedPlayer({ number: num, team });
+    setBottomSheetOpen(true);
   };
 
-  const currentSetActions = matchState.actions.filter((a) => a.setNumber === matchState.currentSet);
-  const endSetStats = {
-    homeAce: currentSetActions.filter((a) => a.team === 'home' && a.skill === 'S' && a.evaluation === '#').length,
-    awayAce: currentSetActions.filter((a) => a.team === 'away' && a.skill === 'S' && a.evaluation === '#').length,
-    homeErr: currentSetActions.filter((a) => a.team === 'home' && a.evaluation === '=').length,
-    awayErr: currentSetActions.filter((a) => a.team === 'away' && a.evaluation === '=').length,
-    homeKill: currentSetActions.filter((a) => a.team === 'home' && a.skill === 'A' && a.evaluation === '#').length,
-    awayKill: currentSetActions.filter((a) => a.team === 'away' && a.skill === 'A' && a.evaluation === '#').length,
+  const handleActionComplete = (actionId: string, skill: Skill) => {
+    setBottomSheetOpen(false);
+    const team = selectedPlayer?.team ?? null;
+    setSelectedPlayer(null);
+    if (SKILLS_WITH_ZONE.includes(skill) && actionId) {
+      setPendingActionId(actionId);
+      setPendingTeam(team);
+      setZoneSelectMode(true);
+    }
   };
 
-  const ActionLog = () => (
+  const handleZoneSelect = (zone: number) => {
+    if (pendingActionId) {
+      updateAction(pendingActionId, { startZone: zone });
+      toast.success(`Zona ${zone} registrata`, { duration: 1200 });
+    }
+    setZoneSelectMode(false);
+    setPendingActionId(null);
+    setPendingTeam(null);
+  };
+
+  const skipZone = () => {
+    setZoneSelectMode(false);
+    setPendingActionId(null);
+    setPendingTeam(null);
+  };
+
+  // Export DVW
+  const handleExportDVW = () => {
+    const dvw = generateDVW(
+      matchInfo, homeTeam, awayTeam, homeLineup, awayLineup,
+      matchState.actions, matchState.setResults,
+      matchState.homeSetsWon, matchState.awaySetsWon
+    );
+    const filename = `${homeTeam.code || 'HOME'}_${awayTeam.code || 'AWAY'}_${matchInfo.date}.dvw`;
+    const blob = new Blob([dvw], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`File DVW scaricato: ${filename}`);
+  };
+
+  // Sostituzione
+  const openSub = (team: 'home' | 'away') => setSubDialog({ open: true, team, out: null });
+  const confirmSubIn = (inNum: number) => {
+    if (subDialog.out != null) {
+      substitutePlayer(subDialog.team, subDialog.out, inNum);
+      toast.success(`Sostituzione: #${subDialog.out} → #${inNum}`);
+    }
+    setSubDialog({ open: false, team: subDialog.team, out: null });
+  };
+
+  // Timeout
+  const handleTimeout = (team: 'home' | 'away') => {
+    const ok = callTimeout(team);
+    const name = team === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite');
+    if (ok) toast.success(`Time-out ${name}`);
+    else toast.error('Time-out non disponibili');
+  };
+
+  const recentActions = [...matchState.actions].reverse().slice(0, 50);
+
+  return (
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <FullscreenToggle />
+
+      {/* HEADER: ScoreBoard */}
+      <div className="shrink-0 px-2 pt-2">
+        <ScoreBoard />
+      </div>
+
+      {/* DESKTOP layout (≥ md) */}
+      <div className="hidden md:flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
+        {/* Colonna campi */}
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {/* CSServePanel + toggle pulito */}
+          <div className="flex items-center gap-2">
+            <CSServePanel />
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={() => setSimplified((v) => !v)}
+              className={`min-h-[44px] px-3 rounded-md border-2 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 active:scale-95 ${
+                simplified ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary border-border text-foreground'
+              }`}
+            >
+              {simplified ? <><EyeOff className="w-3 h-3" /> Dettagli</> : <><Eye className="w-3 h-3" /> Pulito</>}
+            </button>
+            {zoneSelectMode && (
+              <button
+                type="button"
+                onClick={skipZone}
+                className="min-h-[44px] px-3 rounded-md border-2 border-warning bg-warning/20 text-warning text-xs font-black uppercase tracking-wider active:scale-95"
+              >
+                Skip zona
+              </button>
+            )}
+          </div>
+
+          {/* Campi affiancati */}
+          <div className="flex-1 min-h-0 px-1 pt-4">
+            <VolleyballCourt
+              layout="split"
+              heatmapData={homeHeatmap}
+              liveArrows={liveArrows}
+              receptionMode={{
+                home: matchState.servingTeam === 'away',
+                away: matchState.servingTeam === 'home',
+              }}
+              simplifiedView={simplified}
+              onPlayerClick={handlePlayerClick}
+              selectedPlayer={selectedPlayer}
+              selectedZone={null}
+              onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
+              zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
+            />
+          </div>
+
+          {/* Rally history */}
+          <CSRallyHistory />
+        </div>
+
+        {/* Pannello laterale destro: tab analisi */}
+        <div className="w-[320px] shrink-0 flex flex-col gap-2 min-h-0">
+          <div className="grid grid-cols-3 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+            {(['log', 'stats', 'heat'] as const).map((t) => {
+              const active = rightTab === t;
+              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap' };
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setRightTab(t)}
+                  className={`text-xs font-black uppercase tracking-wider py-2 rounded transition-colors active:scale-95 ${
+                    active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {labels[t]}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto glass rounded-xl p-3">
+            {rightTab === 'log' && <ActionLog actions={recentActions} />}
+            {rightTab === 'stats' && (
+              <div className="space-y-3">
+                <InSetStatsPanel />
+                <PlayerStatsPanel />
+              </div>
+            )}
+            {rightTab === 'heat' && <AttackHeatmap team="all" />}
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE layout (< md) */}
+      <div className="md:hidden flex-1 min-h-0 flex flex-col gap-2 p-2 overflow-hidden">
+        <div className="flex-1 min-h-0">
+          <VolleyballCourt
+            layout="split"
+            simplifiedView={simplified}
+            onPlayerClick={handlePlayerClick}
+            selectedPlayer={selectedPlayer}
+            selectedZone={null}
+            onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
+            zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
+          />
+        </div>
+        <CSRallyHistory />
+      </div>
+
+      {/* TOOLBAR BOTTOM (fissa) */}
+      <div className="shrink-0 border-t border-border bg-background/95 backdrop-blur px-2 py-2">
+        <CSToolbar
+          homeName={homeTeam.name || 'Casa'}
+          awayName={awayTeam.name || 'Ospite'}
+          homeTimeoutsLeft={2 - matchState.homeTimeoutsUsed}
+          awayTimeoutsLeft={2 - matchState.awayTimeoutsUsed}
+          onPointHome={() => addPoint('home')}
+          onPointAway={() => addPoint('away')}
+          onUndoAction={undoLastAction}
+          onUndoRally={() => {
+            const n = undoRally();
+            if (n > 0) toast.success(`Rally annullato (${n} azioni)`);
+            else toast.info('Nessuna azione nel rally corrente');
+          }}
+          onSubstitution={() => openSub('home')}
+          onTimeoutHome={() => handleTimeout('home')}
+          onTimeoutAway={() => handleTimeout('away')}
+          onEndSet={() => setEndSetDialog(true)}
+          onExport={handleExportDVW}
+          onSettings={() => setSettingsOpen(true)}
+        />
+      </div>
+
+      {/* BOTTOM SHEET: azione */}
+      <Sheet open={bottomSheetOpen} onOpenChange={(o) => { if (!o) { setBottomSheetOpen(false); setSelectedPlayer(null); } }}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[80vh]">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Registrazione azione</SheetTitle>
+          </SheetHeader>
+          <ActionPanel
+            player={selectedPlayer}
+            onComplete={handleActionComplete}
+            onClose={() => { setBottomSheetOpen(false); setSelectedPlayer(null); }}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* Sheet impostazioni */}
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Impostazioni scout</SheetTitle>
+          </SheetHeader>
+          <ScoutSettingsPanel settings={settings} setSetting={setSetting} setSettings={setSettings} />
+        </SheetContent>
+      </Sheet>
+
+      {/* Dialog fine set */}
+      <Dialog open={endSetDialog} onOpenChange={setEndSetDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Fine set {matchState.currentSet}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center text-3xl font-black">
+              {homeTeam.name || 'Casa'} {matchState.homeScore} — {matchState.awayScore} {awayTeam.name || 'Ospite'}
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEndSetDialog(false)}
+                className="min-h-12 flex-1 rounded bg-secondary font-bold"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={() => { endSet(); setEndSetDialog(false); }}
+                className="min-h-12 flex-1 rounded bg-primary font-black text-primary-foreground"
+              >
+                Conferma
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog sostituzione */}
+      <Dialog open={subDialog.open} onOpenChange={(o) => setSubDialog((s) => ({ ...s, open: o, out: null }))}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sostituzione</DialogTitle>
+          </DialogHeader>
+          <SubstitutionPicker
+            team={subDialog.team}
+            setTeam={(t) => setSubDialog({ open: true, team: t, out: null })}
+            outNumber={subDialog.out}
+            onPickOut={(n) => setSubDialog((s) => ({ ...s, out: n }))}
+            onPickIn={confirmSubIn}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Sub-components                                                       */
+/* ------------------------------------------------------------------ */
+
+function ActionLog({ actions }: { actions: ScoutAction[] }) {
+  return (
     <>
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
-        Azioni ({matchState.actions.length})
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+        Ultime azioni ({actions.length})
       </div>
       <div className="space-y-1">
-        {recentActions.length === 0 && (
-          <div className="text-center text-muted-foreground text-xs py-4">
+        {actions.length === 0 && (
+          <div className="text-center text-muted-foreground text-xs py-6">
             Nessuna azione registrata
           </div>
         )}
-        {recentActions.map((action) => (
-          <div
-            key={action.id}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/30 text-xs"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${action.team === 'home' ? 'bg-blue-500' : 'bg-red-500'}`} />
-            <span className="font-mono text-primary font-bold">#{action.playerNumber}</span>
-            <span className="text-muted-foreground">{SKILL_LABELS[action.skill]}</span>
-            {action.attackCode && <span className="text-red-300/70 text-[10px] font-mono font-bold">{action.attackCode}</span>}
-            {action.serveType && (
-              <span className="text-blue-300/70 text-[10px] font-bold">
-                {SERVE_TYPES.find(s => s.key === action.serveType)?.label || action.serveType}
-              </span>
-            )}
+        {actions.map((a) => (
+          <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/30 text-xs">
+            <span className={`w-1.5 h-1.5 rounded-full ${a.team === 'home' ? 'bg-blue-500' : 'bg-red-500'}`} />
+            <span className="font-mono text-primary font-bold">#{a.playerNumber}</span>
+            <span className="text-muted-foreground">{SKILL_LABELS[a.skill]}</span>
             <span className={`font-bold ${
-              action.evaluation === '#' || action.evaluation === '+' ? 'text-accent' :
-              action.evaluation === '=' || action.evaluation === '/' ? 'text-destructive' :
+              a.evaluation === '#' || a.evaluation === '+' ? 'text-accent' :
+              a.evaluation === '=' || a.evaluation === '/' ? 'text-destructive' :
               'text-warning'
             }`}>
-              {action.evaluation}
+              {a.evaluation}
             </span>
-            {(action.startZone || action.endZone) && (
+            {(a.startZone || a.endZone) && (
               <span className="text-primary/60 text-[10px] font-mono">
-                {action.startZone || '?'}→{action.endZone || '?'}
+                {a.startZone || '?'}→{a.endZone || '?'}
               </span>
             )}
-            <span className="text-muted-foreground/50 ml-auto text-[10px]">{action.timestamp}</span>
-            <button type="button" onClick={() => openEditAction(action)} className="min-h-8 min-w-8 rounded p-1 hover:bg-secondary ml-auto flex-shrink-0 active:scale-95" aria-label="Modifica azione">
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
+            <span className="text-muted-foreground/50 ml-auto text-[10px]">{a.timestamp}</span>
           </div>
         ))}
       </div>
-      {matchState.actions.length > 100 && (
-        <p className="text-xs text-muted-foreground text-center py-2">
-          Ultime 100 azioni su {matchState.actions.length} totali
-        </p>
-      )}
-
-      {matchState.setResults.length > 0 && (
-        <div className="border-t border-border mt-3 pt-2">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Set</div>
-          {matchState.setResults.map((sr, i) => (
-            <div key={i} className="flex justify-between text-xs text-foreground">
-              <span>Set {i + 1}</span>
-              <span className="font-bold">{sr.homeScore} - {sr.awayScore}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
-
-  return (
-    <>
-      <div className="hidden lg:flex h-screen overflow-hidden flex-col p-3 gap-2 bg-background max-[900px]:p-2 max-[900px]:gap-1">
-        <div className="fixed right-0 top-1/4 bottom-1/4 w-5 z-40 cursor-e-resize" onPointerDown={() => setPanelOpen(true)} />
-        <FullscreenToggle />
-
-        {/* HEADER stile Click&Scout */}
-        <CSHeader />
-
-        {/* TOOLBAR Info / Modifiche / ⚙ — Fine Incontro */}
-        <CSToolbar
-          onInfo={() => setInfoOpen(true)}
-          onModify={() => setModifyOpen(true)}
-          onSettings={() => setSettingsOpen(true)}
-          onEndMatch={() => setShowEndSetDialog(true)}
-        />
-
-        {/* CORPO PRINCIPALE — 3 colonne: rail SX | center (campo+serve+action+history) | rail DX */}
-        <div className="flex-1 min-h-0 flex gap-1 overflow-hidden">
-          {/* Side rail SX (squadra di casa) */}
-          <CSSideRail
-            side="left"
-            timeoutsAvailable={2 - matchState.homeTimeoutsUsed}
-            onTimeout={() => {
-              const ok = useMatchStore.getState().callTimeout('home');
-              if (ok) toast.success(`Time-out ${homeTeam.name || 'Casa'}`);
-              else toast.error('Time-out non disponibili');
-            }}
-            onSubstitution={() => window.dispatchEvent(new CustomEvent('scout-open-sub', { detail: { team: 'home' } }))}
-            onYellowCard={() => { useMatchStore.getState().addSanction('home', 'yellow', null); toast.warning('🟨 Giallo Casa'); }}
-            onRedCard={() => { useMatchStore.getState().addSanction('home', 'red', null); toast.error('🟥 Rosso Casa'); }}
-            onPoint={() => useMatchStore.getState().addPoint('home')}
-          />
-
-          {/* COLONNA CENTRALE */}
-          <div className="flex-1 min-w-0 flex flex-col gap-2">
-            {/* Campo + pannello SERVE laterale (visibile solo se c'è una squadra al servizio) */}
-            <div className="flex-1 min-h-0 flex gap-1 items-stretch">
-              <div className="relative flex-1 min-w-0 min-h-0 flex items-center justify-center overflow-hidden max-xl:max-h-[320px]">
-                <VolleyballCourt
-                  compactAspect
-                  heatmapData={awayHeatmap}
-                  liveArrows={liveArrows}
-                  receptionMode={{
-                    home: matchState.servingTeam === 'away',
-                    away: matchState.servingTeam === 'home',
-                  }}
-                  simplifiedView={simplifiedField}
-                />
-                <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setSimplifiedField((v) => !v)}
-                    className={`h-8 px-2.5 rounded-md backdrop-blur border flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider shadow-md transition-colors ${
-                      simplifiedField
-                        ? 'bg-primary/80 border-primary text-primary-foreground'
-                        : 'bg-secondary/80 border-border text-foreground hover:bg-secondary'
-                    }`}
-                    title={simplifiedField ? 'Mostra tutto' : 'Campo pulito'}
-                  >
-                    {simplifiedField ? <><EyeOff className="w-3 h-3" /> Dettagli</> : <><Eye className="w-3 h-3" /> Pulito</>}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setReceptionEditorOpen(true)}
-                    title="Modifica schemi di ricezione 5-1"
-                    className="h-8 px-2.5 rounded-md bg-secondary/80 backdrop-blur border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold uppercase tracking-wider text-foreground shadow-md"
-                  >
-                    <Move className="w-3 h-3" /> Schemi ricezione
-                  </button>
-                </div>
-              </div>
-              {matchState.servingTeam && (
-                <CSServePanel
-                  onShowDirections={() => {
-                    setTab('dir');
-                    setPanelOpen(true);
-                  }}
-                />
-              )}
-            </div>
-
-            {/* Barra "attendendo input" — indicatore step in corso */}
-            {waitingStep && (
-              <div className="h-0.5 w-full rounded-full overflow-hidden bg-[hsl(var(--cs-cta)/0.15)] shrink-0">
-                <div
-                  className="h-full bg-[hsl(var(--cs-cta))] animate-pulse"
-                  style={{ width: `${Math.min(100, ['team','player','skill','serveType','attackCombo','evaluation','startZone','endZone'].indexOf(waitingStep) * 14 + 14)}%` }}
-                />
-              </div>
-            )}
-
-            {/* Pannello azione — riusa ActionPanel */}
-            <div className="glass rounded-xl p-3 h-44 overflow-hidden flex-shrink-0 max-[900px]:p-2 max-[900px]:h-36 max-xl:h-40">
-              <div className="flex items-center justify-between mb-2 shrink-0 max-[900px]:mb-1">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  Inserimento Azione
-                </h3>
-                <div className="flex items-center gap-1.5">
-                  <button type="button" onClick={() => setSetting('showRallyHistory', !settings.showRallyHistory)}
-                    className="h-7 px-2 rounded-md bg-secondary/80 border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold text-muted-foreground uppercase tracking-wider"
-                    title={settings.showRallyHistory ? 'Nascondi storico rally' : 'Mostra storico rally'}>
-                    {settings.showRallyHistory ? '▾' : '▴'} Storico
-                  </button>
-                  <button type="button" onClick={() => setPanelOpen(true)}
-                    className="h-7 px-2 rounded-md bg-secondary/80 border border-border flex items-center gap-1.5 hover:bg-secondary transition-colors text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    <PanelRight className="w-3 h-3" /> Statistiche
-                  </button>
-                </div>
-              </div>
-              <ActionPanel />
-            </div>
-
-            {/* Storico rally Click&Scout — collassabile */}
-            {settings.showRallyHistory && (
-              <div className="flex-shrink-0">
-                <CSRallyHistory />
-              </div>
-            )}
-          </div>
-
-          {/* Side rail DX (squadra ospite) */}
-          <CSSideRail
-            side="right"
-            timeoutsAvailable={2 - matchState.awayTimeoutsUsed}
-            onTimeout={() => {
-              const ok = useMatchStore.getState().callTimeout('away');
-              if (ok) toast.success(`Time-out ${awayTeam.name || 'Ospite'}`);
-              else toast.error('Time-out non disponibili');
-            }}
-            onSubstitution={() => window.dispatchEvent(new CustomEvent('scout-open-sub', { detail: { team: 'away' } }))}
-            onYellowCard={() => { useMatchStore.getState().addSanction('away', 'yellow', null); toast.warning('🟨 Giallo Ospite'); }}
-            onRedCard={() => { useMatchStore.getState().addSanction('away', 'red', null); toast.error('🟥 Rosso Ospite'); }}
-            onPoint={() => useMatchStore.getState().addPoint('away')}
-          />
-
-          {/* Colonna analisi rotazioni — collassabile, default chiusa */}
-          <div className={`hidden xl:flex flex-shrink-0 transition-all duration-200 ${rotationsOpen ? 'w-[180px]' : 'w-7'}`}>
-            <button
-              type="button"
-              onClick={() => setRotationsOpen((v) => !v)}
-              className="w-7 flex items-center justify-center bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] hover:brightness-125 active:scale-95 rounded-md"
-              title={rotationsOpen ? 'Nascondi rotazioni' : 'Mostra rotazioni'}
-              aria-label="Toggle rotazioni"
-            >
-              {rotationsOpen ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
-            {rotationsOpen && (
-              <div className="flex-1 ml-1 overflow-y-auto rounded-md border border-border/40 bg-card/40 p-1.5">
-                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1 text-center">Rotazioni</div>
-                <RotationDirections />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sheet "Modifiche" — riusa ScoreBoard completo per sanzioni/correzioni/reset */}
-        <Sheet open={controlsOpen} onOpenChange={setControlsOpen}>
-          <SheetContent side="top" className="max-h-[60vh] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Controlli partita</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4">
-              <ScoreBoard />
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        {/* Sheet "Impostazioni scout" */}
-        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Impostazioni scout</SheetTitle>
-            </SheetHeader>
-            <ScoutSettingsPanel settings={settings} setSetting={setSetting} setSettings={setSettings} />
-          </SheetContent>
-        </Sheet>
-
-        <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
-          <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Pannello statistiche</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-3">
-              <div className="grid grid-cols-7 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
-                {TABS.map((t) => {
-                  const active = tab === t.key;
-                  return (
-                    <button key={t.key} type="button" onClick={() => setTab(t.key)}
-                      className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors active:scale-95 ${active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {tab === 'log' && <ActionLog />}
-              {tab === 'live' && <InSetStatsPanel />}
-              {tab === 'stats' && <PlayerStatsPanel />}
-              {tab === 'heat' && <AttackHeatmap team="all" />}
-              {tab === 'compare' && <TeamComparison />}
-              {tab === 'sets' && <SetDistribution />}
-              {tab === 'dir' && <RotationDirections />}
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        {matchState.isMatchEnded && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
-            <div className="glass rounded-2xl p-8 max-w-md w-full text-center space-y-5 border border-primary/30">
-              <div className="text-xs font-black uppercase tracking-widest text-primary">Partita Terminata</div>
-              <div className="text-5xl font-black italic">
-                {matchState.homeSetsWon} <span className="text-muted-foreground/40">—</span> {matchState.awaySetsWon}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <span className="text-foreground font-bold">{homeTeam.name || 'Casa'}</span>
-                {' vs '}
-                <span className="text-foreground font-bold">{awayTeam.name || 'Ospite'}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    useMatchStore.setState((s) => ({ matchState: { ...s.matchState, isMatchEnded: false } }));
-                    toast.info('Rilevazione ripresa — set extra/scrimmage');
-                  }}
-                  className="min-h-14 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-95 transition-transform"
-                >
-                  ▶ Continua Rilevazione
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { if (confirm('Iniziare una nuova partita? I dati attuali andranno persi se non esportati.')) resetMatch(); }}
-                  className="min-h-14 rounded-xl bg-secondary text-foreground font-black uppercase tracking-wider text-sm active:scale-95 transition-transform border border-border"
-                >
-                  ✕ Nuova Partita
-                </button>
-              </div>
-              <p className="text-[10px] text-muted-foreground/70">Esporta in DVW dal pannello azione prima di uscire.</p>
-            </div>
-          </div>
-        )}
-        </div>
-
-        {/* Editor schemi di ricezione 5-1 */}
-        <ReceptionFormationEditor open={receptionEditorOpen} onOpenChange={setReceptionEditorOpen} />
-
-      <div className="lg:hidden h-screen flex flex-col p-2 gap-2 overflow-hidden pb-20">
-        <ScoreBoard />
-
-        {mobileTab === 'scout' && (
-          <div className="flex max-h-32 shrink-0 overflow-hidden">
-            <VolleyballCourt />
-          </div>
-        )}
-
-        {mobileTab === 'scout' && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowEndSetDialog(true)}
-              className="min-h-14 px-6 rounded-xl bg-secondary text-warning font-black border border-warning/40 transition-transform duration-75 active:scale-95"
-            >
-              ⏭ Fine Set
-            </button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="ml-auto min-h-14 w-14 rounded-xl bg-secondary text-foreground font-black transition-transform duration-75 active:scale-95"
-                  aria-label="Impostazioni scout"
-                >
-                  <Settings className="mx-auto h-6 w-6" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
-                <SheetHeader>
-                  <SheetTitle>Impostazioni scout</SheetTitle>
-                </SheetHeader>
-                <ScoutSettingsPanel settings={settings} setSetting={setSetting} setSettings={setSettings} />
-              </SheetContent>
-            </Sheet>
-          </div>
-        )}
-
-        <div className="min-h-0 flex-1 overflow-y-auto glass rounded-xl p-3">
-          {mobileTab === 'scout' && <ActionPanel />}
-          {mobileTab === 'quick' && <QuickActions />}
-          {mobileTab === 'stats' && (
-            <div className="space-y-4">
-              {timeoutBanner && (
-                <div className="flex items-center justify-between rounded-lg bg-warning px-3 py-2 text-sm font-black text-background">
-                  <span>⏸ TIME-OUT — Analisi avversario</span>
-                  <button type="button" onClick={() => setTimeoutBanner(false)} className="min-h-8 min-w-8 text-background/70 hover:text-background">✕</button>
-                </div>
-              )}
-              <InSetStatsPanel />
-              <PlayerStatsPanel />
-            </div>
-          )}
-          {mobileTab === 'log' && (
-            <div className="space-y-4">
-              <ActionLog />
-              <AttackHeatmap team="all" />
-            </div>
-          )}
-        </div>
-
-        <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 gap-1 border-t border-border bg-background/95 p-2 backdrop-blur">
-          {MOBILE_TABS.map((item) => {
-            const Icon = item.icon;
-            const active = mobileTab === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setMobileTab(item.key)}
-                className={`min-h-16 rounded-xl flex flex-col items-center justify-center gap-1 text-sm font-bold transition-all duration-75 active:scale-95 ${
-                  active ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <Icon className="h-6 w-6" />
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    
-      <EndSetDialog open={showEndSetDialog} onOpenChange={setShowEndSetDialog} stats={endSetStats} onConfirm={() => { endSet(); setShowEndSetDialog(false); }} currentSet={matchState.currentSet} homeName={homeTeam.name || 'Casa'} awayName={awayTeam.name || 'Ospite'} homeScore={matchState.homeScore} awayScore={matchState.awayScore} />
-
-      <Dialog open={editingAction !== null} onOpenChange={(open) => !open && setEditingAction(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Modifica azione #{editingAction?.playerNumber} {editingAction?.skill}</DialogTitle>
-          </DialogHeader>
-          {editingAction && (
-            <div className="space-y-3">
-              <Select value={editDraft.playerNumber} onValueChange={(v) => setEditDraft((d) => ({ ...d, playerNumber: v }))}>
-                <SelectTrigger><SelectValue placeholder="Giocatore" /></SelectTrigger>
-                <SelectContent>
-                  {(editingAction.team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup).map((n) => <SelectItem key={n} value={String(n)}>#{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={editDraft.evaluation} onValueChange={(v) => setEditDraft((d) => ({ ...d, evaluation: v as Evaluation }))}>
-                <SelectTrigger><SelectValue placeholder="Valutazione" /></SelectTrigger>
-                <SelectContent>{(['#', '+', '!', '-', '/', '='] as Evaluation[]).map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={editDraft.startZone} onValueChange={(v) => setEditDraft((d) => ({ ...d, startZone: v }))}>
-                <SelectTrigger><SelectValue placeholder="Zona origine" /></SelectTrigger>
-                <SelectContent><SelectItem value="none">Nessuna</SelectItem>{[1,2,3,4,5,6,7,8,9].map((z) => <SelectItem key={z} value={String(z)}>{z}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={editDraft.endZone} onValueChange={(v) => setEditDraft((d) => ({ ...d, endZone: v }))}>
-                <SelectTrigger><SelectValue placeholder="Zona destinazione" /></SelectTrigger>
-                <SelectContent><SelectItem value="none">Nessuna</SelectItem>{[1,2,3,4,5,6,7,8,9].map((z) => <SelectItem key={z} value={String(z)}>{z}</SelectItem>)}</SelectContent>
-              </Select>
-              <button type="button" className="min-h-12 w-full rounded bg-destructive font-bold text-destructive-foreground" onClick={() => { deleteAction(editingAction.id); setEditingAction(null); }}>Elimina</button>
-              <div className="flex gap-2">
-                <button type="button" className="min-h-12 flex-1 rounded bg-secondary font-bold" onClick={() => setEditingAction(null)}>Annulla</button>
-                <button type="button" className="min-h-12 flex-1 rounded bg-primary font-bold text-primary-foreground" onClick={() => { updateAction(editingAction.id, { playerNumber: Number(editDraft.playerNumber), evaluation: editDraft.evaluation, startZone: editDraft.startZone === 'none' ? null : Number(editDraft.startZone), endZone: editDraft.endZone === 'none' ? null : Number(editDraft.endZone) }); setEditingAction(null); }}>Salva</button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Info partita / rally corrente */}
-      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Info partita</DialogTitle>
-          </DialogHeader>
-          {(() => {
-            const acts = matchState.actions;
-            // Rally corrente: dalle ultime azioni fino a un terminale escluso
-            let startIdx = 0;
-            for (let i = acts.length - 1; i >= 0; i--) {
-              const a = acts[i];
-              const terminal =
-                (a.evaluation === '#' && (a.skill === 'S' || a.skill === 'A' || a.skill === 'B')) ||
-                a.evaluation === '=' || a.evaluation === '/';
-              if (terminal) { startIdx = i + 1; break; }
-            }
-            const rally = acts.slice(startIdx);
-            return (
-              <div className="space-y-3 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-lg bg-secondary/40 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Set</div>
-                    <div className="text-2xl font-black">{matchState.currentSet}</div>
-                  </div>
-                  <div className="rounded-lg bg-secondary/40 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Punteggio</div>
-                    <div className="text-2xl font-black">{matchState.homeScore} – {matchState.awayScore}</div>
-                  </div>
-                  <div className="rounded-lg bg-secondary/40 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Set vinti</div>
-                    <div className="text-2xl font-black">{matchState.homeSetsWon} – {matchState.awaySetsWon}</div>
-                  </div>
-                  <div className="rounded-lg bg-secondary/40 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Al servizio</div>
-                    <div className="text-base font-black">{matchState.servingTeam === 'home' ? (homeTeam.name || 'Casa') : matchState.servingTeam === 'away' ? (awayTeam.name || 'Ospite') : '—'}</div>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Rally corrente ({rally.length} azioni)</div>
-                  {rally.length === 0 ? (
-                    <div className="text-xs text-muted-foreground italic py-2">Rally vuoto — in attesa del prossimo punto.</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {rally.map((a) => (
-                        <span key={a.id} className={`px-2 py-1 rounded text-[11px] font-mono font-bold ${a.team === 'home' ? 'bg-[hsl(var(--cs-team-a)/0.25)]' : 'bg-[hsl(var(--cs-team-b)/0.25)]'}`}>
-                          #{a.playerNumber}{a.skill}{a.evaluation}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button type="button"
-                    onClick={() => { window.dispatchEvent(new CustomEvent('scout-export-dvw')); setInfoOpen(false); }}
-                    className="min-h-12 w-full rounded-lg bg-primary/10 border border-primary/30 text-primary font-bold flex items-center justify-center gap-2">
-                    <Download className="w-4 h-4" /> Export DVW
-                  </button>
-                  <button type="button"
-                    onClick={() => { window.dispatchEvent(new CustomEvent('scout-export-csv')); setInfoOpen(false); }}
-                    className="min-h-12 w-full rounded-lg bg-secondary border border-border text-foreground font-bold flex items-center justify-center gap-2">
-                    <Download className="w-4 h-4" /> Export CSV
-                  </button>
-                </div>
-                <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent('scout-undo-rally')); setInfoOpen(false); }}
-                  disabled={rally.length === 0}
-                  className="min-h-12 w-full rounded-lg bg-destructive/10 border border-destructive/30 text-destructive font-bold disabled:opacity-30">
-                  ↩ Annulla rally corrente
-                </button>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modifiche: ultime azioni + edit/delete + controlli avanzati */}
-      <Dialog open={modifyOpen} onOpenChange={setModifyOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Modifiche azioni</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Ultime 20 azioni — tocca per modificare</div>
-            <div className="space-y-1 max-h-[40vh] overflow-y-auto">
-              {recentActions.slice(0, 20).map((a) => (
-                <div key={a.id} className="flex items-center gap-2 px-2 py-2 rounded-md bg-secondary/40 text-xs">
-                  <span className={`w-1.5 h-1.5 rounded-full ${a.team === 'home' ? 'bg-[hsl(var(--cs-team-a))]' : 'bg-[hsl(var(--cs-team-b))]'}`} />
-                  <span className="font-mono font-bold text-primary">#{a.playerNumber}</span>
-                  <span className="text-muted-foreground">{SKILL_LABELS[a.skill]}</span>
-                  <span className="font-bold ml-1">{a.evaluation}</span>
-                  {(a.startZone || a.endZone) && (
-                    <span className="text-primary/60 text-[10px] font-mono">{a.startZone || '?'}→{a.endZone || '?'}</span>
-                  )}
-                  <span className="ml-auto text-[10px] text-muted-foreground/60">{a.timestamp}</span>
-                  <button type="button" onClick={() => { openEditAction(a); setModifyOpen(false); }}
-                    className="min-h-8 px-2 rounded bg-secondary text-xs font-bold hover:bg-secondary/70 active:scale-95">Modifica</button>
-                  <button type="button" onClick={() => { if (confirm('Eliminare questa azione?')) deleteAction(a.id); }}
-                    className="min-h-8 px-2 rounded bg-destructive/15 text-destructive text-xs font-bold hover:bg-destructive/25 active:scale-95">✕</button>
-                </div>
-              ))}
-              {recentActions.length === 0 && (
-                <div className="text-xs text-muted-foreground italic text-center py-4">Nessuna azione</div>
-              )}
-            </div>
-            <button type="button" onClick={() => { setModifyOpen(false); setControlsOpen(true); }}
-              className="min-h-12 w-full rounded-lg bg-secondary border border-border text-sm font-bold text-foreground">
-              ⚙ Controlli avanzati (sanzioni / reset / score manuale)
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
 
-
-function EndSetDialog({ open, onOpenChange, stats, onConfirm, currentSet, homeName, awayName, homeScore, awayScore }: { open: boolean; onOpenChange: (v: boolean) => void; stats: Record<string, number>; onConfirm: () => void; currentSet: number; homeName: string; awayName: string; homeScore: number; awayScore: number }) {
-  const rows = [['Ace Casa', stats.homeAce], ['Ace Ospite', stats.awayAce], ['Errori Casa', stats.homeErr], ['Errori Ospite', stats.awayErr], ['Kill Casa', stats.homeKill], ['Kill Ospite', stats.awayKill]];
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Fine Set {currentSet}</DialogTitle></DialogHeader>
-        <div className="space-y-4">
-          <div className="text-center text-3xl font-black">{homeName} {homeScore} — {awayScore} {awayName}</div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {rows.map(([label, value]) => <div key={label} className="rounded-lg bg-secondary p-3 text-center"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black text-primary">{value}</div></div>)}
-          </div>
-          <div className="flex gap-2"><button type="button" onClick={() => onOpenChange(false)} className="min-h-14 flex-1 rounded bg-secondary font-bold">Annulla</button><button type="button" onClick={onConfirm} className="min-h-14 flex-1 rounded bg-primary font-black text-primary-foreground">Conferma Fine Set</button></div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RotationDirections() {
-  const { matchState } = useMatchStore();
-  const [team, setTeam] = useState<'home' | 'away'>('home');
-  const [filter, setFilter] = useState<'all' | 'pos' | 'neg'>('all');
-  const [zoom, setZoom] = useState<number | null>(null);
-  const zone = (z?: number) => ({ 4: [15, 10], 3: [45, 10], 2: [75, 10], 5: [15, 30], 6: [45, 30], 1: [75, 30], 7: [15, 50], 8: [45, 50], 9: [75, 50] } as Record<number, number[]>)[z || 0];
-  const actionsFor = (rot: number) => matchState.actions.filter((a, idx, arr) => {
-    if (a.skill !== 'A' || a.team !== team || (team === 'home' ? a.homeSetterPosition : a.awaySetterPosition) !== rot) return false;
-    const prevR = [...arr.slice(0, idx)].reverse().find((x) => x.skill === 'R');
-    if (filter === 'pos') return prevR?.evaluation === '#' || prevR?.evaluation === '+';
-    if (filter === 'neg') return prevR?.evaluation === '-' || prevR?.evaluation === '/';
-    return true;
+function SubstitutionPicker({
+  team, setTeam, outNumber, onPickOut, onPickIn,
+}: {
+  team: 'home' | 'away';
+  setTeam: (t: 'home' | 'away') => void;
+  outNumber: number | null;
+  onPickOut: (n: number) => void;
+  onPickIn: (n: number) => void;
+}) {
+  const { homeTeam, awayTeam, matchState } = useMatchStore();
+  const teamData = team === 'home' ? homeTeam : awayTeam;
+  const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+  const onCourt = lineup.map((n) => {
+    const p = teamData.players.find((pp) => pp.number === n);
+    return { number: n, name: p?.lastName || `#${n}`, isLibero: p?.isLibero };
   });
-  const Field = ({ rot, large = false }: { rot: number; large?: boolean }) => {
-    const acts = actionsFor(rot);
-    return <svg viewBox="0 0 90 60" width="100%" className="rounded-lg bg-secondary/60"><text x="4" y="10" className="fill-foreground text-[8px] font-bold">R{rot}</text>{[30,60].map(x=><line key={x} x1={x} y1="0" x2={x} y2="60" stroke="rgba(255,255,255,.25)" />)}{[20,40].map(y=><line key={y} x1="0" y1={y} x2="90" y2={y} stroke="rgba(255,255,255,.25)" />)}{acts.map((a,i)=>{const s=zone(a.startZone), e=zone(a.endZone); if(!s||!e)return null; const c=a.evaluation==='#'?'#16a34a':(a.evaluation==='='||a.evaluation==='/')?'#dc2626':'#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth={i===acts.length-1?'2.5':'1.2'} strokeLinecap="round" />})}</svg>;
-  };
-  return <div className="space-y-2"><div className="flex flex-wrap gap-2">{(['home','away'] as const).map(t=><button key={t} onClick={()=>setTeam(t)} className={`min-h-9 rounded-lg px-3 text-xs font-bold ${team===t?'bg-primary text-primary-foreground':'bg-secondary'}`}>{t==='home'?'CASA':'OSPITE'}</button>)}{(['all','pos','neg'] as const).map(f=><button key={f} onClick={()=>setFilter(f)} className={`min-h-9 rounded-lg px-3 text-xs font-bold ${filter===f?'bg-primary text-primary-foreground':'bg-secondary'}`}>{f==='all'?'TUTTI':f==='pos'?'RIC+':'CONTRO'}</button>)}</div><div className="grid grid-cols-2 gap-2">{[1,2,3,4,5,6].map(r=><button key={r} onClick={()=>setZoom(r)}><Field rot={r} /></button>)}</div><Dialog open={zoom!==null} onOpenChange={(o)=>!o&&setZoom(null)}><DialogContent>{zoom && <Field rot={zoom} large />}</DialogContent></Dialog></div>;
-}
+  const bench = teamData.players
+    .filter((p) => !lineup.includes(p.number) && !p.isLibero)
+    .sort((a, b) => a.number - b.number);
 
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        {(['home', 'away'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTeam(t)}
+            className={`min-h-12 flex-1 px-4 rounded text-sm font-bold active:scale-95 ${
+              team === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+            }`}
+          >
+            {t === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
+          </button>
+        ))}
+      </div>
+      {!outNumber ? (
+        <>
+          <p className="text-xs text-muted-foreground">Chi esce?</p>
+          <div className="grid grid-cols-3 gap-2">
+            {onCourt.map((p) => (
+              <button
+                key={p.number}
+                type="button"
+                onClick={() => onPickOut(p.number)}
+                className="min-h-[56px] p-3 rounded-lg bg-secondary hover:bg-destructive/20 text-foreground text-sm font-bold active:scale-95"
+              >
+                #{p.number} {p.name}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">Chi entra al posto di #{outNumber}?</p>
+          <div className="grid grid-cols-3 gap-2">
+            {bench.map((p) => (
+              <button
+                key={p.number}
+                type="button"
+                onClick={() => onPickIn(p.number)}
+                className="min-h-[56px] p-3 rounded-lg bg-secondary hover:bg-accent/20 text-foreground text-sm font-bold active:scale-95"
+              >
+                #{p.number} {p.lastName}
+              </button>
+            ))}
+            {bench.length === 0 && (
+              <div className="col-span-3 text-center text-xs text-muted-foreground italic py-4">
+                Nessun giocatore disponibile in panchina
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
