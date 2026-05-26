@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart2, List, ArrowLeftRight, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { useScoutSettings } from '@/lib/scoutSettings';
