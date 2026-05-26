@@ -13,7 +13,7 @@ type Mode = 'signin' | 'signup';
 type InviteInfo = {
   id: string;
   email: string;
-  role: 'super_admin' | 'society_admin' | 'coach';
+  invited_role: 'super_admin' | 'society_admin' | 'coach';
   society_id: string;
   society_name: string;
   expires_at: string;
@@ -22,7 +22,7 @@ type InviteInfo = {
   is_accepted: boolean;
 };
 
-const roleLabels: Record<InviteInfo['role'], string> = {
+const roleLabels: Record<InviteInfo['invited_role'], string> = {
   super_admin: 'Super Admin',
   society_admin: 'Admin società',
   coach: 'Coach',
@@ -65,7 +65,7 @@ export default function Auth() {
     const accepted = Array.isArray(data) ? data[0] : data;
     setInviteAccepted(true);
     await refreshRoles();
-    toast.success(`Invito accettato: ${accepted?.society_name ?? 'società'} (${roleLabels[accepted?.role as InviteInfo['role']] ?? accepted?.role})`);
+    toast.success(`Invito accettato: ${accepted?.society_name ?? 'società'} (${roleLabels[accepted?.invited_role as InviteInfo['invited_role']] ?? accepted?.invited_role})`);
     return true;
   };
 
@@ -198,7 +198,7 @@ export default function Auth() {
                 <p className="font-medium text-foreground">Invito società</p>
                 <p>
                   Sei stato invitato a unirti a <span className="font-medium text-foreground">{inviteInfo.society_name}</span> come{' '}
-                  <span className="font-medium text-foreground">{roleLabels[inviteInfo.role]}</span>.
+                  <span className="font-medium text-foreground">{roleLabels[inviteInfo.invited_role]}</span>.
                 </p>
                 {acceptingInvite && <p className="text-primary">Accettazione invito in corso…</p>}
               </div>

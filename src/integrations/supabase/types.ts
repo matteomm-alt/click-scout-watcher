@@ -2041,7 +2041,7 @@ export type Database = {
       accept_society_invitation: {
         Args: { _token: string }
         Returns: {
-          role: Database["public"]["Enums"]["app_role"]
+          invited_role: Database["public"]["Enums"]["app_role"]
           society_id: string
           society_name: string
         }[]
@@ -2053,9 +2053,9 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          invited_role: Database["public"]["Enums"]["app_role"]
           is_accepted: boolean
           is_expired: boolean
-          role: Database["public"]["Enums"]["app_role"]
           society_id: string
           society_name: string
         }[]
