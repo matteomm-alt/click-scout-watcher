@@ -85,7 +85,7 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
     navigator.vibrate?.(25);
     const now = new Date();
     const ts = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    const skillType: SkillType = 'H';
+    const skillType: SkillType = skill === 'A' ? selectedSkillType : 'H';
     const teamPrefix = player.team === 'home' ? '*' : 'a';
     const playerStr = String(player.number).padStart(2, '0');
     const code = `${teamPrefix}${playerStr}${skill}${skillType}${evaluation}~~~~~`;
