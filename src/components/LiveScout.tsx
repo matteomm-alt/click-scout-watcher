@@ -39,6 +39,7 @@ export function LiveScout() {
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [zoneSelectMode, setZoneSelectMode] = useState(false);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
@@ -83,6 +84,7 @@ export function LiveScout() {
     setSelectedPlayer(null);
     if (SKILLS_WITH_ZONE.includes(skill) && actionId) {
       setPendingActionId(actionId);
+      setPendingSkill(skill);
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
@@ -90,17 +92,23 @@ export function LiveScout() {
 
   const handleZoneSelect = (zone: number) => {
     if (pendingActionId) {
-      updateAction(pendingActionId, { startZone: zone });
+      if (pendingSkill === 'A') {
+        updateAction(pendingActionId, { endZone: zone });
+      } else {
+        updateAction(pendingActionId, { startZone: zone });
+      }
       toast.success(`Zona ${zone} registrata`, { duration: 1200 });
     }
     setZoneSelectMode(false);
     setPendingActionId(null);
+    setPendingSkill(null);
     setPendingTeam(null);
   };
 
   const skipZone = () => {
     setZoneSelectMode(false);
     setPendingActionId(null);
+    setPendingSkill(null);
     setPendingTeam(null);
   };
 
