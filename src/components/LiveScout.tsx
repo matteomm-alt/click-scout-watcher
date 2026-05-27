@@ -84,6 +84,7 @@ export function LiveScout() {
     setSelectedPlayer(null);
     if (SKILLS_WITH_ZONE.includes(skill) && actionId) {
       setPendingActionId(actionId);
+      setPendingSkill(skill);
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
@@ -91,17 +92,23 @@ export function LiveScout() {
 
   const handleZoneSelect = (zone: number) => {
     if (pendingActionId) {
-      updateAction(pendingActionId, { startZone: zone });
+      if (pendingSkill === 'A') {
+        updateAction(pendingActionId, { endZone: zone });
+      } else {
+        updateAction(pendingActionId, { startZone: zone });
+      }
       toast.success(`Zona ${zone} registrata`, { duration: 1200 });
     }
     setZoneSelectMode(false);
     setPendingActionId(null);
+    setPendingSkill(null);
     setPendingTeam(null);
   };
 
   const skipZone = () => {
     setZoneSelectMode(false);
     setPendingActionId(null);
+    setPendingSkill(null);
     setPendingTeam(null);
   };
 
