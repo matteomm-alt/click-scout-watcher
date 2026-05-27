@@ -39,6 +39,7 @@ export function LiveScout() {
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [zoneSelectMode, setZoneSelectMode] = useState(false);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
