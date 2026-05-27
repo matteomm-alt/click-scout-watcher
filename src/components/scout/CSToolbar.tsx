@@ -18,11 +18,12 @@ interface CSToolbarProps {
 }
 
 function ToolbarBtn({
-  onClick, children, title, variant = 'default', disabled,
+  onClick, children, title, variant = 'default', disabled, noShrink,
 }: {
   onClick?: () => void; children: React.ReactNode; title?: string;
   variant?: 'default' | 'primary' | 'warning' | 'destructive' | 'home' | 'away';
   disabled?: boolean;
+  noShrink?: boolean;
 }) {
   const v: Record<string, string> = {
     default: 'bg-secondary text-foreground border-border hover:bg-secondary/80',
@@ -38,7 +39,7 @@ function ToolbarBtn({
       onClick={onClick}
       title={title}
       disabled={disabled}
-      className={`min-h-[48px] px-3 rounded-lg border-2 font-black uppercase tracking-wider text-[13px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${v[variant]}`}
+      className={`min-h-[48px] px-3 rounded-lg border-2 font-black uppercase tracking-wider text-[13px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${noShrink ? 'flex-shrink-0' : ''} ${v[variant]}`}
     >
       {children}
     </button>
