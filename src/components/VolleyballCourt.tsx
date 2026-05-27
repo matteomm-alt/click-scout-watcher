@@ -219,7 +219,7 @@ export function VolleyballCourt({
             <button
               type="button"
               key={`zone-${team}-${z.zone}`}
-              onClick={() => onZoneClick?.(z.zone, team)}
+              onClick={() => zoneClickEnabled && onZoneClick?.(z.zone, team)}
               className={`absolute z-[15] -translate-x-1/2 -translate-y-1/2 rounded-md border-2 transition-all active:scale-95 ${
                 active
                   ? 'bg-primary/60 border-primary ring-2 ring-primary'
