@@ -51,20 +51,28 @@ export function InSetStatsPanel() {
   }, [setActions, homeTeam, awayTeam]);
 
   const { sideoutHome, breakHome, sideoutAway, breakAway } = useMemo(() => {
-    // Conta rally per fase: serving = chi batte; side-out = punto del ricevente
-    const points = setActions.filter(a => (a.skill === 'S' || a.skill === 'A' || a.skill === 'B') && (a.evaluation === '#' || a.evaluation === '='));
-    let sH = 0, sHTot = 0, bH = 0, bHTot = 0, sA = 0, sATot = 0, bA = 0, bATot = 0;
-    // Approssimazione: usa skill S come marcatore "team al servizio"
-    for (const a of setActions.filter(x => x.skill === 'S')) {
-      if (a.team === 'home') { bHTot++; if (a.evaluation === '#') bH++; sATot++; if (a.evaluation === '=') sA++; }
-      else { bATot++; if (a.evaluation === '#') bA++; sHTot++; if (a.evaluation === '=') sH++; }
+    // Calcolo via servingTeam: chi serviva determina K2 (break) o K1 (sideout) per l'avversario
+    const serveActions = setActions.filter(a => a.skill === 'S');
+    let soH = 0, soHTot = 0, bH = 0, bHTot = 0;
+    let soA = 0, soATot = 0, bA = 0, bATot = 0;
+
+    for (const a of serveActions) {
+      if (a.servingTeam === 'home') {
+        bHTot++; soATot++;
+        if (a.evaluation === '#') bH++;       // ace = break home
+        if (a.evaluation === '=') soA++;      // errore battuta home = sideout away
+      } else if (a.servingTeam === 'away') {
+        bATot++; soHTot++;
+        if (a.evaluation === '#') bA++;
+        if (a.evaluation === '=') soH++;
+      }
     }
-    void points;
+
     return {
-      sideoutHome: sHTot > 0 ? Math.round((sH / sHTot) * 100) : 0,
-      breakHome: bHTot > 0 ? Math.round((bH / bHTot) * 100) : 0,
-      sideoutAway: sATot > 0 ? Math.round((sA / sATot) * 100) : 0,
-      breakAway: bATot > 0 ? Math.round((bA / bATot) * 100) : 0,
+      sideoutHome: soHTot > 0 ? Math.round((soH / soHTot) * 100) : 0,
+      breakHome:   bHTot  > 0 ? Math.round((bH / bHTot)  * 100) : 0,
+      sideoutAway: soATot > 0 ? Math.round((soA / soATot) * 100) : 0,
+      breakAway:   bATot  > 0 ? Math.round((bA / bATot)  * 100) : 0,
     };
   }, [setActions]);
 
