@@ -201,6 +201,7 @@ export function LiveScout() {
               selectedZone={null}
               onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
               zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
+              zoneSelectSkill={zoneSelectMode ? pendingSkill : undefined}
             />
           </div>
 

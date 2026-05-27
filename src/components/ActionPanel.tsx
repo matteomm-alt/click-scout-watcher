@@ -26,6 +26,14 @@ const ALL_SKILLS: SkillDef[] = [
   { key: 'E', label: 'E' },
 ];
 
+const ATTACK_TYPES: { key: SkillType; label: string }[] = [
+  { key: 'H', label: 'Alto' },
+  { key: 'Q', label: '1° Tempo' },
+  { key: 'T', label: 'Zona 3' },
+  { key: 'P', label: 'Pipe' },
+  { key: 'O', label: 'Lob' },
+];
+
 const SKILL_FULL: Record<Skill, string> = {
   S: 'Battuta', R: 'Ricezione', A: 'Attacco', B: 'Muro', D: 'Difesa', E: 'Alzata', F: 'Freeball',
 };
@@ -47,8 +55,12 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
   const { homeTeam, awayTeam, matchState, addAction, addPoint } = useMatchStore();
   const { settings } = useScoutSettings();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [selectedSkillType, setSelectedSkillType] = useState<SkillType>('H');
 
-  useEffect(() => { setSelectedSkill(null); }, [player?.number, player?.team]);
+  useEffect(() => {
+    setSelectedSkill(null);
+    setSelectedSkillType('H');
+  }, [player?.number, player?.team]);
 
   if (!player) return null;
 
@@ -73,7 +85,7 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
     navigator.vibrate?.(25);
     const now = new Date();
     const ts = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    const skillType: SkillType = 'H';
+    const skillType: SkillType = skill === 'A' ? selectedSkillType : 'H';
     const teamPrefix = player.team === 'home' ? '*' : 'a';
     const playerStr = String(player.number).padStart(2, '0');
     const code = `${teamPrefix}${playerStr}${skill}${skillType}${evaluation}~~~~~`;
@@ -157,6 +169,31 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
           })}
         </div>
       </div>
+
+      {/* Tipo attacco (solo se A selezionato) */}
+      {selectedSkill === 'A' && (
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+            Tipo attacco
+          </div>
+          <div className="grid grid-cols-5 gap-2">
+            {ATTACK_TYPES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setSelectedSkillType(t.key)}
+                className={`min-h-[40px] px-2 rounded-lg border-2 text-xs font-black transition-all active:scale-95 ${
+                  selectedSkillType === t.key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-secondary border-border text-foreground hover:bg-secondary/80'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Valutazione */}
       <div>

@@ -76,6 +76,8 @@ interface VolleyballCourtProps {
   onZoneClick?: (zone: number, team: 'home' | 'away') => void;
   /** Squadra su cui mostrare l'overlay zone (default: entrambe) */
   zoneSelectTeam?: 'home' | 'away';
+  /** Skill in corso di selezione zona (per banner contestuale) */
+  zoneSelectSkill?: string | null;
 
   /** Layout: 'split' (default) due campi affiancati, 'single' un unico campo */
   layout?: 'split' | 'single';
@@ -128,6 +130,7 @@ export function VolleyballCourt({
   selectedZone,
   onZoneClick,
   zoneSelectTeam,
+  zoneSelectSkill,
   layout = 'split',
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
@@ -164,6 +167,7 @@ export function VolleyballCourt({
 
     const zoneCenters = team === 'home' ? ZONE_CENTERS_HOME : ZONE_CENTERS_AWAY;
     const showZoneOverlay = !!onZoneClick && (!zoneSelectTeam || zoneSelectTeam === team);
+    const zoneClickEnabled = showZoneOverlay;
 
     const showHeatmap = heatmapData && team === 'away';
     const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
@@ -208,6 +212,16 @@ export function VolleyballCourt({
           );
         })}
 
+        {/* Banner contestuale zona */}
+        {showZoneOverlay && zoneSelectSkill && (
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-wider shadow-lg">
+            {zoneSelectSkill === 'A' ? 'Dove è caduta?' :
+             zoneSelectSkill === 'S' ? 'Zona battuta' :
+             zoneSelectSkill === 'R' ? 'Da dove è arrivata?' :
+             'Seleziona zona'}
+          </div>
+        )}
+
         {/* Zone overlay cliccabili (post-azione) */}
         {showZoneOverlay && zoneCenters.map((z) => {
           const active = selectedZone === z.zone;
@@ -215,7 +229,7 @@ export function VolleyballCourt({
             <button
               type="button"
               key={`zone-${team}-${z.zone}`}
-              onClick={() => onZoneClick?.(z.zone, team)}
+              onClick={() => zoneClickEnabled && onZoneClick?.(z.zone, team)}
               className={`absolute z-[15] -translate-x-1/2 -translate-y-1/2 rounded-md border-2 transition-all active:scale-95 ${
                 active
                   ? 'bg-primary/60 border-primary ring-2 ring-primary'

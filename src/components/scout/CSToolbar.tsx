@@ -18,11 +18,12 @@ interface CSToolbarProps {
 }
 
 function ToolbarBtn({
-  onClick, children, title, variant = 'default', disabled,
+  onClick, children, title, variant = 'default', disabled, noShrink,
 }: {
   onClick?: () => void; children: React.ReactNode; title?: string;
   variant?: 'default' | 'primary' | 'warning' | 'destructive' | 'home' | 'away';
   disabled?: boolean;
+  noShrink?: boolean;
 }) {
   const v: Record<string, string> = {
     default: 'bg-secondary text-foreground border-border hover:bg-secondary/80',
@@ -38,7 +39,7 @@ function ToolbarBtn({
       onClick={onClick}
       title={title}
       disabled={disabled}
-      className={`min-h-[48px] px-3 rounded-lg border-2 font-black uppercase tracking-wider text-[13px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${v[variant]}`}
+      className={`min-h-[48px] px-3 rounded-lg border-2 font-black uppercase tracking-wider text-[13px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${noShrink ? 'flex-shrink-0' : ''} ${v[variant]}`}
     >
       {children}
     </button>
@@ -48,20 +49,22 @@ function ToolbarBtn({
 export function CSToolbar({
   onUndoAction, onUndoRally, onSubstitution,
   onTimeoutHome, onTimeoutAway, onEndSet, onExport, onSettings,
-  onPointHome, onPointAway,
+  onPointHome, onPointAway, onQuickActions,
   homeName = 'Casa', awayName = 'Ospite',
   homeTimeoutsLeft = 2, awayTimeoutsLeft = 2,
-}: CSToolbarProps) {
+}: CSToolbarProps & { onQuickActions?: () => void }) {
   return (
-    <div className="flex items-center gap-2 flex-wrap py-1">
-      <ToolbarBtn onClick={onPointHome} variant="home" title={`+1 ${homeName}`}>
-        +1 {homeName.slice(0, 8).toUpperCase()}
+    <div className="flex items-center gap-2 flex-nowrap overflow-x-auto py-1">
+      <ToolbarBtn onClick={onPointHome} variant="home" title={`+1 ${homeName}`} noShrink>
+        <span className="hidden sm:inline">+1 {homeName.slice(0, 8).toUpperCase()}</span>
+        <span className="sm:hidden">+1</span>
       </ToolbarBtn>
-      <ToolbarBtn onClick={onPointAway} variant="away" title={`+1 ${awayName}`}>
-        +1 {awayName.slice(0, 8).toUpperCase()}
+      <ToolbarBtn onClick={onPointAway} variant="away" title={`+1 ${awayName}`} noShrink>
+        <span className="hidden sm:inline">+1 {awayName.slice(0, 8).toUpperCase()}</span>
+        <span className="sm:hidden">+1</span>
       </ToolbarBtn>
 
-      <div className="h-8 w-px bg-border mx-1" />
+      <div className="hidden sm:block h-8 w-px bg-border mx-1" />
 
       <ToolbarBtn onClick={onUndoAction} title="Annulla ultima azione">
         <Undo2 className="w-4 h-4" /> Undo
@@ -80,16 +83,22 @@ export function CSToolbar({
         <Clock className="w-4 h-4" /> T-O {awayName.slice(0, 4)}
       </ToolbarBtn>
 
-      <div className="flex-1" />
+      {onQuickActions && (
+        <ToolbarBtn onClick={onQuickActions} variant="primary" title="Azioni rapide">
+          ⚡
+        </ToolbarBtn>
+      )}
 
-      <ToolbarBtn onClick={onEndSet} variant="warning" title="Fine set">
+      <div className="hidden sm:block flex-1" />
+
+      <ToolbarBtn onClick={onEndSet} variant="warning" title="Fine set" noShrink>
         <SkipForward className="w-4 h-4" /> Fine set
       </ToolbarBtn>
-      <ToolbarBtn onClick={onExport} variant="primary" title="Esporta DVW">
+      <ToolbarBtn onClick={onExport} variant="primary" title="Esporta DVW" noShrink>
         <Download className="w-4 h-4" /> DVW
       </ToolbarBtn>
       {onSettings && (
-        <ToolbarBtn onClick={onSettings} title="Impostazioni">
+        <ToolbarBtn onClick={onSettings} title="Impostazioni" noShrink>
           <Settings className="w-4 h-4" />
         </ToolbarBtn>
       )}

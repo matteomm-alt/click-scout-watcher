@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import type { SanctionType } from '@/types/volleyball';
+import type { SanctionType, ScoutAction } from '@/types/volleyball';
 import { toast } from 'sonner';
 
 const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: 'card' | 'square' }> = {
@@ -15,7 +15,7 @@ const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: '
   disqualification: { label: 'Squalifica', color: 'bg-zinc-900 border border-red-600', icon: 'square' },
 };
 
-function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePos, pct }: { open: boolean; setOpen: (v: boolean) => void; serverNumber: number; serveActions: any[]; zonePos: (z?: number) => number[] | undefined; pct: (n: number) => number }) {
+function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePos, pct }: { open: boolean; setOpen: (v: boolean) => void; serverNumber: number; serveActions: ScoutAction[]; zonePos: (z?: number) => number[] | undefined; pct: (n: number) => number }) {
   const stat = {
     ace: serveActions.filter((a) => a.evaluation === '#').length,
     err: serveActions.filter((a) => a.evaluation === '=').length,
