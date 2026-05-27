@@ -130,6 +130,7 @@ export function VolleyballCourt({
   selectedZone,
   onZoneClick,
   zoneSelectTeam,
+  zoneSelectSkill,
   layout = 'split',
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
