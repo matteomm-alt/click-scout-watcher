@@ -48,7 +48,7 @@ export interface Lineup {
 }
 
 export type Skill = 'S' | 'R' | 'A' | 'B' | 'D' | 'E' | 'F'; // Serve, Receive, Attack, Block, Dig, Set, Freeball
-export type SkillType = 'H' | 'M' | 'Q' | 'T' | 'N' | 'O' | 'U'; // High, Medium, Quick, Tempo, Nil, Other, Unknown
+export type SkillType = 'H' | 'M' | 'Q' | 'T' | 'N' | 'O' | 'U' | 'P'; // +P=Pipe
 export type Evaluation = '#' | '+' | '!' | '-' | '/' | '='; // Kill/Perfect, Positive, OK, Negative, Poor, Error
 
 // Serve types (DVW convention: skill type letter)
