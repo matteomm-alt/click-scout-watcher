@@ -33,7 +33,7 @@ interface MatchStore {
 
   matchState: MatchState;
   startMatch: () => void;
-  addAction: (action: Omit<ScoutAction, 'id' | 'setNumber' | 'homeScore' | 'awayScore' | 'homeSetterPosition' | 'awaySetterPosition' | 'homeLineup' | 'awayLineup'>) => void;
+  addAction: (action: Omit<ScoutAction, 'id' | 'setNumber' | 'homeScore' | 'awayScore' | 'homeSetterPosition' | 'awaySetterPosition' | 'homeLineup' | 'awayLineup'>) => string;
   updateAction: (id: string, updates: { playerNumber?: number; evaluation?: Evaluation; startZone?: number | null; endZone?: number | null }) => void;
   deleteAction: (id: string) => void;
   setSingleTeamMode: (v: boolean) => void;
@@ -302,6 +302,7 @@ export const useMatchStore = create<MatchStore>()(
           if (updated) toast.info('Valutazione aggiornata', { duration: 1500 });
           return { matchState: { ...s.matchState, actions } };
         });
+        return action.id;
       },
 
       updateAction: (id, updates) => set((s) => ({
