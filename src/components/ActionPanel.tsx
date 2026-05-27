@@ -170,6 +170,31 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
         </div>
       </div>
 
+      {/* Tipo attacco (solo se A selezionato) */}
+      {selectedSkill === 'A' && (
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+            Tipo attacco
+          </div>
+          <div className="grid grid-cols-5 gap-2">
+            {ATTACK_TYPES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setSelectedSkillType(t.key)}
+                className={`min-h-[40px] px-2 rounded-lg border-2 text-xs font-black transition-all active:scale-95 ${
+                  selectedSkillType === t.key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-secondary border-border text-foreground hover:bg-secondary/80'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Valutazione */}
       <div>
         <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
