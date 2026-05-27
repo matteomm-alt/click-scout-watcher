@@ -55,8 +55,12 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
   const { homeTeam, awayTeam, matchState, addAction, addPoint } = useMatchStore();
   const { settings } = useScoutSettings();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [selectedSkillType, setSelectedSkillType] = useState<SkillType>('H');
 
-  useEffect(() => { setSelectedSkill(null); }, [player?.number, player?.team]);
+  useEffect(() => {
+    setSelectedSkill(null);
+    setSelectedSkillType('H');
+  }, [player?.number, player?.team]);
 
   if (!player) return null;
 
