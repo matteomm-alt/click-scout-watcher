@@ -30,7 +30,7 @@ const ATTACK_TYPES: { key: SkillType; label: string }[] = [
   { key: 'H', label: 'Alto' },
   { key: 'Q', label: '1° Tempo' },
   { key: 'T', label: 'Zona 3' },
-  { key: 'P' as SkillType, label: 'Pipe' },
+  { key: 'P', label: 'Pipe' },
   { key: 'O', label: 'Lob' },
 ];
 
