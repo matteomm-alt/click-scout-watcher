@@ -212,6 +212,16 @@ export function VolleyballCourt({
           );
         })}
 
+        {/* Banner contestuale zona */}
+        {showZoneOverlay && zoneSelectSkill && (
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-wider shadow-lg">
+            {zoneSelectSkill === 'A' ? 'Dove è caduta?' :
+             zoneSelectSkill === 'S' ? 'Zona battuta' :
+             zoneSelectSkill === 'R' ? 'Da dove è arrivata?' :
+             'Seleziona zona'}
+          </div>
+        )}
+
         {/* Zone overlay cliccabili (post-azione) */}
         {showZoneOverlay && zoneCenters.map((z) => {
           const active = selectedZone === z.zone;
