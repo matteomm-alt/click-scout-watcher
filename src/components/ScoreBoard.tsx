@@ -15,7 +15,7 @@ const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: '
   disqualification: { label: 'Squalifica', color: 'bg-zinc-900 border border-red-600', icon: 'square' },
 };
 
-function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePos, pct }: { open: boolean; setOpen: (v: boolean) => void; serverNumber: number; serveActions: any[]; zonePos: (z?: number) => number[] | undefined; pct: (n: number) => number }) {
+function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePos, pct }: { open: boolean; setOpen: (v: boolean) => void; serverNumber: number; serveActions: ScoutAction[]; zonePos: (z?: number) => number[] | undefined; pct: (n: number) => number }) {
   const stat = {
     ace: serveActions.filter((a) => a.evaluation === '#').length,
     err: serveActions.filter((a) => a.evaluation === '=').length,
