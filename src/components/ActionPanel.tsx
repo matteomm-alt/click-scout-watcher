@@ -78,7 +78,7 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
     const playerStr = String(player.number).padStart(2, '0');
     const code = `${teamPrefix}${playerStr}${skill}${skillType}${evaluation}~~~~~`;
 
-    addAction({
+    const actionId = addAction({
       timestamp: ts,
       team: player.team,
       playerNumber: player.number,
@@ -96,9 +96,7 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
       }
     }
 
-    // Recupera l'id dell'azione appena registrata
-    const latest = useMatchStore.getState().matchState.actions.slice(-1)[0];
-    onComplete(latest?.id ?? '', skill);
+    onComplete(actionId, skill);
   };
 
   const handleEval = (evaluation: Evaluation) => {
