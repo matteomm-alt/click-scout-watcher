@@ -26,6 +26,14 @@ const ALL_SKILLS: SkillDef[] = [
   { key: 'E', label: 'E' },
 ];
 
+const ATTACK_TYPES: { key: SkillType; label: string }[] = [
+  { key: 'H', label: 'Alto' },
+  { key: 'Q', label: '1° Tempo' },
+  { key: 'T', label: 'Zona 3' },
+  { key: 'P', label: 'Pipe' },
+  { key: 'O', label: 'Lob' },
+];
+
 const SKILL_FULL: Record<Skill, string> = {
   S: 'Battuta', R: 'Ricezione', A: 'Attacco', B: 'Muro', D: 'Difesa', E: 'Alzata', F: 'Freeball',
 };
