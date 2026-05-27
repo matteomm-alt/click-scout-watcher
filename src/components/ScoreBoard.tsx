@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import type { SanctionType } from '@/types/volleyball';
+import type { SanctionType, ScoutAction } from '@/types/volleyball';
 import { toast } from 'sonner';
 
 const sanctionMeta: Record<SanctionType, { label: string; color: string; icon: 'card' | 'square' }> = {
