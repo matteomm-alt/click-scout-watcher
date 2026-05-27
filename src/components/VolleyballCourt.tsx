@@ -76,6 +76,8 @@ interface VolleyballCourtProps {
   onZoneClick?: (zone: number, team: 'home' | 'away') => void;
   /** Squadra su cui mostrare l'overlay zone (default: entrambe) */
   zoneSelectTeam?: 'home' | 'away';
+  /** Skill in corso di selezione zona (per banner contestuale) */
+  zoneSelectSkill?: string | null;
 
   /** Layout: 'split' (default) due campi affiancati, 'single' un unico campo */
   layout?: 'split' | 'single';
