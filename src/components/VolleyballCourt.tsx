@@ -70,6 +70,8 @@ interface VolleyballCourtProps {
   onPlayerClick?: (playerNumber: number, team: 'home' | 'away') => void;
   /** Giocatrice attualmente selezionata (ring pulsante) */
   selectedPlayer?: { number: number; team: 'home' | 'away' } | null;
+  /** Giocatrice che ha appena completato un'azione (flash verde ~700ms) */
+  recentActionPlayer?: { number: number; team: 'home' | 'away'; evaluation?: string } | null;
 
   /** Overlay zone cliccabili sopra al campo (per step zona post-azione) */
   selectedZone?: number | null;
@@ -127,6 +129,7 @@ export function VolleyballCourt({
   simplifiedView = false,
   onPlayerClick,
   selectedPlayer,
+  recentActionPlayer,
   selectedZone,
   onZoneClick,
   zoneSelectTeam,
@@ -266,6 +269,13 @@ export function VolleyballCourt({
           const isServer = pos === 1 && matchState.servingTeam === team;
           const isSelected = selectedPlayer?.number === playerNum && selectedPlayer.team === team;
           const isHighlighted = highlightTeam === team && highlightPlayerNumber === playerNum;
+          const isRecent = recentActionPlayer?.number === playerNum && recentActionPlayer.team === team;
+          const recentEval = recentActionPlayer?.evaluation;
+          const recentColor =
+            recentEval === '#' ? 'ring-emerald-400'
+            : recentEval === '=' ? 'ring-red-500'
+            : recentEval === '/' ? 'ring-amber-400'
+            : 'ring-primary';
 
           // Colori per ruolo
           let colorCls: string;
@@ -285,6 +295,7 @@ export function VolleyballCourt({
             isServer && serverPulseActive ? 'ring-4 ring-cyan-300 animate-pulse' : '',
             isSelected ? 'ring-4 ring-white ring-offset-2 ring-offset-transparent animate-pulse' : '',
             isHighlighted ? 'ring-4 ring-primary' : '',
+            isRecent ? `ring-4 ${recentColor} animate-ping-once` : '',
           ].filter(Boolean).join(' ');
 
           const clickable = !!onPlayerClick;
