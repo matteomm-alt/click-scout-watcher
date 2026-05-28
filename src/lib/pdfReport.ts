@@ -427,3 +427,190 @@ export function downloadMatchReport(
   const date = meta.date || new Date().toISOString().slice(0, 10);
   doc.save(`report_${safeName(meta.homeName)}_${safeName(meta.awayName)}_${date}.pdf`);
 }
+
+// ============================================================
+// P14 — Scheda atleta PDF
+// ============================================================
+export interface AthleteCardData {
+  firstName: string | null;
+  lastName: string;
+  number: number | null;
+  role: string | null;
+  birthDate: string | null;
+  email: string | null;
+  phone: string | null;
+  team: string | null;
+  isLibero: boolean;
+  isCaptain: boolean;
+  medicalCertExpiry: string | null;
+  notes: string | null;
+  attendancePct?: number | null;
+  presences?: number;
+  totalEvents?: number;
+  evaluations?: Array<{ fundamental: string; score: number; date: string }>;
+  injuries?: Array<{ bodyPart: string; severity: string; status: string; startDate: string }>;
+  societyName?: string | null;
+}
+
+export function generateAthleteCard(data: AthleteCardData): jsPDF {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  // Header
+  doc.setFillColor(...DARK);
+  doc.rect(0, 0, PAGE_W, 36, 'F');
+  doc.setFillColor(...ORANGE);
+  doc.rect(0, 36, PAGE_W, 1.5, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text((data.societyName || 'VOLLEYSCOUT PRO').toUpperCase(), MARGIN, 12);
+  doc.setFontSize(22);
+  doc.text('SCHEDA ATLETA', MARGIN, 24);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Generato il ${new Date().toLocaleDateString('it-IT')}`, PAGE_W - MARGIN, 12, { align: 'right' });
+
+  let y = 50;
+  // Identità
+  doc.setTextColor(...DARK);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  const fullName = `${data.lastName.toUpperCase()}${data.firstName ? ' ' + data.firstName : ''}`;
+  doc.text(fullName, MARGIN, y);
+  if (data.number !== null) {
+    doc.setTextColor(...ORANGE);
+    doc.setFontSize(28);
+    doc.text(`#${data.number}`, PAGE_W - MARGIN, y, { align: 'right' });
+  }
+  y += 8;
+  doc.setTextColor(...MUTED);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  const badges: string[] = [];
+  if (data.role) badges.push(data.role);
+  if (data.isLibero) badges.push('Libero');
+  if (data.isCaptain) badges.push('Capitano');
+  if (data.team) badges.push(data.team);
+  doc.text(badges.join(' · ') || '—', MARGIN, y);
+  y += 10;
+
+  // Tabella info
+  doc.setDrawColor(...BORDER);
+  doc.setLineWidth(0.2);
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+  y += 6;
+  const fields: Array<[string, string]> = [
+    ['Data di nascita', data.birthDate || '—'],
+    ['Email', data.email || '—'],
+    ['Telefono', data.phone || '—'],
+    ['Cert. medico', data.medicalCertExpiry || '—'],
+  ];
+  doc.setFontSize(9);
+  for (const [k, v] of fields) {
+    doc.setTextColor(...MUTED);
+    doc.text(k.toUpperCase(), MARGIN, y);
+    doc.setTextColor(...DARK);
+    doc.setFont('helvetica', 'bold');
+    doc.text(v, MARGIN + 45, y);
+    doc.setFont('helvetica', 'normal');
+    y += 6;
+  }
+  y += 4;
+
+  // Presenze
+  if (data.attendancePct !== undefined && data.attendancePct !== null) {
+    y = checkPage(doc, y, 30);
+    doc.setFillColor(...ORANGE);
+    doc.rect(MARGIN, y, 3, 6, 'F');
+    doc.setTextColor(...DARK);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('PRESENZE', MARGIN + 6, y + 5);
+    y += 10;
+    doc.setFontSize(28);
+    doc.setTextColor(...ORANGE);
+    doc.text(`${Math.round(data.attendancePct)}%`, MARGIN, y);
+    doc.setFontSize(10);
+    doc.setTextColor(...MUTED);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${data.presences ?? 0} / ${data.totalEvents ?? 0} eventi`, MARGIN + 35, y - 2);
+    y += 8;
+  }
+
+  // Valutazioni
+  if (data.evaluations && data.evaluations.length > 0) {
+    y = checkPage(doc, y, 30);
+    doc.setFillColor(...ORANGE);
+    doc.rect(MARGIN, y, 3, 6, 'F');
+    doc.setTextColor(...DARK);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('VALUTAZIONI RECENTI', MARGIN + 6, y + 5);
+    y += 9;
+    doc.setFontSize(9);
+    for (const e of data.evaluations.slice(0, 10)) {
+      y = checkPage(doc, y, 6);
+      doc.setTextColor(...MUTED);
+      doc.text(e.date, MARGIN, y);
+      doc.setTextColor(...DARK);
+      doc.text(e.fundamental, MARGIN + 28, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...ORANGE);
+      doc.text(e.score.toFixed(1), PAGE_W - MARGIN, y, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      y += 5;
+    }
+    y += 4;
+  }
+
+  // Infortuni
+  if (data.injuries && data.injuries.length > 0) {
+    y = checkPage(doc, y, 25);
+    doc.setFillColor(...ORANGE);
+    doc.rect(MARGIN, y, 3, 6, 'F');
+    doc.setTextColor(...DARK);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('INFORTUNI', MARGIN + 6, y + 5);
+    y += 9;
+    doc.setFontSize(9);
+    for (const i of data.injuries.slice(0, 8)) {
+      y = checkPage(doc, y, 6);
+      doc.setTextColor(...MUTED);
+      doc.text(i.startDate, MARGIN, y);
+      doc.setTextColor(...DARK);
+      doc.text(`${i.bodyPart} (${i.severity})`, MARGIN + 28, y);
+      doc.setTextColor(i.status === 'attivo' ? (ORANGE as any) : (MUTED as any));
+      doc.text(i.status, PAGE_W - MARGIN, y, { align: 'right' });
+      y += 5;
+    }
+    y += 4;
+  }
+
+  if (data.notes) {
+    y = checkPage(doc, y, 20);
+    doc.setFillColor(...ORANGE);
+    doc.rect(MARGIN, y, 3, 6, 'F');
+    doc.setTextColor(...DARK);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('NOTE', MARGIN + 6, y + 5);
+    y += 9;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...MUTED);
+    const lines = doc.splitTextToSize(data.notes, PAGE_W - MARGIN * 2);
+    doc.text(lines, MARGIN, y);
+  }
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text('VolleyScout Pro · Scheda atleta riservata', PAGE_W / 2, 290, { align: 'center' });
+
+  return doc;
+}
+
+export function downloadAthleteCard(data: AthleteCardData) {
+  const doc = generateAthleteCard(data);
+  doc.save(`scheda_${safeName(data.lastName)}${data.number ?? ''}.pdf`);
+}
