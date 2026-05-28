@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export type ScoutSettings = {
   showServeType: boolean;
@@ -118,10 +119,43 @@ const readSettings = (): ScoutSettings => {
 
 export function useScoutSettings() {
   const [settings, setSettingsState] = useState<ScoutSettings>(readSettings);
+  const cloudLoadedRef = useRef(false);
+  const skipNextSyncRef = useRef(false);
 
+  // Carica da Supabase al primo mount (override su localStorage)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('scout_settings')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled || error) { cloudLoadedRef.current = true; return; }
+      const cloud = (data?.scout_settings ?? null) as Partial<ScoutSettings> | null;
+      if (cloud && Object.keys(cloud).length > 0) {
+        skipNextSyncRef.current = true;
+        setSettingsState((cur) => ({ ...cur, ...cloud }));
+      }
+      cloudLoadedRef.current = true;
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Persist locale + cloud
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    if (!cloudLoadedRef.current) return;
+    if (skipNextSyncRef.current) { skipNextSyncRef.current = false; return; }
+    const handle = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from('profiles').update({ scout_settings: settings as unknown as never }).eq('id', user.id);
+    }, 600);
+    return () => clearTimeout(handle);
   }, [settings]);
 
   const setSetting = <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => {

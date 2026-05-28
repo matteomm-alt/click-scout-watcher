@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Undo2, ArrowLeftRight, Clock, SkipForward, Download, RotateCcw, Settings } from 'lucide-react';
 
 interface CSToolbarProps {
@@ -53,52 +54,53 @@ export function CSToolbar({
   homeName = 'Casa', awayName = 'Ospite',
   homeTimeoutsLeft = 2, awayTimeoutsLeft = 2,
 }: CSToolbarProps & { onQuickActions?: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-2 flex-nowrap overflow-x-auto py-1">
-      <ToolbarBtn onClick={onPointHome} variant="home" title={`+1 ${homeName}`} noShrink>
-        <span className="hidden sm:inline">+1 {homeName.slice(0, 8).toUpperCase()}</span>
-        <span className="sm:hidden">+1</span>
+      <ToolbarBtn onClick={onPointHome} variant="home" title={`${t('scout.ui.pointFor')} ${homeName}`} noShrink>
+        <span className="hidden sm:inline">{t('scout.ui.pointFor')} {homeName.slice(0, 8).toUpperCase()}</span>
+        <span className="sm:hidden">{t('scout.ui.pointFor')}</span>
       </ToolbarBtn>
-      <ToolbarBtn onClick={onPointAway} variant="away" title={`+1 ${awayName}`} noShrink>
-        <span className="hidden sm:inline">+1 {awayName.slice(0, 8).toUpperCase()}</span>
-        <span className="sm:hidden">+1</span>
+      <ToolbarBtn onClick={onPointAway} variant="away" title={`${t('scout.ui.pointFor')} ${awayName}`} noShrink>
+        <span className="hidden sm:inline">{t('scout.ui.pointFor')} {awayName.slice(0, 8).toUpperCase()}</span>
+        <span className="sm:hidden">{t('scout.ui.pointFor')}</span>
       </ToolbarBtn>
 
       <div className="hidden sm:block h-8 w-px bg-border mx-1" />
 
-      <ToolbarBtn onClick={onUndoAction} title="Annulla ultima azione">
-        <Undo2 className="w-4 h-4" /> Undo
+      <ToolbarBtn onClick={onUndoAction} title={t('scout.ui.undo') as string}>
+        <Undo2 className="w-4 h-4" /> {t('scout.ui.undo')}
       </ToolbarBtn>
-      <ToolbarBtn onClick={onUndoRally} title="Annulla rally corrente">
-        <Undo2 className="w-4 h-4" /> Rally
+      <ToolbarBtn onClick={onUndoRally} title={t('scout.ui.undoRally') as string}>
+        <Undo2 className="w-4 h-4" /> {t('scout.ui.undoRally')}
       </ToolbarBtn>
-      <ToolbarBtn onClick={onSubstitution} title="Sostituzione">
-        <ArrowLeftRight className="w-4 h-4" /> Sub
+      <ToolbarBtn onClick={onSubstitution} title={t('scout.ui.substitution') as string}>
+        <ArrowLeftRight className="w-4 h-4" /> {t('scout.ui.sub')}
       </ToolbarBtn>
 
-      <ToolbarBtn onClick={onTimeoutHome} title={`T-O ${homeName} (${homeTimeoutsLeft} disp.)`} disabled={homeTimeoutsLeft <= 0}>
+      <ToolbarBtn onClick={onTimeoutHome} title={`${t('scout.ui.timeout')} ${homeName} (${homeTimeoutsLeft})`} disabled={homeTimeoutsLeft <= 0}>
         <Clock className="w-4 h-4" /> T-O {homeName.slice(0, 4)}
       </ToolbarBtn>
-      <ToolbarBtn onClick={onTimeoutAway} title={`T-O ${awayName} (${awayTimeoutsLeft} disp.)`} disabled={awayTimeoutsLeft <= 0}>
+      <ToolbarBtn onClick={onTimeoutAway} title={`${t('scout.ui.timeout')} ${awayName} (${awayTimeoutsLeft})`} disabled={awayTimeoutsLeft <= 0}>
         <Clock className="w-4 h-4" /> T-O {awayName.slice(0, 4)}
       </ToolbarBtn>
 
       {onQuickActions && (
-        <ToolbarBtn onClick={onQuickActions} variant="primary" title="Azioni rapide">
+        <ToolbarBtn onClick={onQuickActions} variant="primary" title={t('scout.ui.quickActions') as string}>
           ⚡
         </ToolbarBtn>
       )}
 
       <div className="hidden sm:block flex-1" />
 
-      <ToolbarBtn onClick={onEndSet} variant="warning" title="Fine set" noShrink>
-        <SkipForward className="w-4 h-4" /> Fine set
+      <ToolbarBtn onClick={onEndSet} variant="warning" title={t('scout.ui.endSet') as string} noShrink>
+        <SkipForward className="w-4 h-4" /> {t('scout.ui.endSet')}
       </ToolbarBtn>
-      <ToolbarBtn onClick={onExport} variant="primary" title="Esporta DVW" noShrink>
+      <ToolbarBtn onClick={onExport} variant="primary" title={t('scout.ui.exportDvw') as string} noShrink>
         <Download className="w-4 h-4" /> DVW
       </ToolbarBtn>
       {onSettings && (
-        <ToolbarBtn onClick={onSettings} title="Impostazioni" noShrink>
+        <ToolbarBtn onClick={onSettings} title={t('scout.ui.settings') as string} noShrink>
           <Settings className="w-4 h-4" />
         </ToolbarBtn>
       )}

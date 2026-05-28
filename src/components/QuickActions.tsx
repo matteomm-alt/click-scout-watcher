@@ -102,7 +102,7 @@ export function QuickActions() {
       </div>
 
       {!pendingPlayer ? (
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
           {QUICK_CONFIGS.map((cfg) => {
             const Icon = cfg.icon;
             return (
@@ -133,7 +133,7 @@ export function QuickActions() {
               <X className="mx-auto w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {lineup.filter((n) => n > 0).map((num) => {
               const player = teamData.players.find((p) => p.number === num);
               return (

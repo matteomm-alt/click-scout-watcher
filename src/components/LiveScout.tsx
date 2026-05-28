@@ -41,6 +41,7 @@ export function LiveScout() {
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
+  const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -81,7 +82,14 @@ export function LiveScout() {
   const handleActionComplete = (actionId: string, skill: Skill) => {
     setBottomSheetOpen(false);
     const team = selectedPlayer?.team ?? null;
+    const num = selectedPlayer?.number ?? null;
     setSelectedPlayer(null);
+    // Flash visivo sull'ultima giocatrice
+    if (num !== null && team) {
+      const last = matchState.actions[matchState.actions.length - 1];
+      setRecentActionPlayer({ number: num, team, evaluation: last?.evaluation });
+      window.setTimeout(() => setRecentActionPlayer(null), 700);
+    }
     if (SKILLS_WITH_ZONE.includes(skill) && actionId) {
       setPendingActionId(actionId);
       setPendingSkill(skill);
@@ -198,6 +206,7 @@ export function LiveScout() {
               simplifiedView={simplified}
               onPlayerClick={handlePlayerClick}
               selectedPlayer={selectedPlayer}
+              recentActionPlayer={recentActionPlayer}
               selectedZone={null}
               onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
               zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
@@ -250,6 +259,7 @@ export function LiveScout() {
             simplifiedView={simplified}
             onPlayerClick={handlePlayerClick}
             selectedPlayer={selectedPlayer}
+            recentActionPlayer={recentActionPlayer}
             selectedZone={null}
             onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
             zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}

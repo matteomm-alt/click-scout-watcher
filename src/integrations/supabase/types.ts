@@ -1088,6 +1088,7 @@ export type Database = {
           full_name: string | null
           id: string
           onboarded: boolean
+          scout_settings: Json
           updated_at: string
         }
         Insert: {
@@ -1096,6 +1097,7 @@ export type Database = {
           full_name?: string | null
           id: string
           onboarded?: boolean
+          scout_settings?: Json
           updated_at?: string
         }
         Update: {
@@ -1104,6 +1106,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           onboarded?: boolean
+          scout_settings?: Json
           updated_at?: string
         }
         Relationships: []
@@ -2070,6 +2073,16 @@ export type Database = {
           id: string
           league: string
           match_date: string
+        }[]
+      }
+      get_public_shared_match_stats: {
+        Args: { _match_id: string; _token: string }
+        Returns: {
+          away_points: number
+          home_points: number
+          skill_breakdown: Json
+          total_actions: number
+          total_sets: number
         }[]
       }
       get_user_societies: {
