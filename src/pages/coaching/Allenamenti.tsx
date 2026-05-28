@@ -19,8 +19,9 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
-  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown,
+  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -562,6 +563,18 @@ export default function Allenamenti() {
                 <Button size="sm" variant="ghost" className="flex-1 gap-1.5 h-8" onClick={() => openEdit(t.id)}>
                   <Pencil className="w-3.5 h-3.5" /> Modifica
                 </Button>
+                {!t.is_template && (
+                  <Button
+                    size="sm" variant="ghost"
+                    className="h-8 w-8 p-0 text-primary hover:text-primary"
+                    asChild
+                    title="Registra presenze"
+                  >
+                    <Link to={`/gestionale/presenze?training=${t.id}`}>
+                      <ClipboardCheck className="w-3.5 h-3.5" />
+                    </Link>
+                  </Button>
+                )}
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openDuplicate(t.id)} title="Duplica">
                   <Copy className="w-3.5 h-3.5" />
                 </Button>

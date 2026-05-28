@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ClipboardCheck, Check, X, AlertCircle, HeartPulse, ClipboardList, BarChart3, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,9 @@ export function PresenzeView() {
   const [seasonStats, setSeasonStats] = useState<{ athleteId: string; pct: number; presenti: number; totali: number }[]>([]);
   const [seasonLoading, setSeasonLoading] = useState(false);
 
+  const [searchParams] = useSearchParams();
+  const trainingParam = searchParams.get('training');
+
   useEffect(() => {
     if (!societyId) return;
     (async () => {
@@ -50,9 +54,12 @@ export function PresenzeView() {
         .eq('society_id', societyId).order('start_at', { ascending: false }).limit(30);
       const list = (data as any) || [];
       setEvents(list);
-      if (list.length > 0) setSelectedEventId(list[0].id);
+      // Preseleziona da query param se presente, altrimenti il più recente
+      const fromParam = trainingParam && list.find((e: Event) => e.id === trainingParam);
+      if (fromParam) setSelectedEventId(trainingParam);
+      else if (list.length > 0) setSelectedEventId(list[0].id);
     })();
-  }, [societyId]);
+  }, [societyId, trainingParam]);
 
   useEffect(() => {
     if (!societyId) return;
