@@ -12,11 +12,24 @@ interface PublicMatch {
   away_team_name: string | null;
 }
 
+interface PublicStats {
+  total_actions: number;
+  total_sets: number;
+  home_points: number;
+  away_points: number;
+  skill_breakdown: Record<string, number>;
+}
+
+const SKILL_LABELS: Record<string, string> = {
+  S: 'Battute', R: 'Ricezioni', A: 'Attacchi', B: 'Muri', D: 'Difese', E: 'Alzate', F: 'Free ball',
+};
+
 export default function AnalisiPubblica() {
   const { matchId } = useParams<{ matchId: string }>();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('t');
   const [match, setMatch] = useState<PublicMatch | null>(null);
+  const [stats, setStats] = useState<PublicStats | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -26,14 +39,17 @@ export default function AnalisiPubblica() {
       setLoading(false);
       return;
     }
-    supabase
-      .rpc('get_public_shared_match', { _match_id: matchId, _token: token })
-      .then(({ data, error: e }) => {
-        const row = Array.isArray(data) ? data[0] : null;
-        if (e || !row) setError('Link non valido o scaduto.');
-        else setMatch(row as PublicMatch);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase.rpc('get_public_shared_match', { _match_id: matchId, _token: token }),
+      (supabase as any).rpc('get_public_shared_match_stats', { _match_id: matchId, _token: token }),
+    ]).then(([{ data, error: e }, { data: sData }]) => {
+      const row = Array.isArray(data) ? data[0] : null;
+      if (e || !row) { setError('Link non valido o scaduto.'); setLoading(false); return; }
+      setMatch(row as PublicMatch);
+      const sRow = Array.isArray(sData) ? sData[0] : null;
+      if (sRow) setStats(sRow as PublicStats);
+      setLoading(false);
+    });
   }, [matchId, token]);
 
   if (loading) {
@@ -62,6 +78,33 @@ export default function AnalisiPubblica() {
             </p>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mt-2">set vinti</p>
           </div>
+          {stats && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Azioni totali</p>
+                  <p className="text-2xl font-black italic">{stats.total_actions}</p>
+                </div>
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Set giocati</p>
+                  <p className="text-2xl font-black italic">{stats.total_sets}</p>
+                </div>
+              </div>
+              {Object.keys(stats.skill_breakdown || {}).length > 0 && (
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Distribuzione fondamentali</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                    {Object.entries(stats.skill_breakdown).map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-2 border-b border-border/50 py-1">
+                        <span className="text-muted-foreground">{SKILL_LABELS[k] || k}</span>
+                        <span className="font-bold">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <p className="text-xs text-muted-foreground text-center">Generato con VolleyScout Pro</p>
         </div>
       </div>
