@@ -153,7 +153,7 @@ export function useScoutSettings() {
     const handle = setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      await supabase.from('profiles').update({ scout_settings: settings as unknown as Record<string, unknown> }).eq('id', user.id);
+      await supabase.from('profiles').update({ scout_settings: settings as unknown as never }).eq('id', user.id);
     }, 600);
     return () => clearTimeout(handle);
   }, [settings]);
