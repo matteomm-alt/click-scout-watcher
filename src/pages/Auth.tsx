@@ -31,7 +31,7 @@ const roleLabels: Record<InviteInfo['invited_role'], string> = {
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading, refreshRoles } = useAuth();
+  const { user, loading: authLoading, refreshRoles, signOut } = useAuth();
 
   const inviteToken = new URLSearchParams(location.search).get('invite');
   const [mode, setMode] = useState<Mode>(inviteToken ? 'signup' : 'signin');
