@@ -341,6 +341,21 @@ export function LiveScout() {
         </SheetContent>
       </Sheet>
 
+      {/* Sheet azioni rapide (mobile-first) */}
+      <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" /> Azioni rapide
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-3">
+            <QuickActions />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+
       {/* Sheet impostazioni */}
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
         <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto">
