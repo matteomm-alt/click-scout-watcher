@@ -48,6 +48,69 @@ function ToolbarBtn({
   );
 }
 
+function LongPressBtn({
+  onLongPress, children, title, variant = 'default', duration = 800, noShrink,
+}: {
+  onLongPress: () => void;
+  children: React.ReactNode;
+  title?: string;
+  variant?: 'default' | 'primary' | 'warning' | 'destructive';
+  duration?: number;
+  noShrink?: boolean;
+}) {
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const [progress, setProgress] = React.useState(0);
+
+  const start = () => {
+    setProgress(0);
+    const step = 100 / (duration / 50);
+    intervalRef.current = setInterval(() => {
+      setProgress((p) => Math.min(p + step, 100));
+    }, 50);
+    timerRef.current = setTimeout(() => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setProgress(0);
+      navigator.vibrate?.(40);
+      onLongPress();
+    }, duration);
+  };
+
+  const cancel = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setProgress(0);
+  };
+
+  const v: Record<string, string> = {
+    default: 'bg-secondary text-foreground border-border',
+    warning: 'bg-warning text-background border-warning',
+    destructive: 'bg-destructive text-destructive-foreground border-destructive',
+    primary: 'bg-primary text-primary-foreground border-primary',
+  };
+
+  return (
+    <button
+      type="button"
+      title={title}
+      onPointerDown={start}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onPointerCancel={cancel}
+      onContextMenu={(e) => e.preventDefault()}
+      className={`relative min-h-[48px] px-3 rounded-lg border-2 font-black uppercase tracking-wider text-[13px] flex items-center gap-2 transition-all active:scale-95 overflow-hidden select-none ${noShrink ? 'flex-shrink-0' : ''} ${v[variant]}`}
+    >
+      {progress > 0 && (
+        <span
+          className="absolute inset-y-0 left-0 bg-background/30 pointer-events-none transition-[width] duration-75"
+          style={{ width: `${progress}%` }}
+        />
+      )}
+      <span className="relative flex items-center gap-2">{children}</span>
+    </button>
+  );
+}
+
 export function CSToolbar({
   onUndoAction, onUndoRally, onSubstitution,
   onTimeoutHome, onTimeoutAway, onEndSet, onExport, onSettings,
