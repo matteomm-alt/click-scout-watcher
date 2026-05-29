@@ -48,6 +48,9 @@ export default function Auth() {
 
   const from = (location.state as { from?: string })?.from ?? '/';
 
+  const emailMismatch =
+    !!(user && inviteInfo && user.email?.toLowerCase() !== inviteInfo.email.toLowerCase());
+
   const acceptInvite = async (token: string) => {
     if (acceptingInviteRef.current || inviteAccepted) return false;
     acceptingInviteRef.current = true;
