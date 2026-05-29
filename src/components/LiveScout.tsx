@@ -303,6 +303,7 @@ export function LiveScout() {
           </SheetHeader>
           <ActionPanel
             player={selectedPlayer}
+            suggestedSkill={selectedPlayer ? lastSkillByTeam[selectedPlayer.team] : null}
             onComplete={handleActionComplete}
             onClose={() => { setBottomSheetOpen(false); setSelectedPlayer(null); }}
           />
