@@ -79,13 +79,14 @@ export function LiveScout() {
     setSelectedPlayer({ number: num, team });
     setBottomSheetOpen(true);
   };
-
   const handleActionComplete = (actionId: string, skill: Skill) => {
     setBottomSheetOpen(false);
     const team = selectedPlayer?.team ?? null;
     const num = selectedPlayer?.number ?? null;
+    if (team) {
+      setLastSkillByTeam((prev) => ({ ...prev, [team]: skill }));
+    }
     setSelectedPlayer(null);
-    // Flash visivo sull'ultima giocatrice
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
       setRecentActionPlayer({ number: num, team, evaluation: last?.evaluation });
@@ -97,6 +98,7 @@ export function LiveScout() {
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
+  };
   };
 
   const handleZoneSelect = (zone: number) => {
