@@ -42,6 +42,7 @@ export function LiveScout() {
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
+  const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -78,13 +79,14 @@ export function LiveScout() {
     setSelectedPlayer({ number: num, team });
     setBottomSheetOpen(true);
   };
-
   const handleActionComplete = (actionId: string, skill: Skill) => {
     setBottomSheetOpen(false);
     const team = selectedPlayer?.team ?? null;
     const num = selectedPlayer?.number ?? null;
+    if (team) {
+      setLastSkillByTeam((prev) => ({ ...prev, [team]: skill }));
+    }
     setSelectedPlayer(null);
-    // Flash visivo sull'ultima giocatrice
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
       setRecentActionPlayer({ number: num, team, evaluation: last?.evaluation });
@@ -300,6 +302,7 @@ export function LiveScout() {
           </SheetHeader>
           <ActionPanel
             player={selectedPlayer}
+            suggestedSkill={selectedPlayer ? lastSkillByTeam[selectedPlayer.team] : null}
             onComplete={handleActionComplete}
             onClose={() => { setBottomSheetOpen(false); setSelectedPlayer(null); }}
           />

@@ -10,6 +10,7 @@ import { X } from 'lucide-react';
 
 interface ActionPanelProps {
   player: { number: number; team: 'home' | 'away' } | null;
+  suggestedSkill?: Skill | null;
   /** Chiamato dopo aver registrato l'azione. Restituisce l'id e lo skill scelto. */
   onComplete: (actionId: string, skill: Skill) => void;
   onClose: () => void;
@@ -51,16 +52,16 @@ const EVAL_LABEL: Record<Evaluation, string> = {
   '#': 'Perfetto', '+': 'Positivo', '!': 'OK', '-': 'Negativo', '/': 'Murato', '=': 'Errore',
 };
 
-export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
+export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: ActionPanelProps) {
   const { homeTeam, awayTeam, matchState, addAction, addPoint } = useMatchStore();
   const { settings } = useScoutSettings();
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(suggestedSkill ?? null);
   const [selectedSkillType, setSelectedSkillType] = useState<SkillType>('H');
 
   useEffect(() => {
-    setSelectedSkill(null);
+    setSelectedSkill(suggestedSkill ?? null);
     setSelectedSkillType('H');
-  }, [player?.number, player?.team]);
+  }, [player?.number, player?.team, suggestedSkill]);
 
   if (!player) return null;
 
@@ -168,6 +169,11 @@ export function ActionPanel({ player, onComplete, onClose }: ActionPanelProps) {
             );
           })}
         </div>
+        {suggestedSkill && selectedSkill === suggestedSkill && (
+          <div className="text-[10px] text-muted-foreground mt-1.5 italic">
+            Suggerito dall'azione precedente · tocca un altro per cambiare
+          </div>
+        )}
       </div>
 
       {/* Tipo attacco (solo se A selezionato) */}

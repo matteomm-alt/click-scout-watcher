@@ -31,7 +31,7 @@ const roleLabels: Record<InviteInfo['invited_role'], string> = {
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading, refreshRoles } = useAuth();
+  const { user, loading: authLoading, refreshRoles, signOut } = useAuth();
 
   const inviteToken = new URLSearchParams(location.search).get('invite');
   const [mode, setMode] = useState<Mode>(inviteToken ? 'signup' : 'signin');
@@ -47,6 +47,9 @@ export default function Auth() {
   const acceptingInviteRef = useRef(false);
 
   const from = (location.state as { from?: string })?.from ?? '/';
+
+  const emailMismatch =
+    !!(user && inviteInfo && user.email?.toLowerCase() !== inviteInfo.email.toLowerCase());
 
   const acceptInvite = async (token: string) => {
     if (acceptingInviteRef.current || inviteAccepted) return false;
@@ -119,12 +122,13 @@ export default function Auth() {
       navigate(from, { replace: true });
       return;
     }
+    if (emailMismatch) return;
     if (!inviteLoading && inviteInfo && !inviteError && !acceptingInvite && !acceptingInviteRef.current) {
       acceptInvite(inviteToken).then((ok) => {
         if (ok) navigate(from, { replace: true });
       });
     }
-  }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, navigate, from]);
+  }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, emailMismatch, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,6 +191,27 @@ export default function Auth() {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Verifica invito in corso…
+              </div>
+            ) : emailMismatch && inviteInfo ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 text-destructive">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">Account non corrispondente</p>
+                    <p className="text-xs text-muted-foreground">
+                      Sei loggato come <span className="font-medium text-foreground">{user?.email}</span>,
+                      ma questo invito è riservato a{' '}
+                      <span className="font-medium text-foreground">{inviteInfo.email}</span>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => { await signOut(); }}
+                  className="w-full min-h-[44px] rounded-lg bg-destructive text-destructive-foreground font-bold text-sm hover:brightness-110 active:scale-95 transition-all"
+                >
+                  Esci e accedi con l'account giusto
+                </button>
               </div>
             ) : inviteError ? (
               <div className="flex items-start gap-2 text-destructive">
