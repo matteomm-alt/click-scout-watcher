@@ -48,11 +48,27 @@ export function LiveScout() {
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
 
-  const [rightTab, setRightTab] = useState<RightTab>('log');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [endSetDialog, setEndSetDialog] = useState(false);
-  const [subDialog, setSubDialog] = useState<{ open: boolean; team: 'home' | 'away'; out: number | null }>({ open: false, team: 'home', out: null });
   const [simplified, setSimplified] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+
+  const { user } = useAuth();
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+
+  // Apri dialog fine set quando setOverPending
+  useEffect(() => {
+    if (matchState.setOverPending) setEndSetDialog(true);
+  }, [matchState.setOverPending]);
+
+  // Salvataggio automatico su Supabase ogni 5 azioni (best-effort).
+  useEffect(() => {
+    if (!user || matchState.actions.length === 0) return;
+    if (matchState.actions.length % 5 !== 0) return;
+    upsertScoutSession(
+      sessionIdRef.current, user.id,
+      matchInfo, homeTeam, awayTeam, matchState,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchState.actions.length]);
 
   // Apri dialog fine set quando setOverPending
   useEffect(() => {
