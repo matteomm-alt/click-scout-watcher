@@ -206,7 +206,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       {/* Valutazione */}
       <div>
         <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-          Valutazione {selectedSkill ? `· ${SKILL_FULL[selectedSkill]}` : '(scegli prima il fondamentale)'}
+          {t('scout.ui.selectEvaluation')} {selectedSkill ? `· ${SKILL_FULL[selectedSkill]}` : ''}
         </div>
         <div className="grid grid-cols-6 gap-2">
           {EVALUATIONS.map((e) => (
