@@ -122,12 +122,13 @@ export default function Auth() {
       navigate(from, { replace: true });
       return;
     }
+    if (emailMismatch) return;
     if (!inviteLoading && inviteInfo && !inviteError && !acceptingInvite && !acceptingInviteRef.current) {
       acceptInvite(inviteToken).then((ok) => {
         if (ok) navigate(from, { replace: true });
       });
     }
-  }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, navigate, from]);
+  }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, emailMismatch, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
