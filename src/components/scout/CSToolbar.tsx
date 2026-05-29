@@ -157,9 +157,15 @@ export function CSToolbar({
 
       <div className="hidden sm:block flex-1" />
 
-      <ToolbarBtn onClick={onEndSet} variant="warning" title={t('scout.ui.endSet') as string} noShrink>
+      <LongPressBtn
+        onLongPress={() => (onEndSet ? onEndSet() : undefined)}
+        variant="warning"
+        title="Tieni premuto per terminare il set"
+        noShrink
+        duration={800}
+      >
         <SkipForward className="w-4 h-4" /> {t('scout.ui.endSet')}
-      </ToolbarBtn>
+      </LongPressBtn>
       <ToolbarBtn onClick={onExport} variant="primary" title={t('scout.ui.exportDvw') as string} noShrink>
         <Download className="w-4 h-4" /> DVW
       </ToolbarBtn>
