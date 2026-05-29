@@ -47,6 +47,7 @@ export const en = {
       poor: 'Poor',
       bad: 'Bad',
       error: 'Error',
+    },
     ui: {
       selectPlayer: 'Tap a player on the court',
       selectFundamental: 'Fundamental',
