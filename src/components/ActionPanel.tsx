@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType } from '@/types/volleyball';
 import { useScoutSettings } from '@/lib/scoutSettings';
