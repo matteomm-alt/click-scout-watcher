@@ -51,13 +51,23 @@ export function PresenzeView() {
     if (!societyId) return;
     (async () => {
       const { data } = await supabase.from('events').select('id, title, start_at, event_type')
-        .eq('society_id', societyId).order('start_at', { ascending: false }).limit(30);
+        .eq('society_id', societyId).order('start_at', { ascending: false }).limit(50);
       const list = (data as any) || [];
       setEvents(list);
-      // Preseleziona da query param se presente, altrimenti il più recente
-      const fromParam = trainingParam && list.find((e: Event) => e.id === trainingParam);
-      if (fromParam) setSelectedEventId(trainingParam);
-      else if (list.length > 0) setSelectedEventId(list[0].id);
+      if (trainingParam) {
+        const fromTraining = list.find(
+          (e: Event) => (e as unknown as { source_training_id?: string }).source_training_id === trainingParam
+            || e.id === trainingParam,
+        );
+        if (fromTraining) {
+          setSelectedEventId(fromTraining.id);
+        } else if (list.length > 0) {
+          setSelectedEventId(list[0].id);
+          toast.info("Evento non trovato — mostrato l'allenamento più recente");
+        }
+      } else if (list.length > 0) {
+        setSelectedEventId(list[0].id);
+      }
     })();
   }, [societyId, trainingParam]);
 

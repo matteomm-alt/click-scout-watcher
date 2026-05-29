@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType } from '@/types/volleyball';
 import { useScoutSettings } from '@/lib/scoutSettings';
@@ -53,6 +54,7 @@ const EVAL_LABEL: Record<Evaluation, string> = {
 };
 
 export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: ActionPanelProps) {
+  const { t } = useTranslation();
   const { homeTeam, awayTeam, matchState, addAction, addPoint } = useMatchStore();
   const { settings } = useScoutSettings();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(suggestedSkill ?? null);
@@ -148,7 +150,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
 
       {/* Fondamentale */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Fondamentale</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{t('scout.ui.selectFundamental')}</div>
         <div className="grid grid-cols-6 gap-2">
           {visibleSkills.map((s) => {
             const active = selectedSkill === s.key;
@@ -171,7 +173,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
         </div>
         {suggestedSkill && selectedSkill === suggestedSkill && (
           <div className="text-[10px] text-muted-foreground mt-1.5 italic">
-            Suggerito dall'azione precedente · tocca un altro per cambiare
+            {t('scout.ui.suggestedSkill')}
           </div>
         )}
       </div>
@@ -180,7 +182,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       {selectedSkill === 'A' && (
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-            Tipo attacco
+            {t('scout.ui.attackType')}
           </div>
           <div className="grid grid-cols-5 gap-2">
             {ATTACK_TYPES.map((t) => (
@@ -204,7 +206,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       {/* Valutazione */}
       <div>
         <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-          Valutazione {selectedSkill ? `· ${SKILL_FULL[selectedSkill]}` : '(scegli prima il fondamentale)'}
+          {t('scout.ui.selectEvaluation')} {selectedSkill ? `· ${SKILL_FULL[selectedSkill]}` : ''}
         </div>
         <div className="grid grid-cols-6 gap-2">
           {EVALUATIONS.map((e) => (

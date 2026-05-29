@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { useScoutSettings } from '@/lib/scoutSettings';
 import { generateDVW } from '@/lib/dvwExporter';
+import { upsertScoutSession } from '@/lib/scoutPersistence';
+import { useAuth } from '@/contexts/AuthContext';
 import { SKILL_LABELS } from '@/types/volleyball';
 import type { Skill, ScoutAction } from '@/types/volleyball';
 
@@ -13,16 +15,18 @@ import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
 import { InSetStatsPanel } from '@/components/InSetStatsPanel';
+import { QuickActions } from '@/components/QuickActions';
 import { CSToolbar } from '@/components/scout/CSToolbar';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
+import { CSLiveString } from '@/components/scout/CSLiveString';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-type RightTab = 'log' | 'stats' | 'heat';
+type RightTab = 'log' | 'stats' | 'heat' | 'quick';
 
 const SKILLS_WITH_ZONE: Skill[] = ['A', 'S', 'R', 'D'];
 
@@ -49,11 +53,26 @@ export function LiveScout() {
   const [endSetDialog, setEndSetDialog] = useState(false);
   const [subDialog, setSubDialog] = useState<{ open: boolean; team: 'home' | 'away'; out: number | null }>({ open: false, team: 'home', out: null });
   const [simplified, setSimplified] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+
+  const { user } = useAuth();
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   // Apri dialog fine set quando setOverPending
   useEffect(() => {
     if (matchState.setOverPending) setEndSetDialog(true);
   }, [matchState.setOverPending]);
+
+  // Salvataggio automatico su Supabase ogni 5 azioni (best-effort).
+  useEffect(() => {
+    if (!user || matchState.actions.length === 0) return;
+    if (matchState.actions.length % 5 !== 0) return;
+    upsertScoutSession(
+      sessionIdRef.current, user.id,
+      matchInfo, homeTeam, awayTeam, matchState,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchState.actions.length]);
 
   // Heatmap & live arrows (basati su attacchi home)
   const homeHeatmap = useMemo(() => {
@@ -222,10 +241,10 @@ export function LiveScout() {
 
         {/* Pannello laterale destro: tab analisi */}
         <div className="w-[320px] shrink-0 flex flex-col gap-2 min-h-0">
-          <div className="grid grid-cols-3 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
-            {(['log', 'stats', 'heat'] as const).map((t) => {
+          <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+            {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
               const active = rightTab === t;
-              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap' };
+              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
               return (
                 <button
                   key={t}
@@ -249,6 +268,7 @@ export function LiveScout() {
               </div>
             )}
             {rightTab === 'heat' && <AttackHeatmap team="all" />}
+            {rightTab === 'quick' && <QuickActions />}
           </div>
         </div>
       </div>
@@ -270,6 +290,9 @@ export function LiveScout() {
         <CSRallyHistory />
       </div>
 
+      {/* STRINGA DVW LIVE del rally corrente */}
+      <CSLiveString />
+
       {/* TOOLBAR BOTTOM (fissa) */}
       <div className="shrink-0 border-t border-border bg-background/95 backdrop-blur px-2 py-2">
         <CSToolbar
@@ -288,9 +311,18 @@ export function LiveScout() {
           onSubstitution={() => openSub('home')}
           onTimeoutHome={() => handleTimeout('home')}
           onTimeoutAway={() => handleTimeout('away')}
-          onEndSet={() => setEndSetDialog(true)}
+          onEndSet={() => {
+            if (user) {
+              upsertScoutSession(
+                sessionIdRef.current, user.id,
+                matchInfo, homeTeam, awayTeam, matchState,
+              );
+            }
+            setEndSetDialog(true);
+          }}
           onExport={handleExportDVW}
           onSettings={() => setSettingsOpen(true)}
+          onQuickActions={() => setQuickOpen(true)}
         />
       </div>
 
@@ -308,6 +340,21 @@ export function LiveScout() {
           />
         </SheetContent>
       </Sheet>
+
+      {/* Sheet azioni rapide (mobile-first) */}
+      <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" /> Azioni rapide
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-3">
+            <QuickActions />
+          </div>
+        </SheetContent>
+      </Sheet>
+
 
       {/* Sheet impostazioni */}
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
