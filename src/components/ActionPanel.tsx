@@ -54,6 +54,7 @@ const EVAL_LABEL: Record<Evaluation, string> = {
 };
 
 export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: ActionPanelProps) {
+  const { t } = useTranslation();
   const { homeTeam, awayTeam, matchState, addAction, addPoint } = useMatchStore();
   const { settings } = useScoutSettings();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(suggestedSkill ?? null);
