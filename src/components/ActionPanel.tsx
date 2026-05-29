@@ -169,6 +169,11 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
             );
           })}
         </div>
+        {suggestedSkill && selectedSkill === suggestedSkill && (
+          <div className="text-[10px] text-muted-foreground mt-1.5 italic">
+            Suggerito dall'azione precedente · tocca un altro per cambiare
+          </div>
+        )}
       </div>
 
       {/* Tipo attacco (solo se A selezionato) */}
