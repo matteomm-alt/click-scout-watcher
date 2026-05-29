@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMatchStore } from '@/store/matchStore';
 import { useScoutSettings } from '@/lib/scoutSettings';
 import { generateDVW } from '@/lib/dvwExporter';
+import { upsertScoutSession } from '@/lib/scoutPersistence';
+import { useAuth } from '@/contexts/AuthContext';
 import { SKILL_LABELS } from '@/types/volleyball';
 import type { Skill, ScoutAction } from '@/types/volleyball';
 
@@ -13,16 +15,18 @@ import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
 import { InSetStatsPanel } from '@/components/InSetStatsPanel';
+import { QuickActions } from '@/components/QuickActions';
 import { CSToolbar } from '@/components/scout/CSToolbar';
 import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
+import { CSLiveString } from '@/components/scout/CSLiveString';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-type RightTab = 'log' | 'stats' | 'heat';
+type RightTab = 'log' | 'stats' | 'heat' | 'quick';
 
 const SKILLS_WITH_ZONE: Skill[] = ['A', 'S', 'R', 'D'];
 
