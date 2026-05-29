@@ -570,7 +570,7 @@ export default function Allenamenti() {
                     asChild
                     title="Registra presenze"
                   >
-                    <Link to={`/gestionale/presenze?training=${t.id}`}>
+                    <Link to={`/gestionale/presenze?training=${t.id}&date=${t.scheduled_date ?? ''}`}>
                       <ClipboardCheck className="w-3.5 h-3.5" />
                     </Link>
                   </Button>
