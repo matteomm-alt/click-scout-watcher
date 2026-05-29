@@ -150,7 +150,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
 
       {/* Fondamentale */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Fondamentale</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{t('scout.ui.selectFundamental')}</div>
         <div className="grid grid-cols-6 gap-2">
           {visibleSkills.map((s) => {
             const active = selectedSkill === s.key;
