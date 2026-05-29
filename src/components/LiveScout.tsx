@@ -272,7 +272,6 @@ export function LiveScout() {
           </div>
         </div>
       </div>
-      </div>
 
       {/* MOBILE layout (< md) */}
       <div className="md:hidden flex-1 min-h-0 flex flex-col gap-2 p-2 overflow-hidden">
