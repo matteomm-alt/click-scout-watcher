@@ -192,6 +192,27 @@ export default function Auth() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Verifica invito in corso…
               </div>
+            ) : emailMismatch && inviteInfo ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 text-destructive">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">Account non corrispondente</p>
+                    <p className="text-xs text-muted-foreground">
+                      Sei loggato come <span className="font-medium text-foreground">{user?.email}</span>,
+                      ma questo invito è riservato a{' '}
+                      <span className="font-medium text-foreground">{inviteInfo.email}</span>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => { await signOut(); }}
+                  className="w-full min-h-[44px] rounded-lg bg-destructive text-destructive-foreground font-bold text-sm hover:brightness-110 active:scale-95 transition-all"
+                >
+                  Esci e accedi con l'account giusto
+                </button>
+              </div>
             ) : inviteError ? (
               <div className="flex items-start gap-2 text-destructive">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
