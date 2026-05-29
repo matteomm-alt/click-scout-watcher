@@ -99,7 +99,6 @@ export function LiveScout() {
       setZoneSelectMode(true);
     }
   };
-  };
 
   const handleZoneSelect = (zone: number) => {
     if (pendingActionId) {
