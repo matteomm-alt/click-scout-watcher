@@ -182,7 +182,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       {selectedSkill === 'A' && (
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-            Tipo attacco
+            {t('scout.ui.attackType')}
           </div>
           <div className="grid grid-cols-5 gap-2">
             {ATTACK_TYPES.map((t) => (
