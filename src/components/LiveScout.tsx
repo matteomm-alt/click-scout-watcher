@@ -290,6 +290,9 @@ export function LiveScout() {
         <CSRallyHistory />
       </div>
 
+      {/* STRINGA DVW LIVE del rally corrente */}
+      <CSLiveString />
+
       {/* TOOLBAR BOTTOM (fissa) */}
       <div className="shrink-0 border-t border-border bg-background/95 backdrop-blur px-2 py-2">
         <CSToolbar
@@ -308,9 +311,18 @@ export function LiveScout() {
           onSubstitution={() => openSub('home')}
           onTimeoutHome={() => handleTimeout('home')}
           onTimeoutAway={() => handleTimeout('away')}
-          onEndSet={() => setEndSetDialog(true)}
+          onEndSet={() => {
+            if (user) {
+              upsertScoutSession(
+                sessionIdRef.current, user.id,
+                matchInfo, homeTeam, awayTeam, matchState,
+              );
+            }
+            setEndSetDialog(true);
+          }}
           onExport={handleExportDVW}
           onSettings={() => setSettingsOpen(true)}
+          onQuickActions={() => setQuickOpen(true)}
         />
       </div>
 
