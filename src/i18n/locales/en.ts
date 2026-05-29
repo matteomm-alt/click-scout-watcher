@@ -47,6 +47,20 @@ export const en = {
       poor: 'Poor',
       bad: 'Bad',
       error: 'Error',
+    ui: {
+      selectPlayer: 'Tap a player on the court',
+      selectFundamental: 'Fundamental',
+      selectEvaluation: 'Evaluation',
+      attackType: 'Attack type',
+      suggestedSkill: 'Suggested from previous action · tap another to change',
+      skipZone: 'Skip zone',
+    },
+    attackTypes: {
+      high: 'High ball',
+      quick: 'Quick set',
+      zone3: 'Zone 3',
+      pipe: 'Pipe',
+      lob: 'Lob',
     },
   },
   pdf: {
