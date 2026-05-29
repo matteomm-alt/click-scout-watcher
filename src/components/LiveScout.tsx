@@ -42,6 +42,7 @@ export function LiveScout() {
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
+  const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
