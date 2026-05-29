@@ -10,13 +10,12 @@ import { X } from 'lucide-react';
 
 interface ActionPanelProps {
   player: { number: number; team: 'home' | 'away' } | null;
-interface ActionPanelProps {
-  player: { number: number; team: 'home' | 'away' } | null;
   suggestedSkill?: Skill | null;
   /** Chiamato dopo aver registrato l'azione. Restituisce l'id e lo skill scelto. */
   onComplete: (actionId: string, skill: Skill) => void;
   onClose: () => void;
 }
+
 type SkillDef = { key: Skill; label: string };
 
 const ALL_SKILLS: SkillDef[] = [
