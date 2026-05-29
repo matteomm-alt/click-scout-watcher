@@ -241,10 +241,10 @@ export function LiveScout() {
 
         {/* Pannello laterale destro: tab analisi */}
         <div className="w-[320px] shrink-0 flex flex-col gap-2 min-h-0">
-          <div className="grid grid-cols-3 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
-            {(['log', 'stats', 'heat'] as const).map((t) => {
+          <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+            {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
               const active = rightTab === t;
-              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap' };
+              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
               return (
                 <button
                   key={t}
@@ -268,8 +268,10 @@ export function LiveScout() {
               </div>
             )}
             {rightTab === 'heat' && <AttackHeatmap team="all" />}
+            {rightTab === 'quick' && <QuickActions />}
           </div>
         </div>
+      </div>
       </div>
 
       {/* MOBILE layout (< md) */}
