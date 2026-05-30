@@ -22,7 +22,7 @@ import {
   Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import jsPDF from 'jspdf';
+
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';

@@ -26,7 +26,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
 } from 'recharts';
-import jsPDF from 'jspdf';
+
 import { downloadMatchReport } from '@/lib/pdfReport';
 
 interface MatchRow {

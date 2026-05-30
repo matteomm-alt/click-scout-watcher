@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ListChecks, Plus, Trash2, UserPlus, FileDown, MessageSquare, Send } from 'lucide-react';
-import jsPDF from 'jspdf';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
