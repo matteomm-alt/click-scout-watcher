@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { UserCircle, Plus, Pencil, Trash2, Phone, Mail, HeartPulse } from 'lucide-react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { UserCircle, Plus, Pencil, Trash2, Phone, Mail, HeartPulse, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { isFeatureEnabled } from '@/lib/societyFeatures';
 import { AthleteInjuriesDialog } from '@/components/injuries/AthleteInjuriesDialog';
+import { downloadAthleteCard } from '@/lib/pdfReport';
+import { queryKeys } from '@/lib/queryKeys';
 import { toast } from 'sonner';
 
 interface Athlete {
@@ -43,9 +46,7 @@ export function AtletiView() {
   const { user } = useAuth();
   const { societyId, features } = useActiveSociety();
   const injuriesEnabled = isFeatureEnabled(features, 'injuries');
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [activeInjuries, setActiveInjuries] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Athlete | null>(null);
@@ -54,22 +55,66 @@ export function AtletiView() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'number' | 'last_name' | 'role'>('number');
 
-  const load = async () => {
-    if (!societyId) return;
-    setLoading(true);
-    const [aRes, iRes] = await Promise.all([
-      supabase.from('athletes').select('*').eq('society_id', societyId)
-        .order('number', { ascending: true, nullsFirst: false }),
-      injuriesEnabled
-        ? supabase.from('athlete_injuries').select('athlete_id').eq('society_id', societyId).eq('status', 'attivo')
-        : Promise.resolve({ data: [], error: null }),
-    ]);
-    setAthletes((aRes.data as any) || []);
-    setActiveInjuries(new Set(((iRes.data as any) || []).map((r: { athlete_id: string }) => r.athlete_id)));
-    setLoading(false);
+  // ── Queries ─────────────────────────────────────────────
+  const { data: athletes = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.athletes.all(societyId ?? ''),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('athletes').select('*').eq('society_id', societyId!)
+        .order('number', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return (data as Athlete[]) ?? [];
+    },
+    enabled: !!societyId,
+  });
+
+  const { data: activeInjuries = new Set<string>() } = useQuery({
+    queryKey: queryKeys.athletes.injuries(societyId ?? ''),
+    queryFn: async () => {
+      if (!injuriesEnabled) return new Set<string>();
+      const { data, error } = await supabase
+        .from('athlete_injuries').select('athlete_id')
+        .eq('society_id', societyId!).eq('status', 'attivo');
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.athlete_id));
+    },
+    enabled: !!societyId,
+  });
+
+  // ── Mutations ───────────────────────────────────────────
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.athletes.all(societyId ?? '') });
+    queryClient.invalidateQueries({ queryKey: queryKeys.athletes.injuries(societyId ?? '') });
   };
 
-  useEffect(() => { load(); }, [societyId]);
+  const saveMutation = useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => {
+      if (editing) {
+        const { error } = await supabase.from('athletes').update(payload).eq('id', editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('athletes').insert({ ...payload, society_id: societyId, coach_id: user!.id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing ? 'Atleta aggiornato' : 'Atleta aggiunto');
+      setDialogOpen(false);
+      invalidate();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('athletes').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Atleta rimosso');
+      setDeleteId(null);
+      invalidate();
+    },
+  });
 
   const openCreate = () => {
     setEditing(null);
@@ -95,7 +140,7 @@ export function AtletiView() {
     setDialogOpen(true);
   };
 
-  const save = async () => {
+  const save = () => {
     if (!form.last_name || !societyId || !user) return;
     const payload = {
       last_name: form.last_name,
@@ -110,26 +155,61 @@ export function AtletiView() {
       notes: form.notes || null,
       medical_cert_expiry: form.medical_cert_expiry || null,
     };
-    if (editing) {
-      const { error } = await supabase.from('athletes').update(payload).eq('id', editing.id);
-      if (error) { toast.error('Errore aggiornamento'); return; }
-      toast.success('Atleta aggiornato');
-    } else {
-      const { error } = await supabase.from('athletes').insert({ ...payload, society_id: societyId, coach_id: user.id });
-      if (error) { toast.error('Errore creazione'); return; }
-      toast.success('Atleta aggiunto');
-    }
-    setDialogOpen(false);
-    load();
+    saveMutation.mutate(payload);
   };
 
-  const deleteAthlete = async () => {
+  const deleteAthlete = () => {
     if (!deleteId) return;
-    const { error } = await supabase.from('athletes').delete().eq('id', deleteId);
-    if (error) { toast.error('Errore eliminazione'); return; }
-    toast.success('Atleta rimosso');
-    setDeleteId(null);
-    load();
+    deleteMutation.mutate(deleteId);
+  };
+
+  // ── PDF scheda atleta (P6) ──────────────────────────────
+  const exportAthletePdf = async (a: Athlete) => {
+    try {
+      // Carica presenze e valutazioni in parallelo per arricchire il PDF
+      const [attRes, evalRes, injRes] = await Promise.all([
+        supabase.from('attendances').select('status').eq('athlete_id', a.id),
+        supabase.from('athlete_evaluations').select('fundamental, score, evaluation_date')
+          .eq('athlete_id', a.id).order('evaluation_date', { ascending: false }).limit(10),
+        injuriesEnabled
+          ? supabase.from('athlete_injuries').select('body_part, severity, status, start_date')
+              .eq('athlete_id', a.id).order('start_date', { ascending: false }).limit(10)
+          : Promise.resolve({ data: [] as any[], error: null }),
+      ]);
+      const att = (attRes.data ?? []) as { status: string }[];
+      const presences = att.filter(x => x.status === 'presente').length;
+      const totalEvents = att.length;
+      const attendancePct = totalEvents > 0 ? Math.round((presences / totalEvents) * 100) : null;
+
+      downloadAthleteCard({
+        firstName: a.first_name,
+        lastName: a.last_name,
+        number: a.number,
+        role: a.role,
+        birthDate: a.birth_date,
+        email: a.email,
+        phone: a.phone,
+        team: null,
+        isLibero: a.is_libero,
+        isCaptain: a.is_captain,
+        medicalCertExpiry: a.medical_cert_expiry,
+        notes: a.notes,
+        attendancePct,
+        presences,
+        totalEvents,
+        evaluations: ((evalRes.data ?? []) as any[]).map(e => ({
+          fundamental: e.fundamental, score: e.score, date: e.evaluation_date,
+        })),
+        injuries: ((injRes.data ?? []) as any[]).map(i => ({
+          bodyPart: i.body_part, severity: i.severity, status: i.status, startDate: i.start_date,
+        })),
+        societyName: null,
+      });
+      toast.success('Scheda PDF generata');
+    } catch (e) {
+      console.error(e);
+      toast.error('Errore generazione PDF');
+    }
   };
 
   // Formatta numero per WhatsApp — rimuove spazi e aggiunge +39 se italiano
