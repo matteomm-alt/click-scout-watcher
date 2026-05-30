@@ -88,12 +88,12 @@ export function AtletiView() {
   };
 
   const saveMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
+    mutationFn: async (payload: ReturnType<typeof buildPayload>) => {
       if (editing) {
         const { error } = await supabase.from('athletes').update(payload).eq('id', editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('athletes').insert({ ...payload, society_id: societyId, coach_id: user!.id });
+        const { error } = await supabase.from('athletes').insert({ ...payload, society_id: societyId!, coach_id: user!.id });
         if (error) throw error;
       }
     },
@@ -442,7 +442,7 @@ export function AtletiView() {
           onOpenChange={(o) => {
             if (!o) {
               setInjuriesAthlete(null);
-              load();
+              invalidate();
             }
           }}
           athleteId={injuriesAthlete.id}
