@@ -374,6 +374,10 @@ export function AtletiView() {
                           <HeartPulse className="w-3.5 h-3.5" />
                         </Button>
                       )}
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        title="Esporta scheda PDF" onClick={() => exportAthletePdf(a)}>
+                        <FileText className="w-3.5 h-3.5" />
+                      </Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
