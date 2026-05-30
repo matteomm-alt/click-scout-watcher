@@ -87,8 +87,21 @@ export function AtletiView() {
     queryClient.invalidateQueries({ queryKey: queryKeys.athletes.injuries(societyId ?? '') });
   };
 
+  type AthletePayload = {
+    last_name: string;
+    first_name: string | null;
+    number: number | null;
+    role: string | null;
+    is_libero: boolean;
+    is_captain: boolean;
+    birth_date: string | null;
+    phone: string | null;
+    email: string | null;
+    notes: string | null;
+    medical_cert_expiry: string | null;
+  };
   const saveMutation = useMutation({
-    mutationFn: async (payload: ReturnType<typeof buildPayload>) => {
+    mutationFn: async (payload: AthletePayload) => {
       if (editing) {
         const { error } = await supabase.from('athletes').update(payload).eq('id', editing.id);
         if (error) throw error;
