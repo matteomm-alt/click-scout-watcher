@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ListChecks, Plus, Trash2, UserPlus, FileDown, MessageSquare, Send } from 'lucide-react';
-import jsPDF from 'jspdf';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -132,8 +132,9 @@ export function ConvocazioniView() {
   const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
 
 
-  const generatePdf = () => {
+  const generatePdf = async () => {
     if (!selected) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();
     let y = 14;

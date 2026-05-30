@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Calendar, Trophy, Dumbbell, AlertTriangle, MapPin, TrendingUp, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useAuth } from '@/contexts/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,68 +42,73 @@ export function HomeDashboard() {
   const { societyId, isAdmin } = useActiveSociety();
   const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
-  const [nextEvent, setNextEvent] = useState<NextEvent | null>(null);
-  const [dvw, setDvw] = useState<DvwKpi>({ total: 0, wins: 0, winRate: 0, lastResult: null, lastMatchId: null });
-  const [trainings, setTrainings] = useState<RecentTraining[]>([]);
-  const [alerts, setAlerts] = useState<AttendanceAlert[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!societyId || !user) {
-      setLoading(false);
-      return;
-    }
-    const load = async () => {
-      setLoading(true);
-      const nowIso = new Date().toISOString();
+  const { data: nextEvent = null } = useQuery({
+    queryKey: queryKeys.dashboard.events(societyId ?? ''),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title, start_at, location, event_type')
+        .eq('society_id', societyId!)
+        .gte('start_at', new Date().toISOString())
+        .order('start_at', { ascending: true })
+        .limit(1);
+      if (error) throw error;
+      return ((data?.[0] as NextEvent) ?? null);
+    },
+    enabled: !!societyId,
+    staleTime: 2 * 60 * 1000,
+  });
 
-      const [eventRes, dvwRes, trainingsRes, athletesRes, attRes] = await Promise.all([
-        supabase
-          .from('events')
-          .select('id, title, start_at, location, event_type')
-          .eq('society_id', societyId)
-          .gte('start_at', nowIso)
-          .order('start_at', { ascending: true })
-          .limit(1),
-        supabase
-          .from('scout_matches')
-          .select('id, home_sets_won, away_sets_won, match_date, away_team:away_team_id(name), home_team:home_team_id(name)')
-          .eq('coach_id', user.id)
-          .order('match_date', { ascending: false }),
-        supabase
-          .from('trainings')
-          .select('id, title, scheduled_date')
-          .eq('society_id', societyId)
-          .order('scheduled_date', { ascending: false, nullsFirst: false })
-          .limit(3),
-        supabase
-          .from('athletes')
-          .select('id, last_name, first_name')
-          .eq('society_id', societyId),
-        supabase
-          .from('attendances')
-          .select('athlete_id, status')
-          .eq('society_id', societyId),
-      ]);
-
-      setNextEvent((eventRes.data?.[0] as NextEvent) ?? null);
-
-      const dvwRows = (dvwRes.data ?? []) as any[];
-      const total = dvwRows.length;
-      const wins = dvwRows.filter((m: any) => m.home_sets_won > m.away_sets_won).length;
+  const { data: dvw = { total: 0, wins: 0, winRate: 0, lastResult: null, lastMatchId: null } } = useQuery<DvwKpi>({
+    queryKey: queryKeys.dashboard.matches(user?.id ?? ''),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('scout_matches')
+        .select('id, home_sets_won, away_sets_won, match_date, away_team:away_team_id(name), home_team:home_team_id(name)')
+        .eq('coach_id', user!.id)
+        .order('match_date', { ascending: false });
+      if (error) throw error;
+      const rows = (data ?? []) as any[];
+      const total = rows.length;
+      const wins = rows.filter((m) => m.home_sets_won > m.away_sets_won).length;
       const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
-      const lastRow = dvwRows[0];
+      const lastRow = rows[0];
       const lastResult = lastRow ? {
         won: lastRow.home_sets_won > lastRow.away_sets_won,
         opponent: lastRow.away_team?.name ?? '—',
         date: lastRow.match_date,
       } : null;
-      setDvw({ total, wins, winRate, lastResult, lastMatchId: lastRow?.id ?? null });
+      return { total, wins, winRate, lastResult, lastMatchId: lastRow?.id ?? null };
+    },
+    enabled: !!user?.id,
+  });
 
-      setTrainings((trainingsRes.data as RecentTraining[]) ?? []);
+  const { data: trainings = [] } = useQuery<RecentTraining[]>({
+    queryKey: queryKeys.dashboard.trainings(societyId ?? ''),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('trainings')
+        .select('id, title, scheduled_date')
+        .eq('society_id', societyId!)
+        .order('scheduled_date', { ascending: false, nullsFirst: false })
+        .limit(3);
+      if (error) throw error;
+      return (data as RecentTraining[]) ?? [];
+    },
+    enabled: !!societyId,
+  });
 
-      // Attendance alert calc
-      const athletes = athletesRes.data ?? [];
+  const { data: alerts = [], isLoading: loading } = useQuery<AttendanceAlert[]>({
+    queryKey: queryKeys.dashboard.attendance(societyId ?? ''),
+    queryFn: async () => {
+      const [aRes, attRes] = await Promise.all([
+        supabase.from('athletes').select('id, last_name, first_name').eq('society_id', societyId!),
+        supabase.from('attendances').select('athlete_id, status').eq('society_id', societyId!),
+      ]);
+      if (aRes.error) throw aRes.error;
+      if (attRes.error) throw attRes.error;
+      const athletes = aRes.data ?? [];
       const attendances = attRes.data ?? [];
       const byAthlete = new Map<string, { presente: number; total: number }>();
       attendances.forEach((a) => {
@@ -111,24 +117,21 @@ export function HomeDashboard() {
         if (a.status === 'presente') cur.presente += 1;
         byAthlete.set(a.athlete_id, cur);
       });
-      const alertList: AttendanceAlert[] = athletes
+      return athletes
         .map((ath) => {
           const stats = byAthlete.get(ath.id);
-          if (!stats || stats.total < 3) return null; // serve un minimo storico
+          if (!stats || stats.total < 3) return null;
           const pct = Math.round((stats.presente / stats.total) * 100);
           if (pct >= 70) return null;
           const name = `${ath.last_name}${ath.first_name ? ' ' + ath.first_name : ''}`;
-          return { athleteId: ath.id, name, pct, total: stats.total };
+          return { athleteId: ath.id, name, pct, total: stats.total } as AttendanceAlert;
         })
         .filter((x): x is AttendanceAlert => x !== null)
         .sort((a, b) => a.pct - b.pct)
         .slice(0, 5);
-      setAlerts(alertList);
-
-      setLoading(false);
-    };
-    load();
-  }, [societyId, user]);
+    },
+    enabled: !!societyId,
+  });
 
   if (!societyId) return null;
 

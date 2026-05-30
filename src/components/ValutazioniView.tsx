@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import jsPDF from 'jspdf';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -148,9 +148,10 @@ export function ValutazioniView() {
   const phasesWithData = PHASES.filter(p => radarData.some(d => d[p.id] != null));
 
   // ── PDF Scheda atleta ───────────────────────────────────────────────
-  const generatePdf = () => {
+  const generatePdf = async () => {
     const ath = athletes.find(a => a.id === selectedAthleteId);
     if (!ath) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();
     let y = 14;
