@@ -132,8 +132,9 @@ export function ConvocazioniView() {
   const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
 
 
-  const generatePdf = () => {
+  const generatePdf = async () => {
     if (!selected) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();
     let y = 14;

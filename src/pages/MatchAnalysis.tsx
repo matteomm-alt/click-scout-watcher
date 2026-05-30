@@ -358,8 +358,9 @@ export default function MatchAnalysis() {
     XLSX.writeFile(wb, `${match.home_team?.name}_${match.away_team?.name}_${match.match_date}.xlsx`);
   };
 
-  const exportScoresheetPdf = () => {
+  const exportScoresheetPdf = async () => {
     if (!match) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF('l', 'mm', 'a4');
     const date = match.match_date || new Date().toISOString().slice(0, 10);
     const safe = (v: string) => v.replace(/[^A-Za-z0-9]+/g, '').slice(0, 8).toUpperCase() || 'TEAM';
@@ -823,7 +824,7 @@ function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkil
 function PlayersTab({ actions, playerNames, match, teamName }: { actions: DbAction[]; playerNames: Map<number, string>; match: MatchRow; teamName: string }) {
   const players = statsByPlayer(actions);
 
-  const exportPlayerPdf = (num: number) => {
+  const exportPlayerPdf = async (num: number) => {
     const playerActions = actions.filter(a => a.player_number === num);
     const stat = (skill: string) => {
       const list = playerActions.filter(a => a.skill === skill);
@@ -842,6 +843,7 @@ function PlayersTab({ actions, playerNames, match, teamName }: { actions: DbActi
     ];
     const stats = skills.map(s => ({ ...s, ...stat(s.key) }));
 
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF('p', 'mm', 'a4');
     const playerName = playerNames.get(num) || `#${num}`;
     const date = match.match_date || new Date().toISOString().slice(0, 10);

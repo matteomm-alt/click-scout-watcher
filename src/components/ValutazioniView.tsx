@@ -148,9 +148,10 @@ export function ValutazioniView() {
   const phasesWithData = PHASES.filter(p => radarData.some(d => d[p.id] != null));
 
   // ── PDF Scheda atleta ───────────────────────────────────────────────
-  const generatePdf = () => {
+  const generatePdf = async () => {
     const ath = athletes.find(a => a.id === selectedAthleteId);
     if (!ath) return;
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();
     let y = 14;

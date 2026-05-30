@@ -341,6 +341,7 @@ export default function Allenamenti() {
       .order('order_index');
     const blocks = (blData ?? []) as { title: string; description: string | null; duration_min: number | null; order_index: number }[];
 
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF('l', 'mm', 'a4');
     const W = 297; const M = 15;
     let y = M;
