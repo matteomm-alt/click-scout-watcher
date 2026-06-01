@@ -282,78 +282,85 @@ export default function Allenamenti() {
     }
   };
 
-  // ── Salvataggio ──────────────────────────────────────────────────────────
-  const submit = async () => {
-    if (!user || !societyId) return;
-    if (!form.title.trim()) {
-      toast({ title: 'Titolo obbligatorio', variant: 'destructive' });
-      return;
-    }
-    setSubmitting(true);
+  // ── Mutations ────────────────────────────────────────────────────────────
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !societyId) throw new Error('Sessione non valida');
+      if (!form.title.trim()) throw new Error('Titolo obbligatorio');
 
-    const payload = {
-      society_id: societyId,
-      created_by: user.id,
-      title: form.title.trim(),
-      scheduled_date: form.scheduled_date || null,
-      duration_min: form.duration_min,
-      status: form.status,
-      goal: form.goal.trim() || null,
-      notes: form.notes.trim() || null,
-      team_id: form.team_id,
-      is_template: form.is_template,
-      template_name: form.is_template ? (form.template_name.trim() || form.title.trim()) : null,
-      players_count: form.players_count,
-      roles: form.roles,
-      participating_athlete_ids: form.participating_athlete_ids,
-    };
+      const payload = {
+        society_id: societyId,
+        created_by: user.id,
+        title: form.title.trim(),
+        scheduled_date: form.scheduled_date || null,
+        duration_min: form.duration_min,
+        status: form.status,
+        goal: form.goal.trim() || null,
+        notes: form.notes.trim() || null,
+        team_id: form.team_id,
+        is_template: form.is_template,
+        template_name: form.is_template ? (form.template_name.trim() || form.title.trim()) : null,
+        players_count: form.players_count,
+        roles: form.roles,
+        participating_athlete_ids: form.participating_athlete_ids,
+      };
 
-    let trainingId = form.id;
-    if (trainingId) {
-      const { error } = await supabase.from('trainings').update(payload).eq('id', trainingId);
-      if (error) { toast({ title: 'Errore salvataggio', description: error.message, variant: 'destructive' }); setSubmitting(false); return; }
-      // Strategia semplice: cancella e re-inserisci blocchi (più sicuro per riordino)
-      await supabase.from('training_blocks').delete().eq('training_id', trainingId);
-    } else {
-      const { data, error } = await supabase.from('trainings').insert(payload).select('id').single();
-      if (error || !data) { toast({ title: 'Errore creazione', description: error?.message, variant: 'destructive' }); setSubmitting(false); return; }
-      trainingId = data.id;
-    }
-
-    if (form.blocks.length > 0) {
-      const blockPayload = form.blocks.map((b, i) => ({
-        training_id: trainingId,
-        title: b.title || `Blocco ${i + 1}`,
-        description: b.description || null,
-        exercise_id: b.exercise_id,
-        duration_min: b.duration_min,
-        reps: b.reps,
-        intensity: b.intensity,
-        order_index: i,
-        players_count: b.players_count,
-        roles: b.roles,
-      }));
-      const { error: blErr } = await supabase.from('training_blocks').insert(blockPayload);
-      if (blErr) {
-        toast({ title: 'Errore salvataggio blocchi', description: blErr.message, variant: 'destructive' });
-        setSubmitting(false);
-        return;
+      let trainingId = form.id;
+      if (trainingId) {
+        const { error } = await supabase.from('trainings').update(payload).eq('id', trainingId);
+        if (error) throw error;
+        await supabase.from('training_blocks').delete().eq('training_id', trainingId);
+      } else {
+        const { data, error } = await supabase.from('trainings').insert(payload).select('id').single();
+        if (error || !data) throw error ?? new Error('Errore creazione');
+        trainingId = data.id;
       }
-    }
 
-    toast({ title: form.id ? 'Allenamento aggiornato' : 'Allenamento creato' });
-    setDlgOpen(false);
-    setSubmitting(false);
-    load();
-  };
+      if (form.blocks.length > 0) {
+        const blockPayload = form.blocks.map((b, i) => ({
+          training_id: trainingId,
+          title: b.title || `Blocco ${i + 1}`,
+          description: b.description || null,
+          exercise_id: b.exercise_id,
+          duration_min: b.duration_min,
+          reps: b.reps,
+          intensity: b.intensity,
+          order_index: i,
+          players_count: b.players_count,
+          roles: b.roles,
+        }));
+        const { error: blErr } = await supabase.from('training_blocks').insert(blockPayload);
+        if (blErr) throw blErr;
+      }
+      return form.id;
+    },
+    onSuccess: (existingId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
+      toast({ title: existingId ? 'Allenamento aggiornato' : 'Allenamento creato' });
+      setDlgOpen(false);
+      setForm(emptyForm());
+    },
+    onError: (error) => handleSupabaseError(error, 'salvataggio allenamento'),
+  });
 
-  const confirmDelete = async () => {
-    if (!deleteId) return;
-    const { error } = await supabase.from('trainings').delete().eq('id', deleteId);
-    setDeleteId(null);
-    if (error) toast({ title: 'Errore', description: error.message, variant: 'destructive' });
-    else { toast({ title: 'Eliminato' }); load(); }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('training_blocks').delete().eq('training_id', id);
+      const { error } = await supabase.from('trainings').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
+      toast({ title: 'Eliminato' });
+      setDeleteId(null);
+    },
+    onError: (error) => handleSupabaseError(error, 'eliminazione allenamento'),
+  });
+
+  const confirmDelete = () => { if (deleteId) deleteMutation.mutate(deleteId); };
+  const submit = () => saveMutation.mutate();
+  const submitting = saveMutation.isPending;
+
 
   const handlePDF = async (t: TrainingRow) => {
     const { data: blData } = await supabase
