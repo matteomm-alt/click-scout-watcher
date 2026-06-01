@@ -57,6 +57,7 @@ const Esercizi = lazy(() => import("./pages/coaching/Esercizi.tsx"));
 const Periodizzazione = lazy(() => import("./pages/coaching/Periodizzazione.tsx"));
 const Pianificazione = lazy(() => import("./pages/coaching/Pianificazione.tsx"));
 const AdminSocieties = lazy(() => import("./pages/admin/Societies.tsx"));
+const AtletaDetail = lazy(() => import("./pages/atleta/AtletaDetail.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,6 +138,7 @@ const App = () => (
 
                 {/* Atleta */}
                 <Route path="/atleti" element={<Atleti />} />
+                <Route path="/atleti/:id" element={<AtletaDetail />} />
                 <Route path="/valutazioni" element={<Valutazioni />} />
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/infortuni" element={<Infortuni />} />

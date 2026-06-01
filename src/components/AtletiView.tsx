@@ -324,7 +324,13 @@ export function AtletiView() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold">{a.last_name}{a.first_name ? ` ${a.first_name}` : ''}</span>
+                        <Link
+                          to={`/atleti/${a.id}`}
+                          className="font-bold hover:text-primary hover:underline transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {a.last_name}{a.first_name ? ` ${a.first_name}` : ''}
+                        </Link>
                         {a.is_captain && <Badge variant="default" className="text-[10px] px-1.5 py-0">C</Badge>}
                         {a.is_libero && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">L</Badge>}
                         {injuriesEnabled && activeInjuries.has(a.id) && (
