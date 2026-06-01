@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
+import { handleSupabaseError } from '@/lib/supabaseQuery';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -95,12 +98,7 @@ export default function Allenamenti() {
   const { user } = useAuth();
   const { societyId, societyName, loading: socLoading } = useActiveSociety();
   const { toast } = useToast();
-
-  const [trainings, setTrainings] = useState<TrainingRow[]>([]);
-  const [exercises, setExercises] = useState<ExerciseLite[]>([]);
-  const [teams, setTeams] = useState<TeamLite[]>([]);
-  const [athletes, setAthletes] = useState<AthleteLite[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Filtri
   const [tab, setTab] = useState<'sessions' | 'templates'>('sessions');
@@ -111,58 +109,82 @@ export default function Allenamenti() {
   // Dialog form
   const [dlgOpen, setDlgOpen] = useState(false);
   const [form, setForm] = useState<TrainingFormValue>(emptyForm());
-  const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const load = async () => {
-    if (!societyId) {
-      setTrainings([]); setExercises([]); setTeams([]); setAthletes([]); setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const [trRes, exRes, teamRes, athRes] = await Promise.all([
-      supabase.from('trainings').select('*').eq('society_id', societyId).order('scheduled_date', { ascending: false, nullsFirst: false }).limit(500),
-      supabase.from('exercises').select('id, name, fundamental, tags, duration_min').eq('society_id', societyId).order('name'),
-      supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
-      supabase.from('athletes').select('id, team_id, first_name, last_name, number').eq('society_id', societyId).order('last_name'),
-    ]);
-    if (trRes.error) toast({ title: 'Errore allenamenti', description: trRes.error.message, variant: 'destructive' });
-    if (exRes.error) toast({ title: 'Errore esercizi', description: exRes.error.message, variant: 'destructive' });
-    if (teamRes.error) toast({ title: 'Errore squadre', description: teamRes.error.message, variant: 'destructive' });
-    if (athRes.error) toast({ title: 'Errore atleti', description: athRes.error.message, variant: 'destructive' });
-
-    const trList = (trRes.data || []) as TrainingRow[];
-    // carica conteggio blocchi
-    if (trList.length > 0) {
-      const ids = trList.map((t) => t.id);
-      const blRes = await supabase
-        .from('training_blocks')
-        .select('training_id, duration_min')
-        .in('training_id', ids);
-      if (!blRes.error) {
-        const byTraining = new Map<string, { count: number; minutes: number }>();
-        for (const b of blRes.data || []) {
-          const cur = byTraining.get(b.training_id) || { count: 0, minutes: 0 };
-          cur.count += 1;
-          cur.minutes += b.duration_min || 0;
-          byTraining.set(b.training_id, cur);
-        }
-        for (const t of trList) {
-          const agg = byTraining.get(t.id);
-          t.blockCount = agg?.count || 0;
-          t.blockMinutes = agg?.minutes || 0;
+  // ── Queries ─────────────────────────────────────────────────────────────
+  const { data: trainings = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.trainings.all(societyId ?? ''),
+    queryFn: async () => {
+      const trRes = await supabase
+        .from('trainings').select('*')
+        .eq('society_id', societyId!)
+        .order('scheduled_date', { ascending: false, nullsFirst: false })
+        .limit(500);
+      if (trRes.error) { handleSupabaseError(trRes.error, 'caricamento allenamenti'); return []; }
+      const trList = (trRes.data ?? []) as TrainingRow[];
+      if (trList.length > 0) {
+        const ids = trList.map(t => t.id);
+        const blRes = await supabase
+          .from('training_blocks')
+          .select('training_id, duration_min')
+          .in('training_id', ids);
+        if (!blRes.error) {
+          const byTraining = new Map<string, { count: number; minutes: number }>();
+          for (const b of blRes.data || []) {
+            const cur = byTraining.get(b.training_id) || { count: 0, minutes: 0 };
+            cur.count += 1;
+            cur.minutes += b.duration_min || 0;
+            byTraining.set(b.training_id, cur);
+          }
+          for (const t of trList) {
+            const agg = byTraining.get(t.id);
+            t.blockCount = agg?.count || 0;
+            t.blockMinutes = agg?.minutes || 0;
+          }
         }
       }
-    }
+      return trList;
+    },
+    enabled: !!societyId,
+  });
 
-    setTrainings(trList);
-    setExercises((exRes.data || []) as ExerciseLite[]);
-    setTeams((teamRes.data || []) as TeamLite[]);
-    setAthletes((athRes.data || []) as AthleteLite[]);
-    setLoading(false);
-  };
+  const { data: exercises = [] } = useQuery({
+    queryKey: queryKeys.exercises.all(societyId ?? ''),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('exercises')
+        .select('id, name, fundamental, tags, duration_min')
+        .eq('society_id', societyId!).order('name');
+      if (error) { handleSupabaseError(error, 'caricamento esercizi'); return []; }
+      return (data ?? []) as ExerciseLite[];
+    },
+    enabled: !!societyId,
+  });
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [societyId]);
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams', societyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teams').select('id, name')
+        .eq('society_id', societyId!).order('name');
+      if (error) { handleSupabaseError(error, 'caricamento squadre'); return []; }
+      return (data ?? []) as TeamLite[];
+    },
+    enabled: !!societyId,
+  });
+
+  const { data: athletes = [] } = useQuery({
+    queryKey: queryKeys.athletes.all(societyId ?? ''),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('athletes')
+        .select('id, team_id, first_name, last_name, number')
+        .eq('society_id', societyId!).order('last_name');
+      if (error) { handleSupabaseError(error, 'caricamento atleti'); return []; }
+      return (data ?? []) as AthleteLite[];
+    },
+    enabled: !!societyId,
+  });
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t.name])), [teams]);
 
@@ -260,78 +282,85 @@ export default function Allenamenti() {
     }
   };
 
-  // ── Salvataggio ──────────────────────────────────────────────────────────
-  const submit = async () => {
-    if (!user || !societyId) return;
-    if (!form.title.trim()) {
-      toast({ title: 'Titolo obbligatorio', variant: 'destructive' });
-      return;
-    }
-    setSubmitting(true);
+  // ── Mutations ────────────────────────────────────────────────────────────
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !societyId) throw new Error('Sessione non valida');
+      if (!form.title.trim()) throw new Error('Titolo obbligatorio');
 
-    const payload = {
-      society_id: societyId,
-      created_by: user.id,
-      title: form.title.trim(),
-      scheduled_date: form.scheduled_date || null,
-      duration_min: form.duration_min,
-      status: form.status,
-      goal: form.goal.trim() || null,
-      notes: form.notes.trim() || null,
-      team_id: form.team_id,
-      is_template: form.is_template,
-      template_name: form.is_template ? (form.template_name.trim() || form.title.trim()) : null,
-      players_count: form.players_count,
-      roles: form.roles,
-      participating_athlete_ids: form.participating_athlete_ids,
-    };
+      const payload = {
+        society_id: societyId,
+        created_by: user.id,
+        title: form.title.trim(),
+        scheduled_date: form.scheduled_date || null,
+        duration_min: form.duration_min,
+        status: form.status,
+        goal: form.goal.trim() || null,
+        notes: form.notes.trim() || null,
+        team_id: form.team_id,
+        is_template: form.is_template,
+        template_name: form.is_template ? (form.template_name.trim() || form.title.trim()) : null,
+        players_count: form.players_count,
+        roles: form.roles,
+        participating_athlete_ids: form.participating_athlete_ids,
+      };
 
-    let trainingId = form.id;
-    if (trainingId) {
-      const { error } = await supabase.from('trainings').update(payload).eq('id', trainingId);
-      if (error) { toast({ title: 'Errore salvataggio', description: error.message, variant: 'destructive' }); setSubmitting(false); return; }
-      // Strategia semplice: cancella e re-inserisci blocchi (più sicuro per riordino)
-      await supabase.from('training_blocks').delete().eq('training_id', trainingId);
-    } else {
-      const { data, error } = await supabase.from('trainings').insert(payload).select('id').single();
-      if (error || !data) { toast({ title: 'Errore creazione', description: error?.message, variant: 'destructive' }); setSubmitting(false); return; }
-      trainingId = data.id;
-    }
-
-    if (form.blocks.length > 0) {
-      const blockPayload = form.blocks.map((b, i) => ({
-        training_id: trainingId,
-        title: b.title || `Blocco ${i + 1}`,
-        description: b.description || null,
-        exercise_id: b.exercise_id,
-        duration_min: b.duration_min,
-        reps: b.reps,
-        intensity: b.intensity,
-        order_index: i,
-        players_count: b.players_count,
-        roles: b.roles,
-      }));
-      const { error: blErr } = await supabase.from('training_blocks').insert(blockPayload);
-      if (blErr) {
-        toast({ title: 'Errore salvataggio blocchi', description: blErr.message, variant: 'destructive' });
-        setSubmitting(false);
-        return;
+      let trainingId = form.id;
+      if (trainingId) {
+        const { error } = await supabase.from('trainings').update(payload).eq('id', trainingId);
+        if (error) throw error;
+        await supabase.from('training_blocks').delete().eq('training_id', trainingId);
+      } else {
+        const { data, error } = await supabase.from('trainings').insert(payload).select('id').single();
+        if (error || !data) throw error ?? new Error('Errore creazione');
+        trainingId = data.id;
       }
-    }
 
-    toast({ title: form.id ? 'Allenamento aggiornato' : 'Allenamento creato' });
-    setDlgOpen(false);
-    setSubmitting(false);
-    load();
-  };
+      if (form.blocks.length > 0) {
+        const blockPayload = form.blocks.map((b, i) => ({
+          training_id: trainingId,
+          title: b.title || `Blocco ${i + 1}`,
+          description: b.description || null,
+          exercise_id: b.exercise_id,
+          duration_min: b.duration_min,
+          reps: b.reps,
+          intensity: b.intensity,
+          order_index: i,
+          players_count: b.players_count,
+          roles: b.roles,
+        }));
+        const { error: blErr } = await supabase.from('training_blocks').insert(blockPayload);
+        if (blErr) throw blErr;
+      }
+      return form.id;
+    },
+    onSuccess: (existingId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
+      toast({ title: existingId ? 'Allenamento aggiornato' : 'Allenamento creato' });
+      setDlgOpen(false);
+      setForm(emptyForm());
+    },
+    onError: (error) => handleSupabaseError(error, 'salvataggio allenamento'),
+  });
 
-  const confirmDelete = async () => {
-    if (!deleteId) return;
-    const { error } = await supabase.from('trainings').delete().eq('id', deleteId);
-    setDeleteId(null);
-    if (error) toast({ title: 'Errore', description: error.message, variant: 'destructive' });
-    else { toast({ title: 'Eliminato' }); load(); }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('training_blocks').delete().eq('training_id', id);
+      const { error } = await supabase.from('trainings').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
+      toast({ title: 'Eliminato' });
+      setDeleteId(null);
+    },
+    onError: (error) => handleSupabaseError(error, 'eliminazione allenamento'),
+  });
+
+  const confirmDelete = () => { if (deleteId) deleteMutation.mutate(deleteId); };
+  const submit = () => saveMutation.mutate();
+  const submitting = saveMutation.isPending;
+
 
   const handlePDF = async (t: TrainingRow) => {
     const { data: blData } = await supabase
