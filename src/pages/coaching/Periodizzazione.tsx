@@ -201,9 +201,18 @@ export default function Periodizzazione() {
                   <div key={phase.id} className="grid items-center gap-0"
                     style={{ gridTemplateColumns: `repeat(${grid.totalWeeks}, minmax(28px, 1fr))` }}>
                     <div
-                      className={`${PHASE_COLOR[phase.name] ?? 'bg-muted'} ${LOAD_HEIGHT[phase.load_level ?? 'medio'] ?? 'h-10'} rounded flex items-center px-2 text-[10px] font-bold uppercase text-background shadow-md`}
+                      className={`${PHASE_COLOR[phase.name] ?? 'bg-muted'} ${LOAD_HEIGHT[phase.load_level ?? 'medio'] ?? 'h-10'} rounded flex items-center px-2 text-[10px] font-bold uppercase text-background shadow-md cursor-pointer transition-transform hover:scale-[1.02]`}
                       style={{ gridColumn: `${startWeek + 1} / span ${widthWeeks}` }}
-                      title={`${phase.name} · ${phase.start_date} → ${phase.end_date}${phase.load_level ? ' · carico ' + phase.load_level : ''}`}
+                      onMouseEnter={(e) => setHoveredPhase({
+                        name: phase.name,
+                        startDate: phase.start_date ?? '',
+                        endDate: phase.end_date ?? '',
+                        loadLevel: phase.load_level,
+                        weeks: widthWeeks,
+                        x: e.currentTarget.getBoundingClientRect().left,
+                        y: e.currentTarget.getBoundingClientRect().bottom + 8,
+                      })}
+                      onMouseLeave={() => setHoveredPhase(null)}
                     >
                       <span className="truncate">{widthWeeks > 2 ? phase.name : phase.name.slice(0, 3)}</span>
                     </div>
