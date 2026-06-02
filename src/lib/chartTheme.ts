@@ -20,3 +20,15 @@ export const CHART_COLORS = {
   dig: '#1D9E75',
   set: '#BA7517',
 };
+
+// Palette ordinata per fondamentale — usata nei grafici multi-skill
+// Ordine: Ricezione, Attacco, Battuta, Muro, Difesa, Alzata
+export const SKILL_COLORS: Record<string, string | string[]> = {
+  'Ricezione': '#3B8BD4',
+  'Attacco':   '#E24B4A',
+  'Battuta':   '#F97316',
+  'Muro':      '#7F77DD',
+  'Difesa':    '#1D9E75',
+  'Alzata':    '#BA7517',
+  default: ['#F97316','#3B8BD4','#E24B4A','#1D9E75','#7F77DD','#BA7517','#0891B2'],
+};

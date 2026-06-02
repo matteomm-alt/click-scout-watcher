@@ -68,6 +68,15 @@ export default function Periodizzazione() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredPhase, setHoveredPhase] = useState<{
+    name: string;
+    startDate: string;
+    endDate: string;
+    loadLevel: string | null;
+    weeks: number;
+    x: number;
+    y: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!societyId) return;
@@ -192,9 +201,18 @@ export default function Periodizzazione() {
                   <div key={phase.id} className="grid items-center gap-0"
                     style={{ gridTemplateColumns: `repeat(${grid.totalWeeks}, minmax(28px, 1fr))` }}>
                     <div
-                      className={`${PHASE_COLOR[phase.name] ?? 'bg-muted'} ${LOAD_HEIGHT[phase.load_level ?? 'medio'] ?? 'h-10'} rounded flex items-center px-2 text-[10px] font-bold uppercase text-background shadow-md`}
+                      className={`${PHASE_COLOR[phase.name] ?? 'bg-muted'} ${LOAD_HEIGHT[phase.load_level ?? 'medio'] ?? 'h-10'} rounded flex items-center px-2 text-[10px] font-bold uppercase text-background shadow-md cursor-pointer transition-transform hover:scale-[1.02]`}
                       style={{ gridColumn: `${startWeek + 1} / span ${widthWeeks}` }}
-                      title={`${phase.name} · ${phase.start_date} → ${phase.end_date}${phase.load_level ? ' · carico ' + phase.load_level : ''}`}
+                      onMouseEnter={(e) => setHoveredPhase({
+                        name: phase.name,
+                        startDate: phase.start_date ?? '',
+                        endDate: phase.end_date ?? '',
+                        loadLevel: phase.load_level,
+                        weeks: widthWeeks,
+                        x: e.currentTarget.getBoundingClientRect().left,
+                        y: e.currentTarget.getBoundingClientRect().bottom + 8,
+                      })}
+                      onMouseLeave={() => setHoveredPhase(null)}
                     >
                       <span className="truncate">{widthWeeks > 2 ? phase.name : phase.name.slice(0, 3)}</span>
                     </div>
@@ -236,6 +254,31 @@ export default function Periodizzazione() {
             </div>
           )}
         </>
+      )}
+
+      {hoveredPhase && (
+        <div
+          className="fixed z-50 pointer-events-none rounded-lg border border-border bg-popover text-popover-foreground shadow-xl px-4 py-3 text-xs space-y-1"
+          style={{ left: hoveredPhase.x, top: hoveredPhase.y, minWidth: 220 }}
+        >
+          <p className="font-bold uppercase italic text-sm">{hoveredPhase.name}</p>
+          <p className="text-muted-foreground">
+            {hoveredPhase.startDate
+              ? new Date(hoveredPhase.startDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+              : '—'}
+            {' → '}
+            {hoveredPhase.endDate
+              ? new Date(hoveredPhase.endDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+              : '—'}
+          </p>
+          <p className="text-muted-foreground">{hoveredPhase.weeks} settimane</p>
+          {hoveredPhase.loadLevel && (
+            <p>
+              Carico:{' '}
+              <span className="font-bold text-primary uppercase">{hoveredPhase.loadLevel}</span>
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

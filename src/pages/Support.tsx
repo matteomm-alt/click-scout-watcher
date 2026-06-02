@@ -1,42 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail, MessageCircle, FileUp, Activity, Users, BarChart3 } from 'lucide-react';
-
-interface GuideProps {
-  icon: React.ComponentType<{ className?: string }>;
-  emoji: string;
-  title: string;
-  steps: string[];
-  note?: string;
-}
-
-function Guide({ icon: Icon, emoji, title, steps, note }: GuideProps) {
-  return (
-    <details className="group rounded-xl border border-border bg-card overflow-hidden">
-      <summary className="cursor-pointer list-none flex items-center gap-3 px-5 py-4 hover:bg-muted/40 transition-colors">
-        <Icon className="w-5 h-5 text-primary shrink-0" />
-        <span className="font-bold text-base flex-1">
-          <span className="mr-1">{emoji}</span> {title}
-        </span>
-        <span className="text-xs font-bold text-muted-foreground group-open:rotate-180 transition-transform">
-          ▼
-        </span>
-      </summary>
-      <div className="px-5 py-4 border-t border-border space-y-2 text-sm">
-        <ol className="space-y-1.5 list-decimal pl-5">
-          {steps.map((s, i) => (
-            <li key={i}>{s}</li>
-          ))}
-        </ol>
-        {note && (
-          <p className="text-xs text-muted-foreground italic mt-3 border-l-2 border-primary pl-3">
-            💡 {note}
-          </p>
-        )}
-      </div>
-    </details>
-  );
-}
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from '@/components/ui/accordion';
 
 export default function Support() {
   return (
@@ -51,61 +18,101 @@ export default function Support() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold uppercase italic tracking-wide">Guide rapide</h2>
 
-        <Guide
-          icon={FileUp}
-          emoji="📁"
-          title="Come importare un DVW"
-          steps={[
-            'Vai su Importa DVW dalla sidebar.',
-            'Trascina il file .dvw nella zona upload.',
-            'Attendi il parsing automatico.',
-            'Clicca su "Analizza" per vedere le statistiche.',
-          ]}
-          note="I file .dvw vengono da DataVolley, VolleyStudio, Click&Scout o dal tuo Scout Live."
-        />
+        <Accordion type="single" collapsible className="space-y-3">
+          <AccordionItem
+            value="dvw"
+            className="rounded-xl border border-border bg-card overflow-hidden px-5"
+          >
+            <AccordionTrigger className="hover:no-underline">
+              <span className="flex items-center gap-3 font-bold text-base">
+                <FileUp className="w-5 h-5 text-primary shrink-0" />
+                <span>📁 Come importare un DVW</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm">
+              <ol className="space-y-1.5 list-decimal pl-5">
+                <li>Vai su Importa DVW dalla sidebar.</li>
+                <li>Trascina il file .dvw nella zona upload.</li>
+                <li>Attendi il parsing automatico.</li>
+                <li>Clicca su "Analizza" per vedere le statistiche.</li>
+              </ol>
+              <p className="text-xs text-muted-foreground italic mt-3 border-l-2 border-primary pl-3">
+                💡 I file .dvw vengono da DataVolley, VolleyStudio, Click&amp;Scout o dal tuo Scout Live.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Guide
-          icon={Activity}
-          emoji="🔴"
-          title="Come usare Scout Live"
-          steps={[
-            'Vai su Scout Live dalla sidebar.',
-            'Configura le due squadre (casa e ospite).',
-            'Inserisci la formazione iniziale di entrambe.',
-            'Per ogni azione: scegli squadra → giocatore → fondamentale → valutazione → zona.',
-            'Alla fine esporta il file DVW.',
-          ]}
-          note="Usa le Impostazioni Scout ⚙️ per semplificare il flusso (es. disabilita combo attacco per chi inizia)."
-        />
+          <AccordionItem
+            value="live"
+            className="rounded-xl border border-border bg-card overflow-hidden px-5"
+          >
+            <AccordionTrigger className="hover:no-underline">
+              <span className="flex items-center gap-3 font-bold text-base">
+                <Activity className="w-5 h-5 text-primary shrink-0" />
+                <span>🔴 Come usare Scout Live</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm">
+              <ol className="space-y-1.5 list-decimal pl-5">
+                <li>Vai su Scout Live dalla sidebar.</li>
+                <li>Configura le due squadre (casa e ospite).</li>
+                <li>Inserisci la formazione iniziale di entrambe.</li>
+                <li>Per ogni azione: tocca la giocatrice sul campo → scegli fondamentale → valutazione.</li>
+                <li>Alla fine esporta il file DVW.</li>
+              </ol>
+              <p className="text-xs text-muted-foreground italic mt-3 border-l-2 border-primary pl-3">
+                💡 Usa le Impostazioni Scout ⚙️ per semplificare il flusso.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Guide
-          icon={Users}
-          emoji="👥"
-          title="Come invitare un coach"
-          steps={[
-            'Vai su Admin (visibile solo per super admin).',
-            'Trova la tua società nella lista.',
-            'Clicca su "Coach" e poi "Invita coach".',
-            'Inserisci l\'email del coach.',
-            'Manda il link ricevuto al coach.',
-          ]}
-          note="Il link di invito scade dopo 7 giorni."
-        />
+          <AccordionItem
+            value="coach"
+            className="rounded-xl border border-border bg-card overflow-hidden px-5"
+          >
+            <AccordionTrigger className="hover:no-underline">
+              <span className="flex items-center gap-3 font-bold text-base">
+                <Users className="w-5 h-5 text-primary shrink-0" />
+                <span>👥 Come invitare un coach</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm">
+              <ol className="space-y-1.5 list-decimal pl-5">
+                <li>Vai su Admin (visibile solo per super admin).</li>
+                <li>Trova la tua società nella lista.</li>
+                <li>Clicca su "Coach" e poi "Invita coach".</li>
+                <li>Inserisci l'email del coach.</li>
+                <li>Manda il link ricevuto al coach.</li>
+              </ol>
+              <p className="text-xs text-muted-foreground italic mt-3 border-l-2 border-primary pl-3">
+                💡 Il link di invito scade dopo 7 giorni.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Guide
-          icon={BarChart3}
-          emoji="📊"
-          title="Come leggere l'analisi DVW"
-          steps={[
-            'Panoramica — statistiche base (skill, valutazioni, set).',
-            'Heatmap — distribuzione zone del campo per attacco/ricezione.',
-            'Giocatori — performance individuali per fondamentale.',
-            'Rotazioni — analisi per rotazione palleggiatore (R1-R6).',
-            'Confronto — squadra casa vs squadra ospite.',
-            'Grafici — visualizzazioni recharts (trend, distribuzioni).',
-            'Avanzate — K1/K2, distribuzione, ricezione, battuta dettagliate.',
-          ]}
-        />
+          <AccordionItem
+            value="analisi"
+            className="rounded-xl border border-border bg-card overflow-hidden px-5"
+          >
+            <AccordionTrigger className="hover:no-underline">
+              <span className="flex items-center gap-3 font-bold text-base">
+                <BarChart3 className="w-5 h-5 text-primary shrink-0" />
+                <span>📊 Come leggere l'analisi DVW</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 text-sm">
+              <ol className="space-y-1.5 list-decimal pl-5">
+                <li>Panoramica — statistiche base per fondamentale e valutazione.</li>
+                <li>Heatmap — distribuzione zone del campo per attacco e ricezione.</li>
+                <li>Giocatori — performance individuali per fondamentale.</li>
+                <li>Rotazioni — analisi per rotazione palleggiatore (R1–R6).</li>
+                <li>Confronto — squadra casa vs squadra ospite.</li>
+                <li>Grafici — trend, distribuzioni, punti per set.</li>
+                <li>Avanzate — K1/K2, distribuzione, ricezione e battuta dettagliate.</li>
+              </ol>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </section>
 
       <section className="space-y-3">

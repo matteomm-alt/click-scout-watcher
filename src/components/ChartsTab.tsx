@@ -1,4 +1,4 @@
-import { getTooltipStyle } from '@/lib/chartTheme';
+import { getTooltipStyle, SKILL_COLORS } from '@/lib/chartTheme';
 import { useEffect, useMemo, useState } from 'react';
 import {
   type DbAction, SKILL_NAMES, EVAL_NAMES, EVAL_COLORS,
@@ -19,7 +19,7 @@ interface Props {
   playerNames: Map<number, string>;
 }
 
-const COLORS = ['#2563EB','#16A34A','#DC2626','#D97706','#7C3AED','#0891B2','#BE185D'];
+const SKILL_DEFAULT = SKILL_COLORS.default as string[];
 const TOOLTIP = getTooltipStyle();
 
 // Zone layout campo (9 zone FIVB, disposizione visiva 3x3)
@@ -373,7 +373,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <ReferenceLine x={0} stroke="hsl(var(--border))" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
-                      <Bar key={sk} dataKey={sk} fill={COLORS[i]} radius={[0,3,3,0]} />
+                      <Bar key={sk} dataKey={sk} fill={(SKILL_COLORS[sk] as string) ?? SKILL_DEFAULT[i]} radius={[0,3,3,0]} />
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
@@ -399,7 +399,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
-                      <Line key={sk} type="monotone" dataKey={sk} stroke={COLORS[i]} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} />
+                      <Line key={sk} type="monotone" dataKey={sk} stroke={(SKILL_COLORS[sk] as string) ?? SKILL_DEFAULT[i]} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} />
                     ))}
                   </LineChart>
                 </ResponsiveContainer>
@@ -419,7 +419,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   {cumulativeData.map((s, i) => (
                     <Line key={s.set} data={s.points} dataKey="value" name={`Set ${s.set}`}
-                      type="monotone" stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} />
+                      type="monotone" stroke={SKILL_DEFAULT[i % SKILL_DEFAULT.length]} strokeWidth={2} dot={false} />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
@@ -507,7 +507,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       <ReferenceLine y={0} stroke="hsl(var(--border))" />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                       {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
-                        <Bar key={sk} dataKey={sk} fill={COLORS[i]}
+                        <Bar key={sk} dataKey={sk} fill={(SKILL_COLORS[sk] as string) ?? SKILL_DEFAULT[i]}
                           opacity={sk === SKILL_NAMES[trendSkill] ? 1 : 0.3}
                           radius={[3,3,0,0]} />
                       ))}
