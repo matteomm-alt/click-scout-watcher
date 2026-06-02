@@ -68,6 +68,15 @@ export default function Periodizzazione() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredPhase, setHoveredPhase] = useState<{
+    name: string;
+    startDate: string;
+    endDate: string;
+    loadLevel: string | null;
+    weeks: number;
+    x: number;
+    y: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!societyId) return;
