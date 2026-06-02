@@ -11,7 +11,10 @@ import { cn } from '@/lib/utils';
 interface Props {
   anchor: Date;
   events: CalendarEvent[];
+  onEventClick?: (evt: CalendarEvent) => void;
 }
+
+
 
 export function MonthView({ anchor, events }: Props) {
   const navigate = useNavigate();
