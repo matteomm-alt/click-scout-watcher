@@ -255,6 +255,31 @@ export default function Periodizzazione() {
           )}
         </>
       )}
+
+      {hoveredPhase && (
+        <div
+          className="fixed z-50 pointer-events-none rounded-lg border border-border bg-popover text-popover-foreground shadow-xl px-4 py-3 text-xs space-y-1"
+          style={{ left: hoveredPhase.x, top: hoveredPhase.y, minWidth: 220 }}
+        >
+          <p className="font-bold uppercase italic text-sm">{hoveredPhase.name}</p>
+          <p className="text-muted-foreground">
+            {hoveredPhase.startDate
+              ? new Date(hoveredPhase.startDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+              : '—'}
+            {' → '}
+            {hoveredPhase.endDate
+              ? new Date(hoveredPhase.endDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+              : '—'}
+          </p>
+          <p className="text-muted-foreground">{hoveredPhase.weeks} settimane</p>
+          {hoveredPhase.loadLevel && (
+            <p>
+              Carico:{' '}
+              <span className="font-bold text-primary uppercase">{hoveredPhase.loadLevel}</span>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
