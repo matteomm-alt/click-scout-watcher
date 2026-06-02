@@ -16,7 +16,7 @@ interface Props {
 
 
 
-export function MonthView({ anchor, events }: Props) {
+export function MonthView({ anchor, events, onEventClick }: Props) {
   const navigate = useNavigate();
   const monthStart = startOfMonth(anchor);
   const monthEnd = endOfMonth(anchor);
