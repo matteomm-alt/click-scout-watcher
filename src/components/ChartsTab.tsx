@@ -507,7 +507,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       <ReferenceLine y={0} stroke="hsl(var(--border))" />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                       {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
-                        <Bar key={sk} dataKey={sk} fill={COLORS[i]}
+                        <Bar key={sk} dataKey={sk} fill={(SKILL_COLORS[sk] as string) ?? SKILL_DEFAULT[i]}
                           opacity={sk === SKILL_NAMES[trendSkill] ? 1 : 0.3}
                           radius={[3,3,0,0]} />
                       ))}
