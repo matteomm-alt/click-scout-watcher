@@ -11,9 +11,12 @@ import { cn } from '@/lib/utils';
 interface Props {
   anchor: Date;
   events: CalendarEvent[];
+  onEventClick?: (evt: CalendarEvent) => void;
 }
 
-export function MonthView({ anchor, events }: Props) {
+
+
+export function MonthView({ anchor, events, onEventClick }: Props) {
   const navigate = useNavigate();
   const monthStart = startOfMonth(anchor);
   const monthEnd = endOfMonth(anchor);
@@ -76,7 +79,7 @@ export function MonthView({ anchor, events }: Props) {
                   return (
                     <div key={evt.id} className="flex items-center gap-1">
                       <button
-                        onClick={() => navigate(`/calendario?id=${evt.id}`)}
+                        onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                         className={cn(
                           'flex-1 text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:bg-muted/50 transition-colors',
                           meta.bgClass,
