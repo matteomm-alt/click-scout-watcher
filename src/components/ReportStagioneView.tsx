@@ -82,28 +82,28 @@ export function ReportStagioneView() {
   // ── Valutazioni per atleta selezionato ───────────────────────────
   const athleteEvals = useMemo(() => {
     const filteredEvs = selectedAthlete === 'all' ? evaluations : evaluations.filter(e => e.athlete_id === selectedAthlete);
-    // Media per fondamentale per fase
-    return FONDAMENTALI.map(fond => {
-      const row: Record<string, any> = { name: fond.length > 15 ? fond.slice(0, 15) + '…' : fond };
+    return FONDAMENTALI_DEFAULT.map(fond => {
+      const row: Record<string, any> = { name: fond.nome.length > 15 ? fond.nome.slice(0, 15) + '…' : fond.nome };
       FASE_ORDER.forEach(fase => {
-        const key = `f${fase.slice(0,2)}_${fond}`;
-        const evs = filteredEvs.filter(e => e.fundamental.includes(fond.split(' ')[0].toLowerCase()) && e.season_phase === fase);
+        const evs = filteredEvs.filter(e =>
+          e.fundamental.startsWith(fond.id + '_') && e.season_phase === fase
+        );
         if (evs.length > 0) row[FASE_LABEL[fase]] = Math.round(evs.reduce((s, e) => s + e.score, 0) / evs.length * 10) / 10;
       });
       return row;
     }).filter(r => Object.keys(r).length > 1);
   }, [evaluations, selectedAthlete]);
 
-  // Radar profilo atleta selezionato (fase fine o ultima disponibile)
+  // Radar profilo atleta selezionato (ultima valutazione per fondamentale)
   const radarData = useMemo(() => {
     const filteredEvs = selectedAthlete === 'all' ? evaluations : evaluations.filter(e => e.athlete_id === selectedAthlete);
-    return FONDAMENTALI.map(fond => {
-      const evs = filteredEvs.filter(e => e.fundamental.includes(fond.split(' ')[0].toLowerCase()));
-      // Ultima valutazione per fondamentale
+    return FONDAMENTALI_DEFAULT.map(fond => {
+      const evs = filteredEvs.filter(e => e.fundamental.startsWith(fond.id + '_'));
       const ultimo = evs.sort((a, b) => b.evaluated_at.localeCompare(a.evaluated_at))[0];
       return {
-        subject: fond.split(' ')[0],
-        Valore: ultimo ? Math.round(ultimo.score * 20) : 0, // normalizzato 0-100
+        subject: fond.nome.length > 10 ? fond.nome.slice(0, 10) + '…' : fond.nome,
+        Valore: ultimo ? Math.round(ultimo.score * 20) : 0,
+        fullName: fond.nome,
       };
     });
   }, [evaluations, selectedAthlete]);
