@@ -419,7 +419,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   {cumulativeData.map((s, i) => (
                     <Line key={s.set} data={s.points} dataKey="value" name={`Set ${s.set}`}
-                      type="monotone" stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} />
+                      type="monotone" stroke={SKILL_DEFAULT[i % SKILL_DEFAULT.length]} strokeWidth={2} dot={false} />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
