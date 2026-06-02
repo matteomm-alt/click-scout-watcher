@@ -1,4 +1,5 @@
 import { getTooltipStyle } from '@/lib/chartTheme';
+import { FONDAMENTALI_DEFAULT } from '@/lib/evalFondamentali';
 import { useEffect, useState, useMemo } from 'react';
 import { PieChart as PieIcon, TrendingUp, Users, Dumbbell, Trophy } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -10,10 +11,9 @@ import { useActiveSociety } from '@/hooks/useActiveSociety';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, Legend, LineChart, Line, ReferenceLine,
+  PolarRadiusAxis, Legend, ReferenceLine,
 } from 'recharts';
 
-const FONDAMENTALI = ['Palleggio','Bagher di appoggio','Bagher di difesa','Ricezione','Bagher di alzata','Rincorsa e stacco','Attacco','Battuta','Muro'];
 const FASE_LABEL: Record<string, string> = { inizio: 'Inizio stagione', meta: 'Metà stagione', fine: 'Fine stagione' };
 const FASE_ORDER = ['inizio', 'meta', 'fine'];
 const TOOLTIP_STYLE = getTooltipStyle();
