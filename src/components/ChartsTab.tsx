@@ -373,7 +373,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <ReferenceLine x={0} stroke="hsl(var(--border))" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
-                      <Bar key={sk} dataKey={sk} fill={COLORS[i]} radius={[0,3,3,0]} />
+                      <Bar key={sk} dataKey={sk} fill={(SKILL_COLORS[sk] as string) ?? SKILL_DEFAULT[i]} radius={[0,3,3,0]} />
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
