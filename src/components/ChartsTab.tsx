@@ -399,7 +399,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
-                      <Line key={sk} type="monotone" dataKey={sk} stroke={COLORS[i]} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} />
+                      <Line key={sk} type="monotone" dataKey={sk} stroke={(SKILL_COLORS[sk] as string) ?? SKILL_DEFAULT[i]} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} />
                     ))}
                   </LineChart>
                 </ResponsiveContainer>
