@@ -10,6 +10,7 @@ interface Props {
   anchor: Date; // qualsiasi data della settimana
   events: CalendarEvent[];
   showCreator: boolean;
+  onEventClick?: (evt: CalendarEvent) => void;
 }
 
 export function WeekView({ anchor, events, showCreator }: Props) {
