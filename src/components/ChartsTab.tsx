@@ -19,7 +19,7 @@ interface Props {
   playerNames: Map<number, string>;
 }
 
-const COLORS = ['#2563EB','#16A34A','#DC2626','#D97706','#7C3AED','#0891B2','#BE185D'];
+const SKILL_DEFAULT = SKILL_COLORS.default as string[];
 const TOOLTIP = getTooltipStyle();
 
 // Zone layout campo (9 zone FIVB, disposizione visiva 3x3)
