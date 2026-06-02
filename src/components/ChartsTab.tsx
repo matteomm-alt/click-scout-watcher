@@ -1,4 +1,4 @@
-import { getTooltipStyle } from '@/lib/chartTheme';
+import { getTooltipStyle, SKILL_COLORS } from '@/lib/chartTheme';
 import { useEffect, useMemo, useState } from 'react';
 import {
   type DbAction, SKILL_NAMES, EVAL_NAMES, EVAL_COLORS,
