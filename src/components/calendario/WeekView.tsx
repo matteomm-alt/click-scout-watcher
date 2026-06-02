@@ -13,7 +13,7 @@ interface Props {
   onEventClick?: (evt: CalendarEvent) => void;
 }
 
-export function WeekView({ anchor, events, showCreator }: Props) {
+export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
   const navigate = useNavigate();
   const weekStart = startOfWeek(anchor, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
