@@ -59,3 +59,17 @@ export const FONDAMENTALI_DEFAULT = [
     'Comunicazione con i compagni',
   ]},
 ] as const;
+
+/**
+ * Restituisce il nome visualizzato di un sub-aspetto standard,
+ * usando il rename personalizzato se presente.
+ */
+export function getSubAspectLabel(
+  fondId: string,
+  subIndex: number,
+  defaultName: string,
+  renamedMap: Record<string, string> | undefined,
+): string {
+  const key = `${fondId}_${subIndex}`;
+  return renamedMap?.[key] ?? defaultName;
+}
