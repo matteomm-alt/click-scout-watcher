@@ -15,6 +15,8 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { downloadAthleteCard } from '@/lib/pdfReport';
 import { handleSupabaseError } from '@/lib/supabaseQuery';
+import { FONDAMENTALI_DEFAULT, getSubAspectLabel } from '@/lib/evalFondamentali';
+import { useEvalTemplate } from '@/hooks/useEvalTemplate';
 
 interface Athlete {
   id: string; number: number | null; last_name: string;
@@ -43,6 +45,7 @@ export default function AtletaDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { societyId } = useActiveSociety();
+  const { template } = useEvalTemplate();
 
   const { data: athlete, isLoading } = useQuery({
     queryKey: queryKeys.athletes.detail(id ?? ''),
@@ -162,9 +165,18 @@ export default function AtletaDetail() {
         attendancePct: attendanceStat?.pct ?? null,
         presences: attendanceStat?.presenti,
         totalEvents: attendanceStat?.totali,
-        evaluations: latestByFundamental.map(e => ({
-          fundamental: e.fundamental, score: e.score, date: e.evaluated_at,
-        })),
+        evaluations: latestByFundamental.map(e => {
+          const [fondId, subIdxStr] = e.fundamental.split('_');
+          const subIndex = parseInt(subIdxStr ?? '0', 10);
+          const fond = FONDAMENTALI_DEFAULT.find(f => f.id === fondId);
+          const defaultName = fond?.subAspetti[subIndex] ?? e.fundamental;
+          return {
+            fundamental: e.fundamental,
+            fundamentalLabel: getSubAspectLabel(fondId, subIndex, defaultName, template.renamedSubAspects),
+            score: e.score,
+            date: e.evaluated_at,
+          };
+        }),
         injuries: injuries.map(i => ({
           bodyPart: i.body_part, severity: i.severity, status: i.status, startDate: i.start_date,
         })),
