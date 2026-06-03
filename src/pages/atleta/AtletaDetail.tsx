@@ -165,9 +165,18 @@ export default function AtletaDetail() {
         attendancePct: attendanceStat?.pct ?? null,
         presences: attendanceStat?.presenti,
         totalEvents: attendanceStat?.totali,
-        evaluations: latestByFundamental.map(e => ({
-          fundamental: e.fundamental, score: e.score, date: e.evaluated_at,
-        })),
+        evaluations: latestByFundamental.map(e => {
+          const [fondId, subIdxStr] = e.fundamental.split('_');
+          const subIndex = parseInt(subIdxStr ?? '0', 10);
+          const fond = FONDAMENTALI_DEFAULT.find(f => f.id === fondId);
+          const defaultName = fond?.subAspetti[subIndex] ?? e.fundamental;
+          return {
+            fundamental: e.fundamental,
+            fundamentalLabel: getSubAspectLabel(fondId, subIndex, defaultName, template.renamedSubAspects),
+            score: e.score,
+            date: e.evaluated_at,
+          };
+        }),
         injuries: injuries.map(i => ({
           bodyPart: i.body_part, severity: i.severity, status: i.status, startDate: i.start_date,
         })),
