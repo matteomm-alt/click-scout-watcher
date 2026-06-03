@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
-import { FONDAMENTALI_DEFAULT } from '@/lib/evalFondamentali';
+import { FONDAMENTALI_DEFAULT, getSubAspectLabel } from '@/lib/evalFondamentali';
 import { useEvalTemplate } from '@/hooks/useEvalTemplate';
 import { EvalTemplateEditor } from '@/components/EvalTemplateEditor';
 
@@ -214,7 +214,8 @@ export function ValutazioniView() {
         if (y > 275) { doc.addPage(); y = 14; }
         const k = `${f.id}_${idx}`;
         const i = getScore(k, 'inizio'); const m = getScore(k, 'meta'); const fi = getScore(k, 'fine');
-        doc.text(`• ${sa}`, 14, y);
+        const label = getSubAspectLabel(f.id, idx, sa, template.renamedSubAspects);
+        doc.text(`• ${label}`, 14, y);
         doc.text(`I:${i || '—'}  M:${m || '—'}  F:${fi || '—'}`, 150, y);
         y += 4.2;
       });
@@ -365,7 +366,7 @@ export function ValutazioniView() {
                       return (
                         <div key={idx} className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0">
                           <div className="flex-1 min-w-[200px]">
-                            <p className="text-sm text-foreground">{aspetto}</p>
+                            <p className="text-sm text-foreground">{getSubAspectLabel(f.id, idx, aspetto, template.renamedSubAspects)}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {lastDate
                                 ? `Ultima (${PHASES.find(p => p.id === phase)?.short}): ${new Date(lastDate).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}`

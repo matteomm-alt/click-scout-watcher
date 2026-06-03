@@ -50,7 +50,11 @@ function mergeTemplates(current: EvalTemplate, incoming: EvalTemplate): EvalTemp
       extraSubAspects[fondId] = [...(extraSubAspects[fondId] ?? []), ...added];
     }
   }
-  return { visibleFundamentals, customFundamentals, extraSubAspects };
+  const renamedSubAspects: Record<string, string> = {
+    ...(incoming.renamedSubAspects ?? {}),
+    ...(current.renamedSubAspects ?? {}),
+  };
+  return { visibleFundamentals, customFundamentals, extraSubAspects, renamedSubAspects };
 }
 
 interface Props {
@@ -102,6 +106,22 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
   const [newFondNome, setNewFondNome] = useState('');
   const [newFondSubs, setNewFondSubs] = useState('');
   const [newSubAspect, setNewSubAspect] = useState<Record<string, string>>({});
+  const [editingSub, setEditingSub] = useState<{ fondId: string; subIndex: number; currentValue: string } | null>(null);
+
+  const renameSubAspect = async (fondId: string, subIndex: number, newName: string) => {
+    const trimmed = newName.trim();
+    const key = `${fondId}_${subIndex}`;
+    const defaultName = FONDAMENTALI_DEFAULT
+      .find(f => f.id === fondId)?.subAspetti[subIndex] ?? '';
+    const updated = { ...template.renamedSubAspects };
+    if (!trimmed || trimmed === defaultName) {
+      delete updated[key];
+    } else {
+      updated[key] = trimmed;
+    }
+    setEditingSub(null);
+    await onSave({ renamedSubAspects: updated });
+  };
 
   const [importPreview, setImportPreview] = useState<{
     file: TemplateExportFile;
@@ -284,9 +304,41 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                   {visible && (
                     <div className="px-3 pb-3 space-y-2">
                       <div className="flex flex-wrap gap-1">
-                        {f.subAspetti.map((sa, i) => (
-                          <Badge key={`std-${i}`} variant="secondary" className="text-[10px] font-normal">{sa}</Badge>
-                        ))}
+                        {f.subAspetti.map((sa, i) => {
+                          const key = `${f.id}_${i}`;
+                          const displayName = template.renamedSubAspects[key] ?? sa;
+                          const isRenamed = !!template.renamedSubAspects[key];
+                          const isEditing = editingSub?.fondId === f.id && editingSub?.subIndex === i;
+
+                          if (isEditing) {
+                            return (
+                              <Input
+                                key={`std-${i}`}
+                                autoFocus
+                                defaultValue={editingSub!.currentValue}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') renameSubAspect(f.id, i, e.currentTarget.value);
+                                  if (e.key === 'Escape') setEditingSub(null);
+                                }}
+                                onBlur={(e) => renameSubAspect(f.id, i, e.target.value)}
+                                className="h-6 text-[10px] w-48 px-2"
+                              />
+                            );
+                          }
+
+                          return (
+                            <Badge
+                              key={`std-${i}`}
+                              variant="secondary"
+                              onClick={() => setEditingSub({ fondId: f.id, subIndex: i, currentValue: displayName })}
+                              className={`text-[10px] font-normal cursor-pointer hover:bg-primary/10 ${isRenamed ? 'text-primary border-primary/40 border' : ''}`}
+                              title={isRenamed ? `Originale: "${sa}" — clicca per modificare` : 'Clicca per rinominare'}
+                            >
+                              {displayName}
+                              {isRenamed && <span className="ml-1 opacity-70">✎</span>}
+                            </Badge>
+                          );
+                        })}
                         {extras.map((sa, i) => (
                           <Badge key={`ext-${i}`} variant="outline"
                             onClick={() => removeSubAspect(f.id, sa)}
@@ -296,6 +348,9 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                           </Badge>
                         ))}
                       </div>
+                      <p className="text-[10px] text-muted-foreground italic">
+                        Clicca su un criterio per rinominarlo. I nomi modificati appaiono in arancio.
+                      </p>
                       <div className="flex gap-2">
                         <Input
                           value={newSubAspect[f.id] ?? ''}

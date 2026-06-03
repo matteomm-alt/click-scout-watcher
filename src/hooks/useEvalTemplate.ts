@@ -12,12 +12,14 @@ export interface EvalTemplate {
   visibleFundamentals: string[] | null;
   customFundamentals: CustomFundamental[];
   extraSubAspects: Record<string, string[]>;
+  renamedSubAspects: Record<string, string>;
 }
 
 export const DEFAULT_TEMPLATE: EvalTemplate = {
   visibleFundamentals: null,
   customFundamentals: [],
   extraSubAspects: {},
+  renamedSubAspects: {},
 };
 
 export function useEvalTemplate() {
@@ -32,7 +34,7 @@ export function useEvalTemplate() {
     (async () => {
       const { data } = await supabase
         .from('coach_eval_templates')
-        .select('visible_fundamentals, custom_fundamentals, extra_sub_aspects')
+        .select('visible_fundamentals, custom_fundamentals, extra_sub_aspects, renamed_sub_aspects')
         .eq('coach_id', user.id)
         .maybeSingle();
       if (cancelled) return;
@@ -41,6 +43,7 @@ export function useEvalTemplate() {
           visibleFundamentals: data.visible_fundamentals ?? null,
           customFundamentals: (data.custom_fundamentals as unknown as CustomFundamental[]) ?? [],
           extraSubAspects: (data.extra_sub_aspects as unknown as Record<string, string[]>) ?? {},
+          renamedSubAspects: ((data as { renamed_sub_aspects?: unknown }).renamed_sub_aspects as Record<string, string>) ?? {},
         });
       }
       setLoading(false);
@@ -60,6 +63,7 @@ export function useEvalTemplate() {
         visible_fundamentals: next.visibleFundamentals,
         custom_fundamentals: next.customFundamentals as never,
         extra_sub_aspects: next.extraSubAspects as never,
+        renamed_sub_aspects: next.renamedSubAspects as never,
       }, { onConflict: 'coach_id' });
     setSaving(false);
   }, [user?.id, template]);
