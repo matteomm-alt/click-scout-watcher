@@ -45,6 +45,7 @@ export default function AtletaDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { societyId } = useActiveSociety();
+  const { template } = useEvalTemplate();
 
   const { data: athlete, isLoading } = useQuery({
     queryKey: queryKeys.athletes.detail(id ?? ''),
