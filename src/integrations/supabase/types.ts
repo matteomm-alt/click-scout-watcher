@@ -371,6 +371,7 @@ export type Database = {
           custom_fundamentals: Json
           extra_sub_aspects: Json
           id: string
+          renamed_sub_aspects: Json
           updated_at: string
           visible_fundamentals: string[] | null
         }
@@ -380,6 +381,7 @@ export type Database = {
           custom_fundamentals?: Json
           extra_sub_aspects?: Json
           id?: string
+          renamed_sub_aspects?: Json
           updated_at?: string
           visible_fundamentals?: string[] | null
         }
@@ -389,6 +391,7 @@ export type Database = {
           custom_fundamentals?: Json
           extra_sub_aspects?: Json
           id?: string
+          renamed_sub_aspects?: Json
           updated_at?: string
           visible_fundamentals?: string[] | null
         }
