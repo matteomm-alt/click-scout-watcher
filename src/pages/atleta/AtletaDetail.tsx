@@ -15,6 +15,8 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { downloadAthleteCard } from '@/lib/pdfReport';
 import { handleSupabaseError } from '@/lib/supabaseQuery';
+import { FONDAMENTALI_DEFAULT, getSubAspectLabel } from '@/lib/evalFondamentali';
+import { useEvalTemplate } from '@/hooks/useEvalTemplate';
 
 interface Athlete {
   id: string; number: number | null; last_name: string;

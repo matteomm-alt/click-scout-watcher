@@ -447,7 +447,7 @@ export interface AthleteCardData {
   attendancePct?: number | null;
   presences?: number;
   totalEvents?: number;
-  evaluations?: Array<{ fundamental: string; score: number; date: string }>;
+  evaluations?: Array<{ fundamental: string; fundamentalLabel?: string; score: number; date: string }>;
   injuries?: Array<{ bodyPart: string; severity: string; status: string; startDate: string }>;
   societyName?: string | null;
 }
@@ -552,7 +552,7 @@ export function generateAthleteCard(data: AthleteCardData): jsPDF {
       doc.setTextColor(...MUTED);
       doc.text(e.date, MARGIN, y);
       doc.setTextColor(...DARK);
-      doc.text(e.fundamental, MARGIN + 28, y);
+      doc.text(e.fundamentalLabel ?? e.fundamental, MARGIN + 28, y);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...ORANGE);
       doc.text(e.score.toFixed(1), PAGE_W - MARGIN, y, { align: 'right' });
