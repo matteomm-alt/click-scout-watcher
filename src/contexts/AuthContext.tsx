@@ -41,14 +41,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Tieni traccia dell'ultimo user id "richiesto" — evita race quando
+    // l'utente cambia rapidamente (logout/login, switch account).
+    let currentUserId: string | null = null;
+
     // 1. Listener PRIMA di getSession (richiesto)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
-        if (newSession?.user) {
+        const uid = newSession?.user?.id ?? null;
+        currentUserId = uid;
+        if (uid) {
           // Defer per evitare deadlock dentro il callback
-          setTimeout(() => loadRoles(newSession.user.id), 0);
+          setTimeout(() => {
+            if (currentUserId !== uid) return; // annullato: utente cambiato
+            loadRoles(uid);
+          }, 0);
         } else {
           setRoles([]);
         }
@@ -59,8 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: existing } }) => {
       setSession(existing);
       setUser(existing?.user ?? null);
-      if (existing?.user) {
-        loadRoles(existing.user.id).finally(() => setLoading(false));
+      const uid = existing?.user?.id ?? null;
+      if (currentUserId == null) currentUserId = uid;
+      if (uid) {
+        loadRoles(uid).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }

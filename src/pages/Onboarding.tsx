@@ -15,18 +15,11 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Zap, FileSpreadsheet, SkipForward, FileUp, BarChart3, Calendar, Activity, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { slugify } from '@/lib/utils';
 
 const CATEGORIES = ['U12', 'U14', 'U16', 'U18', 'Serie D', 'Serie C', 'Serie B', 'Serie A'];
 
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60) || `societa-${Date.now()}`;
-}
+const safeSlugify = (s: string) => slugify(s) || `societa-${Date.now()}`;
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -68,7 +61,7 @@ export default function Onboarding() {
     }
     setBusy(true);
     try {
-      const baseSlug = slugify(teamName);
+      const baseSlug = safeSlugify(teamName);
       const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
       const { data: soc, error: socErr } = await supabase
