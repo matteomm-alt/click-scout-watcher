@@ -53,8 +53,7 @@ interface CoachRow {
   email: string | null;
 }
 
-const slugify = (s: string) =>
-  s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+import { slugify } from '@/lib/utils';
 
 export default function AdminSocieties() {
   const { user, isSuperAdmin, loading: authLoading, refreshRoles } = useAuth();

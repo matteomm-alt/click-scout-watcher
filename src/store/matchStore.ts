@@ -812,9 +812,46 @@ export const useMatchStore = create<MatchStore>()(
       storage: createJSONStorage(() => localStorage),
       version: 3,
       partialize: (state: MatchStore) => {
-        const { matchState, ...rest } = state;
-        const { actions, ...matchStateWithoutActions } = matchState;
-        return { ...rest, matchState: matchStateWithoutActions } as MatchStore;
+        // Persisti solo i campi essenziali per ripristinare il setup match.
+        // Le azioni e gli snapshot pesanti vengono ricaricati da Supabase.
+        const m = state.matchState;
+        return {
+          step: state.step,
+          matchInfo: state.matchInfo,
+          homeTeam: state.homeTeam,
+          awayTeam: state.awayTeam,
+          homeLineup: state.homeLineup,
+          awayLineup: state.awayLineup,
+          homeReceptionFormations: state.homeReceptionFormations,
+          awayReceptionFormations: state.awayReceptionFormations,
+          matchState: {
+            currentSet: m.currentSet,
+            homeScore: m.homeScore,
+            awayScore: m.awayScore,
+            homeSetsWon: m.homeSetsWon,
+            awaySetsWon: m.awaySetsWon,
+            setResults: m.setResults,
+            servingTeam: m.servingTeam,
+            homeSetterPosition: m.homeSetterPosition,
+            awaySetterPosition: m.awaySetterPosition,
+            homeCurrentLineup: m.homeCurrentLineup,
+            awayCurrentLineup: m.awayCurrentLineup,
+            isMatchStarted: m.isMatchStarted,
+            isMatchEnded: m.isMatchEnded,
+            singleTeamMode: m.singleTeamMode,
+            homeTimeoutsUsed: m.homeTimeoutsUsed,
+            awayTimeoutsUsed: m.awayTimeoutsUsed,
+            homeSubstitutionsUsed: m.homeSubstitutionsUsed,
+            awaySubstitutionsUsed: m.awaySubstitutionsUsed,
+            setOverPending: m.setOverPending,
+            homeBenchedMb: m.homeBenchedMb,
+            awayBenchedMb: m.awayBenchedMb,
+            // azioni, timeouts e sanctions NON persistite (troppo grandi / rumorose)
+            actions: [],
+            timeouts: [],
+            sanctions: [],
+          } as MatchState,
+        } as unknown as MatchStore;
       },
       // Backwards-compat: ensure new fields exist when loading old persisted state
       migrate: (persisted: unknown) => {

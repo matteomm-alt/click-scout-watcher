@@ -22,6 +22,7 @@ import { OverviewTab } from '@/components/analysis/OverviewTab';
 import { HeatmapTab } from '@/components/analysis/HeatmapTab';
 import { RotationsTab } from '@/components/analysis/RotationsTab';
 import { CompareTab } from '@/components/analysis/CompareTab';
+import { TabErrorBoundary } from '@/components/analysis/TabErrorBoundary';
 
 const AdvancedTab = lazy(() =>
   import('@/components/analysis/AdvancedTab').then(m => ({ default: m.AdvancedTab }))
@@ -60,7 +61,7 @@ export default function MatchAnalysis() {
 
   const handleShare = async () => {
     if (!id) return;
-    let token = (match as any)?.share_token as string | null;
+    let token = match?.share_token ?? null;
     if (!token) {
       token = crypto.randomUUID();
       await supabase.from('scout_matches').update({ share_token: token }).eq('id', id);
@@ -80,10 +81,12 @@ export default function MatchAnalysis() {
       return;
     }
     setLoadingMulti(true);
+    let cancelled = false;
     (async () => {
       const ids = [...selectedIds];
-      const all: DbAction[] = [];
-      for (const matchId of ids) {
+      // Parallelizza: tutte le partite in parallelo invece di seriale.
+      const fetchOne = async (matchId: string) => {
+        const out: DbAction[] = [];
         let from = 0;
         const PAGE = 1000;
         while (true) {
@@ -94,14 +97,18 @@ export default function MatchAnalysis() {
             .order('set_number').order('rally_index').order('action_index')
             .range(from, from + PAGE - 1);
           if (error || !data || data.length === 0) break;
-          all.push(...(data as any));
+          out.push(...(data as any));
           if (data.length < PAGE) break;
           from += PAGE;
         }
-      }
-      setMultiActions(all);
+        return out;
+      };
+      const results = await Promise.all(ids.map(fetchOne));
+      if (cancelled) return;
+      setMultiActions(results.flat());
       setLoadingMulti(false);
     })();
+    return () => { cancelled = true; };
   }, [selectedIds, actions, id]);
 
   useEffect(() => {
@@ -596,13 +603,15 @@ export default function MatchAnalysis() {
 
         <section className="min-w-0">
           <Suspense fallback={<div className="text-sm text-muted-foreground">Caricamento…</div>}>
-            {tab === 'overview' && <OverviewTab actions={filteredTeamActions} setResults={match.set_results} />}
-            {tab === 'charts' && <ChartsTab actions={filteredTeamActions} playerNames={playerNames} />}
-            {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
-            {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} match={match} teamName={teamFilter === 'home' ? match.home_team.name : match.away_team.name} />}
-            {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
-            {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
-            {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
+            <TabErrorBoundary tabName={TABS.find(t => t.key === tab)?.label || tab}>
+              {tab === 'overview' && <OverviewTab actions={filteredTeamActions} setResults={match.set_results} />}
+              {tab === 'charts' && <ChartsTab actions={filteredTeamActions} playerNames={playerNames} />}
+              {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
+              {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} match={match} teamName={teamFilter === 'home' ? match.home_team.name : match.away_team.name} />}
+              {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
+              {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
+              {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
+            </TabErrorBoundary>
           </Suspense>
         </section>
       </main>
