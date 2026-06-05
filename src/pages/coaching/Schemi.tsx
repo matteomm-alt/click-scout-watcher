@@ -171,12 +171,18 @@ export default function Schemi() {
                   </Button>
                 </div>
               </div>
-              {s.scheme_data?.image_url && (
+              {s.scheme_data?.image_url ? (
                 <button type="button" onClick={() => setViewing(s)} className="block w-full">
                   <img src={s.scheme_data.image_url} alt={s.name}
                     className="w-full h-32 object-cover rounded border border-border hover:opacity-90 transition" />
                 </button>
-              )}
+              ) : s.scheme_data?.diagram &&
+                (s.scheme_data.diagram.markers.length > 0 || s.scheme_data.diagram.arrows.length > 0) ? (
+                <button type="button" onClick={() => setViewing(s)}
+                  className="block w-full rounded border border-border overflow-hidden">
+                  <TacticalEditor value={s.scheme_data.diagram} onChange={() => {}} readOnly height={120} />
+                </button>
+              ) : null}
               {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
               {s.scheme_data?.notes && (
                 <p className="text-[11px] text-muted-foreground/80 line-clamp-3 italic border-l-2 border-primary/40 pl-2">
