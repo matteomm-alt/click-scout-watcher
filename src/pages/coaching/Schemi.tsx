@@ -20,13 +20,20 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import type { TacticalDiagram } from '@/types/tactical';
+import { EMPTY_DIAGRAM } from '@/types/tactical';
+import { TacticalEditor } from '@/components/coaching/TacticalEditor';
 
 interface Scheme {
   id: string;
   name: string;
   description: string | null;
   fundamental: string | null;
-  scheme_data: { notes?: string; image_url?: string } & Record<string, unknown>;
+  scheme_data: {
+    notes?: string;
+    image_url?: string;
+    diagram?: TacticalDiagram;
+  } & Record<string, unknown>;
 }
 
 const FUNDAMENTALS = ['Ricezione', 'Attacco', 'Difesa', 'Battuta', 'Muro', 'Copertura', 'Cambio palla', 'Break point'];
