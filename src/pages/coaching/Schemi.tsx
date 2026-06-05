@@ -67,13 +67,19 @@ export default function Schemi() {
   };
   useEffect(() => { load(); }, [societyId]);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setDiagram(EMPTY_DIAGRAM);
+    setDialogOpen(true);
+  };
   const openEdit = (s: Scheme) => {
     setEditing(s);
     setForm({
       name: s.name, description: s.description ?? '', fundamental: s.fundamental ?? '',
       notes: s.scheme_data?.notes ?? '', image_url: s.scheme_data?.image_url ?? '',
     });
+    setDiagram(s.scheme_data?.diagram ?? EMPTY_DIAGRAM);
     setDialogOpen(true);
   };
   const save = async () => {
@@ -82,7 +88,11 @@ export default function Schemi() {
       name: form.name,
       description: form.description || null,
       fundamental: form.fundamental || null,
-      scheme_data: { notes: form.notes || '', image_url: form.image_url || '' },
+      scheme_data: {
+        notes: form.notes || '',
+        image_url: form.image_url || '',
+        diagram,
+      },
     };
     if (editing) {
       const { error } = await supabase.from('training_schemes').update(payload).eq('id', editing.id);
