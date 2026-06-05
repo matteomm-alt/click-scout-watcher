@@ -52,6 +52,7 @@ export default function Schemi() {
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Scheme | null>(null);
+  const [diagram, setDiagram] = useState<TacticalDiagram>(EMPTY_DIAGRAM);
 
   const load = async () => {
     if (!societyId) return;
