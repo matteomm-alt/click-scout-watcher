@@ -92,7 +92,7 @@ export default function Schemi() {
         notes: form.notes || '',
         image_url: form.image_url || '',
         diagram,
-      } as unknown as never,
+      } as unknown as Record<string, unknown>,
     };
     if (editing) {
       const { error } = await supabase.from('training_schemes').update(payload).eq('id', editing.id);
