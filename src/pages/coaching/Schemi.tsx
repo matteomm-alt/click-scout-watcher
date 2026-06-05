@@ -213,6 +213,14 @@ export default function Schemi() {
               <Textarea rows={6} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Posizioni, traiettorie, varianti, chiamate…" />
             </div>
+            <div>
+              <Label>Diagramma tattico</Label>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Aggiungi giocatori e frecce di movimento direttamente sul campo.
+                Trascina per spostare · doppio click per etichettare.
+              </p>
+              <TacticalEditor value={diagram} onChange={setDiagram} height={280} />
+            </div>
             <div><Label>URL immagine schema (opzionale)</Label>
               <Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
                 placeholder="https://…" />
