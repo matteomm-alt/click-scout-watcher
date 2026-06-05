@@ -84,15 +84,16 @@ export default function Schemi() {
   };
   const save = async () => {
     if (!form.name || !societyId || !user) return;
+    const scheme_data = JSON.parse(JSON.stringify({
+      notes: form.notes || '',
+      image_url: form.image_url || '',
+      diagram,
+    }));
     const payload = {
       name: form.name,
       description: form.description || null,
       fundamental: form.fundamental || null,
-      scheme_data: {
-        notes: form.notes || '',
-        image_url: form.image_url || '',
-        diagram,
-      } as unknown as Record<string, unknown>,
+      scheme_data,
     };
     if (editing) {
       const { error } = await supabase.from('training_schemes').update(payload).eq('id', editing.id);
