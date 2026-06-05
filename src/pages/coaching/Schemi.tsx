@@ -256,6 +256,16 @@ export default function Schemi() {
                   <img src={viewing.scheme_data.image_url} alt={viewing.name}
                     className="w-full max-h-[400px] object-contain rounded border border-border bg-muted/30" />
                 )}
+                {viewing.scheme_data?.diagram &&
+                  (viewing.scheme_data.diagram.markers.length > 0 ||
+                   viewing.scheme_data.diagram.arrows.length > 0) && (
+                  <TacticalEditor
+                    value={viewing.scheme_data.diagram}
+                    onChange={() => {}}
+                    readOnly
+                    height={360}
+                  />
+                )}
                 {viewing.description && <p className="text-sm">{viewing.description}</p>}
                 {viewing.scheme_data?.notes && (
                   <div className="bg-muted/40 rounded p-3 border-l-2 border-primary">
