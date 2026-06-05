@@ -123,6 +123,7 @@ export default function Calendario() {
 
   useEffect(() => {
     if (!societyId || !user) return;
+    if (newEventOpen) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -174,7 +175,7 @@ export default function Calendario() {
     return () => {
       cancelled = true;
     };
-  }, [societyId, user, range.start, range.end, isAdmin, selectedEventTypes, teamFilter, refreshKey]);
+  }, [societyId, user, range.start, range.end, isAdmin, selectedEventTypes, teamFilter, refreshKey, newEventOpen]);
 
   const importExcelRows = async (rows: ExcelEventPreview[]) => {
     if (!societyId || !user) return;
