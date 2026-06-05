@@ -194,7 +194,7 @@ export default function Schemi() {
 
       {/* DIALOG CREATE/EDIT */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Modifica schema' : 'Nuovo schema tattico'}</DialogTitle>
           </DialogHeader>
