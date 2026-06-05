@@ -20,13 +20,20 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import type { TacticalDiagram } from '@/types/tactical';
+import { EMPTY_DIAGRAM } from '@/types/tactical';
+import { TacticalEditor } from '@/components/coaching/TacticalEditor';
 
 interface Scheme {
   id: string;
   name: string;
   description: string | null;
   fundamental: string | null;
-  scheme_data: { notes?: string; image_url?: string } & Record<string, unknown>;
+  scheme_data: {
+    notes?: string;
+    image_url?: string;
+    diagram?: TacticalDiagram;
+  } & Record<string, unknown>;
 }
 
 const FUNDAMENTALS = ['Ricezione', 'Attacco', 'Difesa', 'Battuta', 'Muro', 'Copertura', 'Cambio palla', 'Break point'];
@@ -45,6 +52,7 @@ export default function Schemi() {
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Scheme | null>(null);
+  const [diagram, setDiagram] = useState<TacticalDiagram>(EMPTY_DIAGRAM);
 
   const load = async () => {
     if (!societyId) return;
@@ -59,22 +67,33 @@ export default function Schemi() {
   };
   useEffect(() => { load(); }, [societyId]);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setDiagram(EMPTY_DIAGRAM);
+    setDialogOpen(true);
+  };
   const openEdit = (s: Scheme) => {
     setEditing(s);
     setForm({
       name: s.name, description: s.description ?? '', fundamental: s.fundamental ?? '',
       notes: s.scheme_data?.notes ?? '', image_url: s.scheme_data?.image_url ?? '',
     });
+    setDiagram(s.scheme_data?.diagram ?? EMPTY_DIAGRAM);
     setDialogOpen(true);
   };
   const save = async () => {
     if (!form.name || !societyId || !user) return;
+    const scheme_data = JSON.parse(JSON.stringify({
+      notes: form.notes || '',
+      image_url: form.image_url || '',
+      diagram,
+    }));
     const payload = {
       name: form.name,
       description: form.description || null,
       fundamental: form.fundamental || null,
-      scheme_data: { notes: form.notes || '', image_url: form.image_url || '' },
+      scheme_data,
     };
     if (editing) {
       const { error } = await supabase.from('training_schemes').update(payload).eq('id', editing.id);
@@ -152,12 +171,18 @@ export default function Schemi() {
                   </Button>
                 </div>
               </div>
-              {s.scheme_data?.image_url && (
+              {s.scheme_data?.image_url ? (
                 <button type="button" onClick={() => setViewing(s)} className="block w-full">
                   <img src={s.scheme_data.image_url} alt={s.name}
                     className="w-full h-32 object-cover rounded border border-border hover:opacity-90 transition" />
                 </button>
-              )}
+              ) : s.scheme_data?.diagram &&
+                (s.scheme_data.diagram.markers.length > 0 || s.scheme_data.diagram.arrows.length > 0) ? (
+                <button type="button" onClick={() => setViewing(s)}
+                  className="block w-full rounded border border-border overflow-hidden">
+                  <TacticalEditor value={s.scheme_data.diagram} onChange={() => {}} readOnly height={120} />
+                </button>
+              ) : null}
               {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
               {s.scheme_data?.notes && (
                 <p className="text-[11px] text-muted-foreground/80 line-clamp-3 italic border-l-2 border-primary/40 pl-2">
@@ -175,7 +200,7 @@ export default function Schemi() {
 
       {/* DIALOG CREATE/EDIT */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Modifica schema' : 'Nuovo schema tattico'}</DialogTitle>
           </DialogHeader>
@@ -193,6 +218,14 @@ export default function Schemi() {
             <div><Label>Note tattiche (testo libero)</Label>
               <Textarea rows={6} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Posizioni, traiettorie, varianti, chiamate…" />
+            </div>
+            <div>
+              <Label>Diagramma tattico</Label>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Aggiungi giocatori e frecce di movimento direttamente sul campo.
+                Trascina per spostare · doppio click per etichettare.
+              </p>
+              <TacticalEditor value={diagram} onChange={setDiagram} height={280} />
             </div>
             <div><Label>URL immagine schema (opzionale)</Label>
               <Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
@@ -222,6 +255,16 @@ export default function Schemi() {
                 {viewing.scheme_data?.image_url && (
                   <img src={viewing.scheme_data.image_url} alt={viewing.name}
                     className="w-full max-h-[400px] object-contain rounded border border-border bg-muted/30" />
+                )}
+                {viewing.scheme_data?.diagram &&
+                  (viewing.scheme_data.diagram.markers.length > 0 ||
+                   viewing.scheme_data.diagram.arrows.length > 0) && (
+                  <TacticalEditor
+                    value={viewing.scheme_data.diagram}
+                    onChange={() => {}}
+                    readOnly
+                    height={360}
+                  />
                 )}
                 {viewing.description && <p className="text-sm">{viewing.description}</p>}
                 {viewing.scheme_data?.notes && (
