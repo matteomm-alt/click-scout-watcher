@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getReceptionPositions } from '@/lib/receptionFormations';
+import { getAttackPositions } from '@/lib/receptionFormations';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
@@ -62,6 +63,8 @@ interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
   liveArrows?: LiveArrow[];
   receptionMode?: { home?: boolean; away?: boolean };
+  /** Modalità attacco post-ricezione: sposta le giocatrici in posizione d'attacco */
+  attackMode?: { home?: boolean; away?: boolean };
   highlightTeam?: 'home' | 'away' | null;
   highlightPlayerNumber?: number | null;
   simplifiedView?: boolean;
@@ -124,6 +127,7 @@ export function VolleyballCourt({
   heatmapData,
   liveArrows,
   receptionMode,
+  attackMode,
   highlightTeam,
   highlightPlayerNumber,
   simplifiedView = false,
@@ -164,6 +168,7 @@ export function VolleyballCourt({
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
     const formations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
+    const isAttacking = team === 'home' ? !!attackMode?.home : !!attackMode?.away;
     const recPositions = isReceiving
       ? getReceptionPositions(formations, setterPosition, team === 'home')
       : null;
@@ -259,7 +264,12 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const overridePos = recPositions ? recPositions[pos as 1|2|3|4|5|6] : null;
+          const atkPositions = isAttacking
+            ? getAttackPositions(formations, setterPosition, team === 'home')
+            : null;
+          const overridePos =
+            atkPositions?.[pos as 1|2|3|4|5|6]
+            ?? (recPositions ? recPositions[pos as 1|2|3|4|5|6] : null);
           const p = overridePos ?? basePos;
 
           const logRole = logicalRoleForSlot(pos, setterPosition);
