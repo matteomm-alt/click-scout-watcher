@@ -817,6 +817,29 @@ export const useMatchStore = create<MatchStore>()(
       resetReceptionFormations: (team) => set(() => ({
         [team === 'home' ? 'homeReceptionFormations' : 'awayReceptionFormations']: cloneDefaultFormations(),
       } as Partial<MatchStore>)),
+
+      homeAttackFormations: cloneDefaultAttackFormations(),
+      awayAttackFormations: cloneDefaultAttackFormations(),
+      setAttackPosition: (team, setterPosition, slot, coord) => set((s) => {
+        const key = team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations';
+        const sp = Math.min(6, Math.max(1, setterPosition)) as 1|2|3|4|5|6;
+        const sl = Math.min(6, Math.max(1, slot)) as 1|2|3|4|5|6;
+        const current = s[key];
+        const updated: ReceptionFormations = {
+          ...current,
+          [sp]: {
+            ...current[sp],
+            [sl]: {
+              x: Math.max(0, Math.min(100, coord.x)),
+              y: Math.max(0, Math.min(100, coord.y)),
+            },
+          },
+        };
+        return { [key]: updated } as Partial<MatchStore>;
+      }),
+      resetAttackFormations: (team) => set(() => ({
+        [team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations']: cloneDefaultAttackFormations(),
+      } as Partial<MatchStore>)),
     }),
     {
       name: 'volley-scout-storage-v1',
