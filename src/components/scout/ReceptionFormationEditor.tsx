@@ -10,6 +10,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+type EditorMode = 'reception' | 'attack';
+
 const SETTER_ROTATIONS: Array<{ value: 1|2|3|4|5|6; label: string; desc: string }> = [
   { value: 1, label: 'S1', desc: 'Palleggiatore in P1 (back-right)' },
   { value: 2, label: 'S2', desc: 'Palleggiatore in P2 (front-right)' },
@@ -22,14 +24,24 @@ const SETTER_ROTATIONS: Array<{ value: 1|2|3|4|5|6; label: string; desc: string 
 function FormationCanvas({
   team,
   setterPos,
+  mode,
 }: {
   team: 'home' | 'away';
   setterPos: 1|2|3|4|5|6;
+  mode: EditorMode;
 }) {
-  const formations = useMatchStore((s) =>
+  const receptionFormations = useMatchStore((s) =>
     team === 'home' ? s.homeReceptionFormations : s.awayReceptionFormations
   );
+  const attackFormations = useMatchStore((s) =>
+    team === 'home' ? s.homeAttackFormations : s.awayAttackFormations
+  );
+  const formations = mode === 'reception' ? receptionFormations : attackFormations;
+
   const setReceptionPosition = useMatchStore((s) => s.setReceptionPosition);
+  const setAttackPosition = useMatchStore((s) => s.setAttackPosition);
+  const setPosition = mode === 'reception' ? setReceptionPosition : setAttackPosition;
+
   const teamData = useMatchStore((s) => (team === 'home' ? s.homeTeam : s.awayTeam));
   const lineup = useMatchStore((s) =>
     team === 'home' ? s.matchState.homeCurrentLineup : s.matchState.awayCurrentLineup
@@ -50,7 +62,7 @@ function FormationCanvas({
     const rect = ref.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setReceptionPosition(team, setterPos, slot, { x, y });
+    setPosition(team, setterPos, slot, { x, y });
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
@@ -67,6 +79,11 @@ function FormationCanvas({
       {/* Rete in alto */}
       <div className="absolute top-0 inset-x-0 h-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
       <span className="absolute top-1.5 left-2 text-[9px] font-black uppercase tracking-widest text-white/70">RETE</span>
+      <span className={`absolute top-1.5 right-2 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
+        mode === 'reception' ? 'bg-blue-700 text-white' : 'bg-primary text-primary-foreground'
+      }`}>
+        {mode === 'reception' ? '↙ RIC' : '↗ ATT'}
+      </span>
       {/* Linea 3m */}
       <div className="absolute inset-x-0 top-1/3 h-px bg-white/45" />
       {/* Linee zone */}
@@ -112,16 +129,19 @@ function FormationCanvas({
 export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
   const [team, setTeam] = useState<'home' | 'away'>('home');
   const [setterPos, setSetterPos] = useState<1|2|3|4|5|6>(1);
+  const [editorMode, setEditorMode] = useState<EditorMode>('reception');
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
   const reset = useMatchStore((s) => s.resetReceptionFormations);
+  const resetAttack = useMatchStore((s) => s.resetAttackFormations);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Move className="w-4 h-4" /> Schemi di ricezione 5-1
+            <Move className="w-4 h-4" />
+            {editorMode === 'reception' ? 'Schemi di ricezione 5-1' : 'Schemi di attacco 5-1'}
           </DialogTitle>
         </DialogHeader>
 
@@ -150,6 +170,30 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
             </button>
           </div>
 
+          {/* Tab Ricezione / Attacco */}
+          <div className="flex gap-1 p-1 rounded-lg bg-secondary">
+            <button
+              onClick={() => setEditorMode('reception')}
+              className={`flex-1 px-3 py-2 rounded-md text-xs font-black uppercase tracking-wider transition-all ${
+                editorMode === 'reception'
+                  ? 'bg-blue-700 text-white shadow'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              ↙ Ricezione
+            </button>
+            <button
+              onClick={() => setEditorMode('attack')}
+              className={`flex-1 px-3 py-2 rounded-md text-xs font-black uppercase tracking-wider transition-all ${
+                editorMode === 'attack'
+                  ? 'bg-primary text-primary-foreground shadow'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              ↗ Attacco
+            </button>
+          </div>
+
           {/* Selettore rotazione */}
           <div className="grid grid-cols-6 gap-1">
             {SETTER_ROTATIONS.map((r) => (
@@ -170,18 +214,25 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
 
           <p className="text-xs text-muted-foreground italic">
             {SETTER_ROTATIONS.find((r) => r.value === setterPos)?.desc}.
-            Trascina i giocatori per modificare la disposizione di ricezione.
+            {editorMode === 'reception'
+              ? ' Trascina per modificare la formazione di ricezione. La rete è in alto.'
+              : ' Trascina per modificare le posizioni di attacco dopo l\'alzata. Setter a rete, opposta e bande in posizione d\'attacco.'}
           </p>
 
-          <FormationCanvas team={team} setterPos={setterPos} />
+          <FormationCanvas team={team} setterPos={setterPos} mode={editorMode} />
 
           <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                reset(team);
-                toast.success('Schemi ripristinati ai default 5-1 internazionali');
+                if (editorMode === 'reception') {
+                  reset(team);
+                  toast.success('Formazioni ricezione ripristinate ai default 5-1');
+                } else {
+                  resetAttack(team);
+                  toast.success('Formazioni attacco ripristinate ai default 5-1');
+                }
               }}
             >
               <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Ripristina default
