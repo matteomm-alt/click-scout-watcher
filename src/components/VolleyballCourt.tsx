@@ -140,7 +140,7 @@ export function VolleyballCourt({
   zoneSelectSkill,
   layout = 'split',
 }: VolleyballCourtProps = {}) {
-  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations } = useMatchStore();
 
   // Pulsante server per 3s al cambio di servizio
   const [serverPulseActive, setServerPulseActive] = useState(true);
