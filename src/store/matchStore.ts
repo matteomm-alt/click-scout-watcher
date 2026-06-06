@@ -858,6 +858,8 @@ export const useMatchStore = create<MatchStore>()(
           awayLineup: state.awayLineup,
           homeReceptionFormations: state.homeReceptionFormations,
           awayReceptionFormations: state.awayReceptionFormations,
+          homeAttackFormations: state.homeAttackFormations,
+          awayAttackFormations: state.awayAttackFormations,
           matchState: {
             currentSet: m.currentSet,
             homeScore: m.homeScore,
