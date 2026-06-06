@@ -140,7 +140,7 @@ export function VolleyballCourt({
   zoneSelectSkill,
   layout = 'split',
 }: VolleyballCourtProps = {}) {
-  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations } = useMatchStore();
 
   // Pulsante server per 3s al cambio di servizio
   const [serverPulseActive, setServerPulseActive] = useState(true);
@@ -264,8 +264,11 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
+          const atkFormations = team === 'home'
+            ? (homeAttackFormations ?? homeReceptionFormations)
+            : (awayAttackFormations ?? awayReceptionFormations);
           const atkPositions = isAttacking
-            ? getAttackPositions(formations, setterPosition, team === 'home')
+            ? getAttackPositions(atkFormations, setterPosition, team === 'home')
             : null;
           const overridePos =
             atkPositions?.[pos as 1|2|3|4|5|6]

@@ -6,6 +6,7 @@ import type {
 } from '@/types/volleyball';
 import {
   cloneDefaultFormations,
+  cloneDefaultAttackFormations,
   type ReceptionFormations,
   type Coord,
 } from '@/lib/receptionFormations';
@@ -69,6 +70,16 @@ interface MatchStore {
     coord: Coord
   ) => void;
   resetReceptionFormations: (team: 'home' | 'away') => void;
+
+  homeAttackFormations: ReceptionFormations;
+  awayAttackFormations: ReceptionFormations;
+  setAttackPosition: (
+    team: 'home' | 'away',
+    setterPosition: number,
+    slot: number,
+    coord: Coord
+  ) => void;
+  resetAttackFormations: (team: 'home' | 'away') => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
@@ -806,6 +817,29 @@ export const useMatchStore = create<MatchStore>()(
       resetReceptionFormations: (team) => set(() => ({
         [team === 'home' ? 'homeReceptionFormations' : 'awayReceptionFormations']: cloneDefaultFormations(),
       } as Partial<MatchStore>)),
+
+      homeAttackFormations: cloneDefaultAttackFormations(),
+      awayAttackFormations: cloneDefaultAttackFormations(),
+      setAttackPosition: (team, setterPosition, slot, coord) => set((s) => {
+        const key = team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations';
+        const sp = Math.min(6, Math.max(1, setterPosition)) as 1|2|3|4|5|6;
+        const sl = Math.min(6, Math.max(1, slot)) as 1|2|3|4|5|6;
+        const current = s[key];
+        const updated: ReceptionFormations = {
+          ...current,
+          [sp]: {
+            ...current[sp],
+            [sl]: {
+              x: Math.max(0, Math.min(100, coord.x)),
+              y: Math.max(0, Math.min(100, coord.y)),
+            },
+          },
+        };
+        return { [key]: updated } as Partial<MatchStore>;
+      }),
+      resetAttackFormations: (team) => set(() => ({
+        [team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations']: cloneDefaultAttackFormations(),
+      } as Partial<MatchStore>)),
     }),
     {
       name: 'volley-scout-storage-v1',
@@ -824,6 +858,8 @@ export const useMatchStore = create<MatchStore>()(
           awayLineup: state.awayLineup,
           homeReceptionFormations: state.homeReceptionFormations,
           awayReceptionFormations: state.awayReceptionFormations,
+          homeAttackFormations: state.homeAttackFormations,
+          awayAttackFormations: state.awayAttackFormations,
           matchState: {
             currentSet: m.currentSet,
             homeScore: m.homeScore,
