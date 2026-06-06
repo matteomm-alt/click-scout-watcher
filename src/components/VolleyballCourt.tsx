@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getReceptionPositions } from '@/lib/receptionFormations';
+import { getAttackPositions } from '@/lib/receptionFormations';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
