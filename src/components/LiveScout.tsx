@@ -238,6 +238,10 @@ export function LiveScout() {
                 home: matchState.servingTeam === 'away',
                 away: matchState.servingTeam === 'home',
               }}
+              attackMode={{
+                home: attackPhaseTeam === 'home',
+                away: attackPhaseTeam === 'away',
+              }}
               simplifiedView={simplified}
               onPlayerClick={handlePlayerClick}
               selectedPlayer={selectedPlayer}
