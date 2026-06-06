@@ -185,3 +185,8 @@ export function getAttackPositions(
   });
   return out;
 }
+
+/** Clone delle formazioni di attacco default (per inizializzazione store) */
+export function cloneDefaultAttackFormations(): ReceptionFormations {
+  return JSON.parse(JSON.stringify(DEFAULT_ATTACK_FORMATIONS));
+}
