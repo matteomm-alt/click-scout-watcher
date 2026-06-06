@@ -140,8 +140,12 @@ export function LiveScout() {
     }
     setZoneSelectMode(false);
     setPendingActionId(null);
+    const wasAttack = pendingSkill === 'A';
     setPendingSkill(null);
     setPendingTeam(null);
+    if (wasAttack) {
+      setAttackPhaseTeam(null);
+    }
   };
 
   const skipZone = () => {
