@@ -70,6 +70,16 @@ interface MatchStore {
     coord: Coord
   ) => void;
   resetReceptionFormations: (team: 'home' | 'away') => void;
+
+  homeAttackFormations: ReceptionFormations;
+  awayAttackFormations: ReceptionFormations;
+  setAttackPosition: (
+    team: 'home' | 'away',
+    setterPosition: number,
+    slot: number,
+    coord: Coord
+  ) => void;
+  resetAttackFormations: (team: 'home' | 'away') => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
