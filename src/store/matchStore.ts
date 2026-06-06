@@ -6,6 +6,7 @@ import type {
 } from '@/types/volleyball';
 import {
   cloneDefaultFormations,
+  cloneDefaultAttackFormations,
   type ReceptionFormations,
   type Coord,
 } from '@/lib/receptionFormations';
