@@ -127,6 +127,7 @@ export function VolleyballCourt({
   heatmapData,
   liveArrows,
   receptionMode,
+  attackMode,
   highlightTeam,
   highlightPlayerNumber,
   simplifiedView = false,
