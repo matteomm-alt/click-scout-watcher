@@ -168,6 +168,7 @@ export function VolleyballCourt({
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
     const formations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
+    const isAttacking = team === 'home' ? !!attackMode?.home : !!attackMode?.away;
     const recPositions = isReceiving
       ? getReceptionPositions(formations, setterPosition, team === 'home')
       : null;
