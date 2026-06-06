@@ -119,6 +119,14 @@ export function LiveScout() {
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
+    // Dopo una ricezione → attiva la fase attacco visiva per la squadra ricevente
+    if (skill === 'R' && team) {
+      setAttackPhaseTeam(team);
+    }
+    // Dopo un attacco o battuta → resetta la fase attacco
+    if (skill === 'A' || skill === 'S') {
+      setAttackPhaseTeam(null);
+    }
   };
 
   const handleZoneSelect = (zone: number) => {
