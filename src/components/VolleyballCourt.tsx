@@ -63,6 +63,8 @@ interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
   liveArrows?: LiveArrow[];
   receptionMode?: { home?: boolean; away?: boolean };
+  /** Modalità attacco post-ricezione: sposta le giocatrici in posizione d'attacco */
+  attackMode?: { home?: boolean; away?: boolean };
   highlightTeam?: 'home' | 'away' | null;
   highlightPlayerNumber?: number | null;
   simplifiedView?: boolean;
