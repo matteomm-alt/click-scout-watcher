@@ -115,3 +115,73 @@ export function getReceptionPositions(
   });
   return out;
 }
+
+/**
+ * Posizioni di attacco standard 5-1 per ogni rotazione del palleggiatore.
+ * Rappresentano dove si trovano fisicamente le giocatrici durante l'alzata.
+ */
+export const DEFAULT_ATTACK_FORMATIONS: ReceptionFormations = {
+  1: {
+    1: { x: 78, y: 12 },
+    2: { x: 50, y: 40 },
+    3: { x: 50, y: 8 },
+    4: { x: 16, y: 12 },
+    5: { x: 16, y: 20 },
+    6: { x: 50, y: 72 },
+  },
+  2: {
+    1: { x: 50, y: 40 },
+    2: { x: 78, y: 12 },
+    3: { x: 50, y: 8 },
+    4: { x: 16, y: 12 },
+    5: { x: 20, y: 14 },
+    6: { x: 50, y: 72 },
+  },
+  3: {
+    1: { x: 50, y: 40 },
+    2: { x: 78, y: 14 },
+    3: { x: 65, y: 10 },
+    4: { x: 16, y: 12 },
+    5: { x: 18, y: 22 },
+    6: { x: 50, y: 72 },
+  },
+  4: {
+    1: { x: 50, y: 40 },
+    2: { x: 78, y: 14 },
+    3: { x: 50, y: 8 },
+    4: { x: 68, y: 10 },
+    5: { x: 18, y: 22 },
+    6: { x: 50, y: 72 },
+  },
+  5: {
+    1: { x: 50, y: 40 },
+    2: { x: 16, y: 14 },
+    3: { x: 50, y: 8 },
+    4: { x: 16, y: 18 },
+    5: { x: 68, y: 10 },
+    6: { x: 50, y: 72 },
+  },
+  6: {
+    1: { x: 78, y: 40 },
+    2: { x: 50, y: 8 },
+    3: { x: 50, y: 10 },
+    4: { x: 16, y: 14 },
+    5: { x: 18, y: 22 },
+    6: { x: 68, y: 10 },
+  },
+};
+
+export function getAttackPositions(
+  formations: ReceptionFormations,
+  setterPosition: number,
+  mirror: boolean,
+): SlotPositions {
+  const sp = (Math.min(6, Math.max(1, setterPosition)) as 1 | 2 | 3 | 4 | 5 | 6);
+  const base = formations[sp] ?? DEFAULT_ATTACK_FORMATIONS[sp];
+  if (!mirror) return base;
+  const out = {} as SlotPositions;
+  (Object.keys(base) as unknown as (keyof SlotPositions)[]).forEach((k) => {
+    out[k] = { x: base[k].x, y: 100 - base[k].y };
+  });
+  return out;
+}
