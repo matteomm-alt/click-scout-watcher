@@ -48,6 +48,7 @@ export function SettingRow({ label, description, checked, onChange }: { label: s
 }
 
 export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void; setSettings: (patch: Partial<ScoutSettings>) => void }) {
+  const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
   const PRESETS = [
     { key: 'base' as const, label: '⚡ Base', desc: 'Veloce\nniente zone' },
     { key: 'standard' as const, label: '📊 Standard', desc: 'Con zone\ne fondamentali' },
