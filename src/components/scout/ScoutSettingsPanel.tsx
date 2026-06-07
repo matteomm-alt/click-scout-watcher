@@ -126,6 +126,18 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
       </section>
       <button
         type="button"
+        onClick={() => setReceptionEditorOpen(true)}
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-border bg-secondary/20 text-sm font-bold hover:border-primary/50 hover:bg-primary/5 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Move className="w-4 h-4" />
+          Schemi ricezione / attacco
+        </span>
+        <span className="text-xs text-muted-foreground">S1 → S6</span>
+      </button>
+      <ReceptionFormationEditor open={receptionEditorOpen} onOpenChange={setReceptionEditorOpen} />
+      <button
+        type="button"
         onClick={() => { localStorage.removeItem('scout_seen_tips'); toast.info('Suggerimenti ripristinati'); }}
         className="w-full min-h-10 rounded-lg border border-border text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
       >
