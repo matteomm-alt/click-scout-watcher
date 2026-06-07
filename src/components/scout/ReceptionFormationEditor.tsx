@@ -137,6 +137,44 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
   const reset = useMatchStore((s) => s.resetReceptionFormations);
   const resetAttack = useMatchStore((s) => s.resetAttackFormations);
 
+  const { templates, loading, saving, saveTemplate, deleteTemplate } = useFormationTemplates();
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveDescription, setSaveDescription] = useState('');
+  const [saveType, setSaveType] = useState<'reception' | 'attack' | 'both'>('both');
+
+  const homeReception = useMatchStore((s) => s.homeReceptionFormations);
+  const awayReception = useMatchStore((s) => s.awayReceptionFormations);
+  const homeAttack = useMatchStore((s) => s.homeAttackFormations);
+  const awayAttack = useMatchStore((s) => s.awayAttackFormations);
+  const loadReception = useMatchStore((s) => s.loadReceptionFormations);
+  const loadAttack = useMatchStore((s) => s.loadAttackFormations);
+  const currentReception = team === 'home' ? homeReception : awayReception;
+  const currentAttack = team === 'home' ? homeAttack : awayAttack;
+
+  const applyTemplate = (tpl: FormationTemplate) => {
+    if (tpl.reception_formations) loadReception(team, tpl.reception_formations);
+    if (tpl.attack_formations) loadAttack(team, tpl.attack_formations);
+    const what = tpl.template_type === 'reception' ? 'ricezione'
+      : tpl.template_type === 'attack' ? 'attacco' : 'ricezione + attacco';
+    toast.success(`Template "${tpl.name}" applicato (${what})`);
+  };
+
+  const handleSave = async () => {
+    if (!saveName.trim()) return;
+    await saveTemplate({
+      name: saveName,
+      description: saveDescription || undefined,
+      templateType: saveType,
+      receptionFormations: saveType !== 'attack' ? currentReception : null,
+      attackFormations: saveType !== 'reception' ? currentAttack : null,
+    });
+    setSaveName('');
+    setSaveDescription('');
+    setShowSaveForm(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
