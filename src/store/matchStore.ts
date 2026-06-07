@@ -842,6 +842,14 @@ export const useMatchStore = create<MatchStore>()(
       resetAttackFormations: (team) => set(() => ({
         [team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations']: cloneDefaultAttackFormations(),
       } as Partial<MatchStore>)),
+      loadReceptionFormations: (team, formations) => set(() => ({
+        [team === 'home' ? 'homeReceptionFormations' : 'awayReceptionFormations']:
+          JSON.parse(JSON.stringify(formations)),
+      } as Partial<MatchStore>)),
+      loadAttackFormations: (team, formations) => set(() => ({
+        [team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations']:
+          JSON.parse(JSON.stringify(formations)),
+      } as Partial<MatchStore>)),
     }),
     {
       name: 'volley-scout-storage-v1',
