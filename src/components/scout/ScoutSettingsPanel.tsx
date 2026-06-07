@@ -1,9 +1,12 @@
+import { useState } from 'react';
+import { Move } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { type ScoutSettings, SCOUT_PRESETS } from '@/lib/scoutSettings';
+import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
 
 const RILEVAZIONE_ROWS = [
   { key: 'singleTeamMode' as const, label: '👤 Rileva una sola squadra', description: 'Riduce il carico cognitivo: rileva solo la tua squadra, l\'avversaria si gestisce con "Punto".' },
@@ -45,6 +48,7 @@ export function SettingRow({ label, description, checked, onChange }: { label: s
 }
 
 export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { settings: ScoutSettings; setSetting: <K extends keyof ScoutSettings>(key: K, value: ScoutSettings[K]) => void; setSettings: (patch: Partial<ScoutSettings>) => void }) {
+  const [receptionEditorOpen, setReceptionEditorOpen] = useState(false);
   const PRESETS = [
     { key: 'base' as const, label: '⚡ Base', desc: 'Veloce\nniente zone' },
     { key: 'standard' as const, label: '📊 Standard', desc: 'Con zone\ne fondamentali' },
@@ -120,6 +124,18 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
           {VISUAL_ROWS.map((row) => <SettingRow key={row.key} label={row.label} description={row.description} checked={settings[row.key]} onChange={(checked) => setSetting(row.key, checked)} />)}
         </div>
       </section>
+      <button
+        type="button"
+        onClick={() => setReceptionEditorOpen(true)}
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-border bg-secondary/20 text-sm font-bold hover:border-primary/50 hover:bg-primary/5 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Move className="w-4 h-4" />
+          Schemi ricezione / attacco
+        </span>
+        <span className="text-xs text-muted-foreground">S1 → S6</span>
+      </button>
+      <ReceptionFormationEditor open={receptionEditorOpen} onOpenChange={setReceptionEditorOpen} />
       <button
         type="button"
         onClick={() => { localStorage.removeItem('scout_seen_tips'); toast.info('Suggerimenti ripristinati'); }}
