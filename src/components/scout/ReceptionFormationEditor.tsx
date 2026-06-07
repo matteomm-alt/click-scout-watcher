@@ -2,8 +2,10 @@ import { useState, useRef } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Move } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { RotateCcw, Move, Save, FolderOpen, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFormationTemplates, type FormationTemplate } from '@/hooks/useFormationTemplates';
 
 interface Props {
   open: boolean;
