@@ -80,6 +80,8 @@ interface MatchStore {
     coord: Coord
   ) => void;
   resetAttackFormations: (team: 'home' | 'away') => void;
+  loadReceptionFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
+  loadAttackFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
