@@ -786,6 +786,53 @@ export type Database = {
           },
         ]
       }
+      formation_templates: {
+        Row: {
+          attack_formations: Json | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          reception_formations: Json | null
+          society_id: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          attack_formations?: Json | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          reception_formations?: Json | null
+          society_id: string
+          template_type?: string
+          updated_at?: string
+        }
+        Update: {
+          attack_formations?: Json | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          reception_formations?: Json | null
+          society_id?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formation_templates_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_assignments: {
         Row: {
           assigned_at: string

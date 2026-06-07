@@ -2,8 +2,10 @@ import { useState, useRef } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Move } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { RotateCcw, Move, Save, FolderOpen, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFormationTemplates, type FormationTemplate } from '@/hooks/useFormationTemplates';
 
 interface Props {
   open: boolean;
@@ -135,6 +137,44 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
   const reset = useMatchStore((s) => s.resetReceptionFormations);
   const resetAttack = useMatchStore((s) => s.resetAttackFormations);
 
+  const { templates, loading, saving, saveTemplate, deleteTemplate } = useFormationTemplates();
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveDescription, setSaveDescription] = useState('');
+  const [saveType, setSaveType] = useState<'reception' | 'attack' | 'both'>('both');
+
+  const homeReception = useMatchStore((s) => s.homeReceptionFormations);
+  const awayReception = useMatchStore((s) => s.awayReceptionFormations);
+  const homeAttack = useMatchStore((s) => s.homeAttackFormations);
+  const awayAttack = useMatchStore((s) => s.awayAttackFormations);
+  const loadReception = useMatchStore((s) => s.loadReceptionFormations);
+  const loadAttack = useMatchStore((s) => s.loadAttackFormations);
+  const currentReception = team === 'home' ? homeReception : awayReception;
+  const currentAttack = team === 'home' ? homeAttack : awayAttack;
+
+  const applyTemplate = (tpl: FormationTemplate) => {
+    if (tpl.reception_formations) loadReception(team, tpl.reception_formations);
+    if (tpl.attack_formations) loadAttack(team, tpl.attack_formations);
+    const what = tpl.template_type === 'reception' ? 'ricezione'
+      : tpl.template_type === 'attack' ? 'attacco' : 'ricezione + attacco';
+    toast.success(`Template "${tpl.name}" applicato (${what})`);
+  };
+
+  const handleSave = async () => {
+    if (!saveName.trim()) return;
+    await saveTemplate({
+      name: saveName,
+      description: saveDescription || undefined,
+      templateType: saveType,
+      receptionFormations: saveType !== 'attack' ? currentReception : null,
+      attackFormations: saveType !== 'reception' ? currentAttack : null,
+    });
+    setSaveName('');
+    setSaveDescription('');
+    setShowSaveForm(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -220,6 +260,124 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
           </p>
 
           <FormationCanvas team={team} setterPos={setterPos} mode={editorMode} />
+
+          {/* Sezione template salvati */}
+          <div className="pt-2 border-t border-border">
+            <button
+              onClick={() => setShowTemplates(v => !v)}
+              className="w-full flex items-center justify-between text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors py-1"
+            >
+              <span className="flex items-center gap-2">
+                <FolderOpen className="w-3.5 h-3.5" />
+                Template salvati ({templates.length})
+              </span>
+              {showTemplates ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+
+            {showTemplates && (
+              <div className="mt-3 space-y-3">
+                {!showSaveForm ? (
+                  <button
+                    onClick={() => setShowSaveForm(true)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 text-xs font-bold text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    Salva schema corrente come template
+                  </button>
+                ) : (
+                  <div className="space-y-2 p-3 rounded-lg border border-border bg-secondary/30">
+                    <Input
+                      placeholder="Nome template (es: W3 anti-ace)"
+                      value={saveName}
+                      onChange={e => setSaveName(e.target.value)}
+                      className="text-xs h-8"
+                      onKeyDown={e => { if (e.key === 'Enter' && saveName.trim()) handleSave(); }}
+                      autoFocus
+                    />
+                    <Input
+                      placeholder="Descrizione (opzionale)"
+                      value={saveDescription}
+                      onChange={e => setSaveDescription(e.target.value)}
+                      className="text-xs h-8"
+                    />
+                    <div className="flex gap-1">
+                      {(['reception', 'attack', 'both'] as const).map(t => (
+                        <button
+                          key={t}
+                          onClick={() => setSaveType(t)}
+                          className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${
+                            saveType === t
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {t === 'reception' ? '↙ Ric' : t === 'attack' ? '↗ Att' : '↙↗ Entrambi'}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setShowSaveForm(false); setSaveName(''); setSaveDescription(''); }}
+                        className="flex-1 py-1.5 rounded-md text-xs font-bold bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Annulla
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={!saveName.trim() || saving}
+                        className="flex-1 py-1.5 rounded-md text-xs font-bold bg-primary text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                      >
+                        {saving ? 'Salvataggio...' : 'Salva'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {loading ? (
+                  <div className="text-xs text-muted-foreground text-center py-2">Caricamento...</div>
+                ) : templates.length === 0 ? (
+                  <div className="text-xs text-muted-foreground text-center py-2 italic">
+                    Nessun template salvato. Configura uno schema e salvalo.
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {templates.map(tpl => (
+                      <div key={tpl.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary/20">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-bold text-foreground truncate">{tpl.name}</div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                              {tpl.template_type === 'both' ? '↙↗' : tpl.template_type === 'reception' ? '↙ Ric' : '↗ Att'}
+                            </span>
+                            {tpl.description && (
+                              <span className="text-[10px] text-muted-foreground truncate">{tpl.description}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => applyTemplate(tpl)}
+                            className="px-2 py-1 rounded-md text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            title="Applica al team selezionato"
+                          >
+                            Applica
+                          </button>
+                          <button
+                            onClick={() => deleteTemplate(tpl.id)}
+                            className="p-1 rounded-md text-muted-foreground hover:text-destructive transition-colors"
+                            title="Elimina template"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
 
           <div className="flex justify-between gap-2">
             <Button

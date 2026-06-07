@@ -80,6 +80,8 @@ interface MatchStore {
     coord: Coord
   ) => void;
   resetAttackFormations: (team: 'home' | 'away') => void;
+  loadReceptionFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
+  loadAttackFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
 }
 
 const defaultMatchInfo: MatchInfo = {
@@ -839,6 +841,14 @@ export const useMatchStore = create<MatchStore>()(
       }),
       resetAttackFormations: (team) => set(() => ({
         [team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations']: cloneDefaultAttackFormations(),
+      } as Partial<MatchStore>)),
+      loadReceptionFormations: (team, formations) => set(() => ({
+        [team === 'home' ? 'homeReceptionFormations' : 'awayReceptionFormations']:
+          JSON.parse(JSON.stringify(formations)),
+      } as Partial<MatchStore>)),
+      loadAttackFormations: (team, formations) => set(() => ({
+        [team === 'home' ? 'homeAttackFormations' : 'awayAttackFormations']:
+          JSON.parse(JSON.stringify(formations)),
       } as Partial<MatchStore>)),
     }),
     {
