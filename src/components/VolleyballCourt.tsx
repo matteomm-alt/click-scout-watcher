@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { getReceptionPositions } from '@/lib/receptionFormations';
-import { getAttackPositions } from '@/lib/receptionFormations';
+import { getReceptionPositions, getAttackPositions } from '@/lib/receptionFormations';
+import { getPhaseLayout, getInitialPhases } from '@/lib/tacticalPhases';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
