@@ -320,7 +320,17 @@ export const useMatchStore = create<MatchStore>()(
             }
           } catch {}
           if (updated) toast.info('Valutazione aggiornata', { duration: 1500 });
-          return { matchState: { ...s.matchState, actions } };
+          const prevAction = s.matchState.actions[s.matchState.actions.length - 1];
+          const currentPhases = s.matchState.teamTacticalPhases ?? getInitialPhases(s.matchState.servingTeam);
+          const newPhases = getNextPhases(
+            currentPhases,
+            action.skill,
+            action.team,
+            action.evaluation,
+            prevAction?.skill,
+            prevAction?.team,
+          );
+          return { matchState: { ...s.matchState, actions, teamTacticalPhases: newPhases } };
         });
         return action.id;
       },
