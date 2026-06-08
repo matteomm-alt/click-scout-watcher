@@ -279,10 +279,6 @@ export function LiveScout() {
         <div className="flex-1 min-h-0">
           <VolleyballCourt
             layout="split"
-            attackMode={{
-              home: attackPhaseTeam === 'home',
-              away: attackPhaseTeam === 'away',
-            }}
             simplifiedView={simplified}
             onPlayerClick={handlePlayerClick}
             selectedPlayer={selectedPlayer}
