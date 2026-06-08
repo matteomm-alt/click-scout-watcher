@@ -273,15 +273,7 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const atkFormations = team === 'home'
-            ? (homeAttackFormations ?? homeReceptionFormations)
-            : (awayAttackFormations ?? awayReceptionFormations);
-          const atkPositions = isAttacking
-            ? getAttackPositions(atkFormations, setterPosition, team === 'home')
-            : null;
-          const overridePos =
-            atkPositions?.[pos as 1|2|3|4|5|6]
-            ?? (recPositions ? recPositions[pos as 1|2|3|4|5|6] : null);
+          const overridePos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
           const p = overridePos ?? basePos;
 
           const logRole = logicalRoleForSlot(pos, setterPosition);
