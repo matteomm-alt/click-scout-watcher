@@ -189,13 +189,6 @@ export function VolleyballCourt({
     const showHeatmap = heatmapData && team === 'away';
     const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
 
-    const zoneCenters = team === 'home' ? ZONE_CENTERS_HOME : ZONE_CENTERS_AWAY;
-    const showZoneOverlay = !!onZoneClick && (!zoneSelectTeam || zoneSelectTeam === team);
-    const zoneClickEnabled = showZoneOverlay;
-
-    const showHeatmap = heatmapData && team === 'away';
-    const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
-
     return (
       <div
         className="relative h-full overflow-hidden rounded-md"
