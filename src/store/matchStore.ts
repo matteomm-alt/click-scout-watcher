@@ -10,6 +10,12 @@ import {
   type ReceptionFormations,
   type Coord,
 } from '@/lib/receptionFormations';
+import {
+  getInitialPhases,
+  getNextPhases,
+  resetPhasesAfterPoint,
+  replayPhases,
+} from '@/lib/tacticalPhases';
 import { toast } from 'sonner';
 
 interface MatchStore {
