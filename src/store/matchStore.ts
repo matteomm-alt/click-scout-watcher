@@ -511,6 +511,13 @@ export const useMatchStore = create<MatchStore>()(
       undoLastAction: () => set((s) => {
         const latestSnapshot = lineupSnapshots[lineupSnapshots.length - 1];
         const snapshot = latestSnapshot?.actionCount === s.matchState.actions.length ? lineupSnapshots.pop() : undefined;
+        const newActions = s.matchState.actions.slice(0, -1);
+        const servingForReplay = snapshot?.servingTeam ?? s.matchState.servingTeam;
+        const currentSetActions = newActions.filter(a => a.setNumber === s.matchState.currentSet);
+        const freshPhases = replayPhases(
+          servingForReplay,
+          currentSetActions.map(a => ({ skill: a.skill, team: a.team, evaluation: a.evaluation })),
+        );
         return {
           matchState: {
             ...s.matchState,
@@ -525,7 +532,8 @@ export const useMatchStore = create<MatchStore>()(
               homeBenchedMb: snapshot.homeBenchedMb,
               awayBenchedMb: snapshot.awayBenchedMb,
             } : {}),
-            actions: s.matchState.actions.slice(0, -1),
+            actions: newActions,
+            teamTacticalPhases: freshPhases,
           },
         };
       }),
