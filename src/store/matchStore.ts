@@ -404,6 +404,7 @@ export const useMatchStore = create<MatchStore>()(
             homeScore: newHomeScore,
             awayScore: newAwayScore,
             servingTeam: scoringTeam,
+            teamTacticalPhases: resetPhasesAfterPoint(scoringTeam),
           };
 
           if (needsRotation) {
