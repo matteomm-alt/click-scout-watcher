@@ -125,7 +125,6 @@ export function VolleyballCourt({
   heatmapData,
   liveArrows,
   receptionMode,
-  attackMode,
   highlightTeam,
   highlightPlayerNumber,
   simplifiedView = false,
@@ -139,6 +138,7 @@ export function VolleyballCourt({
   layout = 'split',
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations } = useMatchStore();
+  const teamTacticalPhases = matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam);
 
   // Pulsante server per 3s al cambio di servizio
   const [serverPulseActive, setServerPulseActive] = useState(true);
@@ -164,12 +164,30 @@ export function VolleyballCourt({
   const renderHalf = (team: 'home' | 'away') => {
     const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
-    const formations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
+    const recFormations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
+    const atkFormations = team === 'home'
+      ? (homeAttackFormations ?? homeReceptionFormations)
+      : (awayAttackFormations ?? awayReceptionFormations);
+
+    const phase = team === 'home' ? teamTacticalPhases.home : teamTacticalPhases.away;
+    const phaseLayout = getPhaseLayout(phase);
+
+    let overridePositions: ReturnType<typeof getReceptionPositions> | null = null;
+    if (phaseLayout === 'reception') {
+      overridePositions = getReceptionPositions(recFormations, setterPosition, team === 'home');
+    } else if (phaseLayout === 'attack') {
+      overridePositions = getAttackPositions(atkFormations, setterPosition, team === 'home');
+    }
+    // 'defense' e 'normal' → nessun override (rotazione standard)
+
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
-    const isAttacking = team === 'home' ? !!attackMode?.home : !!attackMode?.away;
-    const recPositions = isReceiving
-      ? getReceptionPositions(formations, setterPosition, team === 'home')
-      : null;
+
+    const zoneCenters = team === 'home' ? ZONE_CENTERS_HOME : ZONE_CENTERS_AWAY;
+    const showZoneOverlay = !!onZoneClick && (!zoneSelectTeam || zoneSelectTeam === team);
+    const zoneClickEnabled = showZoneOverlay;
+
+    const showHeatmap = heatmapData && team === 'away';
+    const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
 
     const zoneCenters = team === 'home' ? ZONE_CENTERS_HOME : ZONE_CENTERS_AWAY;
     const showZoneOverlay = !!onZoneClick && (!zoneSelectTeam || zoneSelectTeam === team);
