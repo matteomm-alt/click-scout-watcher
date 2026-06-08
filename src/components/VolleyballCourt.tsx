@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { getReceptionPositions } from '@/lib/receptionFormations';
-import { getAttackPositions } from '@/lib/receptionFormations';
+import { getReceptionPositions, getAttackPositions } from '@/lib/receptionFormations';
+import { getPhaseLayout, getInitialPhases } from '@/lib/tacticalPhases';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
@@ -63,8 +63,6 @@ interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
   liveArrows?: LiveArrow[];
   receptionMode?: { home?: boolean; away?: boolean };
-  /** Modalità attacco post-ricezione: sposta le giocatrici in posizione d'attacco */
-  attackMode?: { home?: boolean; away?: boolean };
   highlightTeam?: 'home' | 'away' | null;
   highlightPlayerNumber?: number | null;
   simplifiedView?: boolean;
@@ -127,7 +125,6 @@ export function VolleyballCourt({
   heatmapData,
   liveArrows,
   receptionMode,
-  attackMode,
   highlightTeam,
   highlightPlayerNumber,
   simplifiedView = false,
@@ -141,6 +138,7 @@ export function VolleyballCourt({
   layout = 'split',
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations } = useMatchStore();
+  const teamTacticalPhases = matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam);
 
   // Pulsante server per 3s al cambio di servizio
   const [serverPulseActive, setServerPulseActive] = useState(true);
@@ -166,12 +164,23 @@ export function VolleyballCourt({
   const renderHalf = (team: 'home' | 'away') => {
     const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
-    const formations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
+    const recFormations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
+    const atkFormations = team === 'home'
+      ? (homeAttackFormations ?? homeReceptionFormations)
+      : (awayAttackFormations ?? awayReceptionFormations);
+
+    const phase = team === 'home' ? teamTacticalPhases.home : teamTacticalPhases.away;
+    const phaseLayout = getPhaseLayout(phase);
+
+    let overridePositions: ReturnType<typeof getReceptionPositions> | null = null;
+    if (phaseLayout === 'reception') {
+      overridePositions = getReceptionPositions(recFormations, setterPosition, team === 'home');
+    } else if (phaseLayout === 'attack') {
+      overridePositions = getAttackPositions(atkFormations, setterPosition, team === 'home');
+    }
+    // 'defense' e 'normal' → nessun override (rotazione standard)
+
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
-    const isAttacking = team === 'home' ? !!attackMode?.home : !!attackMode?.away;
-    const recPositions = isReceiving
-      ? getReceptionPositions(formations, setterPosition, team === 'home')
-      : null;
 
     const zoneCenters = team === 'home' ? ZONE_CENTERS_HOME : ZONE_CENTERS_AWAY;
     const showZoneOverlay = !!onZoneClick && (!zoneSelectTeam || zoneSelectTeam === team);
@@ -264,15 +273,7 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const atkFormations = team === 'home'
-            ? (homeAttackFormations ?? homeReceptionFormations)
-            : (awayAttackFormations ?? awayReceptionFormations);
-          const atkPositions = isAttacking
-            ? getAttackPositions(atkFormations, setterPosition, team === 'home')
-            : null;
-          const overridePos =
-            atkPositions?.[pos as 1|2|3|4|5|6]
-            ?? (recPositions ? recPositions[pos as 1|2|3|4|5|6] : null);
+          const overridePos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
           const p = overridePos ?? basePos;
 
           const logRole = logicalRoleForSlot(pos, setterPosition);

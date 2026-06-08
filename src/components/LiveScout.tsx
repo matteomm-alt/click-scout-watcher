@@ -45,8 +45,6 @@ export function LiveScout() {
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
-  // Fase tattica: 'attack' attiva dopo una R per la squadra ricevente
-  const [attackPhaseTeam, setAttackPhaseTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
 
@@ -61,10 +59,6 @@ export function LiveScout() {
   const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   // Apri dialog fine set quando setOverPending
-  // Reset fase attacco a fine rally (cambio punteggio)
-  useEffect(() => {
-    setAttackPhaseTeam(null);
-  }, [matchState.homeScore, matchState.awayScore]);
 
   useEffect(() => {
     if (matchState.setOverPending) setEndSetDialog(true);
@@ -124,14 +118,6 @@ export function LiveScout() {
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
-    // Dopo una ricezione → attiva la fase attacco visiva per la squadra ricevente
-    if (skill === 'R' && team) {
-      setAttackPhaseTeam(team);
-    }
-    // Dopo un attacco o battuta → resetta la fase attacco
-    if (skill === 'A' || skill === 'S') {
-      setAttackPhaseTeam(null);
-    }
   };
 
   const handleZoneSelect = (zone: number) => {
@@ -145,12 +131,8 @@ export function LiveScout() {
     }
     setZoneSelectMode(false);
     setPendingActionId(null);
-    const wasAttack = pendingSkill === 'A';
     setPendingSkill(null);
     setPendingTeam(null);
-    if (wasAttack) {
-      setAttackPhaseTeam(null);
-    }
   };
 
   const skipZone = () => {
@@ -243,10 +225,6 @@ export function LiveScout() {
                 home: matchState.servingTeam === 'away',
                 away: matchState.servingTeam === 'home',
               }}
-              attackMode={{
-                home: attackPhaseTeam === 'home',
-                away: attackPhaseTeam === 'away',
-              }}
               simplifiedView={simplified}
               onPlayerClick={handlePlayerClick}
               selectedPlayer={selectedPlayer}
@@ -301,10 +279,6 @@ export function LiveScout() {
         <div className="flex-1 min-h-0">
           <VolleyballCourt
             layout="split"
-            attackMode={{
-              home: attackPhaseTeam === 'home',
-              away: attackPhaseTeam === 'away',
-            }}
             simplifiedView={simplified}
             onPlayerClick={handlePlayerClick}
             selectedPlayer={selectedPlayer}

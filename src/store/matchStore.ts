@@ -10,6 +10,12 @@ import {
   type ReceptionFormations,
   type Coord,
 } from '@/lib/receptionFormations';
+import {
+  getInitialPhases,
+  getNextPhases,
+  resetPhasesAfterPoint,
+  replayPhases,
+} from '@/lib/tacticalPhases';
 import { toast } from 'sonner';
 
 interface MatchStore {
@@ -138,6 +144,7 @@ const defaultMatchState: MatchState = {
   setOverPending: false,
   homeBenchedMb: null,
   awayBenchedMb: null,
+  teamTacticalPhases: getInitialPhases('home'),
 };
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
@@ -313,7 +320,17 @@ export const useMatchStore = create<MatchStore>()(
             }
           } catch {}
           if (updated) toast.info('Valutazione aggiornata', { duration: 1500 });
-          return { matchState: { ...s.matchState, actions } };
+          const prevAction = s.matchState.actions[s.matchState.actions.length - 1];
+          const currentPhases = s.matchState.teamTacticalPhases ?? getInitialPhases(s.matchState.servingTeam);
+          const newPhases = getNextPhases(
+            currentPhases,
+            action.skill,
+            action.team,
+            action.evaluation,
+            prevAction?.skill,
+            prevAction?.team,
+          );
+          return { matchState: { ...s.matchState, actions, teamTacticalPhases: newPhases } };
         });
         return action.id;
       },
@@ -387,6 +404,7 @@ export const useMatchStore = create<MatchStore>()(
             homeScore: newHomeScore,
             awayScore: newAwayScore,
             servingTeam: scoringTeam,
+            teamTacticalPhases: resetPhasesAfterPoint(scoringTeam),
           };
 
           if (needsRotation) {
@@ -493,6 +511,13 @@ export const useMatchStore = create<MatchStore>()(
       undoLastAction: () => set((s) => {
         const latestSnapshot = lineupSnapshots[lineupSnapshots.length - 1];
         const snapshot = latestSnapshot?.actionCount === s.matchState.actions.length ? lineupSnapshots.pop() : undefined;
+        const newActions = s.matchState.actions.slice(0, -1);
+        const servingForReplay = snapshot?.servingTeam ?? s.matchState.servingTeam;
+        const currentSetActions = newActions.filter(a => a.setNumber === s.matchState.currentSet);
+        const freshPhases = replayPhases(
+          servingForReplay,
+          currentSetActions.map(a => ({ skill: a.skill, team: a.team, evaluation: a.evaluation })),
+        );
         return {
           matchState: {
             ...s.matchState,
@@ -507,7 +532,8 @@ export const useMatchStore = create<MatchStore>()(
               homeBenchedMb: snapshot.homeBenchedMb,
               awayBenchedMb: snapshot.awayBenchedMb,
             } : {}),
-            actions: s.matchState.actions.slice(0, -1),
+            actions: newActions,
+            teamTacticalPhases: freshPhases,
           },
         };
       }),

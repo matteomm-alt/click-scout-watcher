@@ -223,6 +223,8 @@ export interface MatchState {
   // Auto-swap libero: numero del centrale in panchina sostituito dal libero (per squadra)
   homeBenchedMb?: number | null;
   awayBenchedMb?: number | null;
+  // Fasi tattiche correnti per ciascuna squadra (paradigma OVS)
+  teamTacticalPhases?: import('@/lib/tacticalPhases').TeamTacticalPhases;
 }
 
 // Re-export per comodità: i tipi delle formazioni di ricezione vivono in @/lib/receptionFormations
