@@ -45,8 +45,6 @@ export function LiveScout() {
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
-  // Fase tattica: 'attack' attiva dopo una R per la squadra ricevente
-  const [attackPhaseTeam, setAttackPhaseTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
 
