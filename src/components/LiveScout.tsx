@@ -59,10 +59,6 @@ export function LiveScout() {
   const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   // Apri dialog fine set quando setOverPending
-  // Reset fase attacco a fine rally (cambio punteggio)
-  useEffect(() => {
-    setAttackPhaseTeam(null);
-  }, [matchState.homeScore, matchState.awayScore]);
 
   useEffect(() => {
     if (matchState.setOverPending) setEndSetDialog(true);
