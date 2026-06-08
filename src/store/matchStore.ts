@@ -144,6 +144,7 @@ const defaultMatchState: MatchState = {
   setOverPending: false,
   homeBenchedMb: null,
   awayBenchedMb: null,
+  teamTacticalPhases: getInitialPhases('home'),
 };
 
 const nowTime = () => new Date().toTimeString().slice(0, 8);
