@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getReceptionPositions, getAttackPositions } from '@/lib/receptionFormations';
 import { getPhaseLayout, getInitialPhases } from '@/lib/tacticalPhases';
+import { getPhasePositionOverride } from '@/lib/courtPositionResolver';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
@@ -273,8 +274,9 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const overridePos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
-          const p = overridePos ?? basePos;
+          const formationPos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
+          const phaseOverride = getPhasePositionOverride(phase, pos, setterPosition, team === 'home');
+          const p = phaseOverride ?? formationPos ?? basePos;
 
           const logRole = logicalRoleForSlot(pos, setterPosition);
           const isSetter = logRole === 'setter';

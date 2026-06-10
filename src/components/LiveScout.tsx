@@ -21,6 +21,8 @@ import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
 import { CSLiveString } from '@/components/scout/CSLiveString';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
+import { TouchFlowPanel, type ScoutingMode } from '@/components/scout/TouchFlowPanel';
+import { suggestNextTouch, SKILL_BANNER, type TouchSuggestion } from '@/lib/scoutSuggestions';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -33,10 +35,12 @@ const SKILLS_WITH_ZONE: Skill[] = ['A', 'S', 'R', 'D'];
 export function LiveScout() {
   const {
     matchState, homeTeam, awayTeam, matchInfo, homeLineup, awayLineup,
-    endSet, updateAction, addPoint, undoLastAction, undoRally,
+    endSet, updateAction, addPoint, addAction, undoLastAction, undoRally,
     callTimeout, substitutePlayer,
   } = useMatchStore();
   const { settings, setSetting, setSettings } = useScoutSettings();
+  const scoutingMode: ScoutingMode =
+    (!settings.showAlzata && !settings.showDifesa) ? 'simple' : 'advanced';
 
   // Stato interno
   const [selectedPlayer, setSelectedPlayer] = useState<{ number: number; team: 'home' | 'away' } | null>(null);
@@ -47,6 +51,7 @@ export function LiveScout() {
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
+  const [suggestion, setSuggestion] = useState<TouchSuggestion | null>(null);
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -63,6 +68,12 @@ export function LiveScout() {
   useEffect(() => {
     if (matchState.setOverPending) setEndSetDialog(true);
   }, [matchState.setOverPending]);
+
+  // Reset suggerimento e skill pendente a fine rally (punto registrato)
+  useEffect(() => {
+    setSuggestion(null);
+    setPendingSkill(null);
+  }, [matchState.homeScore, matchState.awayScore]);
 
   // Salvataggio automatico su Supabase ogni 5 azioni (best-effort).
   useEffect(() => {
@@ -94,13 +105,15 @@ export function LiveScout() {
 
   // === Handlers ===
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
-    // Se siamo in zoneSelectMode, ignora il click sul giocatore
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
-    setBottomSheetOpen(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setBottomSheetOpen(true);
+    }
   };
   const handleActionComplete = (actionId: string, skill: Skill) => {
     setBottomSheetOpen(false);
+    setPendingSkill(null);
     const team = selectedPlayer?.team ?? null;
     const num = selectedPlayer?.number ?? null;
     if (team) {
@@ -118,6 +131,12 @@ export function LiveScout() {
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
+    const lastAction = matchState.actions[matchState.actions.length - 1];
+    const nextSugg = suggestNextTouch(
+      skill, team, lastAction?.evaluation ?? null,
+      scoutingMode === 'simple', matchState.servingTeam,
+    );
+    setSuggestion(nextSugg.skill ? nextSugg : null);
   };
 
   const handleZoneSelect = (zone: number) => {
@@ -191,10 +210,25 @@ export function LiveScout() {
       <div className="hidden md:flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
         {/* Colonna campi */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {/* CSServePanel + toggle pulito */}
+          {/* CSServePanel + banner suggerimento + toggle pulito */}
           <div className="flex items-center gap-2">
             <CSServePanel />
             <div className="flex-1" />
+            {suggestion?.skill && suggestion.team && (
+              <div className={`min-h-[44px] px-3 rounded-md border-2 flex items-center gap-2 text-xs font-black uppercase tracking-wider ${
+                suggestion.team === 'home'
+                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
+                  : 'border-red-500/40 bg-red-500/10 text-red-400'
+              }`}>
+                <span>{SKILL_BANNER[suggestion.skill]}</span>
+                <span className="opacity-60">→</span>
+                <span className="truncate max-w-[120px]">
+                  {suggestion.team === 'home'
+                    ? (homeTeam.name || 'Casa')
+                    : (awayTeam.name || 'Ospite')}
+                </span>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setSimplified((v) => !v)}
@@ -240,37 +274,96 @@ export function LiveScout() {
           <CSRallyHistory />
         </div>
 
-        {/* Pannello laterale destro: tab analisi */}
+        {/* Pannello laterale destro */}
         <div className="w-[320px] shrink-0 flex flex-col gap-2 min-h-0">
-          <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
-            {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
-              const active = rightTab === t;
-              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setRightTab(t)}
-                  className={`text-xs font-black uppercase tracking-wider py-2 rounded transition-colors active:scale-95 ${
-                    active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {labels[t]}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto glass rounded-xl p-3">
-            {rightTab === 'log' && <ActionLog actions={recentActions} />}
-            {rightTab === 'stats' && (
-              <div className="space-y-3">
-                <InSetStatsPanel />
-                <PlayerStatsPanel />
+          {selectedPlayer ? (
+            <div className="flex-1 min-h-0">
+              <TouchFlowPanel
+                selectedPlayer={(() => {
+                  const td = selectedPlayer.team === 'home' ? homeTeam : awayTeam;
+                  const p = td.players.find(pl => pl.number === selectedPlayer.number);
+                  return {
+                    number: selectedPlayer.number,
+                    lastName: p?.lastName ?? `#${selectedPlayer.number}`,
+                    role: p?.role,
+                    team: selectedPlayer.team,
+                  };
+                })()}
+                selectedSkill={pendingSkill}
+                mode={scoutingMode}
+                suggestedSkill={
+                  suggestion?.team === selectedPlayer.team ? suggestion.skill : null
+                }
+                teamName={selectedPlayer.team === 'home'
+                  ? (homeTeam.name || 'Casa')
+                  : (awayTeam.name || 'Ospite')}
+                onSkillSelect={(skill) => {
+                  if (skill === null) { setPendingSkill(null); return; }
+                  setPendingSkill(skill);
+                }}
+                onEvaluationSelect={(evaluation) => {
+                  const skillToUse = pendingSkill
+                    ?? (scoutingMode === 'simple'
+                        && suggestion?.team === selectedPlayer.team
+                        ? suggestion.skill : null);
+                  if (!skillToUse) return;
+                  const id = addAction({
+                    team: selectedPlayer.team,
+                    playerNumber: selectedPlayer.number,
+                    skill: skillToUse,
+                    skillType: 'H',
+                    evaluation,
+                    timestamp: '',
+                    code: '',
+                  });
+                  if (settings.autoPoint && evaluation === '#' && skillToUse === 'S') {
+                    addPoint(selectedPlayer.team);
+                  } else if (settings.autoPoint && evaluation === '='
+                      && (skillToUse === 'S' || skillToUse === 'A')) {
+                    const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
+                    addPoint(opp);
+                  }
+                  handleActionComplete(id, skillToUse);
+                }}
+                onCancel={() => {
+                  setSelectedPlayer(null);
+                  setPendingSkill(null);
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+                {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
+                  const active = rightTab === t;
+                  const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setRightTab(t)}
+                      className={`text-xs font-black uppercase tracking-wider py-2 rounded transition-colors active:scale-95 ${
+                        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {labels[t]}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-            {rightTab === 'heat' && <AttackHeatmap team="all" />}
-            {rightTab === 'quick' && <QuickActions />}
-          </div>
+              <div className="flex-1 min-h-0 overflow-y-auto glass rounded-xl p-3">
+                {rightTab === 'log' && <ActionLog actions={recentActions} />}
+                {rightTab === 'stats' && (
+                  <div className="space-y-3">
+                    <InSetStatsPanel />
+                    <PlayerStatsPanel />
+                  </div>
+                )}
+                {rightTab === 'heat' && <AttackHeatmap team="all" />}
+                {rightTab === 'quick' && <QuickActions />}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
