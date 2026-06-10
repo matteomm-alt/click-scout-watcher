@@ -274,37 +274,94 @@ export function LiveScout() {
           <CSRallyHistory />
         </div>
 
-        {/* Pannello laterale destro: tab analisi */}
+        {/* Pannello laterale destro */}
         <div className="w-[320px] shrink-0 flex flex-col gap-2 min-h-0">
-          <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
-            {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
-              const active = rightTab === t;
-              const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setRightTab(t)}
-                  className={`text-xs font-black uppercase tracking-wider py-2 rounded transition-colors active:scale-95 ${
-                    active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {labels[t]}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto glass rounded-xl p-3">
-            {rightTab === 'log' && <ActionLog actions={recentActions} />}
-            {rightTab === 'stats' && (
-              <div className="space-y-3">
-                <InSetStatsPanel />
-                <PlayerStatsPanel />
+          {selectedPlayer ? (
+            <div className="flex-1 min-h-0">
+              <TouchFlowPanel
+                selectedPlayer={(() => {
+                  const td = selectedPlayer.team === 'home' ? homeTeam : awayTeam;
+                  const p = td.players.find(pl => pl.number === selectedPlayer.number);
+                  return {
+                    number: selectedPlayer.number,
+                    lastName: p?.lastName ?? `#${selectedPlayer.number}`,
+                    role: p?.role,
+                    team: selectedPlayer.team,
+                  };
+                })()}
+                selectedSkill={pendingSkill}
+                mode={scoutingMode}
+                suggestedSkill={
+                  suggestion?.team === selectedPlayer.team ? suggestion.skill : null
+                }
+                teamName={selectedPlayer.team === 'home'
+                  ? (homeTeam.name || 'Casa')
+                  : (awayTeam.name || 'Ospite')}
+                onSkillSelect={(skill) => {
+                  if (skill === null) { setPendingSkill(null); return; }
+                  setPendingSkill(skill);
+                }}
+                onEvaluationSelect={(evaluation) => {
+                  const skillToUse = pendingSkill
+                    ?? (scoutingMode === 'simple'
+                        && suggestion?.team === selectedPlayer.team
+                        ? suggestion.skill : null);
+                  if (!skillToUse) return;
+                  const id = addAction({
+                    team: selectedPlayer.team,
+                    playerNumber: selectedPlayer.number,
+                    skill: skillToUse,
+                    skillType: 'H',
+                    evaluation,
+                  });
+                  if (settings.autoPoint && evaluation === '#' && skillToUse === 'S') {
+                    addPoint(selectedPlayer.team);
+                  } else if (settings.autoPoint && evaluation === '='
+                      && (skillToUse === 'S' || skillToUse === 'A')) {
+                    const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
+                    addPoint(opp);
+                  }
+                  handleActionComplete(id, skillToUse);
+                }}
+                onCancel={() => {
+                  setSelectedPlayer(null);
+                  setPendingSkill(null);
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+                {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
+                  const active = rightTab === t;
+                  const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setRightTab(t)}
+                      className={`text-xs font-black uppercase tracking-wider py-2 rounded transition-colors active:scale-95 ${
+                        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {labels[t]}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-            {rightTab === 'heat' && <AttackHeatmap team="all" />}
-            {rightTab === 'quick' && <QuickActions />}
-          </div>
+              <div className="flex-1 min-h-0 overflow-y-auto glass rounded-xl p-3">
+                {rightTab === 'log' && <ActionLog actions={recentActions} />}
+                {rightTab === 'stats' && (
+                  <div className="space-y-3">
+                    <InSetStatsPanel />
+                    <PlayerStatsPanel />
+                  </div>
+                )}
+                {rightTab === 'heat' && <AttackHeatmap team="all" />}
+                {rightTab === 'quick' && <QuickActions />}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
