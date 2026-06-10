@@ -210,10 +210,25 @@ export function LiveScout() {
       <div className="hidden md:flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
         {/* Colonna campi */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {/* CSServePanel + toggle pulito */}
+          {/* CSServePanel + banner suggerimento + toggle pulito */}
           <div className="flex items-center gap-2">
             <CSServePanel />
             <div className="flex-1" />
+            {suggestion?.skill && suggestion.team && (
+              <div className={`min-h-[44px] px-3 rounded-md border-2 flex items-center gap-2 text-xs font-black uppercase tracking-wider ${
+                suggestion.team === 'home'
+                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
+                  : 'border-red-500/40 bg-red-500/10 text-red-400'
+              }`}>
+                <span>{SKILL_BANNER[suggestion.skill]}</span>
+                <span className="opacity-60">→</span>
+                <span className="truncate max-w-[120px]">
+                  {suggestion.team === 'home'
+                    ? (homeTeam.name || 'Casa')
+                    : (awayTeam.name || 'Ospite')}
+                </span>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setSimplified((v) => !v)}
