@@ -69,6 +69,12 @@ export function LiveScout() {
     if (matchState.setOverPending) setEndSetDialog(true);
   }, [matchState.setOverPending]);
 
+  // Reset suggerimento e skill pendente a fine rally (punto registrato)
+  useEffect(() => {
+    setSuggestion(null);
+    setPendingSkill(null);
+  }, [matchState.homeScore, matchState.awayScore]);
+
   // Salvataggio automatico su Supabase ogni 5 azioni (best-effort).
   useEffect(() => {
     if (!user || matchState.actions.length === 0) return;
