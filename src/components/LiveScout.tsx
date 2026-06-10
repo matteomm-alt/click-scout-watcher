@@ -313,7 +313,7 @@ export function LiveScout() {
                     skill: skillToUse,
                     skillType: 'H',
                     evaluation,
-                    timestamp: 0,
+                    timestamp: '',
                     code: '',
                   });
                   if (settings.autoPoint && evaluation === '#' && skillToUse === 'S') {
