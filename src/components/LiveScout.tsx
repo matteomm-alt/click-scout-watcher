@@ -21,6 +21,8 @@ import { CSServePanel } from '@/components/scout/CSServePanel';
 import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
 import { CSLiveString } from '@/components/scout/CSLiveString';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
+import { TouchFlowPanel, type ScoutingMode } from '@/components/scout/TouchFlowPanel';
+import { suggestNextTouch, SKILL_BANNER, type TouchSuggestion } from '@/lib/scoutSuggestions';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -33,10 +35,12 @@ const SKILLS_WITH_ZONE: Skill[] = ['A', 'S', 'R', 'D'];
 export function LiveScout() {
   const {
     matchState, homeTeam, awayTeam, matchInfo, homeLineup, awayLineup,
-    endSet, updateAction, addPoint, undoLastAction, undoRally,
+    endSet, updateAction, addPoint, addAction, undoLastAction, undoRally,
     callTimeout, substitutePlayer,
   } = useMatchStore();
   const { settings, setSetting, setSettings } = useScoutSettings();
+  const scoutingMode: ScoutingMode =
+    (!settings.showAlzata && !settings.showDifesa) ? 'simple' : 'advanced';
 
   // Stato interno
   const [selectedPlayer, setSelectedPlayer] = useState<{ number: number; team: 'home' | 'away' } | null>(null);
@@ -47,6 +51,7 @@ export function LiveScout() {
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
+  const [suggestion, setSuggestion] = useState<TouchSuggestion | null>(null);
 
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
