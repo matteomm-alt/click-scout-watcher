@@ -99,13 +99,15 @@ export function LiveScout() {
 
   // === Handlers ===
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
-    // Se siamo in zoneSelectMode, ignora il click sul giocatore
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
-    setBottomSheetOpen(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setBottomSheetOpen(true);
+    }
   };
   const handleActionComplete = (actionId: string, skill: Skill) => {
     setBottomSheetOpen(false);
+    setPendingSkill(null);
     const team = selectedPlayer?.team ?? null;
     const num = selectedPlayer?.number ?? null;
     if (team) {
@@ -123,6 +125,12 @@ export function LiveScout() {
       setPendingTeam(team);
       setZoneSelectMode(true);
     }
+    const lastAction = matchState.actions[matchState.actions.length - 1];
+    const nextSugg = suggestNextTouch(
+      skill, team, lastAction?.evaluation ?? null,
+      scoutingMode === 'simple', matchState.servingTeam,
+    );
+    setSuggestion(nextSugg.skill ? nextSugg : null);
   };
 
   const handleZoneSelect = (zone: number) => {
