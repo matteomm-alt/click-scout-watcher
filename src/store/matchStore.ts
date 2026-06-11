@@ -8,6 +8,7 @@ import type { MatchEvent, TouchEvent } from '@/types/matchEvents';
 import {
   cloneDefaultFormations,
   cloneDefaultAttackFormations,
+  cloneDefaultDefenseFormations,
   type ReceptionFormations,
   type Coord,
 } from '@/lib/receptionFormations';
