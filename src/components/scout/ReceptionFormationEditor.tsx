@@ -206,7 +206,9 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Move className="w-4 h-4" />
-            {editorMode === 'reception' ? 'Schemi di ricezione 5-1' : 'Schemi di attacco 5-1'}
+            {editorMode === 'reception' ? 'Schemi di ricezione'
+              : editorMode === 'attack' ? 'Schemi di attacco'
+              : 'Schemi di difesa'}
           </DialogTitle>
         </DialogHeader>
 
