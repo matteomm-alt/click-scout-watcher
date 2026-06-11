@@ -40,11 +40,24 @@ function FormationCanvas({
   const attackFormations = useMatchStore((s) =>
     team === 'home' ? s.homeAttackFormations : s.awayAttackFormations
   );
-  const formations = mode === 'reception' ? receptionFormations : attackFormations;
+  const defenseFormations = useMatchStore((s) =>
+    team === 'home' ? s.homeDefenseFormations : s.awayDefenseFormations
+  );
+  const formations = mode === 'reception'
+    ? receptionFormations
+    : mode === 'attack'
+    ? attackFormations
+    : defenseFormations;
 
   const setReceptionPosition = useMatchStore((s) => s.setReceptionPosition);
   const setAttackPosition = useMatchStore((s) => s.setAttackPosition);
-  const setPosition = mode === 'reception' ? setReceptionPosition : setAttackPosition;
+  const setDefensePositionFn = useMatchStore((s) => s.setDefensePosition);
+  const setPosition = mode === 'reception'
+    ? setReceptionPosition
+    : mode === 'attack'
+    ? setAttackPosition
+    : (team: 'home'|'away', sp: number, sl: number, c: { x: number; y: number }) =>
+        setDefensePositionFn(team, sp as 1|2|3|4|5|6, sl as 1|2|3|4|5|6, c);
 
   const teamData = useMatchStore((s) => (team === 'home' ? s.homeTeam : s.awayTeam));
   const lineup = useMatchStore((s) =>
