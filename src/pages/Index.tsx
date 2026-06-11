@@ -3,6 +3,7 @@ import { MatchSetup } from '@/components/MatchSetup';
 import { RosterManager } from '@/components/RosterManager';
 import { LineupSelector } from '@/components/LineupSelector';
 import { LiveScout } from '@/components/LiveScout';
+import { MatchConfig } from '@/components/MatchConfig';
 
 const Index = () => {
   const step = useMatchStore((s) => s.step);
@@ -14,6 +15,8 @@ const Index = () => {
       return <RosterManager />;
     case 'lineup':
       return <LineupSelector />;
+    case 'config':
+      return <MatchConfig />;
     case 'scout':
       return <LiveScout />;
     default:
