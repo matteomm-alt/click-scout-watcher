@@ -398,6 +398,12 @@ export function LiveScout() {
           onPointHome={() => addPoint('home')}
           onPointAway={() => addPoint('away')}
           onUndoAction={undoLastAction}
+          onRemoveLastTouch={() => {
+            const removed = removeLastTouchFromCurrentRally();
+            if (!removed) {
+              toast.info('Nessun tocco da rimuovere nel rally corrente', { duration: 1200 });
+            }
+          }}
           onUndoRally={() => {
             const n = undoRally();
             if (n > 0) toast.success(`Rally annullato (${n} azioni)`);
