@@ -190,3 +190,42 @@ export function getAttackPositions(
 export function cloneDefaultAttackFormations(): ReceptionFormations {
   return JSON.parse(JSON.stringify(DEFAULT_ATTACK_FORMATIONS));
 }
+
+export const DEFAULT_DEFENSE_FORMATIONS: ReceptionFormations = {
+  1: { 1:{x:50,y:50}, 2:{x:50,y:50}, 3:{x:50,y:50}, 4:{x:50,y:50}, 5:{x:50,y:50}, 6:{x:50,y:50} },
+  2: { 1:{x:50,y:50}, 2:{x:50,y:50}, 3:{x:50,y:50}, 4:{x:50,y:50}, 5:{x:50,y:50}, 6:{x:50,y:50} },
+  3: { 1:{x:50,y:50}, 2:{x:50,y:50}, 3:{x:50,y:50}, 4:{x:50,y:50}, 5:{x:50,y:50}, 6:{x:50,y:50} },
+  4: { 1:{x:50,y:50}, 2:{x:50,y:50}, 3:{x:50,y:50}, 4:{x:50,y:50}, 5:{x:50,y:50}, 6:{x:50,y:50} },
+  5: { 1:{x:50,y:50}, 2:{x:50,y:50}, 3:{x:50,y:50}, 4:{x:50,y:50}, 5:{x:50,y:50}, 6:{x:50,y:50} },
+  6: { 1:{x:50,y:50}, 2:{x:50,y:50}, 3:{x:50,y:50}, 4:{x:50,y:50}, 5:{x:50,y:50}, 6:{x:50,y:50} },
+};
+
+export function cloneDefaultDefenseFormations(): ReceptionFormations {
+  return JSON.parse(JSON.stringify(DEFAULT_DEFENSE_FORMATIONS));
+}
+
+export function getDefensePositions(
+  formations: ReceptionFormations,
+  setterPosition: number,
+  mirror: boolean,
+): SlotPositions | null {
+  const sp = (Math.min(6, Math.max(1, setterPosition)) as 1|2|3|4|5|6);
+  const base = formations[sp] ?? DEFAULT_DEFENSE_FORMATIONS[sp];
+  const isUnconfigured = Object.values(base).every(p => p.x === 50 && p.y === 50);
+  if (isUnconfigured) return null;
+  if (!mirror) return base;
+  const out = {} as SlotPositions;
+  (Object.keys(base) as unknown as (keyof SlotPositions)[]).forEach(k => {
+    out[k] = { x: base[k].x, y: 100 - base[k].y };
+  });
+  return out;
+}
+
+export function isDefenseConfigured(
+  formations: ReceptionFormations,
+  setterPosition: number,
+): boolean {
+  const sp = (Math.min(6, Math.max(1, setterPosition)) as 1|2|3|4|5|6);
+  const base = formations[sp] ?? DEFAULT_DEFENSE_FORMATIONS[sp];
+  return Object.values(base).some(p => p.x !== 50 || p.y !== 50);
+}
