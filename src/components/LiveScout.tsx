@@ -38,6 +38,7 @@ export function LiveScout() {
     endSet, updateAction, addPoint, addAction, undoLastAction, undoRally,
     callTimeout, substitutePlayer,
   } = useMatchStore();
+  const removeLastTouchFromCurrentRally = useMatchStore(s => s.removeLastTouchFromCurrentRally);
   const { settings, setSetting, setSettings } = useScoutSettings();
   const scoutingMode: ScoutingMode =
     (!settings.showAlzata && !settings.showDifesa) ? 'simple' : 'advanced';
