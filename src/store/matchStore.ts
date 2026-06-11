@@ -86,6 +86,12 @@ interface MatchStore {
   resetAttackFormations: (team: 'home' | 'away') => void;
   loadReceptionFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
   loadAttackFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
+  homeDefenseFormations: ReceptionFormations;
+  awayDefenseFormations: ReceptionFormations;
+  setDefensePosition: (team: 'home'|'away', setterPosition: 1|2|3|4|5|6, slot: 1|2|3|4|5|6, coord: Coord) => void;
+  resetDefenseFormations: (team: 'home'|'away') => void;
+  loadDefenseFormations: (team: 'home'|'away', formations: ReceptionFormations) => void;
+  removeLastTouchFromCurrentRally: () => boolean;
 }
 
 const defaultMatchInfo: MatchInfo = {
