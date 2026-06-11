@@ -160,6 +160,7 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
   const awayTeam = useMatchStore((s) => s.awayTeam);
   const reset = useMatchStore((s) => s.resetReceptionFormations);
   const resetAttack = useMatchStore((s) => s.resetAttackFormations);
+  const resetDefense = useMatchStore((s) => s.resetDefenseFormations);
 
   const { templates, loading, saving, saveTemplate, deleteTemplate } = useFormationTemplates();
   const [showTemplates, setShowTemplates] = useState(false);
