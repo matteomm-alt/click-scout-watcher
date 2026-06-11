@@ -113,7 +113,7 @@ function LongPressBtn({
 }
 
 export function CSToolbar({
-  onUndoAction, onUndoRally, onSubstitution,
+  onUndoAction, onRemoveLastTouch, onUndoRally, onSubstitution,
   onTimeoutHome, onTimeoutAway, onEndSet, onExport, onSettings,
   onPointHome, onPointAway, onQuickActions,
   homeName = 'Casa', awayName = 'Ospite',
