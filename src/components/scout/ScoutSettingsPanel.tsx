@@ -5,8 +5,9 @@ import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { type ScoutSettings, SCOUT_PRESETS } from '@/lib/scoutSettings';
+import { type ScoutSettings, SCOUT_PRESETS, MODE_PRESETS, getScoutingMode } from '@/lib/scoutSettings';
 import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
+import { cn } from '@/lib/utils';
 
 const RILEVAZIONE_ROWS = [
   { key: 'singleTeamMode' as const, label: '👤 Rileva una sola squadra', description: 'Riduce il carico cognitivo: rileva solo la tua squadra, l\'avversaria si gestisce con "Punto".' },
