@@ -426,10 +426,13 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
               onClick={() => {
                 if (editorMode === 'reception') {
                   reset(team);
-                  toast.success('Formazioni ricezione ripristinate ai default 5-1');
-                } else {
+                  toast.success('Formazioni ricezione ripristinate');
+                } else if (editorMode === 'attack') {
                   resetAttack(team);
-                  toast.success('Formazioni attacco ripristinate ai default 5-1');
+                  toast.success('Formazioni attacco ripristinate');
+                } else {
+                  resetDefense(team);
+                  toast.success('Formazioni difesa azzerate');
                 }
               }}
             >
