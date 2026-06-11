@@ -291,9 +291,12 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
 
           <p className="text-xs text-muted-foreground italic">
             {SETTER_ROTATIONS.find((r) => r.value === setterPos)?.desc}.
-            {editorMode === 'reception'
-              ? ' Trascina per modificare la formazione di ricezione. La rete è in alto.'
-              : ' Trascina per modificare le posizioni di attacco dopo l\'alzata. Setter a rete, opposta e bande in posizione d\'attacco.'}
+            {' '}
+            {editorMode === 'defense'
+              ? 'Il campo parte vuoto. Trascina ogni giocatrice nella posizione difensiva del tuo sistema.'
+              : editorMode === 'attack'
+              ? "Posizioni durante l'alzata. Setter a rete, opposta e bande in posizione d'attacco."
+              : 'Formazione di ricezione. Trascina i giocatori nella posizione corretta.'}
           </p>
 
           <FormationCanvas team={team} setterPos={setterPos} mode={editorMode} />
