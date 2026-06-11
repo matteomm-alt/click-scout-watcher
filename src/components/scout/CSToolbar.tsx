@@ -133,6 +133,11 @@ export function CSToolbar({
 
       <div className="hidden sm:block h-8 w-px bg-border mx-1" />
 
+      {onRemoveLastTouch && (
+        <ToolbarBtn onClick={onRemoveLastTouch} title="Rimuovi ultimo tocco del rally">
+          <CornerUpLeft className="w-4 h-4" /> Tocco
+        </ToolbarBtn>
+      )}
       <ToolbarBtn onClick={onUndoAction} title={t('scout.ui.undo') as string}>
         <Undo2 className="w-4 h-4" /> {t('scout.ui.undo')}
       </ToolbarBtn>
