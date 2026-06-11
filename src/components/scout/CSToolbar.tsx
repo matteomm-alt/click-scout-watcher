@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Undo2, ArrowLeftRight, Clock, SkipForward, Download, Settings } from 'lucide-react';
+import { Undo2, ArrowLeftRight, Clock, SkipForward, Download, Settings, CornerUpLeft } from 'lucide-react';
 
 interface CSToolbarProps {
   onUndoAction?: () => void;
