@@ -12,7 +12,9 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-type EditorMode = 'reception' | 'attack';
+type EditorMode = 'reception' | 'attack' | 'defense';
+
+import { isDefenseConfigured } from '@/lib/receptionFormations';
 
 const SETTER_ROTATIONS: Array<{ value: 1|2|3|4|5|6; label: string; desc: string }> = [
   { value: 1, label: 'S1', desc: 'Palleggiatore in P1 (back-right)' },
