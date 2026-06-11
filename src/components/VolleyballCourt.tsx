@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { getReceptionPositions, getAttackPositions } from '@/lib/receptionFormations';
+import { getReceptionPositions, getAttackPositions, getDefensePositions } from '@/lib/receptionFormations';
 import { getPhaseLayout, getInitialPhases } from '@/lib/tacticalPhases';
 import { getPhasePositionOverride } from '@/lib/courtPositionResolver';
 
