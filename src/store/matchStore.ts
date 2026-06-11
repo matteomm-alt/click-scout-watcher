@@ -8,6 +8,7 @@ import type { MatchEvent, TouchEvent } from '@/types/matchEvents';
 import {
   cloneDefaultFormations,
   cloneDefaultAttackFormations,
+  cloneDefaultDefenseFormations,
   type ReceptionFormations,
   type Coord,
 } from '@/lib/receptionFormations';
@@ -85,6 +86,12 @@ interface MatchStore {
   resetAttackFormations: (team: 'home' | 'away') => void;
   loadReceptionFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
   loadAttackFormations: (team: 'home' | 'away', formations: ReceptionFormations) => void;
+  homeDefenseFormations: ReceptionFormations;
+  awayDefenseFormations: ReceptionFormations;
+  setDefensePosition: (team: 'home'|'away', setterPosition: 1|2|3|4|5|6, slot: 1|2|3|4|5|6, coord: Coord) => void;
+  resetDefenseFormations: (team: 'home'|'away') => void;
+  loadDefenseFormations: (team: 'home'|'away', formations: ReceptionFormations) => void;
+  removeLastTouchFromCurrentRally: () => boolean;
 }
 
 const defaultMatchInfo: MatchInfo = {
@@ -757,6 +764,68 @@ export const useMatchStore = create<MatchStore>()(
           ? 'homeAttackFormations'
           : 'awayAttackFormations']: JSON.parse(JSON.stringify(formations)),
       } as Partial<MatchStore>)),
+
+      homeDefenseFormations: cloneDefaultDefenseFormations(),
+      awayDefenseFormations: cloneDefaultDefenseFormations(),
+      setDefensePosition: (team, setterPosition, slot, coord) => set((s) => {
+        const key = team === 'home' ? 'homeDefenseFormations' : 'awayDefenseFormations';
+        const sp = Math.min(6, Math.max(1, setterPosition)) as 1|2|3|4|5|6;
+        const sl = Math.min(6, Math.max(1, slot)) as 1|2|3|4|5|6;
+        const current = s[key];
+        return {
+          [key]: {
+            ...current,
+            [sp]: {
+              ...current[sp],
+              [sl]: {
+                x: Math.max(0, Math.min(100, coord.x)),
+                y: Math.max(0, Math.min(100, coord.y)),
+              },
+            },
+          },
+        } as Partial<MatchStore>;
+      }),
+      resetDefenseFormations: (team) => set(() => ({
+        [team === 'home'
+          ? 'homeDefenseFormations'
+          : 'awayDefenseFormations']: cloneDefaultDefenseFormations(),
+      } as Partial<MatchStore>)),
+      loadDefenseFormations: (team, formations) => set(() => ({
+        [team === 'home'
+          ? 'homeDefenseFormations'
+          : 'awayDefenseFormations']: JSON.parse(JSON.stringify(formations)),
+      } as Partial<MatchStore>)),
+
+      removeLastTouchFromCurrentRally: () => {
+        const { events, matchState } = get();
+        if (events.length === 0) return false;
+        const currentRallyId = `${matchState.currentSet}-${matchState.homeScore}-${matchState.awayScore}`;
+        let lastTouchIdx = -1;
+        for (let i = events.length - 1; i >= 0; i--) {
+          const e = events[i];
+          if (e.type === 'touch' && (e as TouchEvent).rallyId === currentRallyId) {
+            lastTouchIdx = i;
+            break;
+          }
+          if (e.type === 'point') return false;
+        }
+        if (lastTouchIdx === -1) return false;
+        const hasTerminal = events
+          .filter(e => e.type === 'touch' && (e as TouchEvent).rallyId === currentRallyId)
+          .some(e => {
+            const t = e as TouchEvent;
+            return (t.evaluation === '#' && ['S', 'A', 'B'].includes(t.skill))
+                || t.evaluation === '=';
+          });
+        if (hasTerminal) return false;
+        const newEvents = [
+          ...events.slice(0, lastTouchIdx),
+          ...events.slice(lastTouchIdx + 1),
+        ];
+        set((s) => replaceEventsAndReplay(s, newEvents));
+        toast.info('Ultimo tocco rimosso', { duration: 1200 });
+        return true;
+      },
     }),
     {
       name: 'volley-scout-storage-v2',
@@ -772,6 +841,8 @@ export const useMatchStore = create<MatchStore>()(
         awayReceptionFormations: state.awayReceptionFormations,
         homeAttackFormations: state.homeAttackFormations,
         awayAttackFormations: state.awayAttackFormations,
+        homeDefenseFormations: state.homeDefenseFormations,
+        awayDefenseFormations: state.awayDefenseFormations,
         events: state.events,
       }),
       onRehydrateStorage: () => (state) => {

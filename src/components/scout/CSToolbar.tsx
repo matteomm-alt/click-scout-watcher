@@ -1,9 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Undo2, ArrowLeftRight, Clock, SkipForward, Download, Settings } from 'lucide-react';
+import { Undo2, ArrowLeftRight, Clock, SkipForward, Download, Settings, CornerUpLeft } from 'lucide-react';
 
 interface CSToolbarProps {
   onUndoAction?: () => void;
+  onRemoveLastTouch?: () => void;
   onUndoRally?: () => void;
   onSubstitution?: () => void;
   onTimeoutHome?: () => void;
@@ -112,7 +113,7 @@ function LongPressBtn({
 }
 
 export function CSToolbar({
-  onUndoAction, onUndoRally, onSubstitution,
+  onUndoAction, onRemoveLastTouch, onUndoRally, onSubstitution,
   onTimeoutHome, onTimeoutAway, onEndSet, onExport, onSettings,
   onPointHome, onPointAway, onQuickActions,
   homeName = 'Casa', awayName = 'Ospite',
@@ -132,6 +133,11 @@ export function CSToolbar({
 
       <div className="hidden sm:block h-8 w-px bg-border mx-1" />
 
+      {onRemoveLastTouch && (
+        <ToolbarBtn onClick={onRemoveLastTouch} title="Rimuovi ultimo tocco del rally">
+          <CornerUpLeft className="w-4 h-4" /> Tocco
+        </ToolbarBtn>
+      )}
       <ToolbarBtn onClick={onUndoAction} title={t('scout.ui.undo') as string}>
         <Undo2 className="w-4 h-4" /> {t('scout.ui.undo')}
       </ToolbarBtn>

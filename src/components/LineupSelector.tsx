@@ -236,8 +236,7 @@ export function LineupSelector() {
   const canStart = isHomeComplete && isAwayComplete;
 
   const handleStart = () => {
-    startMatch();
-    setStep('scout');
+    setStep('config');
   };
 
   return (
@@ -257,7 +256,7 @@ export function LineupSelector() {
             disabled={!canStart}
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-primary disabled:opacity-50"
           >
-            Inizia Partita <ArrowRight className="w-4 h-4 ml-2" />
+            Configura <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
 

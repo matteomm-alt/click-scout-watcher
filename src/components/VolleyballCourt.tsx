@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { getReceptionPositions, getAttackPositions } from '@/lib/receptionFormations';
+import { getReceptionPositions, getAttackPositions, getDefensePositions } from '@/lib/receptionFormations';
 import { getPhaseLayout, getInitialPhases } from '@/lib/tacticalPhases';
 import { getPhasePositionOverride } from '@/lib/courtPositionResolver';
 
@@ -138,7 +138,7 @@ export function VolleyballCourt({
   zoneSelectSkill,
   layout = 'split',
 }: VolleyballCourtProps = {}) {
-  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations } = useMatchStore();
+  const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations, homeDefenseFormations, awayDefenseFormations } = useMatchStore();
   const teamTacticalPhases = matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam);
 
   // Pulsante server per 3s al cambio di servizio
@@ -178,8 +178,12 @@ export function VolleyballCourt({
       overridePositions = getReceptionPositions(recFormations, setterPosition, team === 'home');
     } else if (phaseLayout === 'attack') {
       overridePositions = getAttackPositions(atkFormations, setterPosition, team === 'home');
+    } else if (phaseLayout === 'defense') {
+      const defFormations = team === 'home' ? homeDefenseFormations : awayDefenseFormations;
+      overridePositions = getDefensePositions(defFormations, setterPosition, team === 'home');
+      // getDefensePositions ritorna null se la rotazione non è configurata → fallback rotazione standard
     }
-    // 'defense' e 'normal' → nessun override (rotazione standard)
+    // 'normal' → nessun override
 
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
 

@@ -5,8 +5,9 @@ import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { type ScoutSettings, SCOUT_PRESETS } from '@/lib/scoutSettings';
+import { type ScoutSettings, SCOUT_PRESETS, MODE_PRESETS, getScoutingMode } from '@/lib/scoutSettings';
 import { ReceptionFormationEditor } from '@/components/scout/ReceptionFormationEditor';
+import { cn } from '@/lib/utils';
 
 const RILEVAZIONE_ROWS = [
   { key: 'singleTeamMode' as const, label: '👤 Rileva una sola squadra', description: 'Riduce il carico cognitivo: rileva solo la tua squadra, l\'avversaria si gestisce con "Punto".' },
@@ -56,6 +57,43 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
   ];
   return (
     <div className="mt-4 space-y-5">
+      {/* Toggle Simple / Advanced — in cima */}
+      <section>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Modalità scouting
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { mode: 'simple' as const, label: '⚡ Semplice', desc: 'S R A B' },
+            { mode: 'advanced' as const, label: '📊 Avanzato', desc: 'DVW completo' },
+          ]).map(({ mode, label, desc }) => {
+            const currentMode = getScoutingMode(settings);
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setSettings(MODE_PRESETS[mode])}
+                className={cn(
+                  'flex flex-col items-center py-2.5 px-2 rounded-xl border-2',
+                  'text-xs font-black uppercase tracking-wider transition-all active:scale-95',
+                  currentMode === mode
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-secondary/30 border-border text-muted-foreground hover:border-primary/40',
+                )}
+              >
+                <span>{label}</span>
+                <span className="text-[10px] opacity-75 mt-0.5">{desc}</span>
+              </button>
+            );
+          })}
+        </div>
+        {getScoutingMode(settings) === 'custom' && (
+          <div className="mt-2 text-[11px] text-muted-foreground italic text-center">
+            ✎ Configurazione personalizzata attiva
+          </div>
+        )}
+      </section>
+
       <section>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Preset rapido</h3>
         <div className="grid grid-cols-3 gap-2">

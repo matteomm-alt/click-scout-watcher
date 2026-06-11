@@ -38,6 +38,7 @@ export function LiveScout() {
     endSet, updateAction, addPoint, addAction, undoLastAction, undoRally,
     callTimeout, substitutePlayer,
   } = useMatchStore();
+  const removeLastTouchFromCurrentRally = useMatchStore(s => s.removeLastTouchFromCurrentRally);
   const { settings, setSetting, setSettings } = useScoutSettings();
   const scoutingMode: ScoutingMode =
     (!settings.showAlzata && !settings.showDifesa) ? 'simple' : 'advanced';
@@ -397,6 +398,12 @@ export function LiveScout() {
           onPointHome={() => addPoint('home')}
           onPointAway={() => addPoint('away')}
           onUndoAction={undoLastAction}
+          onRemoveLastTouch={() => {
+            const removed = removeLastTouchFromCurrentRally();
+            if (!removed) {
+              toast.info('Nessun tocco da rimuovere nel rally corrente', { duration: 1200 });
+            }
+          }}
           onUndoRally={() => {
             const n = undoRally();
             if (n > 0) toast.success(`Rally annullato (${n} azioni)`);

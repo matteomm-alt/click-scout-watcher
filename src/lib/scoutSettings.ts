@@ -105,6 +105,29 @@ export const SCOUT_PRESETS = {
   } as Partial<ScoutSettings>,
 } as const;
 
+export type ScoutingMode = 'simple' | 'advanced' | 'custom';
+
+export const MODE_PRESETS = {
+  simple: {
+    showAlzata: false, showDifesa: false, showFreeball: false,
+    showServeType: false, showAttackCombo: false,
+    showStartZone: false, showEndZone: false,
+    fastMode: true, autoPoint: true,
+  } as Partial<ScoutSettings>,
+  advanced: {
+    showAlzata: true, showDifesa: true, showFreeball: true,
+    showServeType: true, showAttackCombo: true,
+    showStartZone: true, showEndZone: true,
+    fastMode: false, autoPoint: true,
+  } as Partial<ScoutSettings>,
+} as const;
+
+export function getScoutingMode(s: ScoutSettings): ScoutingMode {
+  if (!s.showAlzata && !s.showDifesa && !s.showFreeball) return 'simple';
+  if (s.showAlzata && s.showDifesa && s.showFreeball) return 'advanced';
+  return 'custom';
+}
+
 const readSettings = (): ScoutSettings => {
   if (typeof window === 'undefined') return defaultScoutSettings;
 
