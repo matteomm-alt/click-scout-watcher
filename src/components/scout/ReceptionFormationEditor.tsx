@@ -97,10 +97,19 @@ function FormationCanvas({
       <div className="absolute top-0 inset-x-0 h-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
       <span className="absolute top-1.5 left-2 text-[9px] font-black uppercase tracking-widest text-white/70">RETE</span>
       <span className={`absolute top-1.5 right-2 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
-        mode === 'reception' ? 'bg-blue-700 text-white' : 'bg-primary text-primary-foreground'
+        mode === 'reception' ? 'bg-blue-700 text-white'
+          : mode === 'attack' ? 'bg-primary text-primary-foreground'
+          : 'bg-slate-700 text-white'
       }`}>
-        {mode === 'reception' ? '↙ RIC' : '↗ ATT'}
+        {mode === 'reception' ? '↙ RIC' : mode === 'attack' ? '↗ ATT' : '🛡 DIF'}
       </span>
+      {mode === 'defense' && !isDefenseConfigured(formations, setterPos) && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+          <div className="px-4 py-2 rounded-lg bg-black/65 text-white text-xs font-bold text-center leading-snug">
+            Trascina i giocatori<br/>per configurare questa rotazione
+          </div>
+        </div>
+      )}
       {/* Linea 3m */}
       <div className="absolute inset-x-0 top-1/3 h-px bg-white/45" />
       {/* Linee zone */}
