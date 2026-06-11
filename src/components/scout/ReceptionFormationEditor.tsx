@@ -259,6 +259,16 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
             >
               ↗ Attacco
             </button>
+            <button
+              onClick={() => setEditorMode('defense')}
+              className={`flex-1 px-3 py-2 rounded-md text-xs font-black uppercase tracking-wider transition-all ${
+                editorMode === 'defense'
+                  ? 'bg-slate-700 text-white shadow'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              🛡 Difesa
+            </button>
           </div>
 
           {/* Selettore rotazione */}
