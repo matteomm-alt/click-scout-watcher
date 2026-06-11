@@ -4,6 +4,7 @@ import { Undo2, ArrowLeftRight, Clock, SkipForward, Download, Settings, CornerUp
 
 interface CSToolbarProps {
   onUndoAction?: () => void;
+  onRemoveLastTouch?: () => void;
   onUndoRally?: () => void;
   onSubstitution?: () => void;
   onTimeoutHome?: () => void;
