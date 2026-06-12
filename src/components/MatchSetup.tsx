@@ -73,6 +73,34 @@ export function MatchSetup() {
           </button>
         </div>
 
+        {matchState.isMatchStarted && step === 'setup' && (
+          <div className="rounded-xl border border-accent/40 bg-accent/10 p-4 space-y-3">
+            <p className="text-sm font-bold text-foreground">
+              C'è una partita in corso salvata: {homeTeam.name || 'Casa'} vs {awayTeam.name || 'Ospite'}
+            </p>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                onClick={() => setStep('scout')}
+                className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                Riprendi partita in corso
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  resetMatch();
+                  toast.success('Nuova partita pronta');
+                }}
+                className="flex-1"
+              >
+                Nuova partita
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-muted-foreground flex items-center gap-2">
