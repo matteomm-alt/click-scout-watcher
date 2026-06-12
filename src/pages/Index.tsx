@@ -7,6 +7,7 @@ import { MatchConfig } from '@/components/MatchConfig';
 
 const Index = () => {
   const step = useMatchStore((s) => s.step);
+  const isMatchStarted = useMatchStore((s) => s.matchState.isMatchStarted);
 
   switch (step) {
     case 'setup':
@@ -16,7 +17,7 @@ const Index = () => {
     case 'lineup':
       return <LineupSelector />;
     case 'config':
-      return <MatchConfig />;
+      return isMatchStarted ? <LiveScout /> : <MatchConfig />;
     case 'scout':
       return <LiveScout />;
     default:
