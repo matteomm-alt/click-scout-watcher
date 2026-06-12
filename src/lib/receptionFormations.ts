@@ -34,61 +34,14 @@ export type ReceptionFormations = Record<1 | 2 | 3 | 4 | 5 | 6, SlotPositions>;
  *  - Libero in campo al posto del centrale di seconda linea
  */
 export const DEFAULT_RECEPTION_FORMATIONS: ReceptionFormations = {
-  // S1: palleggiatore in P1 (back-right). OPP in P4. OH in P2 (front) e P5 (back).
-  1: {
-    1: { x: 72, y: 14 }, // S → release a rete dx
-    2: { x: 75, y: 58 }, // OH1 (front-right) scende a RB ricezione
-    3: { x: 50, y: 10 }, // MB1 a rete
-    4: { x: 20, y: 20 }, // OPP nascosto front-left
-    5: { x: 22, y: 58 }, // OH2 LB ricezione
-    6: { x: 50, y: 75 }, // L CB ricezione
-  },
-  // S2: palleggiatore in P2 (front-right). OPP in P5. 3 ricevitori = P1, P5(OPP no→OH) ... usiamo P1, P5, P6.
-  // In rotazione P2 setter, gli OH sono in P3 e P6 typically; per semplicità: ricevitori P1+P6+P5.
-  2: {
-    1: { x: 75, y: 58 }, // RB
-    2: { x: 72, y: 14 }, // S → release
-    3: { x: 50, y: 10 }, // MB a rete
-    4: { x: 20, y: 20 }, // hide front-left
-    5: { x: 22, y: 58 }, // LB
-    6: { x: 50, y: 75 }, // CB (L)
-  },
-  // S3: palleggiatore in P3 (front-middle).
-  3: {
-    1: { x: 75, y: 58 }, // RB
-    2: { x: 80, y: 18 }, // a rete dx
-    3: { x: 65, y: 14 }, // S → release leggermente a dx
-    4: { x: 20, y: 20 }, // hide
-    5: { x: 22, y: 58 }, // LB
-    6: { x: 50, y: 75 }, // CB (L)
-  },
-  // S4: palleggiatore in P4 (front-left). Si sposta a destra per alzare.
-  4: {
-    1: { x: 75, y: 58 }, // RB
-    2: { x: 80, y: 18 }, // a rete dx
-    3: { x: 50, y: 10 }, // MB a rete
-    4: { x: 65, y: 14 }, // S parte da sx ma scende a dx (release)
-    5: { x: 22, y: 58 }, // LB
-    6: { x: 50, y: 75 }, // CB (L)
-  },
-  // S5: palleggiatore in P5 (back-left). OH in P2 scende a LB.
-  5: {
-    1: { x: 75, y: 58 }, // RB
-    2: { x: 22, y: 58 }, // OH1 scende a LB
-    3: { x: 50, y: 10 }, // MB a rete
-    4: { x: 20, y: 20 }, // OPP hide
-    5: { x: 65, y: 14 }, // S → release
-    6: { x: 50, y: 75 }, // CB (L)
-  },
-  // S6: palleggiatore in P6 (back-middle). 3 ricevitori = P1 RB, P5 LB, OH che scende.
-  6: {
-    1: { x: 75, y: 58 }, // RB
-    2: { x: 50, y: 68 }, // OH scende centro-back come 3° ricevitore
-    3: { x: 50, y: 10 }, // MB a rete
-    4: { x: 20, y: 20 }, // OPP hide
-    5: { x: 22, y: 58 }, // LB
-    6: { x: 65, y: 14 }, // S → release
-  },
+  // Posizioni FIVB standard P1-P6 — fisse per tutte le rotazioni
+  // P1=fondo dx, P2=rete dx, P3=rete cx, P4=rete sx, P5=fondo sx, P6=fondo cx
+  1: { 1:{x:78,y:78}, 2:{x:78,y:18}, 3:{x:50,y:18}, 4:{x:22,y:18}, 5:{x:22,y:78}, 6:{x:50,y:78} },
+  2: { 1:{x:78,y:78}, 2:{x:78,y:18}, 3:{x:50,y:18}, 4:{x:22,y:18}, 5:{x:22,y:78}, 6:{x:50,y:78} },
+  3: { 1:{x:78,y:78}, 2:{x:78,y:18}, 3:{x:50,y:18}, 4:{x:22,y:18}, 5:{x:22,y:78}, 6:{x:50,y:78} },
+  4: { 1:{x:78,y:78}, 2:{x:78,y:18}, 3:{x:50,y:18}, 4:{x:22,y:18}, 5:{x:22,y:78}, 6:{x:50,y:78} },
+  5: { 1:{x:78,y:78}, 2:{x:78,y:18}, 3:{x:50,y:18}, 4:{x:22,y:18}, 5:{x:22,y:78}, 6:{x:50,y:78} },
+  6: { 1:{x:78,y:78}, 2:{x:78,y:18}, 3:{x:50,y:18}, 4:{x:22,y:18}, 5:{x:22,y:78}, 6:{x:50,y:78} },
 };
 
 export function cloneDefaultFormations(): ReceptionFormations {
