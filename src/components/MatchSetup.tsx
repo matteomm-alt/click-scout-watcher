@@ -9,7 +9,7 @@ import { Calendar, MapPin, Users, Trophy, ArrowRight, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function MatchSetup() {
-  const { matchInfo, setMatchInfo, setStep, loadDemoMatch, homeTeam, awayTeam, setHomeTeam, setAwayTeam, matchState, setSingleTeamMode } = useMatchStore();
+  const { matchInfo, setMatchInfo, step, setStep, loadDemoMatch, homeTeam, awayTeam, setHomeTeam, setAwayTeam, matchState, setSingleTeamMode, resetMatch } = useMatchStore();
   const { seasonStart, societyName } = useActiveSociety();
 
   // Pre-popola data, stagione, e ultimi nomi squadra (Prompt 26)
