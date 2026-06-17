@@ -1,8 +1,10 @@
-import type { Skill } from '@/types/volleyball';
+import type { Skill, Evaluation } from '@/types/volleyball';
 
 export interface TouchSuggestion {
   skill: Skill | null;
   team: 'home' | 'away' | null;
+  evaluation?: Evaluation | null;
+  playerNumber?: number | null;
 }
 
 export function suggestNextTouch(
