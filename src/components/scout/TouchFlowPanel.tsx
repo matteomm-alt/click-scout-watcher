@@ -50,7 +50,7 @@ const ADVANCED_EVALS: { key: Evaluation; label: string; color: string }[] = [
 ];
 
 export function TouchFlowPanel({
-  selectedPlayer, selectedSkill, mode, suggestedSkill,
+  selectedPlayer, selectedSkill, mode, suggestedSkill, suggestedEvaluation,
   teamName, onSkillSelect, onEvaluationSelect, onCancel,
 }: TouchFlowPanelProps) {
   const visibleSkills = SKILLS_CFG.filter(s =>
