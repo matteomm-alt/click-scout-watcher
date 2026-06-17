@@ -27,8 +27,17 @@ const formatCode = (a: ScoutAction) => {
  * Storico rally compatto: ultime azioni + box "ULTIMA" + bottone Undo.
  */
 export function CSRallyHistory() {
-  const { matchState, undoLastAction } = useMatchStore();
+  const { matchState, undoLastAction, lastRetroCorrectedId } = useMatchStore();
   const all = matchState.actions;
+
+  const [flashId, setFlashId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lastRetroCorrectedId) return;
+    setFlashId(lastRetroCorrectedId);
+    const t = window.setTimeout(() => setFlashId(null), 900);
+    return () => window.clearTimeout(t);
+  }, [lastRetroCorrectedId]);
+
   if (all.length === 0) {
     return (
       <div className="h-12 flex items-center justify-center text-xs text-muted-foreground italic border border-dashed border-border/50 rounded-md">
