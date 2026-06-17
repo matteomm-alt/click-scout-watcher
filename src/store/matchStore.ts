@@ -42,6 +42,7 @@ interface MatchStore {
   setAwayLineup: (lineup: Partial<Lineup>) => void;
 
   events: MatchEvent[];
+  lastRetroCorrectedId: string | null;
   matchState: MatchState;
 
   startMatch: () => void;
