@@ -383,6 +383,8 @@ export function LiveScout() {
         <div className="flex-1 min-h-0">
           <VolleyballCourt
             layout="split"
+            highlightTeam={suggestion?.team ?? null}
+            highlightPlayerNumber={suggestion?.playerNumber ?? null}
             simplifiedView={simplified}
             onPlayerClick={handlePlayerClick}
             selectedPlayer={selectedPlayer}
