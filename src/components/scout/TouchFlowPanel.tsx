@@ -13,6 +13,7 @@ interface TouchFlowPanelProps {
   selectedSkill: Skill | null;
   mode: ScoutingMode;
   suggestedSkill?: Skill | null;
+  suggestedEvaluation?: Evaluation | null;
   teamName: string;
   onSkillSelect: (skill: Skill | null) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
