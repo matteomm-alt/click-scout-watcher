@@ -209,6 +209,7 @@ export const useMatchStore = create<MatchStore>()(
       })),
 
       events: [],
+      lastRetroCorrectedId: null,
       matchState: { ...emptyMatchState },
 
       startMatch: () => {
