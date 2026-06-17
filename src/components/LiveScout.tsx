@@ -302,6 +302,9 @@ export function LiveScout() {
                 suggestedSkill={
                   suggestion?.team === selectedPlayer.team ? suggestion.skill : null
                 }
+                suggestedEvaluation={
+                  suggestion?.team === selectedPlayer.team ? suggestion.evaluation : null
+                }
                 teamName={selectedPlayer.team === 'home'
                   ? (homeTeam.name || 'Casa')
                   : (awayTeam.name || 'Ospite')}
