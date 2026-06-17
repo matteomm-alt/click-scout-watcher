@@ -55,7 +55,7 @@ export function CSRallyHistory() {
         {previous.map((a) => (
           <div
             key={a.id}
-            className={`shrink-0 px-2 py-1 rounded text-[11px] font-mono font-bold ${evalColor(a.evaluation)} ${teamBorder(a.team)}`}
+            className={`shrink-0 px-2 py-1 rounded text-[11px] font-mono font-bold ${evalColor(a.evaluation)} ${teamBorder(a.team)} ${flashId === a.id ? 'ring-2 ring-primary animate-pulse' : ''}`}
             title={`Set ${a.setNumber} • ${a.timestamp}`}
           >
             {formatCode(a)}
