@@ -261,6 +261,8 @@ export function LiveScout() {
               layout="split"
               heatmapData={homeHeatmap}
               liveArrows={liveArrows}
+              highlightTeam={suggestion?.team ?? null}
+              highlightPlayerNumber={suggestion?.playerNumber ?? null}
               receptionMode={{
                 home: matchState.servingTeam === 'away',
                 away: matchState.servingTeam === 'home',
