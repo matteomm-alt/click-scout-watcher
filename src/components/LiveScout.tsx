@@ -137,7 +137,12 @@ export function LiveScout() {
       skill, team, lastAction?.evaluation ?? null,
       scoutingMode === 'simple', matchState.servingTeam,
     );
-    setSuggestion(nextSugg.skill ? nextSugg : null);
+    let suggestedPlayerNumber: number | null = null;
+    if (nextSugg.skill === 'S' && nextSugg.team) {
+      const lineup = nextSugg.team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+      suggestedPlayerNumber = lineup?.[0] ?? null;
+    }
+    setSuggestion(nextSugg.skill ? { ...nextSugg, playerNumber: suggestedPlayerNumber } : null);
   };
 
   const handleZoneSelect = (zone: number) => {
@@ -256,6 +261,8 @@ export function LiveScout() {
               layout="split"
               heatmapData={homeHeatmap}
               liveArrows={liveArrows}
+              highlightTeam={suggestion?.team ?? null}
+              highlightPlayerNumber={suggestion?.playerNumber ?? null}
               receptionMode={{
                 home: matchState.servingTeam === 'away',
                 away: matchState.servingTeam === 'home',
@@ -294,6 +301,9 @@ export function LiveScout() {
                 mode={scoutingMode}
                 suggestedSkill={
                   suggestion?.team === selectedPlayer.team ? suggestion.skill : null
+                }
+                suggestedEvaluation={
+                  suggestion?.team === selectedPlayer.team ? suggestion.evaluation : null
                 }
                 teamName={selectedPlayer.team === 'home'
                   ? (homeTeam.name || 'Casa')
@@ -373,6 +383,8 @@ export function LiveScout() {
         <div className="flex-1 min-h-0">
           <VolleyballCourt
             layout="split"
+            highlightTeam={suggestion?.team ?? null}
+            highlightPlayerNumber={suggestion?.playerNumber ?? null}
             simplifiedView={simplified}
             onPlayerClick={handlePlayerClick}
             selectedPlayer={selectedPlayer}

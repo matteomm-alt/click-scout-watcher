@@ -13,6 +13,7 @@ interface TouchFlowPanelProps {
   selectedSkill: Skill | null;
   mode: ScoutingMode;
   suggestedSkill?: Skill | null;
+  suggestedEvaluation?: Evaluation | null;
   teamName: string;
   onSkillSelect: (skill: Skill | null) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
@@ -49,7 +50,7 @@ const ADVANCED_EVALS: { key: Evaluation; label: string; color: string }[] = [
 ];
 
 export function TouchFlowPanel({
-  selectedPlayer, selectedSkill, mode, suggestedSkill,
+  selectedPlayer, selectedSkill, mode, suggestedSkill, suggestedEvaluation,
   teamName, onSkillSelect, onEvaluationSelect, onCancel,
 }: TouchFlowPanelProps) {
   const visibleSkills = SKILLS_CFG.filter(s =>
@@ -185,24 +186,34 @@ export function TouchFlowPanel({
             <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
               Valutazione
             </div>
-            {evals.map(e => (
-              <button
-                key={e.key}
-                type="button"
-                onClick={() => onEvaluationSelect(e.key)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 rounded-xl',
-                  'font-bold text-sm transition-all active:scale-[0.97]',
-                  'bg-secondary/50 hover:bg-secondary/80',
-                  padY,
-                )}
-              >
-                <span className={cn('size-8 flex items-center justify-center rounded-lg text-white font-black', e.color)}>
-                  {e.key}
-                </span>
-                <span className="flex-1 text-left">{e.label}</span>
-              </button>
-            ))}
+            {evals.map(e => {
+              const isSuggEval = e.key === suggestedEvaluation;
+              return (
+                <button
+                  key={e.key}
+                  type="button"
+                  onClick={() => onEvaluationSelect(e.key)}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3 rounded-xl',
+                    'font-bold text-sm transition-all active:scale-[0.97]',
+                    padY,
+                    isSuggEval
+                      ? `${e.color} text-white shadow-md ring-2 ring-white/40`
+                      : 'bg-secondary/50 hover:bg-secondary/80',
+                  )}
+                >
+                  <span className={cn('size-8 flex items-center justify-center rounded-lg text-white font-black', e.color)}>
+                    {e.key}
+                  </span>
+                  <span className="flex-1 text-left">{e.label}</span>
+                  {isSuggEval && (
+                    <span className="text-[10px] uppercase tracking-wider opacity-90">
+                      → suggerito
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </>
         )}
       </div>

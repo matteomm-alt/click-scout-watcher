@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import { useMatchStore } from '@/store/matchStore';
 import type { ScoutAction } from '@/types/volleyball';
@@ -26,8 +27,17 @@ const formatCode = (a: ScoutAction) => {
  * Storico rally compatto: ultime azioni + box "ULTIMA" + bottone Undo.
  */
 export function CSRallyHistory() {
-  const { matchState, undoLastAction } = useMatchStore();
+  const { matchState, undoLastAction, lastRetroCorrectedId } = useMatchStore();
   const all = matchState.actions;
+
+  const [flashId, setFlashId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lastRetroCorrectedId) return;
+    setFlashId(lastRetroCorrectedId);
+    const t = window.setTimeout(() => setFlashId(null), 900);
+    return () => window.clearTimeout(t);
+  }, [lastRetroCorrectedId]);
+
   if (all.length === 0) {
     return (
       <div className="h-12 flex items-center justify-center text-xs text-muted-foreground italic border border-dashed border-border/50 rounded-md">
@@ -45,7 +55,7 @@ export function CSRallyHistory() {
         {previous.map((a) => (
           <div
             key={a.id}
-            className={`shrink-0 px-2 py-1 rounded text-[11px] font-mono font-bold ${evalColor(a.evaluation)} ${teamBorder(a.team)}`}
+            className={`shrink-0 px-2 py-1 rounded text-[11px] font-mono font-bold ${evalColor(a.evaluation)} ${teamBorder(a.team)} ${flashId === a.id ? 'ring-2 ring-primary animate-pulse' : ''}`}
             title={`Set ${a.setNumber} • ${a.timestamp}`}
           >
             {formatCode(a)}

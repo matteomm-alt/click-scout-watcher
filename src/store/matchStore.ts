@@ -42,6 +42,7 @@ interface MatchStore {
   setAwayLineup: (lineup: Partial<Lineup>) => void;
 
   events: MatchEvent[];
+  lastRetroCorrectedId: string | null;
   matchState: MatchState;
 
   startMatch: () => void;
@@ -208,6 +209,7 @@ export const useMatchStore = create<MatchStore>()(
       })),
 
       events: [],
+      lastRetroCorrectedId: null,
       matchState: { ...emptyMatchState },
 
       startMatch: () => {
@@ -293,14 +295,16 @@ export const useMatchStore = create<MatchStore>()(
           const next = addEventAndApply(s, event);
           const prevLen = s.matchState.actions.length;
           const nextLen = (next.matchState?.actions.length ?? 0);
+          let correctedId: string | null = null;
           if (nextLen > prevLen) {
             const prevAction = s.matchState.actions[prevLen - 1];
             const newAction = next.matchState!.actions[prevLen - 1];
             if (prevAction && newAction && prevAction.evaluation !== newAction.evaluation) {
+              correctedId = newAction.id;
               setTimeout(() => toast.info('Valutazione aggiornata', { duration: 1500 }), 0);
             }
           }
-          return next;
+          return { ...next, lastRetroCorrectedId: correctedId };
         });
         return id;
       },
