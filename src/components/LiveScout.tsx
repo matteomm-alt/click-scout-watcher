@@ -137,7 +137,12 @@ export function LiveScout() {
       skill, team, lastAction?.evaluation ?? null,
       scoutingMode === 'simple', matchState.servingTeam,
     );
-    setSuggestion(nextSugg.skill ? nextSugg : null);
+    let suggestedPlayerNumber: number | null = null;
+    if (nextSugg.skill === 'S' && nextSugg.team) {
+      const lineup = nextSugg.team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+      suggestedPlayerNumber = lineup?.[0] ?? null;
+    }
+    setSuggestion(nextSugg.skill ? { ...nextSugg, playerNumber: suggestedPlayerNumber } : null);
   };
 
   const handleZoneSelect = (zone: number) => {
