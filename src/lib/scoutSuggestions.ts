@@ -20,7 +20,7 @@ export function suggestNextTouch(
   switch (prevSkill) {
     case 'S':
       if (prevEvaluation === '#' || prevEvaluation === '=') return { skill: null, team: null };
-      return { skill: 'R', team: opp };
+      return { skill: 'R', team: opp, evaluation: '+' };
     case 'R':
       if (prevEvaluation === '=') return { skill: 'F', team: prevTeam };
       if (simpleMode) return { skill: 'A', team: prevTeam };
