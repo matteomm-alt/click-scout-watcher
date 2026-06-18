@@ -22,6 +22,7 @@ import { CSRallyHistory } from '@/components/scout/CSRallyHistory';
 import { CSLiveString } from '@/components/scout/CSLiveString';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { TouchFlowPanel, type ScoutingMode } from '@/components/scout/TouchFlowPanel';
+import { LiveFooter } from '@/components/scout/LiveFooter';
 import { suggestNextTouch, SKILL_BANNER, type TouchSuggestion } from '@/lib/scoutSuggestions';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
