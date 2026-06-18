@@ -213,6 +213,35 @@ export function LiveScout() {
         <ScoreBoard />
       </div>
 
+      {/* FOOTER FISSA skill+evaluation, stile OpenVolleyScout: sempre visibile, sopra il campo */}
+      <LiveFooter
+        selectedPlayer={selectedPlayer}
+        selectedSkill={pendingSkill}
+        mode={scoutingMode}
+        suggestedSkill={suggestion?.skill ?? null}
+        onSkillSelect={(skill) => setPendingSkill(skill)}
+        onEvaluationSelect={(evaluation) => {
+          if (!selectedPlayer || !pendingSkill) return;
+          const id = addAction({
+            team: selectedPlayer.team,
+            playerNumber: selectedPlayer.number,
+            skill: pendingSkill,
+            skillType: 'H',
+            evaluation,
+            timestamp: '',
+            code: '',
+          });
+          if (settings.autoPoint && evaluation === '#' && pendingSkill === 'S') {
+            addPoint(selectedPlayer.team);
+          } else if (settings.autoPoint && evaluation === '='
+              && (pendingSkill === 'S' || pendingSkill === 'A')) {
+            const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
+            addPoint(opp);
+          }
+          handleActionComplete(id, pendingSkill);
+        }}
+      />
+
       {/* DESKTOP layout (≥ md) */}
       <div className="hidden md:flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
         {/* Colonna campi */}
