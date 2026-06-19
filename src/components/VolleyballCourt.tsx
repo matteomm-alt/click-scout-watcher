@@ -110,13 +110,13 @@ const ZONE_CENTERS_HOME: { zone: number; x: number; y: number }[] = [
 ];
 
 // Determina il ruolo "logico" di uno slot in base alla posizione del setter (schema 5-1).
-// Setter @P1 → slot offsets: P1=Setter, P2=Middle, P3=Outside, P4=Opposite, P5=Middle, P6=Outside
+// Setter @P1 → slot offsets: P1=Setter, P2=Outside, P3=Middle, P4=Opposite, P5=Outside, P6=Middle
 type LogicalRole = 'setter' | 'opposite' | 'middle' | 'outside';
 function logicalRoleForSlot(slotPos: number, setterPos: number): LogicalRole {
   const offset = ((slotPos - setterPos + 6) % 6);
   if (offset === 0) return 'setter';
   if (offset === 3) return 'opposite';
-  if (offset === 1 || offset === 4) return 'middle';
+  if (offset === 2 || offset === 5) return 'middle';
   return 'outside';
 }
 
@@ -175,12 +175,12 @@ export function VolleyballCourt({
 
     let overridePositions: ReturnType<typeof getReceptionPositions> | null = null;
     if (phaseLayout === 'reception') {
-      overridePositions = getReceptionPositions(recFormations, setterPosition, team === 'home');
+      overridePositions = getReceptionPositions(recFormations, setterPosition, false);
     } else if (phaseLayout === 'attack') {
-      overridePositions = getAttackPositions(atkFormations, setterPosition, team === 'home');
+      overridePositions = getAttackPositions(atkFormations, setterPosition, false);
     } else if (phaseLayout === 'defense') {
       const defFormations = team === 'home' ? homeDefenseFormations : awayDefenseFormations;
-      overridePositions = getDefensePositions(defFormations, setterPosition, team === 'home');
+      overridePositions = getDefensePositions(defFormations, setterPosition, false);
       // getDefensePositions ritorna null se la rotazione non è configurata → fallback rotazione standard
     }
     // 'normal' → nessun override
@@ -278,7 +278,19 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const formationPos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
+          const rawFormationPos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
+          // Le formazioni (editor "Schemi ricezione/attacco/difesa") usano un sistema di
+          // coordinate con la RETE IN ALTO (formazione.y: 0=rete, 100=fondo; formazione.x=lato sx/dx).
+          // Il campo live usa la RETE LATERALE (asse x=profondità dalla rete, y=lato).
+          // Trasponiamo gli assi qui, una sola volta: la profondità (formazione.y) diventa
+          // profondità del campo (x), specchiata per AWAY perché la sua rete è sul lato
+          // opposto del proprio sistema di coordinate locale rispetto a HOME.
+          const formationPos = rawFormationPos
+            ? {
+                x: team === 'home' ? rawFormationPos.y : 100 - rawFormationPos.y,
+                y: rawFormationPos.x,
+              }
+            : null;
           const phaseOverride = getPhasePositionOverride(phase, pos, setterPosition, team === 'home');
           const p = phaseOverride ?? formationPos ?? basePos;
 
