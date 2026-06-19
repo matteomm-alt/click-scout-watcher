@@ -110,13 +110,13 @@ const ZONE_CENTERS_HOME: { zone: number; x: number; y: number }[] = [
 ];
 
 // Determina il ruolo "logico" di uno slot in base alla posizione del setter (schema 5-1).
-// Setter @P1 → slot offsets: P1=Setter, P2=Middle, P3=Outside, P4=Opposite, P5=Middle, P6=Outside
+// Setter @P1 → slot offsets: P1=Setter, P2=Outside, P3=Middle, P4=Opposite, P5=Outside, P6=Middle
 type LogicalRole = 'setter' | 'opposite' | 'middle' | 'outside';
 function logicalRoleForSlot(slotPos: number, setterPos: number): LogicalRole {
   const offset = ((slotPos - setterPos + 6) % 6);
   if (offset === 0) return 'setter';
   if (offset === 3) return 'opposite';
-  if (offset === 1 || offset === 4) return 'middle';
+  if (offset === 2 || offset === 5) return 'middle';
   return 'outside';
 }
 
