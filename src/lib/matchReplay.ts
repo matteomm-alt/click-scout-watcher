@@ -129,7 +129,7 @@ export function applyEvent(
         if (autoCorrelation) {
           if (action.skill === 'R') {
             const map: Partial<Record<Evaluation, Evaluation>> = {
-              '#': '-', '+': '-', '-': '+', '/': '/', '=': '=',
+              '#': '-', '+': '-', '-': '+', '/': '/', '=': '#',
             };
             const nextEval = map[action.evaluation];
             const idx = [...actions].reverse()
@@ -141,7 +141,7 @@ export function applyEvent(
           }
           if (action.skill === 'B') {
             const map: Partial<Record<Evaluation, Evaluation>> = {
-              '#': '/', '+': '-', '=': '#', '!': '!',
+              '#': '/', '+': '-', '=': '#', '!': '!', '/': '#',
             };
             const nextEval = map[action.evaluation];
             const idx = [...actions].reverse()
