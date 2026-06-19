@@ -141,7 +141,7 @@ export function applyEvent(
           }
           if (action.skill === 'B') {
             const map: Partial<Record<Evaluation, Evaluation>> = {
-              '#': '/', '+': '-', '=': '#', '!': '!',
+              '#': '/', '+': '-', '=': '#', '!': '!', '/': '#',
             };
             const nextEval = map[action.evaluation];
             const idx = [...actions].reverse()
