@@ -175,12 +175,12 @@ export function VolleyballCourt({
 
     let overridePositions: ReturnType<typeof getReceptionPositions> | null = null;
     if (phaseLayout === 'reception') {
-      overridePositions = getReceptionPositions(recFormations, setterPosition, team === 'home');
+      overridePositions = getReceptionPositions(recFormations, setterPosition, false);
     } else if (phaseLayout === 'attack') {
-      overridePositions = getAttackPositions(atkFormations, setterPosition, team === 'home');
+      overridePositions = getAttackPositions(atkFormations, setterPosition, false);
     } else if (phaseLayout === 'defense') {
       const defFormations = team === 'home' ? homeDefenseFormations : awayDefenseFormations;
-      overridePositions = getDefensePositions(defFormations, setterPosition, team === 'home');
+      overridePositions = getDefensePositions(defFormations, setterPosition, false);
       // getDefensePositions ritorna null se la rotazione non è configurata → fallback rotazione standard
     }
     // 'normal' → nessun override
