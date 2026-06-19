@@ -278,7 +278,19 @@ export function VolleyballCourt({
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
           const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const formationPos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
+          const rawFormationPos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
+          // Le formazioni (editor "Schemi ricezione/attacco/difesa") usano un sistema di
+          // coordinate con la RETE IN ALTO (formazione.y: 0=rete, 100=fondo; formazione.x=lato sx/dx).
+          // Il campo live usa la RETE LATERALE (asse x=profondità dalla rete, y=lato).
+          // Trasponiamo gli assi qui, una sola volta: la profondità (formazione.y) diventa
+          // profondità del campo (x), specchiata per AWAY perché la sua rete è sul lato
+          // opposto del proprio sistema di coordinate locale rispetto a HOME.
+          const formationPos = rawFormationPos
+            ? {
+                x: team === 'home' ? rawFormationPos.y : 100 - rawFormationPos.y,
+                y: rawFormationPos.x,
+              }
+            : null;
           const phaseOverride = getPhasePositionOverride(phase, pos, setterPosition, team === 'home');
           const p = phaseOverride ?? formationPos ?? basePos;
 
