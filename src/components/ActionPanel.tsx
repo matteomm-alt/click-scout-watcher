@@ -41,12 +41,12 @@ const SKILL_FULL: Record<Skill, string> = {
 };
 
 const EVALUATIONS: { key: Evaluation; cls: string }[] = [
-  { key: '#', cls: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' },
-  { key: '+', cls: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' },
-  { key: '!', cls: 'bg-secondary text-foreground border-border hover:bg-secondary/80' },
-  { key: '-', cls: 'bg-orange-100 text-orange-800 border-orange-300 hover:bg-orange-200' },
-  { key: '/', cls: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200' },
-  { key: '=', cls: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200' },
+  { key: '#', cls: 'bg-green-600 text-white border-green-700 hover:bg-green-500' },
+  { key: '+', cls: 'bg-lime-500 text-lime-950 border-lime-600 hover:bg-lime-400' },
+  { key: '!', cls: 'bg-amber-500 text-amber-950 border-amber-600 hover:bg-amber-400' },
+  { key: '-', cls: 'bg-orange-500 text-white border-orange-600 hover:bg-orange-400' },
+  { key: '/', cls: 'bg-red-500 text-white border-red-600 hover:bg-red-400' },
+  { key: '=', cls: 'bg-red-700 text-white border-red-800 hover:bg-red-600' },
 ];
 
 const EVAL_LABEL: Record<Evaluation, string> = {

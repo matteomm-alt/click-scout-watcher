@@ -22,31 +22,31 @@ interface TouchFlowPanelProps {
 
 const SKILLS_CFG: {
   key: Skill; label: string; fullLabel: string;
-  color: string; advancedOnly: boolean;
+  advancedOnly: boolean;
 }[] = [
-  { key:'S', label:'S', fullLabel:'Battuta',   color:'bg-yellow-600', advancedOnly:false },
-  { key:'R', label:'R', fullLabel:'Ricezione',  color:'bg-blue-600',   advancedOnly:false },
-  { key:'A', label:'A', fullLabel:'Attacco',    color:'bg-red-600',    advancedOnly:false },
-  { key:'B', label:'B', fullLabel:'Muro',       color:'bg-purple-600', advancedOnly:false },
-  { key:'E', label:'E', fullLabel:'Alzata',     color:'bg-green-600',  advancedOnly:true  },
-  { key:'D', label:'D', fullLabel:'Difesa',     color:'bg-teal-600',   advancedOnly:true  },
-  { key:'F', label:'F', fullLabel:'Freeball',   color:'bg-slate-500',  advancedOnly:true  },
+  { key:'S', label:'S', fullLabel:'Battuta',   advancedOnly:false },
+  { key:'R', label:'R', fullLabel:'Ricezione',  advancedOnly:false },
+  { key:'A', label:'A', fullLabel:'Attacco',    advancedOnly:false },
+  { key:'B', label:'B', fullLabel:'Muro',       advancedOnly:false },
+  { key:'E', label:'E', fullLabel:'Alzata',     advancedOnly:true  },
+  { key:'D', label:'D', fullLabel:'Difesa',     advancedOnly:true  },
+  { key:'F', label:'F', fullLabel:'Freeball',   advancedOnly:true  },
 ];
 
 const SIMPLE_EVALS: { key: Evaluation; label: string; color: string }[] = [
-  { key:'#', label:'Kill / Ace',  color:'bg-green-500' },
+  { key:'#', label:'Kill / Ace',  color:'bg-green-600' },
   { key:'+', label:'Positivo',    color:'bg-lime-500'  },
   { key:'/', label:'Errore',      color:'bg-red-500'   },
-  { key:'=', label:'Fuori',       color:'bg-gray-500'  },
+  { key:'=', label:'Fuori',       color:'bg-red-700'   },
 ];
 
 const ADVANCED_EVALS: { key: Evaluation; label: string; color: string }[] = [
-  { key:'#', label:'Kill / Ace',    color:'bg-green-500'  },
-  { key:'+', label:'Positivo',      color:'bg-lime-500'   },
-  { key:'!', label:'Accettabile',   color:'bg-yellow-500' },
-  { key:'-', label:'Negativo',      color:'bg-orange-500' },
-  { key:'/', label:'Errore',        color:'bg-red-500'    },
-  { key:'=', label:'Fuori',         color:'bg-gray-500'   },
+  { key:'#', label:'Kill / Ace',    color:'bg-green-600' },
+  { key:'+', label:'Positivo',      color:'bg-lime-500'  },
+  { key:'!', label:'Accettabile',   color:'bg-amber-500' },
+  { key:'-', label:'Negativo',      color:'bg-orange-500'},
+  { key:'/', label:'Errore',        color:'bg-red-500'   },
+  { key:'=', label:'Fuori',         color:'bg-red-700'   },
 ];
 
 export function TouchFlowPanel({
@@ -132,9 +132,8 @@ export function TouchFlowPanel({
                     'font-bold text-sm transition-all active:scale-[0.97]',
                     'disabled:opacity-20 disabled:cursor-not-allowed',
                     padY,
-                    isSugg
-                      ? `${s.color} text-white shadow-md`
-                      : 'bg-secondary/50 hover:bg-secondary/80',
+                    'bg-secondary/50 hover:bg-secondary/80',
+                    isSugg && 'ring-2 ring-primary',
                   )}
                 >
                   <span className="size-8 flex items-center justify-center rounded-lg bg-black/20 font-black">
@@ -160,7 +159,7 @@ export function TouchFlowPanel({
                 if (!sk) return null;
                 return (
                   <>
-                    <span className={cn('size-7 flex items-center justify-center rounded-lg text-white font-black text-sm', sk.color)}>
+                    <span className="size-7 flex items-center justify-center rounded-lg bg-secondary text-foreground font-black text-sm border border-border">
                       {sk.key}
                     </span>
                     <span className="text-sm font-bold">{sk.fullLabel}</span>

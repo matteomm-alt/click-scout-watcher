@@ -5,10 +5,10 @@ import type { ScoutAction } from '@/types/volleyball';
 
 const evalColor = (e: string) => {
   switch (e) {
-    case '#': return 'bg-emerald-600 text-white';
-    case '+': return 'bg-[hsl(var(--cs-cta))] text-white';
-    case '!': return 'bg-secondary text-foreground';
-    case '-': return 'bg-orange-700 text-white';
+    case '#': return 'bg-green-600 text-white';
+    case '+': return 'bg-lime-500 text-lime-950';
+    case '!': return 'bg-amber-500 text-amber-950';
+    case '-': return 'bg-orange-500 text-white';
     case '/': return 'bg-red-500 text-white';
     case '=': return 'bg-red-700 text-white';
     default: return 'bg-secondary text-foreground';

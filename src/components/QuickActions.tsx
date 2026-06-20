@@ -18,12 +18,12 @@ interface QuickConfig {
 }
 
 const QUICK_CONFIGS: QuickConfig[] = [
-  { key: 'ace',          label: 'Ace',              short: 'ACE',  scoringTeam: 'self',     skill: 'S', evaluation: '#', bg: 'bg-emerald-600 hover:bg-emerald-500', icon: Zap },
-  { key: 'serveError',   label: 'Errore battuta',   short: 'ERR-S',scoringTeam: 'opponent', skill: 'S', evaluation: '=', bg: 'bg-orange-600 hover:bg-orange-500',   icon: X },
-  { key: 'attackPoint',  label: 'Punto attacco',    short: 'KILL', scoringTeam: 'self',     skill: 'A', evaluation: '#', bg: 'bg-red-600 hover:bg-red-500',         icon: Award },
-  { key: 'attackError',  label: 'Errore attacco',   short: 'ERR-A',scoringTeam: 'opponent', skill: 'A', evaluation: '=', bg: 'bg-orange-700 hover:bg-orange-600',   icon: X },
-  { key: 'block',        label: 'Muro punto',       short: 'BLOCK',scoringTeam: 'self',     skill: 'B', evaluation: '#', bg: 'bg-purple-600 hover:bg-purple-500',   icon: Shield },
-  { key: 'oppError',     label: 'Errore avversario',short: 'ERR-X',scoringTeam: 'self',     skill: null,evaluation: null,bg: 'bg-secondary hover:bg-secondary/70',   icon: AlertCircle },
+  { key: 'ace',          label: 'Ace',              short: 'ACE',  scoringTeam: 'self',     skill: 'S', evaluation: '#', bg: 'bg-green-600 hover:bg-green-500',   icon: Zap },
+  { key: 'serveError',   label: 'Errore battuta',   short: 'ERR-S',scoringTeam: 'opponent', skill: 'S', evaluation: '=', bg: 'bg-red-700 hover:bg-red-600',       icon: X },
+  { key: 'attackPoint',  label: 'Punto attacco',    short: 'KILL', scoringTeam: 'self',     skill: 'A', evaluation: '#', bg: 'bg-green-600 hover:bg-green-500',   icon: Award },
+  { key: 'attackError',  label: 'Errore attacco',   short: 'ERR-A',scoringTeam: 'opponent', skill: 'A', evaluation: '=', bg: 'bg-red-700 hover:bg-red-600',       icon: X },
+  { key: 'block',        label: 'Muro punto',       short: 'BLOCK',scoringTeam: 'self',     skill: 'B', evaluation: '#', bg: 'bg-green-600 hover:bg-green-500',   icon: Shield },
+  { key: 'oppError',     label: 'Errore avversario',short: 'ERR-X',scoringTeam: 'self',     skill: null,evaluation: null,bg: 'bg-secondary hover:bg-secondary/70', icon: AlertCircle },
 ];
 
 export function QuickActions() {
