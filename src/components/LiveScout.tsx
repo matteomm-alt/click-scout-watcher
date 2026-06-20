@@ -159,6 +159,18 @@ export function LiveScout() {
         updateAction(actionId, skill === 'A' ? { endZone: zone } : { startZone: zone });
       }
     }
+    // Opzione disaccoppiata (settings.showEndZone): per la Battuta, invece di dedurre
+    // automaticamente, l'operatore clicca il punto esatto di atterraggio sul campo
+    // della squadra che RICEVE (non quella che ha servito — qui sta la correzione
+    // rispetto al vecchio comportamento, che mostrava l'overlay sul campo sbagliato),
+    // e solo dopo assegna manualmente quale giocatore ha ricevuto.
+    if (skill === 'S' && settings.showEndZone && team && actionId) {
+      const receivingTeam = team === 'home' ? 'away' : 'home';
+      setPendingActionId(actionId);
+      setPendingSkill(skill);
+      setPendingTeam(receivingTeam);
+      setZoneSelectMode(true);
+    }
     setSelectedPlayer(null);
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
@@ -182,6 +194,18 @@ export function LiveScout() {
     if (pendingActionId) {
       if (pendingSkill === 'A') {
         updateAction(pendingActionId, { endZone: zone });
+      } else if (pendingSkill === 'S') {
+        // Zona di atterraggio della battuta, fissata manualmente sul campo di chi
+        // riceve. Il giocatore che ha ricevuto si assegna toccandolo normalmente:
+        // la sua azione R avrà una propria zona dedotta dalla sua posizione,
+        // indipendente da questa (che resta quella scelta qui per la battuta).
+        updateAction(pendingActionId, { endZone: zone });
+        toast.success(`Zona di atterraggio ${zone} registrata — ora tocca il giocatore che ha ricevuto`, { duration: 2200 });
+        setZoneSelectMode(false);
+        setPendingActionId(null);
+        setPendingSkill(null);
+        setPendingTeam(null);
+        return;
       } else {
         updateAction(pendingActionId, { startZone: zone });
       }

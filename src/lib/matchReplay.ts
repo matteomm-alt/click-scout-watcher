@@ -134,9 +134,19 @@ export function applyEvent(
             const nextEval = map[action.evaluation];
             const idx = [...actions].reverse()
               .findIndex(a => a.skill === 'S' && a.setNumber === action.setNumber);
-            if (nextEval && idx >= 0) {
+            if (idx >= 0) {
               const realIdx = actions.length - 1 - idx;
-              actions[realIdx] = { ...actions[realIdx], evaluation: nextEval };
+              const patch: Partial<typeof actions[number]> = {};
+              if (nextEval) patch.evaluation = nextEval;
+              // La battuta non ha una zona di arrivo propria nel flusso semplificato:
+              // coincide con la zona di partenza della ricezione che la segue (stesso
+              // punto fisico del campo, visto dai due lati della rete). Non sovrascrive
+              // una zona già impostata manualmente (opzione "Zona battuta manuale"),
+              // che ha sempre la precedenza sulla deduzione automatica.
+              if (action.startZone != null && actions[realIdx].endZone == null) {
+                patch.endZone = action.startZone;
+              }
+              actions[realIdx] = { ...actions[realIdx], ...patch };
             }
           }
           if (action.skill === 'B') {
