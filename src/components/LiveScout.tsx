@@ -194,6 +194,18 @@ export function LiveScout() {
     if (pendingActionId) {
       if (pendingSkill === 'A') {
         updateAction(pendingActionId, { endZone: zone });
+      } else if (pendingSkill === 'S') {
+        // Zona di atterraggio della battuta, fissata manualmente sul campo di chi
+        // riceve. Il giocatore che ha ricevuto si assegna toccandolo normalmente:
+        // la sua azione R avrà una propria zona dedotta dalla sua posizione,
+        // indipendente da questa (che resta quella scelta qui per la battuta).
+        updateAction(pendingActionId, { endZone: zone });
+        toast.success(`Zona di atterraggio ${zone} registrata — ora tocca il giocatore che ha ricevuto`, { duration: 2200 });
+        setZoneSelectMode(false);
+        setPendingActionId(null);
+        setPendingSkill(null);
+        setPendingTeam(null);
+        return;
       } else {
         updateAction(pendingActionId, { startZone: zone });
       }
