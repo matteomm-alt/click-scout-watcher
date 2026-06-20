@@ -413,7 +413,7 @@ export function LiveScout() {
                     timestamp: '',
                     code: '',
                   });
-                  if (settings.autoPoint && evaluation === '#' && skillToUse === 'S') {
+                  if (settings.autoPoint && evaluation === '#' && (skillToUse === 'S' || skillToUse === 'A' || skillToUse === 'B')) {
                     addPoint(selectedPlayer.team);
                   } else if (settings.autoPoint && evaluation === '='
                       && (skillToUse === 'S' || skillToUse === 'A')) {
