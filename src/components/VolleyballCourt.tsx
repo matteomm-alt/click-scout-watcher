@@ -316,15 +316,15 @@ export function VolleyballCourt({
           );
         })}
 
-        {/* Live arrows (solo home, ultimi 5) */}
-        {liveArrows && liveArrows.length > 0 && team === 'home' && !simplifiedView && (
+        {/* Live arrows (ultimi 5 attacchi della squadra di questa metà campo) */}
+        {liveArrows && liveArrows.length > 0 && !simplifiedView && (
           <svg className="pointer-events-none absolute inset-0 z-30 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
-              <marker id="arrow-live" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+              <marker id={`arrow-live-${team}`} markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
                 <path d="M0,0 L0,6 L6,3 z" fill="currentColor" />
               </marker>
             </defs>
-            {liveArrows.slice(-5).map((arr, i, arrs) => {
+            {liveArrows.filter((a) => a.team === team).slice(-5).map((arr, i, arrs) => {
               const from = zoneCenters.find((z) => z.zone === arr.startZone);
               const to = zoneCenters.find((z) => z.zone === arr.endZone);
               if (!from || !to || arr.startZone === arr.endZone) return null;
@@ -334,7 +334,7 @@ export function VolleyballCourt({
                 <line key={i} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
                   stroke={color} strokeWidth="0.9" strokeLinecap="round"
                   strokeDasharray="2 1" opacity={opacity}
-                  markerEnd="url(#arrow-live)"
+                  markerEnd={`url(#arrow-live-${team})`}
                   vectorEffect="non-scaling-stroke" />
               );
             })}
