@@ -57,7 +57,7 @@ export function ZoneCourt({ onZoneClick, startZone, endZone, mode = 'display', l
 /* ------------------------------------------------------------------ */
 /* Nuovo VolleyballCourt — campo interattivo "click diretto"           */
 /* ------------------------------------------------------------------ */
-type LiveArrow = { startZone: number; endZone: number; evaluation: string };
+type LiveArrow = { startZone: number; endZone: number; evaluation: string; team: 'home' | 'away' };
 
 interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
