@@ -86,27 +86,8 @@ interface VolleyballCourtProps {
   layout?: 'split' | 'single';
 }
 
-// Coordinate posizioni P1..P6 (in %) per ciascun half-court
-const POS_AWAY: Record<number, { x: number; y: number }> = {
-  2: { x: 78, y: 78 }, 3: { x: 78, y: 50 }, 4: { x: 78, y: 22 },
-  1: { x: 28, y: 78 }, 6: { x: 28, y: 50 }, 5: { x: 28, y: 22 },
-};
-const POS_HOME: Record<number, { x: number; y: number }> = {
-  2: { x: 22, y: 22 }, 3: { x: 22, y: 50 }, 4: { x: 22, y: 78 },
-  1: { x: 72, y: 22 }, 6: { x: 72, y: 50 }, 5: { x: 72, y: 78 },
-};
+// Costanti posizioni P1..P6 e centri zone importate da courtPositionResolver
 
-// Centri zone (per heatmap e overlay)
-const ZONE_CENTERS_AWAY: { zone: number; x: number; y: number }[] = [
-  { zone: 4, x: 78, y: 22 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 78 },
-  { zone: 5, x: 28, y: 22 }, { zone: 6, x: 28, y: 50 }, { zone: 1, x: 28, y: 78 },
-  { zone: 7, x: 6,  y: 22 }, { zone: 8, x: 6,  y: 50 }, { zone: 9, x: 6,  y: 78 },
-];
-const ZONE_CENTERS_HOME: { zone: number; x: number; y: number }[] = [
-  { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
-  { zone: 5, x: 72, y: 78 }, { zone: 6, x: 72, y: 50 }, { zone: 1, x: 72, y: 22 },
-  { zone: 7, x: 94, y: 78 }, { zone: 8, x: 94, y: 50 }, { zone: 9, x: 94, y: 22 },
-];
 
 // Determina il ruolo "logico" di uno slot in base alla posizione del setter (schema 5-1).
 // Setter @P1 → slot offsets: P1=Setter, P2=Outside, P3=Middle, P4=Opposite, P5=Outside, P6=Middle
