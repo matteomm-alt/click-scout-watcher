@@ -159,6 +159,18 @@ export function LiveScout() {
         updateAction(actionId, skill === 'A' ? { endZone: zone } : { startZone: zone });
       }
     }
+    // Opzione disaccoppiata (settings.showEndZone): per la Battuta, invece di dedurre
+    // automaticamente, l'operatore clicca il punto esatto di atterraggio sul campo
+    // della squadra che RICEVE (non quella che ha servito — qui sta la correzione
+    // rispetto al vecchio comportamento, che mostrava l'overlay sul campo sbagliato),
+    // e solo dopo assegna manualmente quale giocatore ha ricevuto.
+    if (skill === 'S' && settings.showEndZone && team && actionId) {
+      const receivingTeam = team === 'home' ? 'away' : 'home';
+      setPendingActionId(actionId);
+      setPendingSkill(skill);
+      setPendingTeam(receivingTeam);
+      setZoneSelectMode(true);
+    }
     setSelectedPlayer(null);
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
