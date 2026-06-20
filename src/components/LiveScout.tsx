@@ -110,6 +110,31 @@ export function LiveScout() {
   );
 
   // === Handlers ===
+
+  /**
+   * Calcola la zona DVW (1-9) dalla posizione EFFETTIVA del giocatore sul campo
+   * (stessa funzione usata da VolleyballCourt per disegnare il marker, garantendo
+   * coerenza tra dove il giocatore appare visivamente e la zona registrata).
+   * Ritorna null se il giocatore non è in formazione (es. numero non trovato in lineup).
+   */
+  const computeZoneForPlayer = (num: number, team: 'home' | 'away'): number | null => {
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const slotPos = lineup?.indexOf(num);
+    if (slotPos == null || slotPos < 0) return null;
+    const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+    const phase = team === 'home' ? matchState.teamTacticalPhases.home : matchState.teamTacticalPhases.away;
+    const pos = resolvePlayerPosition({
+      team,
+      slotPos: slotPos + 1,
+      setterPosition,
+      phase,
+      receptionFormations: team === 'home' ? homeReceptionFormations : awayReceptionFormations,
+      attackFormations: team === 'home' ? homeAttackFormations : awayAttackFormations,
+      defenseFormations: team === 'home' ? homeDefenseFormations : awayDefenseFormations,
+    });
+    return nearestZone(team, pos);
+  };
+
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
@@ -125,17 +150,20 @@ export function LiveScout() {
     if (team) {
       setLastSkillByTeam((prev) => ({ ...prev, [team]: skill }));
     }
+    // Flusso semplificato: per Ricezione e Attacco, la zona si deduce automaticamente
+    // dalla posizione del giocatore selezionato (confermato dal manuale Click&Scout:
+    // "the direction of the serve corresponds to the position of the receiver on court").
+    if ((skill === 'R' || skill === 'A') && num !== null && team && actionId) {
+      const zone = computeZoneForPlayer(num, team);
+      if (zone !== null) {
+        updateAction(actionId, skill === 'A' ? { endZone: zone } : { startZone: zone });
+      }
+    }
     setSelectedPlayer(null);
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
       setRecentActionPlayer({ number: num, team, evaluation: last?.evaluation });
       window.setTimeout(() => setRecentActionPlayer(null), 700);
-    }
-    if (SKILLS_WITH_ZONE.includes(skill) && actionId) {
-      setPendingActionId(actionId);
-      setPendingSkill(skill);
-      setPendingTeam(team);
-      setZoneSelectMode(true);
     }
     const lastAction = matchState.actions[matchState.actions.length - 1];
     const nextSugg = suggestNextTouch(
