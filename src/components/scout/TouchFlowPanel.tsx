@@ -132,9 +132,8 @@ export function TouchFlowPanel({
                     'font-bold text-sm transition-all active:scale-[0.97]',
                     'disabled:opacity-20 disabled:cursor-not-allowed',
                     padY,
-                    isSugg
-                      ? `${s.color} text-white shadow-md`
-                      : 'bg-secondary/50 hover:bg-secondary/80',
+                    'bg-secondary/50 hover:bg-secondary/80',
+                    isSugg && 'ring-2 ring-primary',
                   )}
                 >
                   <span className="size-8 flex items-center justify-center rounded-lg bg-black/20 font-black">
