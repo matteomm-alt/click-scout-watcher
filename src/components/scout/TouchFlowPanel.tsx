@@ -159,7 +159,7 @@ export function TouchFlowPanel({
                 if (!sk) return null;
                 return (
                   <>
-                    <span className={cn('size-7 flex items-center justify-center rounded-lg text-white font-black text-sm', sk.color)}>
+                    <span className="size-7 flex items-center justify-center rounded-lg bg-secondary text-foreground font-black text-sm border border-border">
                       {sk.key}
                     </span>
                     <span className="text-sm font-bold">{sk.fullLabel}</span>
