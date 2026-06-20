@@ -287,7 +287,7 @@ export function LiveScout() {
             timestamp: '',
             code: '',
           });
-          if (settings.autoPoint && evaluation === '#' && pendingSkill === 'S') {
+          if (settings.autoPoint && evaluation === '#' && (pendingSkill === 'S' || pendingSkill === 'A' || pendingSkill === 'B')) {
             addPoint(selectedPlayer.team);
           } else if (settings.autoPoint && evaluation === '='
               && (pendingSkill === 'S' || pendingSkill === 'A')) {
