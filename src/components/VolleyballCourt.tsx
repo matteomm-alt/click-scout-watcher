@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getInitialPhases } from '@/lib/tacticalPhases';
-import { resolvePlayerPosition, ZONE_CENTERS_HOME, ZONE_CENTERS_AWAY } from '@/lib/courtPositionResolver';
+import { resolvePlayerPosition, nearestZone, ZONE_CENTERS_HOME, ZONE_CENTERS_AWAY } from '@/lib/courtPositionResolver';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
@@ -211,26 +211,40 @@ export function VolleyballCourt({
           </div>
         )}
 
-        {/* Zone overlay cliccabili (post-azione) */}
-        {showZoneOverlay && zoneCenters.map((z) => {
-          const active = selectedZone === z.zone;
+        {/* Click libero per zona (stile Click&Scout): nessuna griglia visibile,
+            il punto esatto toccato sul campo viene convertito internamente nella
+            zona DVW più vicina (nearestZone), invece di richiedere la selezione
+            tra 9 riquadri predefiniti. Verificato sugli screenshot reali del
+            manuale Click&Scout: il campo è sempre pieno, senza overlay a griglia. */}
+        {showZoneOverlay && (
+          <button
+            type="button"
+            className="absolute inset-0 z-[25] w-full h-full cursor-crosshair bg-transparent"
+            onClick={(e) => {
+              if (!zoneClickEnabled) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+              const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+              const zone = nearestZone(team, { x: xPct, y: yPct });
+              onZoneClick?.(zone, team);
+            }}
+            aria-label="Tocca un punto del campo per selezionare la zona"
+          />
+        )}
+
+        {/* Indicatore del punto toccato (feedback visivo, non una griglia) */}
+        {showZoneOverlay && selectedZone != null && (() => {
+          const z = zoneCenters.find((zc) => zc.zone === selectedZone);
+          if (!z) return null;
           return (
-            <button
-              type="button"
-              key={`zone-${team}-${z.zone}`}
-              onClick={() => zoneClickEnabled && onZoneClick?.(z.zone, team)}
-              className={`absolute z-[15] -translate-x-1/2 -translate-y-1/2 rounded-md border-2 transition-all active:scale-95 ${
-                active
-                  ? 'bg-primary/60 border-primary ring-2 ring-primary'
-                  : 'bg-black/30 border-white/40 hover:bg-white/15'
-              }`}
-              style={{ left: `${z.x}%`, top: `${z.y}%`, width: '26%', height: '26%' }}
-              aria-label={`Zona ${z.zone}`}
+            <div
+              className="pointer-events-none absolute z-[26] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-primary/80 border-2 border-white shadow-lg"
+              style={{ left: `${z.x}%`, top: `${z.y}%`, width: '36px', height: '36px' }}
             >
-              <span className="text-white font-black text-base drop-shadow">{z.zone}</span>
-            </button>
+              <span className="text-white font-black text-sm drop-shadow">{z.zone}</span>
+            </div>
           );
-        })}
+        })()}
 
         {/* Etichetta ricezione */}
         {isReceiving && !simplifiedView && (
