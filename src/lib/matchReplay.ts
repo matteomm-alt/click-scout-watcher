@@ -151,6 +151,16 @@ export function applyEvent(
               actions[realIdx] = { ...actions[realIdx], evaluation: nextEval };
             }
           }
+          // L'Alzata non ha una zona propria nel flusso semplificato: eredita la
+          // zona di partenza dell'Attacco che la segue.
+          if (action.skill === 'A' && action.endZone != null) {
+            const idx = [...actions].reverse()
+              .findIndex(a => a.skill === 'E' && a.setNumber === action.setNumber);
+            if (idx >= 0) {
+              const realIdx = actions.length - 1 - idx;
+              actions[realIdx] = { ...actions[realIdx], endZone: action.endZone };
+            }
+          }
         }
       } catch {}
       const prevAction = state.actions[state.actions.length - 1];
