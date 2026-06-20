@@ -91,6 +91,14 @@ export function LiveFooter({
         <div className="flex-1 flex gap-1 flex-wrap">
           {evals.map(e => {
             const disabled = !selectedSkill;
+            const evalColors: Record<string, string> = {
+              '#': 'bg-green-600 text-white border-green-700',
+              '+': 'bg-lime-500 text-lime-950 border-lime-600',
+              '!': 'bg-amber-500 text-amber-950 border-amber-600',
+              '-': 'bg-orange-500 text-white border-orange-600',
+              '/': 'bg-red-500 text-white border-red-600',
+              '=': 'bg-red-700 text-white border-red-800',
+            };
             return (
               <button
                 key={e.key}
@@ -99,7 +107,8 @@ export function LiveFooter({
                 onClick={() => onEvaluationSelect(e.key)}
                 className={cn(
                   'min-h-[34px] min-w-[34px] px-2 rounded-md text-sm font-black transition-all active:scale-95',
-                  'border bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                  'border hover:brightness-110',
+                  evalColors[e.key],
                   disabled && 'opacity-30 cursor-not-allowed',
                 )}
                 title={e.label}
