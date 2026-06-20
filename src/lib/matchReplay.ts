@@ -171,6 +171,29 @@ export function applyEvent(
               actions[realIdx] = { ...actions[realIdx], endZone: action.endZone };
             }
           }
+          // L'Attacco non ha una zona di partenza propria nel flusso semplificato
+          // (si tocca solo l'attaccante, la sua posizione diventa endZone). Per
+          // ricostruire una traiettoria vera (partenza→arrivo) senza richiedere
+          // un secondo tocco, la partenza si deduce dal tocco IMMEDIATAMENTE
+          // precedente nello stesso rally che abbia già una zona propria nativa
+          // (Ricezione o Difesa — non l'Alzata, che ha solo una zona ereditata
+          // e potrebbe non essere ancora stata scritta in questo stesso ciclo).
+          // Stesso principio usato da OpenVolleyScout: la partenza di un tocco
+          // è il punto del tocco precedente, non un dato richiesto a parte.
+          if (action.skill === 'A' && action.startZone == null) {
+            const prevTouch = [...actions].reverse().find(a =>
+              a.id !== action.id &&
+              (a.rallyId && action.rallyId ? a.rallyId === action.rallyId : a.setNumber === action.setNumber) &&
+              (a.skill === 'R' || a.skill === 'D') &&
+              a.startZone != null,
+            );
+            if (prevTouch) {
+              const idx = actions.findIndex(a => a.id === action.id);
+              if (idx >= 0) {
+                actions[idx] = { ...actions[idx], startZone: prevTouch.startZone };
+              }
+            }
+          }
         }
       } catch {}
       const prevAction = state.actions[state.actions.length - 1];

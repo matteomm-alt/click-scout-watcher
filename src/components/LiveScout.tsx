@@ -105,7 +105,7 @@ export function LiveScout() {
     matchState.actions
       .filter((a) => a.skill === 'A' && a.startZone != null && a.endZone != null)
       .slice(-5)
-      .map((a) => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation })),
+      .map((a) => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation, team: a.team })),
     [matchState.actions]
   );
 
