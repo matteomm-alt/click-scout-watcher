@@ -39,6 +39,9 @@ export function LiveScout() {
     matchState, homeTeam, awayTeam, matchInfo, homeLineup, awayLineup,
     endSet, updateAction, addPoint, addAction, undoLastAction, undoRally,
     callTimeout, substitutePlayer,
+    homeReceptionFormations, awayReceptionFormations,
+    homeAttackFormations, awayAttackFormations,
+    homeDefenseFormations, awayDefenseFormations,
   } = useMatchStore();
   const removeLastTouchFromCurrentRally = useMatchStore(s => s.removeLastTouchFromCurrentRally);
   const { settings, setSetting, setSettings } = useScoutSettings();
