@@ -151,19 +151,6 @@ export function VolleyballCourt({
       : (awayAttackFormations ?? awayReceptionFormations);
 
     const phase = team === 'home' ? teamTacticalPhases.home : teamTacticalPhases.away;
-    const phaseLayout = getPhaseLayout(phase);
-
-    let overridePositions: ReturnType<typeof getReceptionPositions> | null = null;
-    if (phaseLayout === 'reception') {
-      overridePositions = getReceptionPositions(recFormations, setterPosition, false);
-    } else if (phaseLayout === 'attack') {
-      overridePositions = getAttackPositions(atkFormations, setterPosition, false);
-    } else if (phaseLayout === 'defense') {
-      const defFormations = team === 'home' ? homeDefenseFormations : awayDefenseFormations;
-      overridePositions = getDefensePositions(defFormations, setterPosition, false);
-      // getDefensePositions ritorna null se la rotazione non è configurata → fallback rotazione standard
-    }
-    // 'normal' → nessun override
 
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
 
