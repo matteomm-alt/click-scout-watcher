@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
-import { getReceptionPositions, getAttackPositions, getDefensePositions } from '@/lib/receptionFormations';
-import { getPhaseLayout, getInitialPhases } from '@/lib/tacticalPhases';
-import { getPhasePositionOverride } from '@/lib/courtPositionResolver';
+import { getInitialPhases } from '@/lib/tacticalPhases';
+import { resolvePlayerPosition, ZONE_CENTERS_HOME, ZONE_CENTERS_AWAY } from '@/lib/courtPositionResolver';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
@@ -87,27 +86,8 @@ interface VolleyballCourtProps {
   layout?: 'split' | 'single';
 }
 
-// Coordinate posizioni P1..P6 (in %) per ciascun half-court
-const POS_AWAY: Record<number, { x: number; y: number }> = {
-  2: { x: 78, y: 78 }, 3: { x: 78, y: 50 }, 4: { x: 78, y: 22 },
-  1: { x: 28, y: 78 }, 6: { x: 28, y: 50 }, 5: { x: 28, y: 22 },
-};
-const POS_HOME: Record<number, { x: number; y: number }> = {
-  2: { x: 22, y: 22 }, 3: { x: 22, y: 50 }, 4: { x: 22, y: 78 },
-  1: { x: 72, y: 22 }, 6: { x: 72, y: 50 }, 5: { x: 72, y: 78 },
-};
+// Costanti posizioni P1..P6 e centri zone importate da courtPositionResolver
 
-// Centri zone (per heatmap e overlay)
-const ZONE_CENTERS_AWAY: { zone: number; x: number; y: number }[] = [
-  { zone: 4, x: 78, y: 22 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 78 },
-  { zone: 5, x: 28, y: 22 }, { zone: 6, x: 28, y: 50 }, { zone: 1, x: 28, y: 78 },
-  { zone: 7, x: 6,  y: 22 }, { zone: 8, x: 6,  y: 50 }, { zone: 9, x: 6,  y: 78 },
-];
-const ZONE_CENTERS_HOME: { zone: number; x: number; y: number }[] = [
-  { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
-  { zone: 5, x: 72, y: 78 }, { zone: 6, x: 72, y: 50 }, { zone: 1, x: 72, y: 22 },
-  { zone: 7, x: 94, y: 78 }, { zone: 8, x: 94, y: 50 }, { zone: 9, x: 94, y: 22 },
-];
 
 // Determina il ruolo "logico" di uno slot in base alla posizione del setter (schema 5-1).
 // Setter @P1 → slot offsets: P1=Setter, P2=Outside, P3=Middle, P4=Opposite, P5=Outside, P6=Middle
@@ -171,19 +151,6 @@ export function VolleyballCourt({
       : (awayAttackFormations ?? awayReceptionFormations);
 
     const phase = team === 'home' ? teamTacticalPhases.home : teamTacticalPhases.away;
-    const phaseLayout = getPhaseLayout(phase);
-
-    let overridePositions: ReturnType<typeof getReceptionPositions> | null = null;
-    if (phaseLayout === 'reception') {
-      overridePositions = getReceptionPositions(recFormations, setterPosition, false);
-    } else if (phaseLayout === 'attack') {
-      overridePositions = getAttackPositions(atkFormations, setterPosition, false);
-    } else if (phaseLayout === 'defense') {
-      const defFormations = team === 'home' ? homeDefenseFormations : awayDefenseFormations;
-      overridePositions = getDefensePositions(defFormations, setterPosition, false);
-      // getDefensePositions ritorna null se la rotazione non è configurata → fallback rotazione standard
-    }
-    // 'normal' → nessun override
 
     const isReceiving = team === 'home' ? !!receptionMode?.home : !!receptionMode?.away;
 
@@ -277,22 +244,12 @@ export function VolleyballCourt({
           const playerNum = lineup[pos - 1];
           if (!playerNum) return null;
           const info = getPlayerInfo(playerNum, team);
-          const basePos = team === 'home' ? POS_HOME[pos] : POS_AWAY[pos];
-          const rawFormationPos = overridePositions?.[pos as 1|2|3|4|5|6] ?? null;
-          // Le formazioni (editor "Schemi ricezione/attacco/difesa") usano un sistema di
-          // coordinate con la RETE IN ALTO (formazione.y: 0=rete, 100=fondo; formazione.x=lato sx/dx).
-          // Il campo live usa la RETE LATERALE (asse x=profondità dalla rete, y=lato).
-          // Trasponiamo gli assi qui, una sola volta: la profondità (formazione.y) diventa
-          // profondità del campo (x), specchiata per AWAY perché la sua rete è sul lato
-          // opposto del proprio sistema di coordinate locale rispetto a HOME.
-          const formationPos = rawFormationPos
-            ? {
-                x: team === 'home' ? rawFormationPos.y : 100 - rawFormationPos.y,
-                y: rawFormationPos.x,
-              }
-            : null;
-          const phaseOverride = getPhasePositionOverride(phase, pos, setterPosition, team === 'home');
-          const p = phaseOverride ?? formationPos ?? basePos;
+          const p = resolvePlayerPosition({
+            team, slotPos: pos, setterPosition, phase,
+            receptionFormations: recFormations,
+            attackFormations: atkFormations,
+            defenseFormations: team === 'home' ? homeDefenseFormations : awayDefenseFormations,
+          });
 
           const logRole = logicalRoleForSlot(pos, setterPosition);
           const isSetter = logRole === 'setter';
