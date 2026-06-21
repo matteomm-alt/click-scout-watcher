@@ -1,4 +1,5 @@
-import type { Skill, Evaluation } from '@/types/volleyball';
+import type { Skill, Evaluation, AttackType } from '@/types/volleyball';
+import { ATTACK_TYPES } from '@/types/volleyball';
 import { cn } from '@/lib/utils';
 
 export type ScoutingMode = 'simple' | 'advanced';
@@ -8,6 +9,8 @@ interface LiveFooterProps {
   selectedSkill: Skill | null;
   mode: ScoutingMode;
   suggestedSkill?: Skill | null;
+  selectedAttackType: AttackType;
+  onAttackTypeSelect: (type: AttackType) => void;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
@@ -45,11 +48,13 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
  */
 export function LiveFooter({
   selectedPlayer, selectedSkill, mode, suggestedSkill,
+  selectedAttackType, onAttackTypeSelect,
   onSkillSelect, onEvaluationSelect,
 }: LiveFooterProps) {
   const visibleSkills = SKILLS_ORDER.filter(s => mode === 'simple' ? !s.advancedOnly : true);
   const evals = mode === 'simple' ? SIMPLE_EVALS : ADVANCED_EVALS;
   const noPlayer = !selectedPlayer;
+  const showAttackType = selectedSkill === 'A' && mode === 'advanced';
 
   return (
     <div className="shrink-0 border-t border-border bg-card/50 px-2 py-1.5 flex flex-col gap-1.5">
