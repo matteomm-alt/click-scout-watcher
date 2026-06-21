@@ -274,7 +274,7 @@ export function LiveScout() {
         selectedPlayer={selectedPlayer}
         selectedSkill={pendingSkill}
         mode={scoutingMode}
-        suggestedSkill={suggestion?.skill ?? null}
+        suggestedSkill={selectedPlayer && suggestion?.team === selectedPlayer.team ? suggestion.skill : null}
         onSkillSelect={(skill) => setPendingSkill(skill)}
         onEvaluationSelect={(evaluation) => {
           if (!selectedPlayer || !pendingSkill) return;
