@@ -184,13 +184,14 @@ export function applyEvent(
             const prevTouch = [...actions].reverse().find(a =>
               a.id !== action.id &&
               (a.rallyId && action.rallyId ? a.rallyId === action.rallyId : a.setNumber === action.setNumber) &&
-              (a.skill === 'R' || a.skill === 'D') &&
-              a.startZone != null,
+              (a.skill === 'R' || a.skill === 'D' || a.skill === 'A' || a.skill === 'B') &&
+              (a.skill === 'R' ? a.startZone != null : a.endZone != null),
             );
             if (prevTouch) {
+              const prevZone = prevTouch.skill === 'R' ? prevTouch.startZone : prevTouch.endZone;
               const idx = actions.findIndex(a => a.id === action.id);
               if (idx >= 0) {
-                actions[idx] = { ...actions[idx], startZone: prevTouch.startZone };
+                actions[idx] = { ...actions[idx], startZone: prevZone };
               }
             }
           }
