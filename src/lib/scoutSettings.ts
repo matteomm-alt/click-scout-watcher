@@ -14,7 +14,7 @@ export type ScoutSettings = {
   showMuroVincente: boolean;
   showMuroErrato: boolean;
   sostituzioniLibere: boolean;
-  attaccoPredefinito: 'H' | 'Q' | 'T';
+  attaccoPredefinito: 'H' | 'M' | 'Q' | 'T' | 'U';
   ricezionePredefinita: '#' | '+' | '!' | '-' | '/' | '=';
   showAllDirections: boolean;
   posizionaPerRuolo: boolean;

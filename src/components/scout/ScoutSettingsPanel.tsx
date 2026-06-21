@@ -122,7 +122,7 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
         <div className="grid gap-3 rounded-xl border border-border bg-secondary/40 p-4">
           <Select value={settings.attaccoPredefinito} onValueChange={(v) => setSetting('attaccoPredefinito', v as ScoutSettings['attaccoPredefinito'])}>
             <SelectTrigger><SelectValue placeholder="Attacco predefinito" /></SelectTrigger>
-            <SelectContent><SelectItem value="H">H — Alta</SelectItem><SelectItem value="Q">Q — Veloce</SelectItem><SelectItem value="T">T — Tesa</SelectItem></SelectContent>
+            <SelectContent><SelectItem value="H">H — Alta</SelectItem><SelectItem value="M">M — Media</SelectItem><SelectItem value="Q">Q — Veloce</SelectItem><SelectItem value="T">T — Tesa</SelectItem><SelectItem value="U">U — Super</SelectItem></SelectContent>
           </Select>
           <Select value={settings.ricezionePredefinita} onValueChange={(v) => setSetting('ricezionePredefinita', v as ScoutSettings['ricezionePredefinita'])}>
             <SelectTrigger><SelectValue placeholder="Ricezione predefinita" /></SelectTrigger>
