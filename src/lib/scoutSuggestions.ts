@@ -23,20 +23,17 @@ export function suggestNextTouch(
       return { skill: 'R', team: opp, evaluation: '+' };
     case 'R':
       if (prevEvaluation === '=') return { skill: 'F', team: prevTeam };
-      if (simpleMode) return { skill: 'A', team: prevTeam };
-      return { skill: 'E', team: prevTeam };
+      return { skill: 'A', team: prevTeam };
     case 'E':
       return { skill: 'A', team: prevTeam };
     case 'A':
       if (prevEvaluation === '#' || prevEvaluation === '=') return { skill: null, team: null };
-      if (simpleMode) return { skill: 'R', team: opp };
-      return { skill: 'D', team: opp };
+      return { skill: 'A', team: opp };
     case 'B':
       if (prevEvaluation === '#') return { skill: null, team: null };
-      return { skill: 'D', team: prevTeam };
+      return { skill: 'A', team: prevTeam };
     case 'D':
-      if (simpleMode) return { skill: 'A', team: prevTeam };
-      return { skill: 'E', team: prevTeam };
+      return { skill: 'A', team: prevTeam };
     case 'F':
       return { skill: 'R', team: opp };
     default:
