@@ -61,6 +61,18 @@ export const SERVE_TYPES: { key: ServeType; label: string; description: string }
   { key: 'N', label: 'Sky Ball', description: 'Sky ball' },
 ];
 
+// Attack types (DVW "Type of Hit" convention, manuale Click&Scout sez. 4.7.1):
+// descrive il colpo dell'attaccante, e riflette indirettamente il tipo di
+// palla alzata che ha ricevuto — non è un campo separato sull'Alzata.
+export type AttackType = 'H' | 'M' | 'Q' | 'T' | 'U';
+export const ATTACK_TYPES: { key: AttackType; label: string; description: string }[] = [
+  { key: 'H', label: 'Alta', description: 'High' },
+  { key: 'M', label: 'Media', description: 'Medium' },
+  { key: 'Q', label: 'Veloce', description: 'Quick' },
+  { key: 'T', label: 'Tesa', description: 'Tense' },
+  { key: 'U', label: 'Super', description: 'sUper' },
+];
+
 // Attack combinations (standard DVW codes)
 export interface AttackCombo {
   code: string;
