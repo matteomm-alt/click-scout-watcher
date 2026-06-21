@@ -139,6 +139,9 @@ export function LiveScout() {
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
+    if (suggestion?.team === team && (suggestion.skill === 'R' || suggestion.skill === 'A')) {
+      setPendingSkill(suggestion.skill);
+    }
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setBottomSheetOpen(true);
     }
