@@ -7,7 +7,7 @@ import { generateDVW } from '@/lib/dvwExporter';
 import { upsertScoutSession } from '@/lib/scoutPersistence';
 import { useAuth } from '@/contexts/AuthContext';
 import { SKILL_LABELS } from '@/types/volleyball';
-import type { Skill, ScoutAction } from '@/types/volleyball';
+import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
@@ -54,6 +54,7 @@ export function LiveScout() {
   const [zoneSelectMode, setZoneSelectMode] = useState(false);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
+  const [pendingAttackType, setPendingAttackType] = useState<AttackType>(settings.attaccoPredefinito as AttackType);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
@@ -275,6 +276,8 @@ export function LiveScout() {
         selectedSkill={pendingSkill}
         mode={scoutingMode}
         suggestedSkill={selectedPlayer && suggestion?.team === selectedPlayer.team ? suggestion.skill : null}
+        selectedAttackType={pendingAttackType}
+        onAttackTypeSelect={setPendingAttackType}
         onSkillSelect={(skill) => setPendingSkill(skill)}
         onEvaluationSelect={(evaluation) => {
           if (!selectedPlayer || !pendingSkill) return;
@@ -282,7 +285,7 @@ export function LiveScout() {
             team: selectedPlayer.team,
             playerNumber: selectedPlayer.number,
             skill: pendingSkill,
-            skillType: 'H',
+            skillType: pendingSkill === 'A' ? pendingAttackType : 'H',
             evaluation,
             timestamp: '',
             code: '',
@@ -408,7 +411,7 @@ export function LiveScout() {
                     team: selectedPlayer.team,
                     playerNumber: selectedPlayer.number,
                     skill: skillToUse,
-                    skillType: 'H',
+                    skillType: skillToUse === 'A' ? pendingAttackType : 'H',
                     evaluation,
                     timestamp: '',
                     code: '',
