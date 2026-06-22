@@ -91,8 +91,8 @@ interface VolleyballCourtProps {
 
 // Determina il ruolo "logico" di uno slot in base alla posizione del setter (schema 5-1).
 // Setter @P1 → slot offsets: P1=Setter, P2=Outside, P3=Middle, P4=Opposite, P5=Outside, P6=Middle
-type LogicalRole = 'setter' | 'opposite' | 'middle' | 'outside';
-function logicalRoleForSlot(slotPos: number, setterPos: number): LogicalRole {
+export type LogicalRole = 'setter' | 'opposite' | 'middle' | 'outside';
+export function logicalRoleForSlot(slotPos: number, setterPos: number): LogicalRole {
   const offset = ((slotPos - setterPos + 6) % 6);
   if (offset === 0) return 'setter';
   if (offset === 3) return 'opposite';
