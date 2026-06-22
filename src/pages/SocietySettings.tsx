@@ -144,11 +144,16 @@ export default function SocietySettings() {
 
   const handleInvite = async () => {
     if (!societyId || !user || !inviteEmail.trim()) return;
+    const email = inviteEmail.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error('Email non valida');
+      return;
+    }
     const { data, error } = await supabase
       .from('society_invitations')
       .insert({
         society_id: societyId,
-        email: inviteEmail.toLowerCase().trim(),
+        email,
         role: 'coach',
         invited_by: user.id,
       })

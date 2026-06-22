@@ -124,13 +124,18 @@ export default function AdminSocieties() {
       (profs || []).forEach((p) => profilesMap.set(p.id, { full_name: p.full_name }));
     }
 
-    // Per email: usiamo gli inviti accettati per recuperare l'email originale del coach
-    const acceptedInvitesByUser = new Map<string, string>();
-    (invs || []).forEach((inv) => {
-      if (inv.accepted_at && inv.role === 'coach') {
-        // non abbiamo direttamente user_id sull'invito, ma possiamo correlare per email/profilo
+    let emailsByUser = new Map<string, string>();
+    if (coachUserIds.length > 0) {
+      const { data: emailRows, error: emailErr } = await (supabase as any)
+        .rpc('get_user_emails', { _user_ids: coachUserIds });
+      if (emailErr) {
+        console.warn('email coach', emailErr);
+      } else {
+        emailsByUser = new Map(
+          (emailRows ?? []).map((r: { user_id: string; email: string }) => [r.user_id, r.email]),
+        );
       }
-    });
+    }
 
     const coachesData: CoachRow[] = coachRolesArr
       .filter((c) => c.society_id)
@@ -139,7 +144,7 @@ export default function AdminSocieties() {
         user_id: c.user_id,
         society_id: c.society_id as string,
         full_name: profilesMap.get(c.user_id)?.full_name ?? null,
-        email: acceptedInvitesByUser.get(c.user_id) ?? null,
+        email: emailsByUser.get(c.user_id) ?? null,
       }));
 
     setSocieties(((socs || []) as { id: string; name: string; slug: string; created_at: string; features: unknown }[]).map((s) => ({
@@ -341,8 +346,8 @@ export default function AdminSocieties() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {societies.map((s) => {
             const socInvites = invitations.filter((i) => i.society_id === s.id);
-            const pendingAdmin = socInvites.filter((i) => !i.accepted_at && i.role === 'society_admin');
-            const pendingCoach = socInvites.filter((i) => !i.accepted_at && i.role === 'coach');
+            const pendingAdmin = socInvites.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date() && i.role === 'society_admin');
+            const pendingCoach = socInvites.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date() && i.role === 'coach');
             const socCoaches = coaches.filter((c) => c.society_id === s.id);
             return (
               <article
@@ -378,8 +383,9 @@ export default function AdminSocieties() {
                         className="flex items-center gap-2 text-xs bg-muted/40 border border-border rounded px-2 py-1.5"
                       >
                         <UserCog className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span className="truncate flex-1" title={c.full_name || c.user_id}>
+                        <span className="truncate flex-1" title={c.email || c.full_name || c.user_id}>
                           {c.full_name || <span className="font-mono text-muted-foreground">{c.user_id.slice(0, 8)}…</span>}
+                          {c.email && <span className="text-muted-foreground"> · {c.email}</span>}
                         </span>
                         <button
                           type="button"
