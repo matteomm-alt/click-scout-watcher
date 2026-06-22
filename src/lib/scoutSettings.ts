@@ -6,6 +6,11 @@ export type ScoutSettings = {
   showAttackCombo: boolean;
   showStartZone: boolean;
   showEndZone: boolean;
+  // Distinta da showEndZone (usata per la Battuta): attiva la selezione
+  // manuale opzionale del punto di caduta reale dell'Attacco nel campo
+  // avversario, separata dalla posizione dell'attaccante (già usata per
+  // la distribuzione del palleggiatore, non toccata da questa opzione).
+  showAttackLandingZone: boolean;
   showAlzata: boolean;
   showDifesa: boolean;
   showFreeball: boolean;
