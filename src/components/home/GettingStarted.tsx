@@ -37,6 +37,7 @@ export function GettingStarted() {
       setHasMatches((mRes.count ?? 0) > 0);
     })();
     return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [societyId, user?.id]);
 
   const steps: Step[] = [

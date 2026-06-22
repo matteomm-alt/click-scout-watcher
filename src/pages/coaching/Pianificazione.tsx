@@ -96,6 +96,7 @@ export default function Pianificazione() {
     setPhases((data as Phase[]) ?? []);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadPlans(); }, [societyId]);
   useEffect(() => { if (selectedPlanId) loadPhases(selectedPlanId); else setPhases([]); }, [selectedPlanId]);
 

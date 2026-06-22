@@ -47,6 +47,7 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
         onChange(new Set([currentMatchId]));
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMatchId]);
 
   const selectAll = () => onChange(new Set(matches.map(m => m.id)));

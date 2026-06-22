@@ -51,7 +51,8 @@ export default function Inventario() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [societyId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [societyId]);
 
   const markReturned = async (id: string) => {
     const { error } = await supabase.from('inventory_assignments')

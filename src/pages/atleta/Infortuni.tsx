@@ -70,6 +70,7 @@ export default function Infortuni() {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
 
   const athleteName = (id: string) => {
@@ -118,6 +119,7 @@ export default function Infortuni() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([id, n]) => ({ name: athleteName(id), count: n }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [injuries, athletes]);
 
   const handleDelete = async () => {

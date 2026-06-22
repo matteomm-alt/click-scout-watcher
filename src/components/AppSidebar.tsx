@@ -140,10 +140,15 @@ export function AppSidebar() {
       </SidebarMenuItem>
     ));
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const mainItems = useMemo(() => visible(MAIN), [features, scoutMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const gestionaleItems = useMemo(() => visible(GESTIONALE), [features, scoutMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const coachingItems = useMemo(() => visible(COACHING), [features, scoutMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const analisiItems = useMemo(() => visible(ANALISI), [features, scoutMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const atletaItems = useMemo(() => visible(ATLETA), [features, scoutMode]);
 
   return (

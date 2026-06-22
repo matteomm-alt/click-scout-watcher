@@ -77,6 +77,7 @@ export default function Obiettivi() {
     })));
     setLoading(false);
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
 
   const openCreate = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };

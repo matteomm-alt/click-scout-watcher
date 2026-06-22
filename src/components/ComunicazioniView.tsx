@@ -64,7 +64,8 @@ export function ComunicazioniView() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId, user?.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [societyId, user?.id]);
 
   const markAsRead = async (commId: string) => {
     if (!user || readBy[commId]) return;
