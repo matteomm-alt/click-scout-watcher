@@ -252,7 +252,11 @@ export function LiveScout() {
   const handleZoneSelect = (zone: number) => {
     if (pendingActionId) {
       if (pendingSkill === 'A') {
-        updateAction(pendingActionId, { endZone: zone });
+        // Punto di caduta reale, distinto da endZone (posizione
+        // dell'attaccante, già impostata al momento del tocco — non
+        // sovrascritta qui, per non alterare la distribuzione del
+        // palleggiatore che dipende da quella).
+        updateAction(pendingActionId, { landingZone: zone });
       } else if (pendingSkill === 'S') {
         // Zona di atterraggio della battuta, fissata manualmente sul campo di chi
         // riceve. Il giocatore che ha ricevuto si assegna toccandolo normalmente:
