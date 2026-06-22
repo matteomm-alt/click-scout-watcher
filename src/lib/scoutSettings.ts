@@ -85,6 +85,7 @@ export const SCOUT_PRESETS = {
     showAttackCombo: false,
     showStartZone: true,
     showEndZone: true,
+    showAttackLandingZone: false,
     showAlzata: true,
     showDifesa: true,
     showFreeball: false,
