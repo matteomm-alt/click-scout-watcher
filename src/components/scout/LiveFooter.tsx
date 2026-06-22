@@ -1,5 +1,5 @@
 import type { Skill, Evaluation, AttackType } from '@/types/volleyball';
-import { ATTACK_TYPES } from '@/types/volleyball';
+import { ATTACK_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
 import { cn } from '@/lib/utils';
 
 export type ScoutingMode = 'simple' | 'advanced';
