@@ -24,7 +24,7 @@ import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { TouchFlowPanel, type ScoutingMode } from '@/components/scout/TouchFlowPanel';
 import { LiveFooter } from '@/components/scout/LiveFooter';
 import { suggestNextTouch, SKILL_BANNER, type TouchSuggestion } from '@/lib/scoutSuggestions';
-import { resolvePlayerPosition, nearestZone } from '@/lib/courtPositionResolver';
+import { resolvePlayerPosition, nearestZone, getMiddleComboPosition } from '@/lib/courtPositionResolver';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
