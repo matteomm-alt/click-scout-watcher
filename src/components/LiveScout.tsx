@@ -200,6 +200,10 @@ export function LiveScout() {
         }
         setPendingMiddleCombo(null);
       }
+      if (skill === 'A' && pendingOtherCombo) {
+        updateAction(actionId, { attackCode: pendingOtherCombo });
+        setPendingOtherCombo(null);
+      }
     }
     // Opzione disaccoppiata (settings.showEndZone): per la Battuta, invece di dedurre
     // automaticamente, l'operatore clicca il punto esatto di atterraggio sul campo
