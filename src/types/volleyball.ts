@@ -81,6 +81,7 @@ export interface AttackCombo {
   tempo: 'Q' | 'M' | 'T' | 'H' | 'O' | 'N' | 'U';
   position: 'F' | 'C' | 'B' | 'P' | 'S' | '-';
   setterOffsetM?: number;
+  zones?: number[];
 }
 
 export const ATTACK_COMBOS: AttackCombo[] = [
