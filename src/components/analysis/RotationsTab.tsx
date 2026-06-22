@@ -17,6 +17,9 @@ function rallyWinner(rally: DbAction[]): 'home' | 'away' | null {
   return last.home_score > last.away_score ? 'home' : last.away_score > last.home_score ? 'away' : null;
 }
 
+const GRID_SKILLS = ['S', 'R', 'A', 'B', 'D'] as const;
+type GridSkill = typeof GRID_SKILLS[number];
+
 export function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; teamId: string; side: 'home' | 'away' }) {
   const stats = rotationStats(actions, teamId, { side });
   const raw = new Map<number, { made: number; conceded: number }>();
@@ -37,8 +40,6 @@ export function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; t
     if (winner === side) row.made++; else row.conceded++;
   });
 
-  const GRID_SKILLS = ['S', 'R', 'A', 'B', 'D'] as const;
-  type GridSkill = typeof GRID_SKILLS[number];
 
   const skillRotGrid = useMemo(() => {
     const grid: Record<number, Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>> = {} as any;

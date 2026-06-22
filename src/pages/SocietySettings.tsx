@@ -139,7 +139,8 @@ export default function SocietySettings() {
     setInvitations(inv ?? []);
   };
 
-  useEffect(() => { loadCoaches(); /* eslint-disable-next-line */ }, [societyId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadCoaches(); }, [societyId]);
 
   const handleInvite = async () => {
     if (!societyId || !user || !inviteEmail.trim()) return;

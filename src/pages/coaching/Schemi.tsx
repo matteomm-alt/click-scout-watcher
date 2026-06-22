@@ -65,6 +65,7 @@ export default function Schemi() {
     setSchemes((data as Scheme[]) ?? []);
     setLoading(false);
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
 
   const openCreate = () => {

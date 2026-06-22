@@ -111,6 +111,7 @@ export function StrutturaSettimanaleView() {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
 
   // Quando cambio nSettimane o nSedute, ricalcolo preservando i dati esistenti

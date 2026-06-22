@@ -128,6 +128,7 @@ export default function Auth() {
         if (ok) navigate(from, { replace: true });
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, emailMismatch, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
