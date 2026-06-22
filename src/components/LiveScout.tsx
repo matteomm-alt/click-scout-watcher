@@ -6,7 +6,7 @@ import { useScoutSettings } from '@/lib/scoutSettings';
 import { generateDVW } from '@/lib/dvwExporter';
 import { upsertScoutSession } from '@/lib/scoutPersistence';
 import { useAuth } from '@/contexts/AuthContext';
-import { SKILL_LABELS } from '@/types/volleyball';
+import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
 import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
