@@ -11,6 +11,9 @@ interface LiveFooterProps {
   suggestedSkill?: Skill | null;
   selectedAttackType: AttackType;
   onAttackTypeSelect: (type: AttackType) => void;
+  isMiddleBlocker?: boolean;
+  selectedMiddleCombo?: string | null;
+  onMiddleComboSelect?: (code: string) => void;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
