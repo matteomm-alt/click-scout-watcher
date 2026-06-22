@@ -55,6 +55,7 @@ interface MatchStore {
     evaluation?: Evaluation;
     startZone?: number | null;
     endZone?: number | null;
+    attackCode?: string | null;
   }) => void;
   deleteAction: (id: string) => void;
   setSingleTeamMode: (v: boolean) => void;
