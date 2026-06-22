@@ -324,6 +324,7 @@ export function LiveScout() {
         selectedAttackType={pendingAttackType}
         onAttackTypeSelect={setPendingAttackType}
         isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
+        selectedPlayerZone={selectedPlayer ? computeZoneForPlayer(selectedPlayer.number, selectedPlayer.team) : null}
         selectedMiddleCombo={pendingMiddleCombo}
         onMiddleComboSelect={setPendingMiddleCombo}
         selectedOtherCombo={pendingOtherCombo}
