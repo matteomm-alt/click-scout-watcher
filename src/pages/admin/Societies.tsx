@@ -124,13 +124,18 @@ export default function AdminSocieties() {
       (profs || []).forEach((p) => profilesMap.set(p.id, { full_name: p.full_name }));
     }
 
-    // Per email: usiamo gli inviti accettati per recuperare l'email originale del coach
-    const acceptedInvitesByUser = new Map<string, string>();
-    (invs || []).forEach((inv) => {
-      if (inv.accepted_at && inv.role === 'coach') {
-        // non abbiamo direttamente user_id sull'invito, ma possiamo correlare per email/profilo
+    let emailsByUser = new Map<string, string>();
+    if (coachUserIds.length > 0) {
+      const { data: emailRows, error: emailErr } = await (supabase as any)
+        .rpc('get_user_emails', { _user_ids: coachUserIds });
+      if (emailErr) {
+        console.warn('email coach', emailErr);
+      } else {
+        emailsByUser = new Map(
+          (emailRows ?? []).map((r: { user_id: string; email: string }) => [r.user_id, r.email]),
+        );
       }
-    });
+    }
 
     const coachesData: CoachRow[] = coachRolesArr
       .filter((c) => c.society_id)
@@ -139,7 +144,7 @@ export default function AdminSocieties() {
         user_id: c.user_id,
         society_id: c.society_id as string,
         full_name: profilesMap.get(c.user_id)?.full_name ?? null,
-        email: acceptedInvitesByUser.get(c.user_id) ?? null,
+        email: emailsByUser.get(c.user_id) ?? null,
       }));
 
     setSocieties(((socs || []) as { id: string; name: string; slug: string; created_at: string; features: unknown }[]).map((s) => ({
