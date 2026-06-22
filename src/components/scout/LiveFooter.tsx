@@ -125,6 +125,37 @@ export function LiveFooter({
         </div>
       )}
 
+      {showMiddleCombo && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+            Combo
+          </span>
+          <div className="flex-1 flex gap-1 flex-wrap">
+            {MIDDLE_COMBOS.map(c => {
+              const isActive = c.code === selectedMiddleCombo;
+              return (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => onMiddleComboSelect?.(c.code)}
+                  title={c.description}
+                  className={cn(
+                    'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                    isActive
+                      ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                      : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                  )}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
+
 
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
