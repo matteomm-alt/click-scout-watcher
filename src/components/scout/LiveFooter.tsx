@@ -47,8 +47,12 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
   { key: '=', label: 'Fuori' },
 ];
 
-const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM != null);
-const OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM == null);
+const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.position === 'C');
+const ALL_OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.position !== 'C');
+function filterOtherCombosByZone(zone: number | null): typeof ALL_OTHER_COMBOS {
+  if (zone == null) return ALL_OTHER_COMBOS;
+  return ALL_OTHER_COMBOS.filter((c) => !c.zones || c.zones.includes(zone));
+}
 
 /**
  * Footer fissa skill+evaluation, sempre visibile (anche senza giocatore selezionato),
