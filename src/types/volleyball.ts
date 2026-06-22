@@ -163,6 +163,12 @@ export interface ScoutAction {
   evaluation: Evaluation;
   startZone?: number;
   endZone?: number;
+  // Punto di caduta reale della palla per un Attacco, distinto da endZone
+  // (che rappresenta la posizione dell'attaccante, non dove cade la palla
+  // nel campo avversario — dato già usato per la distribuzione del
+  // palleggiatore in SetDistribution.tsx, da non alterare). Opzionale,
+  // popolato solo quando l'operatore attiva la selezione manuale.
+  landingZone?: number;
   attackCode?: string;
   serveType?: ServeType;
   setNumber: number;
