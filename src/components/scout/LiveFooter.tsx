@@ -1,5 +1,5 @@
 import type { Skill, Evaluation, AttackType } from '@/types/volleyball';
-import { ATTACK_TYPES } from '@/types/volleyball';
+import { ATTACK_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
 import { cn } from '@/lib/utils';
 
 export type ScoutingMode = 'simple' | 'advanced';
@@ -11,6 +11,9 @@ interface LiveFooterProps {
   suggestedSkill?: Skill | null;
   selectedAttackType: AttackType;
   onAttackTypeSelect: (type: AttackType) => void;
+  isMiddleBlocker?: boolean;
+  selectedMiddleCombo?: string | null;
+  onMiddleComboSelect?: (code: string) => void;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
@@ -41,6 +44,8 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
   { key: '=', label: 'Fuori' },
 ];
 
+const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM != null);
+
 /**
  * Footer fissa skill+evaluation, sempre visibile (anche senza giocatore selezionato),
  * fedele allo schema di OpenVolleyScout: due righe separate, bottoni inattivi neutri,
@@ -49,12 +54,14 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
 export function LiveFooter({
   selectedPlayer, selectedSkill, mode, suggestedSkill,
   selectedAttackType, onAttackTypeSelect,
+  isMiddleBlocker, selectedMiddleCombo, onMiddleComboSelect,
   onSkillSelect, onEvaluationSelect,
 }: LiveFooterProps) {
   const visibleSkills = SKILLS_ORDER.filter(s => mode === 'simple' ? !s.advancedOnly : true);
   const evals = mode === 'simple' ? SIMPLE_EVALS : ADVANCED_EVALS;
   const noPlayer = !selectedPlayer;
-  const showAttackType = selectedSkill === 'A' && mode === 'advanced';
+  const showAttackType = selectedSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
+  const showMiddleCombo = selectedSkill === 'A' && mode === 'advanced' && !!isMiddleBlocker;
 
   return (
     <div className="shrink-0 border-t border-border bg-card/50 px-2 py-1.5 flex flex-col gap-1.5">
@@ -117,6 +124,37 @@ export function LiveFooter({
           </div>
         </div>
       )}
+
+      {showMiddleCombo && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+            Combo
+          </span>
+          <div className="flex-1 flex gap-1 flex-wrap">
+            {MIDDLE_COMBOS.map(c => {
+              const isActive = c.code === selectedMiddleCombo;
+              return (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => onMiddleComboSelect?.(c.code)}
+                  title={c.description}
+                  className={cn(
+                    'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                    isActive
+                      ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                      : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                  )}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
 
 
       <div className="flex items-center gap-2">

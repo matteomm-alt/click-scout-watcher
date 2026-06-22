@@ -6,11 +6,11 @@ import { useScoutSettings } from '@/lib/scoutSettings';
 import { generateDVW } from '@/lib/dvwExporter';
 import { upsertScoutSession } from '@/lib/scoutPersistence';
 import { useAuth } from '@/contexts/AuthContext';
-import { SKILL_LABELS } from '@/types/volleyball';
+import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
 import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
-import { VolleyballCourt } from '@/components/VolleyballCourt';
+import { VolleyballCourt, logicalRoleForSlot } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
@@ -24,7 +24,7 @@ import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { TouchFlowPanel, type ScoutingMode } from '@/components/scout/TouchFlowPanel';
 import { LiveFooter } from '@/components/scout/LiveFooter';
 import { suggestNextTouch, SKILL_BANNER, type TouchSuggestion } from '@/lib/scoutSuggestions';
-import { resolvePlayerPosition, nearestZone } from '@/lib/courtPositionResolver';
+import { resolvePlayerPosition, nearestZone, getMiddleComboPosition } from '@/lib/courtPositionResolver';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -55,6 +55,7 @@ export function LiveScout() {
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingAttackType, setPendingAttackType] = useState<AttackType>(settings.attaccoPredefinito as AttackType);
+  const [pendingMiddleCombo, setPendingMiddleCombo] = useState<string | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
@@ -136,6 +137,15 @@ export function LiveScout() {
     return nearestZone(team, pos);
   };
 
+  const isPlayerMiddleBlocker = (num: number, team: 'home' | 'away'): boolean => {
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const slotPos = lineup?.indexOf(num);
+    if (slotPos == null || slotPos < 0) return false;
+    const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+    return logicalRoleForSlot(slotPos + 1, setterPosition) === 'middle';
+  };
+
+
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
@@ -161,6 +171,33 @@ export function LiveScout() {
       const zone = computeZoneForPlayer(num, team);
       if (zone !== null) {
         updateAction(actionId, skill === 'A' ? { endZone: zone } : { startZone: zone });
+      }
+      // Per il centrale, la combo selezionata sposta fisicamente il punto di stacco
+      // rispetto al palleggiatore: ricalcola endZone e annota attackCode.
+      if (skill === 'A' && pendingMiddleCombo) {
+        const combo = ATTACK_COMBOS.find((c) => c.code === pendingMiddleCombo);
+        if (combo?.setterOffsetM != null) {
+          const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+          const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+          const setterNum = lineup?.[setterPosition - 1];
+          const setterSlot = setterNum != null ? lineup?.indexOf(setterNum) : -1;
+          if (setterSlot != null && setterSlot >= 0) {
+            const phase = team === 'home' ? matchState.teamTacticalPhases.home : matchState.teamTacticalPhases.away;
+            const setterPos = resolvePlayerPosition({
+              team,
+              slotPos: setterSlot + 1,
+              setterPosition,
+              phase,
+              receptionFormations: team === 'home' ? homeReceptionFormations : awayReceptionFormations,
+              attackFormations: team === 'home' ? homeAttackFormations : awayAttackFormations,
+              defenseFormations: team === 'home' ? homeDefenseFormations : awayDefenseFormations,
+            });
+            const comboPos = getMiddleComboPosition(setterPos, combo.setterOffsetM, team === 'home');
+            const comboZone = nearestZone(team, comboPos);
+            updateAction(actionId, { endZone: comboZone, attackCode: combo.code });
+          }
+        }
+        setPendingMiddleCombo(null);
       }
     }
     // Opzione disaccoppiata (settings.showEndZone): per la Battuta, invece di dedurre
@@ -281,6 +318,9 @@ export function LiveScout() {
         suggestedSkill={selectedPlayer && suggestion?.team === selectedPlayer.team ? suggestion.skill : null}
         selectedAttackType={pendingAttackType}
         onAttackTypeSelect={setPendingAttackType}
+        isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
+        selectedMiddleCombo={pendingMiddleCombo}
+        onMiddleComboSelect={setPendingMiddleCombo}
         onSkillSelect={(skill) => setPendingSkill(skill)}
         onEvaluationSelect={(evaluation) => {
           if (!selectedPlayer || !pendingSkill) return;
