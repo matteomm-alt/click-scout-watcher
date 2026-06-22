@@ -58,6 +58,7 @@ export function LiveFooter({
   selectedPlayer, selectedSkill, mode, suggestedSkill,
   selectedAttackType, onAttackTypeSelect,
   isMiddleBlocker, selectedMiddleCombo, onMiddleComboSelect,
+  selectedOtherCombo, onOtherComboSelect,
   onSkillSelect, onEvaluationSelect,
 }: LiveFooterProps) {
   const visibleSkills = SKILLS_ORDER.filter(s => mode === 'simple' ? !s.advancedOnly : true);
@@ -65,6 +66,7 @@ export function LiveFooter({
   const noPlayer = !selectedPlayer;
   const showAttackType = selectedSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
   const showMiddleCombo = selectedSkill === 'A' && mode === 'advanced' && !!isMiddleBlocker;
+  const showOtherCombos = selectedSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
 
   return (
     <div className="shrink-0 border-t border-border bg-card/50 px-2 py-1.5 flex flex-col gap-1.5">
