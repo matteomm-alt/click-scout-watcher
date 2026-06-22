@@ -137,6 +137,15 @@ export function LiveScout() {
     return nearestZone(team, pos);
   };
 
+  const isPlayerMiddleBlocker = (num: number, team: 'home' | 'away'): boolean => {
+    const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const slotPos = lineup?.indexOf(num);
+    if (slotPos == null || slotPos < 0) return false;
+    const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+    return logicalRoleForSlot(slotPos + 1, setterPosition) === 'middle';
+  };
+
+
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
