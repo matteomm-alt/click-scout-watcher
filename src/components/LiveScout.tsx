@@ -197,6 +197,8 @@ export function LiveScout() {
             const comboZone = nearestZone(team, comboPos);
             updateAction(actionId, { endZone: comboZone, attackCode: combo.code });
           }
+        } else if (combo) {
+          updateAction(actionId, { attackCode: combo.code });
         }
         setPendingMiddleCombo(null);
       }
