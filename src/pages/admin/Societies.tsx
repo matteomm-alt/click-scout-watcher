@@ -346,8 +346,8 @@ export default function AdminSocieties() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {societies.map((s) => {
             const socInvites = invitations.filter((i) => i.society_id === s.id);
-            const pendingAdmin = socInvites.filter((i) => !i.accepted_at && i.role === 'society_admin');
-            const pendingCoach = socInvites.filter((i) => !i.accepted_at && i.role === 'coach');
+            const pendingAdmin = socInvites.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date() && i.role === 'society_admin');
+            const pendingCoach = socInvites.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date() && i.role === 'coach');
             const socCoaches = coaches.filter((c) => c.society_id === s.id);
             return (
               <article
