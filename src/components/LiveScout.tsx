@@ -318,6 +318,9 @@ export function LiveScout() {
         suggestedSkill={selectedPlayer && suggestion?.team === selectedPlayer.team ? suggestion.skill : null}
         selectedAttackType={pendingAttackType}
         onAttackTypeSelect={setPendingAttackType}
+        isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
+        selectedMiddleCombo={pendingMiddleCombo}
+        onMiddleComboSelect={setPendingMiddleCombo}
         onSkillSelect={(skill) => setPendingSkill(skill)}
         onEvaluationSelect={(evaluation) => {
           if (!selectedPlayer || !pendingSkill) return;
