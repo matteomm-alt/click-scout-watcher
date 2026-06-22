@@ -17,6 +17,7 @@ const RILEVAZIONE_ROWS = [
   { key: 'showStartZone' as const, label: 'Zona origine', description: 'Richiede la zona di partenza dell\'azione (2-tap traiettoria).' },
   { key: 'showEndZone' as const, label: 'Zona battuta manuale', description: 'Per la Battuta, clicca il punto esatto di atterraggio sul campo di chi riceve, poi assegna il giocatore toccandolo. Disattivata: la zona di ricezione/attacco si deduce automaticamente dal giocatore selezionato.' },
   { key: 'showAttackLandingZone' as const, label: 'Zona caduta attacco', description: 'Dopo aver registrato un Attacco, clicca il punto esatto in cui la palla è caduta nel campo avversario. Distinto dalla posizione dell\'attaccante, già usata per la distribuzione del palleggiatore.' },
+  { key: 'swapCourtSides' as const, label: 'Inverti lati campo', description: 'Mostra la squadra Casa a sinistra e Ospite a destra, invece dell\'ordine predefinito. Solo visivo, non altera la logica di gioco.' },
   { key: 'showAlzata' as const, label: 'Skill E', description: 'Mostra Alzata nella lista fondamentali.' },
   { key: 'showDifesa' as const, label: 'Skill D', description: 'Mostra Difesa nella lista fondamentali.' },
   { key: 'showFreeball' as const, label: 'Skill F', description: 'Mostra Freeball nella lista fondamentali.' },

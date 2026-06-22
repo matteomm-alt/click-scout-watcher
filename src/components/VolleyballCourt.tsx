@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getInitialPhases } from '@/lib/tacticalPhases';
 import { resolvePlayerPosition, nearestZone, ZONE_CENTERS_HOME, ZONE_CENTERS_AWAY } from '@/lib/courtPositionResolver';
@@ -84,6 +84,8 @@ interface VolleyballCourtProps {
 
   /** Layout: 'split' (default) due campi affiancati, 'single' un unico campo */
   layout?: 'split' | 'single';
+  /** Inverte l'ordine visivo: Casa a sinistra, Ospite a destra (default: Ospite sx, Casa dx) */
+  swapSides?: boolean;
 }
 
 // Costanti posizioni P1..P6 e centri zone importate da courtPositionResolver
@@ -117,6 +119,7 @@ export function VolleyballCourt({
   zoneSelectTeam,
   zoneSelectSkill,
   layout = 'split',
+  swapSides = false,
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations, homeDefenseFormations, awayDefenseFormations } = useMatchStore();
   const teamTacticalPhases = matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam);
@@ -366,21 +369,22 @@ export function VolleyballCourt({
     );
   }
 
+  const sideOrder: ('home' | 'away')[] = swapSides ? ['home', 'away'] : ['away', 'home'];
   return (
     <div className="w-full h-full flex gap-2 items-stretch">
-      <div className="flex-1 min-w-0 relative">
-        <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-          {awayTeam.name || 'Ospite'}
-        </span>
-        {renderHalf('away')}
-      </div>
-      <div className="w-1 self-stretch bg-white/70 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" aria-hidden />
-      <div className="flex-1 min-w-0 relative">
-        <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-          {homeTeam.name || 'Casa'}
-        </span>
-        {renderHalf('home')}
-      </div>
+      {sideOrder.map((side, idx) => (
+        <Fragment key={side}>
+          <div className="flex-1 min-w-0 relative">
+            <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+              {side === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
+            </span>
+            {renderHalf(side)}
+          </div>
+          {idx === 0 && (
+            <div className="w-1 self-stretch bg-white/70 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" aria-hidden />
+          )}
+        </Fragment>
+      ))}
     </div>
   );
 }

@@ -62,6 +62,20 @@ export function LiveScout() {
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
   const [suggestion, setSuggestion] = useState<TouchSuggestion | null>(null);
 
+  // Primo suggerimento della partita: l'operatore ha già scelto chi serve
+  // per primo in MatchConfig.tsx (matchState.servingTeam), ma quella scelta
+  // non veniva mai usata per evidenziare "Battuta" al primissimo tocco —
+  // suggestion restava null finché non si registrava manualmente la prima
+  // azione. Si attiva solo quando non esiste ancora nessuna azione, per
+  // non interferire mai con i suggerimenti calcolati dopo un tocco reale.
+  useEffect(() => {
+    if (matchState.actions.length > 0 || suggestion !== null) return;
+    const lineup = matchState.servingTeam === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+    const serverNumber = lineup?.[0] ?? null;
+    setSuggestion({ skill: 'S', team: matchState.servingTeam, playerNumber: serverNumber });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchState.actions.length, matchState.servingTeam]);
+
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [endSetDialog, setEndSetDialog] = useState(false);
@@ -416,6 +430,7 @@ export function LiveScout() {
           <div className="flex-1 min-h-0 px-1 pt-4">
             <VolleyballCourt
               layout="split"
+              swapSides={settings.swapCourtSides}
               heatmapData={homeHeatmap}
               liveArrows={liveArrows}
               highlightTeam={suggestion?.team ?? null}
@@ -540,6 +555,7 @@ export function LiveScout() {
         <div className="flex-1 min-h-0">
           <VolleyballCourt
             layout="split"
+            swapSides={settings.swapCourtSides}
             highlightTeam={suggestion?.team ?? null}
             highlightPlayerNumber={suggestion?.playerNumber ?? null}
             simplifiedView={simplified}

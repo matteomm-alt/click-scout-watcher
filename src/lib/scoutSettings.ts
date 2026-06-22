@@ -11,6 +11,10 @@ export type ScoutSettings = {
   // avversario, separata dalla posizione dell'attaccante (già usata per
   // la distribuzione del palleggiatore, non toccata da questa opzione).
   showAttackLandingZone: boolean;
+  // Inverte l'ordine visivo delle due metà campo (di default Ospite a
+  // sinistra, Casa a destra, hardcoded nel rendering) — non altera la
+  // logica di gioco, solo la disposizione sullo schermo.
+  swapCourtSides: boolean;
   showAlzata: boolean;
   showDifesa: boolean;
   showFreeball: boolean;
@@ -41,6 +45,7 @@ export const defaultScoutSettings: ScoutSettings = {
   showStartZone: true,
   showEndZone: true,
   showAttackLandingZone: false,
+  swapCourtSides: false,
   showAlzata: true,
   showDifesa: true,
   showFreeball: true,
@@ -70,6 +75,7 @@ export const SCOUT_PRESETS = {
     showStartZone: false,
     showEndZone: false,
     showAttackLandingZone: false,
+    swapCourtSides: false,
     showAlzata: false,
     showDifesa: false,
     showFreeball: false,
@@ -86,6 +92,7 @@ export const SCOUT_PRESETS = {
     showStartZone: true,
     showEndZone: true,
     showAttackLandingZone: false,
+    swapCourtSides: false,
     showAlzata: true,
     showDifesa: true,
     showFreeball: false,
@@ -102,6 +109,7 @@ export const SCOUT_PRESETS = {
     showStartZone: true,
     showEndZone: true,
     showAttackLandingZone: false,
+    swapCourtSides: false,
     showAlzata: true,
     showDifesa: true,
     showFreeball: true,
