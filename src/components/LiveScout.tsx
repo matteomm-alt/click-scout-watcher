@@ -219,6 +219,17 @@ export function LiveScout() {
       setPendingTeam(receivingTeam);
       setZoneSelectMode(true);
     }
+    // Punto di caduta reale dell'Attacco, distinto dalla posizione
+    // dell'attaccante (endZone, già calcolata sopra e usata per la
+    // distribuzione del palleggiatore — non toccata qui). La palla cade
+    // sempre nel campo della squadra che NON ha attaccato.
+    if (skill === 'A' && settings.showAttackLandingZone && team && actionId) {
+      const landingTeam = team === 'home' ? 'away' : 'home';
+      setPendingActionId(actionId);
+      setPendingSkill(skill);
+      setPendingTeam(landingTeam);
+      setZoneSelectMode(true);
+    }
     setSelectedPlayer(null);
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
