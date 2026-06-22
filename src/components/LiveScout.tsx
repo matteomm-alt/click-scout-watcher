@@ -197,6 +197,8 @@ export function LiveScout() {
             const comboZone = nearestZone(team, comboPos);
             updateAction(actionId, { endZone: comboZone, attackCode: combo.code });
           }
+        } else if (combo) {
+          updateAction(actionId, { attackCode: combo.code });
         }
         setPendingMiddleCombo(null);
       }
@@ -324,6 +326,7 @@ export function LiveScout() {
         selectedAttackType={pendingAttackType}
         onAttackTypeSelect={setPendingAttackType}
         isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
+        selectedPlayerZone={selectedPlayer ? computeZoneForPlayer(selectedPlayer.number, selectedPlayer.team) : null}
         selectedMiddleCombo={pendingMiddleCombo}
         onMiddleComboSelect={setPendingMiddleCombo}
         selectedOtherCombo={pendingOtherCombo}

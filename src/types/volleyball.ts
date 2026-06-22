@@ -81,6 +81,7 @@ export interface AttackCombo {
   tempo: 'Q' | 'M' | 'T' | 'H' | 'O' | 'N' | 'U';
   position: 'F' | 'C' | 'B' | 'P' | 'S' | '-';
   setterOffsetM?: number;
+  zones?: number[];
 }
 
 export const ATTACK_COMBOS: AttackCombo[] = [
@@ -90,21 +91,21 @@ export const ATTACK_COMBOS: AttackCombo[] = [
   { code: 'XC', label: 'XC', description: 'Veloce lontana da palleggiatore', tempo: 'Q', position: 'C' },
   { code: 'X7', label: 'X7', description: 'Spostata avanti (gap/shoot)', tempo: 'Q', position: 'C', setterOffsetM: -2.7 },
   { code: 'XD', label: 'XD', description: 'Fast (slide)', tempo: 'Q', position: 'C', setterOffsetM: 2.7 },
-  { code: 'X5', label: 'X5', description: 'Mezza in 4', tempo: 'T', position: 'F' },
-  { code: 'X6', label: 'X6', description: 'Mezza in 2', tempo: 'T', position: 'B' },
-  { code: 'X8', label: 'X8', description: 'Mezza in 1', tempo: 'T', position: 'B' },
+  { code: 'X5', label: 'X5', description: 'Mezza in 4', tempo: 'T', position: 'F', zones: [4] },
+  { code: 'X6', label: 'X6', description: 'Mezza in 2', tempo: 'T', position: 'B', zones: [2] },
+  { code: 'X8', label: 'X8', description: 'Mezza in 1', tempo: 'T', position: 'B', zones: [1] },
   { code: 'X3', label: 'X3', description: 'Mezza da posto 2', tempo: 'M', position: 'B' },
   { code: 'XT', label: 'XT', description: 'Mezza da posto 4', tempo: 'M', position: 'F' },
   // Pipe
-  { code: 'XP', label: 'XP', description: 'Pipe', tempo: 'M', position: 'P' },
+  { code: 'XP', label: 'XP', description: 'Pipe', tempo: 'M', position: 'P', zones: [6] },
   { code: 'XB', label: 'XB', description: 'Pipe 6-1', tempo: 'M', position: 'P' },
   { code: 'XR', label: 'XR', description: 'Pipe 6-5', tempo: 'M', position: 'P' },
   // High ball (palla alta)
-  { code: 'V5', label: 'V5', description: 'Palla alta in 4', tempo: 'H', position: 'F' },
-  { code: 'V6', label: 'V6', description: 'Palla alta in 2', tempo: 'H', position: 'B' },
+  { code: 'V5', label: 'V5', description: 'Palla alta in 4', tempo: 'H', position: 'F', zones: [4] },
+  { code: 'V6', label: 'V6', description: 'Palla alta in 2', tempo: 'H', position: 'B', zones: [2] },
   { code: 'V0', label: 'V0', description: 'Palla alta in 5', tempo: 'H', position: 'F' },
-  { code: 'V8', label: 'V8', description: 'Palla alta in 1', tempo: 'H', position: 'B' },
-  { code: 'VP', label: 'VP', description: 'Pipe alta', tempo: 'H', position: 'P' },
+  { code: 'V8', label: 'V8', description: 'Palla alta in 1', tempo: 'H', position: 'B', zones: [1] },
+  { code: 'VP', label: 'VP', description: 'Pipe alta', tempo: 'H', position: 'P', zones: [6] },
   { code: 'V3', label: 'V3', description: 'Palla alta in 3', tempo: 'H', position: '-' },
   // Slide
   { code: 'CB', label: 'CB', description: 'Slide vicino palleggiatore', tempo: 'Q', position: 'C' },

@@ -16,6 +16,7 @@ interface LiveFooterProps {
   onMiddleComboSelect?: (code: string) => void;
   selectedOtherCombo?: string | null;
   onOtherComboSelect?: (code: string) => void;
+  selectedPlayerZone?: number | null;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
@@ -46,8 +47,12 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
   { key: '=', label: 'Fuori' },
 ];
 
-const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM != null);
-const OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM == null);
+const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.position === 'C');
+const ALL_OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.position !== 'C');
+function filterOtherCombosByZone(zone: number | null): typeof ALL_OTHER_COMBOS {
+  if (zone == null) return ALL_OTHER_COMBOS;
+  return ALL_OTHER_COMBOS.filter((c) => !c.zones || c.zones.includes(zone));
+}
 
 /**
  * Footer fissa skill+evaluation, sempre visibile (anche senza giocatore selezionato),
@@ -58,7 +63,7 @@ export function LiveFooter({
   selectedPlayer, selectedSkill, mode, suggestedSkill,
   selectedAttackType, onAttackTypeSelect,
   isMiddleBlocker, selectedMiddleCombo, onMiddleComboSelect,
-  selectedOtherCombo, onOtherComboSelect,
+  selectedOtherCombo, onOtherComboSelect, selectedPlayerZone,
   onSkillSelect, onEvaluationSelect,
 }: LiveFooterProps) {
   const visibleSkills = SKILLS_ORDER.filter(s => mode === 'simple' ? !s.advancedOnly : true);
@@ -165,7 +170,7 @@ export function LiveFooter({
             Combo
           </span>
           <div className="flex-1 flex gap-1 flex-wrap">
-            {OTHER_COMBOS.map(c => {
+            {filterOtherCombosByZone(selectedPlayerZone ?? null).map(c => {
               const isActive = c.code === selectedOtherCombo;
               return (
                 <button
