@@ -170,7 +170,7 @@ export function LiveFooter({
             Combo
           </span>
           <div className="flex-1 flex gap-1 flex-wrap">
-            {OTHER_COMBOS.map(c => {
+            {filterOtherCombosByZone(selectedPlayerZone ?? null).map(c => {
               const isActive = c.code === selectedOtherCombo;
               return (
                 <button
