@@ -107,6 +107,19 @@ export function resolvePlayerPosition(args: ResolvePlayerPositionArgs): CourtCoo
   return phaseOverride ?? formationPos ?? basePos;
 }
 
+
+export function getMiddleComboPosition(
+  setterPos: CourtCoord,
+  setterOffsetM: number,
+  isHome: boolean,
+): CourtCoord {
+  const METERS_TO_PCT = 100 / 9;
+  const direction = isHome ? 1 : -1;
+  const deltaY = -setterOffsetM * METERS_TO_PCT * direction;
+  const y = Math.max(0, Math.min(100, setterPos.y + deltaY));
+  return { x: setterPos.x, y };
+}
+
 /**
  * Trova la zona DVW (1-9) più vicina a una coordinata (x,y) sul campo,
  * usando distanza euclidea dai centri di zona già usati per heatmap/overlay.
