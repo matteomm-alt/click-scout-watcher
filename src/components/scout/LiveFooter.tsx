@@ -47,6 +47,7 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
 ];
 
 const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM != null);
+const OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM == null);
 
 /**
  * Footer fissa skill+evaluation, sempre visibile (anche senza giocatore selezionato),
