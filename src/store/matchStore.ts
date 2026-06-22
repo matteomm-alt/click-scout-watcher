@@ -328,6 +328,8 @@ export const useMatchStore = create<MatchStore>()(
               ? { endZone: updates.endZone ?? undefined } : {}),
             ...(updates.attackCode !== undefined
               ? { attackCode: updates.attackCode ?? undefined } : {}),
+            ...(updates.landingZone !== undefined
+              ? { landingZone: updates.landingZone ?? undefined } : {}),
           } as TouchEvent;
         });
         set((s) => replaceEventsAndReplay(s, newEvents));
