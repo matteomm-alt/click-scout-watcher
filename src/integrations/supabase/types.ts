@@ -2135,6 +2135,13 @@ export type Database = {
           total_sets: number
         }[]
       }
+      get_user_emails: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       get_user_societies: {
         Args: { _user_id: string }
         Returns: {
