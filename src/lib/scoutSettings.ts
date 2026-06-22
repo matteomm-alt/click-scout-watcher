@@ -11,6 +11,10 @@ export type ScoutSettings = {
   // avversario, separata dalla posizione dell'attaccante (già usata per
   // la distribuzione del palleggiatore, non toccata da questa opzione).
   showAttackLandingZone: boolean;
+  // Inverte l'ordine visivo delle due metà campo (di default Ospite a
+  // sinistra, Casa a destra, hardcoded nel rendering) — non altera la
+  // logica di gioco, solo la disposizione sullo schermo.
+  swapCourtSides: boolean;
   showAlzata: boolean;
   showDifesa: boolean;
   showFreeball: boolean;
