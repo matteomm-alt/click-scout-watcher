@@ -56,6 +56,7 @@ export function LiveScout() {
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingAttackType, setPendingAttackType] = useState<AttackType>(settings.attaccoPredefinito as AttackType);
   const [pendingMiddleCombo, setPendingMiddleCombo] = useState<string | null>(null);
+  const [pendingOtherCombo, setPendingOtherCombo] = useState<string | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
@@ -199,6 +200,10 @@ export function LiveScout() {
         }
         setPendingMiddleCombo(null);
       }
+      if (skill === 'A' && pendingOtherCombo) {
+        updateAction(actionId, { attackCode: pendingOtherCombo });
+        setPendingOtherCombo(null);
+      }
     }
     // Opzione disaccoppiata (settings.showEndZone): per la Battuta, invece di dedurre
     // automaticamente, l'operatore clicca il punto esatto di atterraggio sul campo
@@ -321,6 +326,8 @@ export function LiveScout() {
         isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
         selectedMiddleCombo={pendingMiddleCombo}
         onMiddleComboSelect={setPendingMiddleCombo}
+        selectedOtherCombo={pendingOtherCombo}
+        onOtherComboSelect={setPendingOtherCombo}
         onSkillSelect={(skill) => setPendingSkill(skill)}
         onEvaluationSelect={(evaluation) => {
           if (!selectedPlayer || !pendingSkill) return;

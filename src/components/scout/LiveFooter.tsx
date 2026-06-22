@@ -14,6 +14,8 @@ interface LiveFooterProps {
   isMiddleBlocker?: boolean;
   selectedMiddleCombo?: string | null;
   onMiddleComboSelect?: (code: string) => void;
+  selectedOtherCombo?: string | null;
+  onOtherComboSelect?: (code: string) => void;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
@@ -45,6 +47,7 @@ const ADVANCED_EVALS: { key: Evaluation; label: string }[] = [
 ];
 
 const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM != null);
+const OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.setterOffsetM == null);
 
 /**
  * Footer fissa skill+evaluation, sempre visibile (anche senza giocatore selezionato),
@@ -55,6 +58,7 @@ export function LiveFooter({
   selectedPlayer, selectedSkill, mode, suggestedSkill,
   selectedAttackType, onAttackTypeSelect,
   isMiddleBlocker, selectedMiddleCombo, onMiddleComboSelect,
+  selectedOtherCombo, onOtherComboSelect,
   onSkillSelect, onEvaluationSelect,
 }: LiveFooterProps) {
   const visibleSkills = SKILLS_ORDER.filter(s => mode === 'simple' ? !s.advancedOnly : true);
@@ -62,6 +66,7 @@ export function LiveFooter({
   const noPlayer = !selectedPlayer;
   const showAttackType = selectedSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
   const showMiddleCombo = selectedSkill === 'A' && mode === 'advanced' && !!isMiddleBlocker;
+  const showOtherCombos = selectedSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
 
   return (
     <div className="shrink-0 border-t border-border bg-card/50 px-2 py-1.5 flex flex-col gap-1.5">
@@ -154,8 +159,34 @@ export function LiveFooter({
         </div>
       )}
 
-
-
+      {showOtherCombos && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+            Combo
+          </span>
+          <div className="flex-1 flex gap-1 flex-wrap">
+            {OTHER_COMBOS.map(c => {
+              const isActive = c.code === selectedOtherCombo;
+              return (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => onOtherComboSelect?.(c.code)}
+                  title={c.description}
+                  className={cn(
+                    'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                    isActive
+                      ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                      : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                  )}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
