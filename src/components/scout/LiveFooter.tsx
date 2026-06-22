@@ -16,6 +16,7 @@ interface LiveFooterProps {
   onMiddleComboSelect?: (code: string) => void;
   selectedOtherCombo?: string | null;
   onOtherComboSelect?: (code: string) => void;
+  selectedPlayerZone?: number | null;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
