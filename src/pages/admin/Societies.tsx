@@ -383,8 +383,9 @@ export default function AdminSocieties() {
                         className="flex items-center gap-2 text-xs bg-muted/40 border border-border rounded px-2 py-1.5"
                       >
                         <UserCog className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span className="truncate flex-1" title={c.full_name || c.user_id}>
+                        <span className="truncate flex-1" title={c.email || c.full_name || c.user_id}>
                           {c.full_name || <span className="font-mono text-muted-foreground">{c.user_id.slice(0, 8)}…</span>}
+                          {c.email && <span className="text-muted-foreground"> · {c.email}</span>}
                         </span>
                         <button
                           type="button"
