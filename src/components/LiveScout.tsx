@@ -172,6 +172,33 @@ export function LiveScout() {
       if (zone !== null) {
         updateAction(actionId, skill === 'A' ? { endZone: zone } : { startZone: zone });
       }
+      // Per il centrale, la combo selezionata sposta fisicamente il punto di stacco
+      // rispetto al palleggiatore: ricalcola endZone e annota attackCode.
+      if (skill === 'A' && pendingMiddleCombo) {
+        const combo = ATTACK_COMBOS.find((c) => c.code === pendingMiddleCombo);
+        if (combo?.setterOffsetM != null) {
+          const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+          const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+          const setterNum = lineup?.[setterPosition - 1];
+          const setterSlot = setterNum != null ? lineup?.indexOf(setterNum) : -1;
+          if (setterSlot != null && setterSlot >= 0) {
+            const phase = team === 'home' ? matchState.teamTacticalPhases.home : matchState.teamTacticalPhases.away;
+            const setterPos = resolvePlayerPosition({
+              team,
+              slotPos: setterSlot + 1,
+              setterPosition,
+              phase,
+              receptionFormations: team === 'home' ? homeReceptionFormations : awayReceptionFormations,
+              attackFormations: team === 'home' ? homeAttackFormations : awayAttackFormations,
+              defenseFormations: team === 'home' ? homeDefenseFormations : awayDefenseFormations,
+            });
+            const comboPos = getMiddleComboPosition(setterPos, combo.setterOffsetM, team === 'home');
+            const comboZone = nearestZone(team, comboPos);
+            updateAction(actionId, { endZone: comboZone, attackCode: combo.code });
+          }
+        }
+        setPendingMiddleCombo(null);
+      }
     }
     // Opzione disaccoppiata (settings.showEndZone): per la Battuta, invece di dedurre
     // automaticamente, l'operatore clicca il punto esatto di atterraggio sul campo
