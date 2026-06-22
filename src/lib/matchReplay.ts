@@ -105,6 +105,7 @@ export function applyEvent(
         startZone: event.startZone,
         endZone: event.endZone,
         attackCode: event.attackCode,
+        landingZone: event.landingZone,
         serveType: event.serveType,
         setNumber: event.setNumber,
         homeScore: event.homeScore,

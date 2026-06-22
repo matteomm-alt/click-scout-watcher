@@ -219,6 +219,17 @@ export function LiveScout() {
       setPendingTeam(receivingTeam);
       setZoneSelectMode(true);
     }
+    // Punto di caduta reale dell'Attacco, distinto dalla posizione
+    // dell'attaccante (endZone, già calcolata sopra e usata per la
+    // distribuzione del palleggiatore — non toccata qui). La palla cade
+    // sempre nel campo della squadra che NON ha attaccato.
+    if (skill === 'A' && settings.showAttackLandingZone && team && actionId) {
+      const landingTeam = team === 'home' ? 'away' : 'home';
+      setPendingActionId(actionId);
+      setPendingSkill(skill);
+      setPendingTeam(landingTeam);
+      setZoneSelectMode(true);
+    }
     setSelectedPlayer(null);
     if (num !== null && team) {
       const last = matchState.actions[matchState.actions.length - 1];
@@ -241,7 +252,11 @@ export function LiveScout() {
   const handleZoneSelect = (zone: number) => {
     if (pendingActionId) {
       if (pendingSkill === 'A') {
-        updateAction(pendingActionId, { endZone: zone });
+        // Punto di caduta reale, distinto da endZone (posizione
+        // dell'attaccante, già impostata al momento del tocco — non
+        // sovrascritta qui, per non alterare la distribuzione del
+        // palleggiatore che dipende da quella).
+        updateAction(pendingActionId, { landingZone: zone });
       } else if (pendingSkill === 'S') {
         // Zona di atterraggio della battuta, fissata manualmente sul campo di chi
         // riceve. Il giocatore che ha ricevuto si assegna toccandolo normalmente:

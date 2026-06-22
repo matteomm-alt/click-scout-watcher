@@ -40,6 +40,7 @@ export interface TouchEvent extends BaseEvent {
   startZone?: number;
   endZone?: number;
   attackCode?: string;
+  landingZone?: number;
   serveType?: ServeType;
   setNumber: number;
   homeScore: number;
