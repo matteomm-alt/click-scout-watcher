@@ -10,7 +10,7 @@ import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
 import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
-import { VolleyballCourt } from '@/components/VolleyballCourt';
+import { VolleyballCourt, logicalRoleForSlot } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
 import { PlayerStatsPanel } from '@/components/PlayerStatsPanel';
