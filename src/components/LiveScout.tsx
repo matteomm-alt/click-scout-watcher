@@ -55,6 +55,7 @@ export function LiveScout() {
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
   const [pendingAttackType, setPendingAttackType] = useState<AttackType>(settings.attaccoPredefinito as AttackType);
+  const [pendingMiddleCombo, setPendingMiddleCombo] = useState<string | null>(null);
   const [pendingTeam, setPendingTeam] = useState<'home' | 'away' | null>(null);
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
