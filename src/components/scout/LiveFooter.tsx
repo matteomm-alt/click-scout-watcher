@@ -14,6 +14,8 @@ interface LiveFooterProps {
   isMiddleBlocker?: boolean;
   selectedMiddleCombo?: string | null;
   onMiddleComboSelect?: (code: string) => void;
+  selectedOtherCombo?: string | null;
+  onOtherComboSelect?: (code: string) => void;
   onSkillSelect: (skill: Skill) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
 }
