@@ -40,6 +40,7 @@ export const defaultScoutSettings: ScoutSettings = {
   showAttackCombo: true,
   showStartZone: true,
   showEndZone: true,
+  showAttackLandingZone: false,
   showAlzata: true,
   showDifesa: true,
   showFreeball: true,
