@@ -92,6 +92,7 @@ export const ATTACK_COMBOS: AttackCombo[] = [
   { code: 'XD', label: 'XD', description: 'Fast (slide)', tempo: 'Q', position: 'C', setterOffsetM: 2.7 },
   { code: 'X5', label: 'X5', description: 'Mezza in 4', tempo: 'T', position: 'F' },
   { code: 'X6', label: 'X6', description: 'Mezza in 2', tempo: 'T', position: 'B' },
+  { code: 'X8', label: 'X8', description: 'Mezza in 1', tempo: 'T', position: 'B' },
   { code: 'X3', label: 'X3', description: 'Mezza da posto 2', tempo: 'M', position: 'B' },
   { code: 'XT', label: 'XT', description: 'Mezza da posto 4', tempo: 'M', position: 'F' },
   // Pipe
