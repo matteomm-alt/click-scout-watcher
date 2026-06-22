@@ -282,7 +282,7 @@ export default function Auth() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={submitting || inviteLoading || (Boolean(inviteError) && !inviteInfo?.is_accepted) || acceptingInvite}>
+          <Button type="submit" className="w-full" disabled={submitting || inviteLoading || (mode === 'signup' && Boolean(inviteError) && !inviteInfo?.is_accepted) || acceptingInvite}>
             {(submitting || acceptingInvite) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {acceptingInvite ? 'Accettazione invito…' : null}
             {!acceptingInvite && (mode === 'signin' ? 'Accedi' : 'Crea account')}
