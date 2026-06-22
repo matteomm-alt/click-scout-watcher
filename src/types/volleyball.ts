@@ -78,19 +78,18 @@ export interface AttackCombo {
   code: string;
   label: string;
   description: string;
-  tempo: 'Q' | 'M' | 'T' | 'H' | 'O' | 'N' | 'U'; // Quick, Medium, Tempo(3rd), High, Other, Nil, Unknown
-  position: 'F' | 'C' | 'B' | 'P' | 'S' | '-'; // Front, Center, Back, Pipe, Setter, Other
+  tempo: 'Q' | 'M' | 'T' | 'H' | 'O' | 'N' | 'U';
+  position: 'F' | 'C' | 'B' | 'P' | 'S' | '-';
+  setterOffsetM?: number;
 }
 
 export const ATTACK_COMBOS: AttackCombo[] = [
-  // Quick tempo (1° tempo)
-  { code: 'X1', label: 'X1', description: 'Veloce avanti', tempo: 'Q', position: 'C' },
+  { code: 'X1', label: 'X1', description: 'Veloce avanti', tempo: 'Q', position: 'C', setterOffsetM: -0.9 },
   { code: 'XM', label: 'XM', description: 'Veloce in 3', tempo: 'Q', position: 'C' },
-  { code: 'XF', label: 'XF', description: 'Veloce dietro', tempo: 'Q', position: 'C' },
-  { code: 'X2', label: 'X2', description: 'Veloce dietro bassa', tempo: 'Q', position: 'C' },
+  { code: 'X2', label: 'X2', description: 'Veloce dietro', tempo: 'Q', position: 'C', setterOffsetM: 0.9 },
   { code: 'XC', label: 'XC', description: 'Veloce lontana da palleggiatore', tempo: 'Q', position: 'C' },
-  { code: 'X7', label: 'X7', description: 'Veloce bassa avanti', tempo: 'Q', position: 'C' },
-  // Medium tempo (2° tempo)
+  { code: 'X7', label: 'X7', description: 'Spostata avanti (gap/shoot)', tempo: 'Q', position: 'C', setterOffsetM: -2.7 },
+  { code: 'XD', label: 'XD', description: 'Fast (slide)', tempo: 'Q', position: 'C', setterOffsetM: 2.7 },
   { code: 'X5', label: 'X5', description: 'Mezza in 4', tempo: 'T', position: 'F' },
   { code: 'X6', label: 'X6', description: 'Mezza in 2', tempo: 'T', position: 'B' },
   { code: 'X3', label: 'X3', description: 'Mezza da posto 2', tempo: 'M', position: 'B' },
