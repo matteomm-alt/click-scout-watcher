@@ -63,7 +63,7 @@ export function LiveFooter({
   selectedPlayer, selectedSkill, mode, suggestedSkill,
   selectedAttackType, onAttackTypeSelect,
   isMiddleBlocker, selectedMiddleCombo, onMiddleComboSelect,
-  selectedOtherCombo, onOtherComboSelect,
+  selectedOtherCombo, onOtherComboSelect, selectedPlayerZone,
   onSkillSelect, onEvaluationSelect,
 }: LiveFooterProps) {
   const visibleSkills = SKILLS_ORDER.filter(s => mode === 'simple' ? !s.advancedOnly : true);
