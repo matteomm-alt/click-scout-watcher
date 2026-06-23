@@ -68,7 +68,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
     .slice(0, 8)
     .map(p => {
       const name = playerNames.get(p.number) || `#${p.number}`;
-      const row: Record<string, any> = { name: `#${p.number} ${name.split(' ')[0]}` };
+      const row: Record<string, string | number | null> = { name: `#${p.number} ${name.split(' ')[0]}` };
       ['R','A','S','B','D'].forEach(sk => {
         const s = p.bySkill[sk];
         row[SKILL_NAMES[sk]] = s ? Math.round(s.efficiency) : null;
@@ -83,7 +83,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
       bySet.get(a.set_number)!.push(a);
     }
     return [...bySet.entries()].sort((a, b) => a[0] - b[0]).map(([set, acts]) => {
-      const row: Record<string, any> = { name: `Set ${set}` };
+      const row: Record<string, string | number> = { name: `Set ${set}` };
       ['R','A','S','B','D'].forEach(sk => {
         const skActs = acts.filter(a => a.skill === sk);
         if (skActs.length > 0) {
@@ -109,7 +109,20 @@ export function ChartsTab({ actions, playerNames }: Props) {
   }, [actions]);
 
   // ── TREND MULTI-PARTITA ───────────────────────────────────────────
-  const [trendData, setTrendData] = useState<any[]>([]);
+  type TrendRow = Record<string, string | number | boolean | null | undefined>;
+  type TrendMatchRow = {
+    id: string;
+    match_date: string | null;
+    home_team_id: string;
+    away_team_id: string;
+    home_sets_won: number;
+    away_sets_won: number;
+    home_team?: { name?: string } | null;
+    away_team?: { name?: string } | null;
+  };
+  type TrendActionRow = { skill: string; evaluation: string; scout_team_id: string };
+
+  const [trendData, setTrendData] = useState<TrendRow[]>([]);
   const [trendLoading, setTrendLoading] = useState(false);
   const [trendSkill, setTrendSkill] = useState('R');
 
@@ -129,8 +142,8 @@ export function ChartsTab({ actions, playerNames }: Props) {
 
       if (!matches || matches.length === 0) { setTrendLoading(false); return; }
 
-      const rows: any[] = [];
-      for (const m of matches as any[]) {
+      const rows: TrendRow[] = [];
+      for (const m of (matches as unknown as TrendMatchRow[])) {
         const side = m.home_team_id === teamId ? 'home' : 'away';
         const { data: acts } = await supabase
           .from('scout_actions')
@@ -141,17 +154,18 @@ export function ChartsTab({ actions, playerNames }: Props) {
         if (!acts || acts.length === 0) continue;
         const opponent = side === 'home' ? m.away_team?.name : m.home_team?.name;
         const won = side === 'home' ? m.home_sets_won > m.away_sets_won : m.away_sets_won > m.home_sets_won;
-        const row: Record<string, any> = {
+        const row: TrendRow = {
           name: m.match_date ? m.match_date.slice(5) : '?',
           date: m.match_date,
           opponent,
           won,
         };
+        const actsRows = acts as unknown as TrendActionRow[];
         ['R','A','S','B','D'].forEach(sk => {
-          const skActs = (acts as any[]).filter((a: any) => a.skill === sk);
+          const skActs = actsRows.filter((a) => a.skill === sk);
           if (skActs.length >= 3) {
-            const perf = skActs.filter((a: any) => a.evaluation === '#').length;
-            const err = skActs.filter((a: any) => ['=','/'].includes(a.evaluation)).length;
+            const perf = skActs.filter((a) => a.evaluation === '#').length;
+            const err = skActs.filter((a) => ['=','/'].includes(a.evaluation)).length;
             row[SKILL_NAMES[sk]] = Math.round((perf - err) / skActs.length * 100);
           }
         });
@@ -249,7 +263,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
       <div className="flex gap-1 flex-wrap">
         {SECTIONS.map(s => (
           <Button key={s.id} size="sm" variant={section === s.id ? 'default' : 'outline'}
-            onClick={() => setSection(s.id as any)}>
+            onClick={() => setSection(s.id as typeof section)}>
             {s.label}
           </Button>
         ))}
@@ -499,7 +513,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                             <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '10px 14px', borderRadius: 8, fontSize: 12 }}>
                               <p style={{ fontWeight: 600 }}>{d?.opponent || label}</p>
                               <p>{d?.date}</p>
-                              {payload.map((p: any) => <p key={p.dataKey} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
+                              {payload.map((p: { dataKey?: string | number; color?: string; name?: string; value?: number | string }) => <p key={String(p.dataKey)} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
                             </div>
                           );
                         }}
