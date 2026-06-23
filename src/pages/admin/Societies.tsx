@@ -127,6 +127,7 @@ export default function AdminSocieties() {
 
     let emailsByUser = new Map<string, string>();
     if (coachUserIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: emailRows, error: emailErr } = await (supabase as any)
         .rpc('get_user_emails', { _user_ids: coachUserIds });
       if (emailErr) {

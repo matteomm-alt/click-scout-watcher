@@ -64,6 +64,7 @@ export default function Onboarding() {
       const baseSlug = safeSlugify(teamName);
       const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: societyId2, error: socErr } = await (supabase as any).rpc(
         'create_society_self_onboarding',
         {
