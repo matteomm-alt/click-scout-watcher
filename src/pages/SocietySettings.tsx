@@ -15,8 +15,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail } from 'lucide-react';
+import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { ROLE_LABELS, SOCIETY_ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';
 
 interface SocietyRow {
   id: string;
@@ -27,9 +31,14 @@ interface SocietyRow {
   features: Record<string, unknown>;
 }
 
-/**
- * Converte un esadecimale (#RRGGBB) in formato HSL "h s% l%" usato dai design tokens.
- */
+interface MemberRow {
+  id: string;
+  user_id: string;
+  role: AppRole;
+  full_name: string | null;
+}
+
+/** Converte un esadecimale (#RRGGBB) in formato HSL "h s% l%" usato dai design tokens. */
 function hexToHslString(hex: string): string | null {
   const m = hex.trim().match(/^#?([a-f\d]{6})$/i);
   if (!m) return null;
@@ -55,9 +64,6 @@ function hexToHslString(hex: string): string | null {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-/**
- * Converte una stringa HSL "h s% l%" in #RRGGBB per popolare il color picker.
- */
 function hslStringToHex(hsl: string): string {
   const m = hsl.trim().match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
   if (!m) return '#3b82f6';
@@ -94,27 +100,29 @@ export default function SocietySettings() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Form state
+  // Form generale società
+  const [societyName, setSocietyName] = useState('');
   const [seasonStart, setSeasonStart] = useState('');
   const [seasonEnd, setSeasonEnd] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryHex, setPrimaryHex] = useState('#3b82f6');
   const [accentHex, setAccentHex] = useState('#f59e0b');
 
-  // Coach management
-  const [coaches, setCoaches] = useState<{ id: string; user_id: string; full_name: string | null }[]>([]);
-  const [invitations, setInvitations] = useState<{ id: string; email: string; expires_at: string; token: string }[]>([]);
+  // Member management
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; email: string; role: AppRole; expires_at: string; token: string }[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<AppRole>('coach');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
 
-  const loadCoaches = async () => {
+  const loadMembers = async () => {
     if (!societyId) return;
     const { data: roles } = await supabase
       .from('user_roles')
-      .select('id, user_id')
+      .select('id, user_id, role')
       .eq('society_id', societyId)
-      .eq('role', 'coach');
+      .in('role', SOCIETY_ASSIGNABLE_ROLES);
     const userIds = (roles ?? []).map((r) => r.user_id);
     let profilesMap = new Map<string, string | null>();
     if (userIds.length > 0) {
@@ -124,23 +132,23 @@ export default function SocietySettings() {
         .in('id', userIds);
       profilesMap = new Map((profs ?? []).map((p) => [p.id, p.full_name]));
     }
-    setCoaches((roles ?? []).map((r) => ({
+    setMembers((roles ?? []).map((r) => ({
       id: r.id,
       user_id: r.user_id,
+      role: r.role as AppRole,
       full_name: profilesMap.get(r.user_id) ?? null,
     })));
     const { data: inv } = await supabase
       .from('society_invitations')
-      .select('id, email, expires_at, token')
+      .select('id, email, role, expires_at, token')
       .eq('society_id', societyId)
-      .eq('role', 'coach')
       .is('accepted_at', null)
       .gt('expires_at', new Date().toISOString());
-    setInvitations(inv ?? []);
+    setInvitations((inv ?? []) as typeof invitations);
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadCoaches(); }, [societyId]);
+  useEffect(() => { loadMembers(); }, [societyId]);
 
   const handleInvite = async () => {
     if (!societyId || !user || !inviteEmail.trim()) return;
@@ -154,30 +162,54 @@ export default function SocietySettings() {
       .insert({
         society_id: societyId,
         email,
-        role: 'coach',
+        role: inviteRole,
         invited_by: user.id,
       })
       .select('token')
       .single();
     if (error || !data) {
-      toast.error('Errore creazione invito');
+      toast.error(error?.message ?? 'Errore creazione invito');
       return;
     }
-    setGeneratedLink(`${window.location.origin}/auth?invite=${data.token}`);
+    setGeneratedLink(`${window.location.origin}/accept-invitation?token=${data.token}`);
     setInviteEmail('');
-    await loadCoaches();
+    await loadMembers();
   };
 
-  const removeCoach = async (roleId: string) => {
+  const removeMember = async (roleId: string) => {
     const { error } = await supabase.from('user_roles').delete().eq('id', roleId);
-    if (error) toast.error('Errore rimozione');
-    else { toast.success('Coach rimosso'); await loadCoaches(); }
+    if (error) toast.error(error.message || 'Errore rimozione');
+    else { toast.success('Membro rimosso'); await loadMembers(); }
+  };
+
+  const changeMemberRole = async (m: MemberRow, newRole: AppRole) => {
+    if (m.role === newRole) return;
+    // delete the old role row then insert the new one (RLS scoped)
+    const { error: delErr } = await supabase.from('user_roles').delete().eq('id', m.id);
+    if (delErr) { toast.error(delErr.message); return; }
+    const { error: insErr } = await supabase.from('user_roles').insert({
+      user_id: m.user_id,
+      society_id: societyId,
+      role: newRole,
+    });
+    if (insErr) {
+      toast.error(insErr.message);
+      // rollback: re-insert old role
+      await supabase.from('user_roles').insert({
+        user_id: m.user_id,
+        society_id: societyId,
+        role: m.role,
+      });
+      return;
+    }
+    toast.success(`Ruolo aggiornato: ${ROLE_LABELS[newRole]}`);
+    await loadMembers();
   };
 
   const revokeInvitation = async (id: string) => {
     const { error } = await supabase.from('society_invitations').delete().eq('id', id);
     if (error) toast.error('Errore revoca');
-    else { toast.success('Invito revocato'); await loadCoaches(); }
+    else { toast.success('Invito revocato'); await loadMembers(); }
   };
 
   useEffect(() => {
@@ -198,6 +230,7 @@ export default function SocietySettings() {
       } else if (data) {
         const row = data as SocietyRow;
         setSociety(row);
+        setSocietyName(row.name);
         const feats = (row.features ?? {}) as { season_start?: string; season_end?: string };
         setSeasonStart(feats.season_start ?? '');
         setSeasonEnd(feats.season_end ?? '');
@@ -209,7 +242,6 @@ export default function SocietySettings() {
     })();
   }, [societyId]);
 
-  // Guards
   if (loadingSociety || loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -256,6 +288,12 @@ export default function SocietySettings() {
   const handleSave = async () => {
     if (!societyId || !society) return;
 
+    const name = societyName.trim();
+    if (!name) {
+      toast.error('Il nome della società è obbligatorio');
+      return;
+    }
+
     const primaryHsl = hexToHslString(primaryHex);
     const accentHsl = hexToHslString(accentHex);
     if (!primaryHsl || !accentHsl) {
@@ -263,7 +301,6 @@ export default function SocietySettings() {
       return;
     }
 
-    // Validazione date
     if (seasonStart && seasonEnd && seasonStart > seasonEnd) {
       toast.error('La data inizio deve precedere la data fine');
       return;
@@ -271,7 +308,6 @@ export default function SocietySettings() {
 
     setSaving(true);
     try {
-      // Merge features preservando i flag dei moduli (gestiti dal super_admin)
       const newFeatures = {
         ...(society.features ?? {}),
         season_start: seasonStart || null,
@@ -281,6 +317,7 @@ export default function SocietySettings() {
       const { error } = await supabase
         .from('societies')
         .update({
+          name,
           logo_url: logoUrl || null,
           primary_color: primaryHsl,
           accent_color: accentHsl,
@@ -293,7 +330,8 @@ export default function SocietySettings() {
       await refresh();
     } catch (e) {
       console.error(e);
-      toast.error('Errore durante il salvataggio');
+      const msg = e instanceof Error ? e.message : 'Errore durante il salvataggio';
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -311,27 +349,38 @@ export default function SocietySettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Stagione</CardTitle>
-          <CardDescription>Definisce il periodo della stagione corrente.</CardDescription>
+          <CardTitle>Dati generali</CardTitle>
+          <CardDescription>Nome visibile della società e periodo della stagione corrente.</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="season-start">Inizio stagione</Label>
+            <Label htmlFor="society-name">Nome società</Label>
             <Input
-              id="season-start"
-              type="date"
-              value={seasonStart}
-              onChange={(e) => setSeasonStart(e.target.value)}
+              id="society-name"
+              value={societyName}
+              onChange={(e) => setSocietyName(e.target.value)}
+              placeholder="Es. Volley Club Milano"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="season-end">Fine stagione</Label>
-            <Input
-              id="season-end"
-              type="date"
-              value={seasonEnd}
-              onChange={(e) => setSeasonEnd(e.target.value)}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="season-start">Inizio stagione</Label>
+              <Input
+                id="season-start"
+                type="date"
+                value={seasonStart}
+                onChange={(e) => setSeasonStart(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="season-end">Fine stagione</Label>
+              <Input
+                id="season-end"
+                type="date"
+                value={seasonEnd}
+                onChange={(e) => setSeasonEnd(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -427,40 +476,61 @@ export default function SocietySettings() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Gestione coach</CardTitle>
-            <CardDescription>Invita nuovi coach o rimuovi quelli esistenti.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Membri società</CardTitle>
+            <CardDescription>Invita admin, coach, scout e direttori tecnici. Puoi anche promuovere o degradare.</CardDescription>
           </div>
-          <Button size="sm" onClick={() => { setInviteDialogOpen(true); setGeneratedLink(''); }}>
-            <UserPlus className="h-4 w-4 mr-2" /> Invita coach
+          <Button size="sm" onClick={() => { setInviteDialogOpen(true); setGeneratedLink(''); setInviteRole('coach'); }}>
+            <UserPlus className="h-4 w-4 mr-2" /> Invita membro
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {coaches.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Nessun coach associato.</p>
+          {members.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessun membro associato.</p>
           ) : (
             <div className="space-y-2">
-              {coaches.map((c) => (
-                <div key={c.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2">
-                  <span className="text-sm font-medium">{c.full_name ?? 'Coach senza nome'}</span>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4 mr-1" /> Rimuovi
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Rimuovere il coach?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Il coach non potrà più accedere a questa società.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annulla</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => removeCoach(c.id)}>Rimuovi</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+              {members.map((m) => (
+                <div key={m.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2 gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {m.role === 'society_admin' ? (
+                      <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+                    ) : (
+                      <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                    )}
+                    <span className="text-sm font-medium truncate">{m.full_name ?? 'Senza nome'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Select value={m.role} onValueChange={(v) => changeMemberRole(m, v as AppRole)} disabled={m.user_id === user?.id}>
+                      <SelectTrigger className="h-8 w-[170px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SOCIETY_ASSIGNABLE_ROLES.map((r) => (
+                          <SelectItem key={r} value={r} className="text-xs">
+                            {ROLE_LABELS[r]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" disabled={m.user_id === user?.id}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Rimuovere {ROLE_LABELS[m.role].toLowerCase()}?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Il membro non potrà più accedere a questa società con questo ruolo.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annulla</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeMember(m.id)}>Rimuovi</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               ))}
             </div>
@@ -470,13 +540,16 @@ export default function SocietySettings() {
             <div className="space-y-2 pt-2 border-t border-border">
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Inviti pendenti</p>
               {invitations.map((inv) => {
-                const link = `${window.location.origin}/auth?invite=${inv.token}`;
+                const link = `${window.location.origin}/accept-invitation?token=${inv.token}`;
                 return (
                   <div key={inv.id} className="flex items-center justify-between border border-dashed border-border rounded-md px-3 py-2 gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium flex items-center gap-2 truncate">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         {inv.email}
+                        <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/30 rounded px-1.5 py-0.5">
+                          {ROLE_LABELS[inv.role]}
+                        </span>
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Scade il {new Date(inv.expires_at).toLocaleDateString('it-IT')}
@@ -508,18 +581,37 @@ export default function SocietySettings() {
       <Dialog open={inviteDialogOpen} onOpenChange={(o) => { setInviteDialogOpen(o); if (!o) setGeneratedLink(''); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invita un coach</DialogTitle>
+            <DialogTitle>Invita un membro</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input
-              placeholder="email@esempio.it"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              type="email"
-            />
+            <div className="space-y-1.5">
+              <Label htmlFor="invite-email">Email</Label>
+              <Input
+                id="invite-email"
+                placeholder="email@esempio.it"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                type="email"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="invite-role">Ruolo</Label>
+              <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
+                <SelectTrigger id="invite-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SOCIETY_ASSIGNABLE_ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {generatedLink && (
               <div className="space-y-2 border border-primary/30 bg-primary/5 rounded-md p-3">
-                <p className="text-xs text-muted-foreground">Copia questo link e mandalo al coach:</p>
+                <p className="text-xs text-muted-foreground">Copia questo link e mandalo al nuovo membro:</p>
                 <div className="flex gap-2">
                   <Input value={generatedLink} readOnly className="text-xs" />
                   <Button
