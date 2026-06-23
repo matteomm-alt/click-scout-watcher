@@ -80,6 +80,7 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const [loadingTpl, setLoadingTpl] = useState(false);
   const [skeletons, setSkeletons] = useState<{ id: string; name: string; total_duration_min: number | null; blocks: unknown }[]>([]);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState('');
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [skeletonApplied, setSkeletonApplied] = useState(false);
 
   useEffect(() => {
@@ -212,55 +213,81 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
         </div>
       )}
 
-      {/* Applica scheletro */}
       {!skeletonApplied && skeletons.length > 0 && !value.id && (
-        <div className="rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 flex flex-col md:flex-row md:items-center gap-3">
-          <Label className="text-xs uppercase tracking-wider text-accent font-semibold shrink-0">
-            Scheletro (opzionale)
-          </Label>
-          <Select value={selectedSkeletonId} onValueChange={setSelectedSkeletonId}>
-            <SelectTrigger className="h-8 flex-1">
-              <SelectValue placeholder="Scegli uno scheletro…" />
-            </SelectTrigger>
-            <SelectContent>
-              {skeletons.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {selectedSkeletonId && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={async () => {
-                const skel = skeletons.find((s) => s.id === selectedSkeletonId);
-                if (!skel) return;
-                const blocksJson = skel.blocks as { settimane?: { sedute?: { fondamentale?: string; note?: string; durata_min?: number }[] }[] } | null;
-                const sedute = blocksJson?.settimane?.[0]?.sedute ?? [];
-                const newBlocks: BlockDraft[] = sedute.map((s, i) => ({
-                  key: crypto.randomUUID(),
-                  title: s.fondamentale ?? `Blocco ${i + 1}`,
-                  description: s.note ?? '',
-                  exercise_id: null,
-                  duration_min: s.durata_min ?? null,
-                  reps: null,
-                  intensity: null,
-                  players_count: null,
-                  roles: [],
-                }));
-                onChange({
-                  ...value,
-                  blocks: newBlocks,
-                  ...(skel.total_duration_min ? { duration_min: skel.total_duration_min } : {}),
-                });
-                toast({ title: '✅ Struttura applicata', description: 'Personalizza i dettagli dei blocchi.' });
-                setSkeletonApplied(true);
-                setSelectedSkeletonId('');
-              }}
-            >
-              ⚡ Applica struttura
-            </Button>
-          )}
+        <div className="rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 flex flex-col gap-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <Label className="text-xs uppercase tracking-wider text-accent font-semibold shrink-0">
+              Scheletro (opzionale)
+            </Label>
+            <Select value={selectedSkeletonId} onValueChange={(v) => { setSelectedSkeletonId(v); setSelectedWeekIndex(0); }}>
+              <SelectTrigger className="h-8 flex-1">
+                <SelectValue placeholder="Scegli uno scheletro…" />
+              </SelectTrigger>
+              <SelectContent>
+                {skeletons.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {selectedSkeletonId && (() => {
+            const skel = skeletons.find((s) => s.id === selectedSkeletonId);
+            const blocksJson = skel?.blocks as { settimane?: { sedute?: { fondamentale?: string; note?: string; durata_min?: number }[] }[] } | null;
+            const settimane = blocksJson?.settimane ?? [];
+            return (
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
+                {settimane.length > 1 && (
+                  <>
+                    <Label className="text-xs uppercase tracking-wider text-accent font-semibold shrink-0">
+                      Quale settimana
+                    </Label>
+                    <Select value={String(selectedWeekIndex)} onValueChange={(v) => setSelectedWeekIndex(Number(v))}>
+                      <SelectTrigger className="h-8 flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {settimane.map((_, wi) => (
+                          <SelectItem key={wi} value={String(wi)}>
+                            Settimana {wi + 1}{settimane.length === 2 ? (wi === 0 ? ' (A)' : ' (B)') : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (!skel) return;
+                    const sedute = settimane[selectedWeekIndex]?.sedute ?? [];
+                    const newBlocks: BlockDraft[] = sedute.map((s, i) => ({
+                      key: crypto.randomUUID(),
+                      title: s.fondamentale ?? `Blocco ${i + 1}`,
+                      description: s.note ?? '',
+                      exercise_id: null,
+                      duration_min: s.durata_min ?? null,
+                      reps: null,
+                      intensity: null,
+                      players_count: null,
+                      roles: [],
+                    }));
+                    onChange({
+                      ...value,
+                      blocks: newBlocks,
+                      ...(skel.total_duration_min ? { duration_min: skel.total_duration_min } : {}),
+                    });
+                    toast({ title: '✅ Struttura applicata', description: 'Personalizza i dettagli dei blocchi.' });
+                    setSkeletonApplied(true);
+                    setSelectedSkeletonId('');
+                    setSelectedWeekIndex(0);
+                  }}
+                >
+                  ⚡ Applica struttura
+                </Button>
+              </div>
+            );
+          })()}
         </div>
       )}
 
