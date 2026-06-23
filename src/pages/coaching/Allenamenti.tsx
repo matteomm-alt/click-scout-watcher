@@ -288,51 +288,37 @@ export default function Allenamenti() {
       if (!user || !societyId) throw new Error('Sessione non valida');
       if (!form.title.trim()) throw new Error('Titolo obbligatorio');
 
-      const payload = {
-        society_id: societyId,
-        created_by: user.id,
-        title: form.title.trim(),
-        scheduled_date: form.scheduled_date || null,
-        duration_min: form.duration_min,
-        status: form.status,
-        goal: form.goal.trim() || null,
-        notes: form.notes.trim() || null,
-        team_id: form.team_id,
-        is_template: form.is_template,
-        template_name: form.is_template ? (form.template_name.trim() || form.title.trim()) : null,
-        players_count: form.players_count,
-        roles: form.roles,
-        participating_athlete_ids: form.participating_athlete_ids,
-      };
+      const blocksJson = form.blocks.map((b, i) => ({
+        title: b.title || `Blocco ${i + 1}`,
+        description: b.description || null,
+        exercise_id: b.exercise_id,
+        duration_min: b.duration_min,
+        reps: b.reps,
+        intensity: b.intensity,
+        players_count: b.players_count,
+        roles: b.roles,
+      }));
 
-      let trainingId = form.id;
-      if (trainingId) {
-        const { error } = await supabase.from('trainings').update(payload).eq('id', trainingId);
-        if (error) throw error;
-        await supabase.from('training_blocks').delete().eq('training_id', trainingId);
-      } else {
-        const { data, error } = await supabase.from('trainings').insert(payload).select('id').single();
-        if (error || !data) throw error ?? new Error('Errore creazione');
-        trainingId = data.id;
-      }
-
-      if (form.blocks.length > 0) {
-        const blockPayload = form.blocks.map((b, i) => ({
-          training_id: trainingId,
-          title: b.title || `Blocco ${i + 1}`,
-          description: b.description || null,
-          exercise_id: b.exercise_id,
-          duration_min: b.duration_min,
-          reps: b.reps,
-          intensity: b.intensity,
-          order_index: i,
-          players_count: b.players_count,
-          roles: b.roles,
-        }));
-        const { error: blErr } = await supabase.from('training_blocks').insert(blockPayload);
-        if (blErr) throw blErr;
-      }
-      return form.id;
+      const { data: resultId, error } = await (supabase as any).rpc('save_training_with_blocks', {
+        _training_id: form.id ?? null,
+        _society_id: societyId,
+        _created_by: user.id,
+        _title: form.title.trim(),
+        _scheduled_date: form.scheduled_date || null,
+        _duration_min: form.duration_min,
+        _status: form.status,
+        _goal: form.goal.trim() || null,
+        _notes: form.notes.trim() || null,
+        _team_id: form.team_id,
+        _is_template: form.is_template,
+        _template_name: form.is_template ? (form.template_name.trim() || form.title.trim()) : null,
+        _players_count: form.players_count,
+        _roles: form.roles,
+        _participating_athlete_ids: form.participating_athlete_ids,
+        _blocks: blocksJson,
+      });
+      if (error) throw error;
+      return resultId as string;
     },
     onSuccess: (existingId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
