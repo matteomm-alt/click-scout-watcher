@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
-import { type DbAction, phaseBreakdown, SKILL_NAMES } from '@/lib/scoutAnalysis';
+import { type DbAction, phaseBreakdown, rotationStats, SKILL_NAMES } from '@/lib/scoutAnalysis';
 import { Card } from '@/components/ui/card';
 import { BarRow } from './shared/BarRow';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { getTooltipStyle, CHART_COLORS } from '@/lib/chartTheme';
 
 /**
  * Tab "Fasi K1/K2": confronta la prestazione della squadra
