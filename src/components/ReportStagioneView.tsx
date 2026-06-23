@@ -217,7 +217,7 @@ export function ReportStagioneView() {
                     <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                     <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} />
                     <Radar name="Profilo" dataKey="Valore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${Math.round(v / 20 * 10) / 10}/5`]} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${Math.round(Number(v) / 20 * 10) / 10}/5`]} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
