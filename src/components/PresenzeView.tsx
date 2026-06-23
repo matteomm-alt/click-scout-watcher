@@ -157,7 +157,7 @@ export function PresenzeView() {
       .from('attendances')
       .select('athlete_id, status')
       .eq('society_id', societyId);
-    const rows = (data as any) || [];
+    const rows = ((data ?? []) as Array<{ athlete_id: string; status: string }>);
     const byAth: Record<string, { p: number; t: number }> = {};
     for (const a of athletes) byAth[a.id] = { p: 0, t: 0 };
     rows.forEach((r: { athlete_id: string; status: string }) => {
@@ -327,7 +327,7 @@ export function PresenzeView() {
                     <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} />
                     <Tooltip
                       contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                      formatter={(val: number, _n, p: any) => [`${val}% (${p?.payload?.totali ?? 0} eventi)`, 'Presenze']}
+                      formatter={(val: number, _n, p: { payload?: { totali?: number } }) => [`${val}% (${p?.payload?.totali ?? 0} eventi)`, 'Presenze']}
                     />
                     <ReferenceLine x={SOGLIA} stroke="#DC2626" strokeDasharray="4 4"
                       label={{ value: `Soglia ${SOGLIA}%`, fill: '#DC2626', position: 'top', fontSize: 10 }} />
