@@ -137,6 +137,17 @@ export function VolleyballCourt({
     }
   }, [matchState.servingTeam, matchState.homeScore, matchState.awayScore]);
 
+  // Zona di partenza del servizio selezionata (highlight per ~2s)
+  const [serveStartHighlight, setServeStartHighlight] = useState<{ team: 'home' | 'away'; zone: number } | null>(null);
+  const handleServeStartClick = (team: 'home' | 'away', zone: number) => {
+    setServeStartHighlight({ team, zone });
+    window.setTimeout(() => setServeStartHighlight((cur) => (cur?.zone === zone && cur.team === team ? null : cur)), 2200);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('scout-serve-start-zone', { detail: { team, zone } }));
+    }
+  };
+
+
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
     const player = teamData.players.find((p) => p.number === num);
