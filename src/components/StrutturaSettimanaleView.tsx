@@ -94,7 +94,8 @@ export function StrutturaSettimanaleView() {
     const { data } = await supabase.from('training_skeletons')
       .select('*').eq('society_id', societyId)
       .order('created_at', { ascending: false });
-    const list = ((data as any) || []).map((d: any) => ({
+    const rawList = ((data ?? []) as Array<Omit<Struttura, 'blocks'> & { blocks: StrutturaBlocks | string }>);
+    const list: Struttura[] = rawList.map((d) => ({
       ...d,
       blocks: typeof d.blocks === 'string' ? JSON.parse(d.blocks) : d.blocks,
     }));
@@ -149,7 +150,7 @@ export function StrutturaSettimanaleView() {
       description: s.description,
       society_id: societyId,
       created_by: user.id,
-      blocks: s.blocks as any,
+      blocks: s.blocks as unknown as never,
     });
     if (error) { toast.error('Errore duplicazione'); return; }
     toast.success('Struttura duplicata');
@@ -164,7 +165,7 @@ export function StrutturaSettimanaleView() {
       description: desc || null,
       society_id: societyId,
       created_by: user.id,
-      blocks: blocks as any,
+      blocks: blocks as unknown as never,
       total_duration_min: totalMinuti(blocks) || null,
     };
     const { error } = editing
