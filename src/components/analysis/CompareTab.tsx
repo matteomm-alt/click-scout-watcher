@@ -36,7 +36,7 @@ export function CompareTab({ actions, match, currentTeamId }: { actions: DbActio
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .neq('id', match.id)
         .order('match_date', { ascending: false });
-      setMatches(((data ?? []) as unknown as MatchListItem[]));
+      setMatches(((data ?? []) as unknown as MatchRow[]));
     })();
   }, [match.id]);
 

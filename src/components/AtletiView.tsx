@@ -211,10 +211,10 @@ export function AtletiView() {
         attendancePct,
         presences,
         totalEvents,
-        evaluations: ((evalRes.data ?? []) as Array<{ fundamental: string; score: number; evaluation_date: string }>).map(e => ({
+        evaluations: ((evalRes.data ?? []) as unknown as Array<{ fundamental: string; score: number; evaluation_date: string }>).map(e => ({
           fundamental: e.fundamental, score: e.score, date: e.evaluation_date,
         })),
-        injuries: ((injRes.data ?? []) as Array<{ body_part: string; severity: string; status: string; start_date: string }>).map(i => ({
+        injuries: ((injRes.data ?? []) as unknown as Array<{ body_part: string; severity: string; status: string; start_date: string }>).map(i => ({
           bodyPart: i.body_part, severity: i.severity, status: i.status, startDate: i.start_date,
         })),
         societyName: null,
