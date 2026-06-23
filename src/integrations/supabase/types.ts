@@ -2187,7 +2187,12 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "society_admin" | "coach"
+      app_role:
+        | "super_admin"
+        | "society_admin"
+        | "coach"
+        | "scout"
+        | "direttore_tecnico"
       attendance_status: "presente" | "assente" | "giustificato" | "ritardo"
       communication_priority: "bassa" | "normale" | "alta" | "urgente"
       convocation_role: "titolare" | "riserva" | "libero" | "non_convocato"
@@ -2321,7 +2326,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "society_admin", "coach"],
+      app_role: [
+        "super_admin",
+        "society_admin",
+        "coach",
+        "scout",
+        "direttore_tecnico",
+      ],
       attendance_status: ["presente", "assente", "giustificato", "ritardo"],
       communication_priority: ["bassa", "normale", "alta", "urgente"],
       convocation_role: ["titolare", "riserva", "libero", "non_convocato"],

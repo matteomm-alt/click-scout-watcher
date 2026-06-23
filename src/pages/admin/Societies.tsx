@@ -277,7 +277,7 @@ export default function AdminSocieties() {
   };
 
   const inviteLink = (token: string) =>
-    `${window.location.origin}/auth?invite=${token}`;
+    `${window.location.origin}/accept-invitation?token=${token}`;
 
   const copyLink = (token: string) => {
     navigator.clipboard.writeText(inviteLink(token));

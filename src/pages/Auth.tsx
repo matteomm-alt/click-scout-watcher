@@ -121,24 +121,18 @@ export default function Auth() {
     };
   }, [inviteToken]);
 
+  // Quando l'utente è loggato:
+  //  - se c'è un invito pendente, lo mandiamo alla pagina dedicata di accettazione
+  //  - altrimenti torna alla destinazione originaria
   useEffect(() => {
     if (authLoading || !user) return;
-    if (!inviteToken) {
-      navigate(from, { replace: true });
+    if (inviteToken) {
+      navigate(`/accept-invitation?token=${encodeURIComponent(inviteToken)}`, { replace: true });
       return;
     }
-    if (inviteAccepted) {
-      navigate(from, { replace: true });
-      return;
-    }
-    if (emailMismatch) return;
-    if (!inviteLoading && inviteInfo && !inviteError && !acceptingInvite && !acceptingInviteRef.current) {
-      acceptInvite(inviteToken).then((ok) => {
-        if (ok) navigate(from, { replace: true });
-      });
-    }
+    navigate(from, { replace: true });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, inviteToken, inviteInfo, inviteLoading, inviteAccepted, inviteError, acceptingInvite, emailMismatch, navigate, from]);
+  }, [user, authLoading, inviteToken, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +146,7 @@ export default function Auth() {
           password,
           options: {
             emailRedirectTo: inviteToken
-              ? `${window.location.origin}/auth?invite=${encodeURIComponent(inviteToken)}`
+              ? `${window.location.origin}/accept-invitation?token=${encodeURIComponent(inviteToken)}`
               : window.location.origin,
             data: { full_name: fullName || email },
           },
