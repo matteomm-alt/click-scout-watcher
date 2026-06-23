@@ -33,7 +33,15 @@ export default function Auth() {
   const location = useLocation();
   const { user, loading: authLoading, refreshRoles, signOut } = useAuth();
 
-  const inviteToken = new URLSearchParams(location.search).get('invite');
+  // Recupera l'invite token dalla URL oppure dal localStorage (per resistere a
+  // conferme email aperte in browser/tab diversi che perdono il query string).
+  const urlInviteToken = new URLSearchParams(location.search).get('invite');
+  const inviteToken = urlInviteToken || (typeof window !== 'undefined' ? localStorage.getItem('pending_invite_token') : null);
+  useEffect(() => {
+    if (urlInviteToken) {
+      localStorage.setItem('pending_invite_token', urlInviteToken);
+    }
+  }, [urlInviteToken]);
   const [mode, setMode] = useState<Mode>(inviteToken ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
