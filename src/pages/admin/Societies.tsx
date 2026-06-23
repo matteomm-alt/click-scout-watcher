@@ -116,7 +116,7 @@ export default function AdminSocieties() {
 
     const coachRolesArr = (coachRoles || []) as { id: string; user_id: string; society_id: string | null; role: string }[];
     const coachUserIds = Array.from(new Set(coachRolesArr.map((c) => c.user_id)));
-    let profilesMap = new Map<string, { full_name: string | null }>();
+    const profilesMap = new Map<string, { full_name: string | null }>();
     if (coachUserIds.length > 0) {
       const { data: profs } = await supabase
         .from('profiles')

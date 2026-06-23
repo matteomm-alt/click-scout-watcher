@@ -147,7 +147,7 @@ export default function Auth() {
       return;
     }
     navigate(from, { replace: true });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [user, authLoading, inviteToken, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -86,7 +86,6 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   useEffect(() => {
     if (value.id) { setSkeletonApplied(true); return; }
     setSkeletonApplied(false);
-    // eslint-disable-next-line
   }, [value.id]);
 
   useEffect(() => {

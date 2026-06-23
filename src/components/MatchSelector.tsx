@@ -54,7 +54,7 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
   const selectNone = () => onChange(new Set(currentMatchId ? [currentMatchId] : []));
   const toggle = (id: string) => {
     const next = new Set(selectedIds);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id); else next.add(id);
     onChange(next);
   };
 
