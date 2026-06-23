@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { parseDvw, type DvwParsed } from '@/lib/dvwImporter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
