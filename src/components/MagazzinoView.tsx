@@ -31,7 +31,7 @@ const CATEGORIES = ['Divise', 'Palloni', 'Attrezzatura', 'Accessori', 'Altro'];
 // ── Tipi ─────────────────────────────────────────────────────────────
 interface Item {
   id: string; name: string; category: string | null;
-  quantity: number; size: string | null; notes: string | null;
+  quantity: number; min_quantity: number; size: string | null; notes: string | null;
 }
 interface Assignment {
   id: string; item_id: string; athlete_id: string;
@@ -56,7 +56,7 @@ export function MagazzinoView() {
   const [selectedAthlete, setSelectedAthlete] = useState<string>('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', category: 'Divise', quantity: 1, size: '', notes: '' });
+  const [form, setForm] = useState({ name: '', category: 'Divise', quantity: 1, minQuantity: 0, size: '', notes: '' });
   const [assignForm, setAssignForm] = useState({ athlete_id: '', item_id: '', size: '', quantity: 1 });
 
   const load = async () => {
@@ -91,12 +91,13 @@ export function MagazzinoView() {
     if (!form.name || !societyId || !user) return;
     const { error } = await supabase.from('inventory_items').insert({
       name: form.name, category: form.category, quantity: form.quantity,
+      min_quantity: form.minQuantity,
       size: form.size || null, notes: form.notes || null,
       society_id: societyId, created_by: user.id,
     });
     if (error) { toast.error('Errore creazione'); return; }
     setDialogOpen(false);
-    setForm({ name: '', category: 'Divise', quantity: 1, size: '', notes: '' });
+    setForm({ name: '', category: 'Divise', quantity: 1, minQuantity: 0, size: '', notes: '' });
     toast.success('Articolo aggiunto');
     load();
   };
@@ -197,6 +198,9 @@ export function MagazzinoView() {
                                 <p className="font-semibold text-sm truncate">{item.name}</p>
                                 {item.size && <p className="text-xs text-muted-foreground">Taglia: {item.size}</p>}
                               </div>
+                              {item.min_quantity > 0 && item.quantity < item.min_quantity && (
+                                <Badge variant="destructive" className="text-[10px]">Scorta bassa</Badge>
+                              )}
                               <Badge variant="outline">×{item.quantity}</Badge>
                               <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
                                 onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>
@@ -326,8 +330,9 @@ export function MagazzinoView() {
                 <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div><Label>Quantità</Label><Input type="number" min={0} value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
+              <div><Label>Soglia minima</Label><Input type="number" min={0} value={form.minQuantity} onChange={e => setForm(f => ({ ...f, minQuantity: +e.target.value }))} placeholder="0" /></div>
               <div><Label>Taglia</Label><Input value={form.size} onChange={e => setForm(f => ({ ...f, size: e.target.value }))} placeholder="S, M, L, XL..." /></div>
             </div>
           </div>
