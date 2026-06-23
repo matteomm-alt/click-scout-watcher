@@ -22,6 +22,7 @@ import { OverviewTab } from '@/components/analysis/OverviewTab';
 import { HeatmapTab } from '@/components/analysis/HeatmapTab';
 import { RotationsTab } from '@/components/analysis/RotationsTab';
 import { PhasesTab } from '@/components/analysis/PhasesTab';
+import { CombosTab } from '@/components/analysis/CombosTab';
 import { CompareTab } from '@/components/analysis/CompareTab';
 import { TabErrorBoundary } from '@/components/analysis/TabErrorBoundary';
 
@@ -32,7 +33,7 @@ const PlayersTab = lazy(() =>
   import('@/components/analysis/PlayersTab').then(m => ({ default: m.PlayersTab }))
 );
 
-type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'phases' | 'compare' | 'charts' | 'advanced';
+type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'phases' | 'combos' | 'compare' | 'charts' | 'advanced';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Panoramica' },
@@ -41,6 +42,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'players', label: 'Giocatori' },
   { key: 'rotations', label: 'Rotazioni' },
   { key: 'phases', label: 'Fasi K1/K2' },
+  { key: 'combos', label: 'Combo alzata' },
   { key: 'compare', label: 'Confronto' },
   { key: 'advanced', label: 'Avanzate' },
 ];
@@ -612,6 +614,7 @@ export default function MatchAnalysis() {
               {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} match={match} teamName={teamFilter === 'home' ? match.home_team.name : match.away_team.name} />}
               {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'phases' && teamId && <PhasesTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
+              {tab === 'combos' && <CombosTab actions={filteredTeamActions} />}
               {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
               {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
             </TabErrorBoundary>

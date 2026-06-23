@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType } from '@/types/volleyball';
 import { useScoutSettings } from '@/lib/scoutSettings';
+import { suggestCombos } from '@/lib/attackCombos';
 import { X } from 'lucide-react';
+
 
 /* ------------------------------------------------------------------ */
 /* ActionPanel — bottom sheet contestuale: fondamentale + valutazione  */
@@ -59,10 +61,12 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
   const { settings } = useScoutSettings();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(suggestedSkill ?? null);
   const [selectedSkillType, setSelectedSkillType] = useState<SkillType>('H');
+  const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedSkill(suggestedSkill ?? null);
     setSelectedSkillType('H');
+    setSelectedCombo(null);
   }, [player?.number, player?.team, suggestedSkill]);
 
   if (!player) return null;
@@ -101,6 +105,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       skillType,
       evaluation,
       code,
+      attackCode: skill === 'A' ? selectedCombo ?? undefined : undefined,
     });
 
     // Auto-score (autoPoint)
@@ -200,8 +205,49 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
               </button>
             ))}
           </div>
+
+          {/* Combinazione di alzata (predefiniti DataVolley) */}
+          {settings.showAttackCombo && (() => {
+            const isBackRow = slotPos ? [1, 5, 6].includes(slotPos) : undefined;
+            const combos = suggestCombos({ playerRole: pData?.role, isBackRow });
+            return (
+              <div className="mt-3">
+                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                  Combinazione alzata
+                </div>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {combos.map((c) => {
+                    const active = selectedCombo === c.code;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => setSelectedCombo(active ? null : c.code)}
+                        title={c.label}
+                        className={`min-h-[44px] rounded-lg border-2 text-xs font-black transition-all active:scale-95 flex flex-col items-center justify-center leading-tight ${
+                          active
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-secondary border-border text-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        <span>{c.code}</span>
+                        <span className="text-[8px] font-normal opacity-70 truncate w-full px-1">{c.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedCombo && (
+                  <div className="text-[10px] text-muted-foreground mt-1.5 italic">
+                    Combo selezionata: <span className="text-primary font-bold">{selectedCombo}</span>. Tocca di nuovo per togliere.
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
+
+
 
       {/* Valutazione */}
       <div>
