@@ -270,8 +270,8 @@ export function VolleyballCourt({
 
           const logRole = logicalRoleForSlot(pos, setterPosition);
           const isSetter = logRole === 'setter';
-          const isOpposite = logRole === 'opposite';
           const isLibero = Boolean(info.isLibero || info.role === 'L');
+          const isFrontRow = [2, 3, 4].includes(pos);
           const isServer = pos === 1 && matchState.servingTeam === team;
           const isSelected = selectedPlayer?.number === playerNum && selectedPlayer.team === team;
           const isHighlighted = highlightTeam === team && highlightPlayerNumber === playerNum;
@@ -283,18 +283,22 @@ export function VolleyballCourt({
             : recentEval === '/' ? 'ring-amber-400'
             : 'ring-primary';
 
-          // Colori per ruolo
-          let colorCls: string;
+          // Colori del cerchio: distinguiamo solo Libero (giallo) e
+          // Palleggiatore (blu). Tutti gli altri ruoli usano lo stesso
+          // bianco neutro, perché il segnale di team viene dato dal
+          // BORDO (colore squadra) e dal lato del campo.
+          const teamBorderVar = team === 'home' ? '--cs-team-a' : '--cs-team-b';
+          let bgCls: string;
+          let textCls: string;
           if (isLibero) {
-            colorCls = 'bg-violet-400 border-violet-200 text-slate-900';
+            bgCls = 'bg-amber-300';
+            textCls = 'text-slate-900';
           } else if (isSetter) {
-            colorCls = 'bg-blue-700 border-blue-300 text-white';
-          } else if (isOpposite) {
-            colorCls = 'bg-violet-700 border-violet-300 text-white';
-          } else if (logRole === 'middle') {
-            colorCls = 'bg-slate-100 border-slate-400 text-slate-900';
+            bgCls = 'bg-blue-700';
+            textCls = 'text-white';
           } else {
-            colorCls = 'bg-white border-slate-400 text-slate-900';
+            bgCls = 'bg-white';
+            textCls = 'text-slate-900';
           }
 
           const ringCls = [
@@ -303,6 +307,7 @@ export function VolleyballCourt({
             isHighlighted ? 'ring-4 ring-primary' : '',
             isRecent ? `ring-4 ${recentColor} animate-ping-once` : '',
           ].filter(Boolean).join(' ');
+
 
           const clickable = !!onPlayerClick;
           return (
