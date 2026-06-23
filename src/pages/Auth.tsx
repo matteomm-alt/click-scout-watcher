@@ -35,11 +35,24 @@ export default function Auth() {
 
   // Recupera l'invite token dalla URL oppure dal localStorage (per resistere a
   // conferme email aperte in browser/tab diversi che perdono il query string).
+  const PENDING_INVITE_MAX_AGE_MS = 60 * 60 * 1000;
   const urlInviteToken = new URLSearchParams(location.search).get('invite');
-  const inviteToken = urlInviteToken || (typeof window !== 'undefined' ? localStorage.getItem('pending_invite_token') : null);
+  const storedInviteToken = (() => {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem('pending_invite_token');
+    const savedAt = Number(localStorage.getItem('pending_invite_saved_at') ?? '0');
+    if (!raw || !savedAt || Date.now() - savedAt > PENDING_INVITE_MAX_AGE_MS) {
+      localStorage.removeItem('pending_invite_token');
+      localStorage.removeItem('pending_invite_saved_at');
+      return null;
+    }
+    return raw;
+  })();
+  const inviteToken = urlInviteToken || storedInviteToken;
   useEffect(() => {
-    if (urlInviteToken) {
+    if (urlInviteToken && typeof window !== 'undefined') {
       localStorage.setItem('pending_invite_token', urlInviteToken);
+      localStorage.setItem('pending_invite_saved_at', String(Date.now()));
     }
   }, [urlInviteToken]);
   const [mode, setMode] = useState<Mode>(inviteToken ? 'signup' : 'signin');
