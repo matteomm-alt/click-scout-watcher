@@ -267,7 +267,49 @@ export function VolleyballCourt({
           </span>
         )}
 
+        {/* Zone di partenza del servizio (7/8/9) — visibili solo per la squadra che serve.
+            Renderizzate "dietro" al campo (sotto z dei giocatori) lungo la linea di fondo.
+            Click → registra la zona di inizio servizio per la prossima azione skill='S'. */}
+        {matchState.servingTeam === team && !simplifiedView && (() => {
+          // HOME baseline a x=100, AWAY baseline a x=0. Strip larga 12%.
+          const isHome = team === 'home';
+          const stripStyle: React.CSSProperties = isHome
+            ? { left: '88%', top: 0, width: '12%', height: '100%' }
+            : { left: 0, top: 0, width: '12%', height: '100%' };
+          // Ordine top→bottom delle zone per ciascun lato (cfr. ZONE_CENTERS_*)
+          const orderTopToBottom = isHome ? [9, 8, 7] : [7, 8, 9];
+          return (
+            <div className="absolute z-[15] pointer-events-none" style={stripStyle}>
+              <div className="relative h-full w-full flex flex-col">
+                {orderTopToBottom.map((zone) => {
+                  const active = serveStartHighlight?.team === team && serveStartHighlight.zone === zone;
+                  return (
+                    <button
+                      key={`serve-${team}-${zone}`}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleServeStartClick(team, zone); }}
+                      className={`pointer-events-auto flex-1 border border-dashed transition-colors flex items-center justify-center text-[10px] font-black uppercase tracking-wider ${
+                        active
+                          ? 'bg-primary/70 border-primary text-primary-foreground'
+                          : 'bg-black/25 border-white/40 text-white/80 hover:bg-primary/30 hover:border-primary/70'
+                      }`}
+                      title={`Servizio da zona ${zone}`}
+                      aria-label={`Servizio da zona ${zone}`}
+                    >
+                      {zone}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider text-white/70 whitespace-nowrap">
+                Battuta
+              </span>
+            </div>
+          );
+        })()}
+
         {/* Giocatrici */}
+
         {[1, 2, 3, 4, 5, 6].map((pos) => {
           const playerNum = lineup[pos - 1];
           if (!playerNum) return null;
