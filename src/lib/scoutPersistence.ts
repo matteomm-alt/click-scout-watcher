@@ -144,7 +144,7 @@ export async function upsertScoutSession(
     // Batch insert (RLS verifica match->coach_id).
     const BATCH = 200;
     for (let i = 0; i < rows.length; i += BATCH) {
-      const slice = rows.slice(i, i + BATCH);
+      const slice = rows.slice(i, i + BATCH).map(({ _localId, ...rest }) => rest);
       const { error } = await sb.from('scout_actions').insert(slice);
       if (error) {
         console.warn('[scoutPersistence] actions insert failed', error);
