@@ -435,7 +435,7 @@ export default function MatchAnalysis() {
         date: match.match_date,
         league: match.league,
         venue: match.venue,
-        setResults: Array.isArray(match.set_results) ? (match.set_results as unknown as Array<{ home: number; away: number }>) : [],
+        setResults: Array.isArray(match.set_results) ? (match.set_results as unknown as Array<{ intermediates?: string[]; duration?: string | number }>) : [],
         homeTeamId: match.home_team.id,
         awayTeamId: match.away_team.id,
       },
