@@ -320,17 +320,28 @@ export function VolleyballCourt({
                 type="button"
                 disabled={!clickable}
                 onClick={() => clickable && onPlayerClick?.(playerNum, team)}
-                className={`relative flex size-12 md:size-14 items-center justify-center rounded-full text-base md:text-lg font-black border-2 shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${colorCls} ${ringCls} ${clickable ? 'cursor-pointer active:scale-95 transition-transform hover:brightness-110' : 'cursor-default'}`}
+                style={{ borderColor: `hsl(var(${teamBorderVar}))` }}
+                className={`relative flex size-12 md:size-14 items-center justify-center rounded-full text-base md:text-lg font-black border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${bgCls} ${textCls} ${ringCls} ${clickable ? 'cursor-pointer active:scale-95 transition-transform hover:brightness-110' : 'cursor-default'}`}
                 aria-label={`Giocatrice ${info.number}`}
               >
+                {/* Marker front (F arancio) / back (B grigio) row */}
+                <span
+                  className={`absolute -left-1.5 -top-1.5 rounded px-1 py-0.5 text-[9px] font-black border border-white/40 ${
+                    isFrontRow ? 'bg-orange-500 text-white' : 'bg-slate-600 text-white'
+                  }`}
+                  title={isFrontRow ? 'Prima linea' : 'Seconda linea'}
+                >
+                  {isFrontRow ? 'F' : 'B'}
+                </span>
                 {info.number}
                 {isSetter && (
                   <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-900 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">S</span>
                 )}
                 {isLibero && (
-                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-violet-900 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">L</span>
+                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">L</span>
                 )}
               </button>
+
               {!simplifiedView && (
                 <span className="mt-0.5 max-w-16 truncate text-[11px] font-bold text-white/95 drop-shadow">{info.name}</span>
               )}
