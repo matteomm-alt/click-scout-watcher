@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
@@ -150,7 +151,7 @@ export function StrutturaSettimanaleView() {
       description: s.description,
       society_id: societyId,
       created_by: user.id,
-      blocks: s.blocks as unknown as never,
+      blocks: s.blocks as unknown as Json,
     });
     if (error) { toast.error('Errore duplicazione'); return; }
     toast.success('Struttura duplicata');
@@ -165,7 +166,7 @@ export function StrutturaSettimanaleView() {
       description: desc || null,
       society_id: societyId,
       created_by: user.id,
-      blocks: blocks as unknown as never,
+      blocks: blocks as unknown as Json,
       total_duration_min: totalMinuti(blocks) || null,
     };
     const { error } = editing
