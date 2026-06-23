@@ -80,6 +80,7 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const [loadingTpl, setLoadingTpl] = useState(false);
   const [skeletons, setSkeletons] = useState<{ id: string; name: string; total_duration_min: number | null; blocks: unknown }[]>([]);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState('');
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [skeletonApplied, setSkeletonApplied] = useState(false);
 
   useEffect(() => {
