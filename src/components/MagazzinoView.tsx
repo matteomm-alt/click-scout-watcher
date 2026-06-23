@@ -31,7 +31,7 @@ const CATEGORIES = ['Divise', 'Palloni', 'Attrezzatura', 'Accessori', 'Altro'];
 // ── Tipi ─────────────────────────────────────────────────────────────
 interface Item {
   id: string; name: string; category: string | null;
-  quantity: number; size: string | null; notes: string | null;
+  quantity: number; min_quantity: number; size: string | null; notes: string | null;
 }
 interface Assignment {
   id: string; item_id: string; athlete_id: string;
