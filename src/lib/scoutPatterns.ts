@@ -10,8 +10,7 @@
  * squadra "nostra" per orientare il calcolo.
  */
 
-import type { DbAction } from './scoutAnalysis';
-import { rotationOf, RECEPTION_WEIGHTS_FALLBACK } from './scoutAnalysisShim';
+import { rotationOf, type DbAction } from './scoutAnalysis';
 
 // piccolo helper inline per evitare un import circolare con scoutPlayerAdvanced
 const RX_W: Record<string, number> = { '#': 1.0, '+': 0.8, '!': 0.5, '-': 0.2, '/': 0.0, '=': 0.0 };
