@@ -69,7 +69,7 @@ export function HomeDashboard() {
         .eq('coach_id', user!.id)
         .order('match_date', { ascending: false });
       if (error) throw error;
-      const rows = (data ?? []) as any[];
+      const rows = (data ?? []) as Array<{ id: string; home_sets_won: number; away_sets_won: number; match_date: string | null; away_team?: { name?: string } | null; home_team?: { name?: string } | null }>;
       const total = rows.length;
       const wins = rows.filter((m) => m.home_sets_won > m.away_sets_won).length;
       const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;

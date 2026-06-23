@@ -41,6 +41,7 @@ export default function AnalisiPubblica() {
     }
     Promise.all([
       supabase.rpc('get_public_shared_match', { _match_id: matchId, _token: token }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any).rpc('get_public_shared_match_stats', { _match_id: matchId, _token: token }),
     ]).then(([{ data, error: e }, { data: sData }]) => {
       const row = Array.isArray(data) ? data[0] : null;

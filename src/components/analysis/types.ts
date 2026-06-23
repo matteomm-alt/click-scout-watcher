@@ -5,7 +5,7 @@ export interface MatchRow {
   venue: string | null;
   home_sets_won: number;
   away_sets_won: number;
-  set_results: any;
+  set_results: unknown;
   source_filename: string | null;
   share_token?: string | null;
   home_team: { id: string; name: string };

@@ -109,7 +109,7 @@ export function PhasesTab({
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={v => `${v}%`} />
                   <Tooltip
                     contentStyle={getTooltipStyle()}
-                    formatter={(v: number, _n, p: any) => [`${v}% (${p.payload.rallies} rally)`, chart.key]}
+                    formatter={(v: number, _n, p: { payload?: { rallies?: number } }) => [`${v}% (${p.payload?.rallies ?? 0} rally)`, chart.key]}
                   />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                     {chart.data.map((_, i) => <Cell key={i} fill={chart.color} />)}

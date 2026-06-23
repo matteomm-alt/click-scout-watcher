@@ -68,7 +68,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
     .slice(0, 8)
     .map(p => {
       const name = playerNames.get(p.number) || `#${p.number}`;
-      const row: Record<string, any> = { name: `#${p.number} ${name.split(' ')[0]}` };
+      const row: Record<string, string | number | null> = { name: `#${p.number} ${name.split(' ')[0]}` };
       ['R','A','S','B','D'].forEach(sk => {
         const s = p.bySkill[sk];
         row[SKILL_NAMES[sk]] = s ? Math.round(s.efficiency) : null;
@@ -83,7 +83,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
       bySet.get(a.set_number)!.push(a);
     }
     return [...bySet.entries()].sort((a, b) => a[0] - b[0]).map(([set, acts]) => {
-      const row: Record<string, any> = { name: `Set ${set}` };
+      const row: Record<string, string | number> = { name: `Set ${set}` };
       ['R','A','S','B','D'].forEach(sk => {
         const skActs = acts.filter(a => a.skill === sk);
         if (skActs.length > 0) {
@@ -109,7 +109,20 @@ export function ChartsTab({ actions, playerNames }: Props) {
   }, [actions]);
 
   // ── TREND MULTI-PARTITA ───────────────────────────────────────────
-  const [trendData, setTrendData] = useState<any[]>([]);
+  type TrendRow = Record<string, string | number | boolean | null | undefined>;
+  type TrendMatchRow = {
+    id: string;
+    match_date: string | null;
+    home_team_id: string;
+    away_team_id: string;
+    home_sets_won: number;
+    away_sets_won: number;
+    home_team?: { name?: string } | null;
+    away_team?: { name?: string } | null;
+  };
+  type TrendActionRow = { skill: string; evaluation: string; scout_team_id: string };
+
+  const [trendData, setTrendData] = useState<TrendRow[]>([]);
   const [trendLoading, setTrendLoading] = useState(false);
   const [trendSkill, setTrendSkill] = useState('R');
 
@@ -129,8 +142,8 @@ export function ChartsTab({ actions, playerNames }: Props) {
 
       if (!matches || matches.length === 0) { setTrendLoading(false); return; }
 
-      const rows: any[] = [];
-      for (const m of matches as any[]) {
+      const rows: TrendRow[] = [];
+      for (const m of (matches as unknown as TrendMatchRow[])) {
         const side = m.home_team_id === teamId ? 'home' : 'away';
         const { data: acts } = await supabase
           .from('scout_actions')
@@ -141,17 +154,18 @@ export function ChartsTab({ actions, playerNames }: Props) {
         if (!acts || acts.length === 0) continue;
         const opponent = side === 'home' ? m.away_team?.name : m.home_team?.name;
         const won = side === 'home' ? m.home_sets_won > m.away_sets_won : m.away_sets_won > m.home_sets_won;
-        const row: Record<string, any> = {
+        const row: TrendRow = {
           name: m.match_date ? m.match_date.slice(5) : '?',
           date: m.match_date,
           opponent,
           won,
         };
+        const actsRows = acts as unknown as TrendActionRow[];
         ['R','A','S','B','D'].forEach(sk => {
-          const skActs = (acts as any[]).filter((a: any) => a.skill === sk);
+          const skActs = actsRows.filter((a) => a.skill === sk);
           if (skActs.length >= 3) {
-            const perf = skActs.filter((a: any) => a.evaluation === '#').length;
-            const err = skActs.filter((a: any) => ['=','/'].includes(a.evaluation)).length;
+            const perf = skActs.filter((a) => a.evaluation === '#').length;
+            const err = skActs.filter((a) => ['=','/'].includes(a.evaluation)).length;
             row[SKILL_NAMES[sk]] = Math.round((perf - err) / skActs.length * 100);
           }
         });
@@ -249,7 +263,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
       <div className="flex gap-1 flex-wrap">
         {SECTIONS.map(s => (
           <Button key={s.id} size="sm" variant={section === s.id ? 'default' : 'outline'}
-            onClick={() => setSection(s.id as any)}>
+            onClick={() => setSection(s.id as typeof section)}>
             {s.label}
           </Button>
         ))}
@@ -284,7 +298,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     label={({ pct }) => `${pct}%`} labelLine={false}>
                     {evalData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP} formatter={(v: any, n: any) => [`${v} azioni`, n]} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string, n: string) => [`${v} azioni`, n]} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -298,7 +312,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
                   <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                  <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => [`${v}%`]} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => [`${v}%`]} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" />
                   <Bar dataKey="Pos" name="Positivi%" fill="#1D9E75" radius={[3,3,0,0]} />
@@ -369,7 +383,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                     <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={130} />
-                    <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
+                    <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => v !== null ? [`${v}%`] : ['—']} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <ReferenceLine x={0} stroke="hsl(var(--border))" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
@@ -395,7 +409,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                    <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
+                    <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => v !== null ? [`${v}%`] : ['—']} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
@@ -456,7 +470,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <Radar name="Positivi%" dataKey="Positivi" stroke="#1D9E75" fill="#1D9E75" fillOpacity={0.2} strokeWidth={2} />
                   <Radar name="Errori%" dataKey="Errori" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.15} strokeWidth={2} />
-                  <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => [`${v}%`]} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => [`${v}%`]} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </RadarChart>
               </ResponsiveContainer>
@@ -499,7 +513,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                             <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', padding: '10px 14px', borderRadius: 8, fontSize: 12 }}>
                               <p style={{ fontWeight: 600 }}>{d?.opponent || label}</p>
                               <p>{d?.date}</p>
-                              {payload.map((p: any) => <p key={p.dataKey} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
+                              {payload.map((p: { dataKey?: string | number; color?: string; name?: string; value?: number | string }) => <p key={String(p.dataKey)} style={{ color: p.color }}>{p.name}: {p.value}%</p>)}
                             </div>
                           );
                         }}
@@ -524,7 +538,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
                       <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                      <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
+                      <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => v !== null ? [`${v}%`] : ['—']} />
                       <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <Line type="monotone" dataKey={SKILL_NAMES[trendSkill]}
                         stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 5, fill: 'hsl(var(--primary))' }}

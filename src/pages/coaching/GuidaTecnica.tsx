@@ -347,7 +347,7 @@ export default function GuidaTecnica() {
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Progressione</p>
                     <ol className="list-decimal list-inside space-y-0.5">
                       {g.progression.split('\n').filter(Boolean).map((line, i) => (
-                        <li key={i} className="text-xs text-muted-foreground">{line.replace(/^\d+[\.\)]\s*/, '')}</li>
+                        <li key={i} className="text-xs text-muted-foreground">{line.replace(/^\d+[.)]\s*/, '')}</li>
                       ))}
                     </ol>
                   </div>

@@ -64,9 +64,10 @@ export function ConvocazioniView() {
         supabase.from('convocations').select('*').eq('society_id', societyId).order('created_at', { ascending: false }),
         supabase.from('athletes').select('id, last_name, first_name, number, role').eq('society_id', societyId).order('number'),
       ]);
-      setConvocations((c as any) || []);
-      setAthletes((a as any) || []);
-      if (c && c.length > 0) setSelectedId((c[0] as any).id);
+      const convs = ((c ?? []) as unknown as Convocation[]);
+      setConvocations(convs);
+      setAthletes(((a ?? []) as unknown as Athlete[]));
+      if (convs.length > 0) setSelectedId(convs[0].id);
     })();
   }, [societyId]);
 
@@ -75,7 +76,7 @@ export function ConvocazioniView() {
     setLoading(true);
     (async () => {
       const { data } = await supabase.from('convocation_players').select('*').eq('convocation_id', selectedId);
-      setPlayers((data as any) || []);
+      setPlayers(((data ?? []) as unknown as ConvocationPlayer[]));
       setLoading(false);
     })();
   }, [selectedId]);
@@ -87,8 +88,9 @@ export function ConvocazioniView() {
       location: form.location || null, society_id: societyId, created_by: user.id,
     }).select().single();
     if (error) { toast.error('Errore creazione'); return; }
-    setConvocations(prev => [data as any, ...prev]);
-    setSelectedId((data as any).id);
+    const created = data as unknown as Convocation;
+    setConvocations(prev => [created, ...prev]);
+    setSelectedId(created.id);
     setDialogOpen(false);
     setForm({ title: '', match_date: '', meeting_time: '', location: '' });
     toast.success('Convocazione creata');
@@ -102,7 +104,10 @@ export function ConvocazioniView() {
       setPlayers(prev => prev.filter(p => p.id !== existing.id));
     } else {
       const { data } = await supabase.from('convocation_players').insert({ convocation_id: selectedId, athlete_id: athleteId, role: 'titolare' }).select().single();
-      if (data) setPlayers(prev => [...prev, { ...(data as any), role_in_match: (data as any).role }]);
+      if (data) {
+        const row = data as unknown as ConvocationPlayer & { role: string };
+        setPlayers(prev => [...prev, { ...row, role_in_match: row.role }]);
+      }
     }
   };
 

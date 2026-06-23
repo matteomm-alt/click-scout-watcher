@@ -197,7 +197,7 @@ export function applyEvent(
             }
           }
         }
-      } catch {}
+      } catch { /* ignore */ }
       const prevAction = state.actions[state.actions.length - 1];
       const currentPhases = state.teamTacticalPhases ?? getInitialPhases(state.servingTeam);
       const newPhases = getNextPhases(

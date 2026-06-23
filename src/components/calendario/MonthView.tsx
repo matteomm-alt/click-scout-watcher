@@ -94,7 +94,7 @@ export function MonthView({ anchor, events, onEventClick }: Props) {
                       {evt.event_type === 'partita' && (
                         <button
                           onClick={() => navigate(
-                            `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent((evt as any).location || '')}`,
+                            `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent((evt as unknown as { location?: string }).location || '')}`,
                           )}
                           className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0"
                           title="Crea convocazione"

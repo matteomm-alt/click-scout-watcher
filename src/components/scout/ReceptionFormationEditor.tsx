@@ -84,7 +84,7 @@ function FormationCanvas({
 
   const onPointerUp = (e: React.PointerEvent) => {
     setDragging(null);
-    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
+    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
   };
 
   return (

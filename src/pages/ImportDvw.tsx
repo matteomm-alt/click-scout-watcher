@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { parseDvw, type DvwParsed } from '@/lib/dvwImporter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,8 +51,8 @@ export default function ImportDvw() {
       setAwayChoice(c => ({ ...c, newName: result.teams.away.name }));
       await loadKnownTeams();
       setStage('review');
-    } catch (e: any) {
-      toast.error('Errore parsing DVW: ' + (e?.message || 'sconosciuto'));
+    } catch (e: unknown) {
+      toast.error('Errore parsing DVW: ' + ((e as Error)?.message || 'sconosciuto'));
     }
   }
 
@@ -84,9 +85,9 @@ export default function ImportDvw() {
         season: parsed.header.season, league: parsed.header.league,
         phase: parsed.header.phase, venue: parsed.header.venue, city: parsed.header.city,
         home_sets_won: parsed.setsWon.home, away_sets_won: parsed.setsWon.away,
-        set_results: parsed.setResults as any,
+        set_results: parsed.setResults as unknown as Json,
         source_filename: filename,
-        raw_header: parsed.header as any,
+        raw_header: parsed.header as unknown as Json,
       }).select('id').single();
       if (matchErr) throw matchErr;
 
@@ -110,9 +111,9 @@ export default function ImportDvw() {
 
       toast.success('Match importato con successo');
       navigate(`/match/${match.id}`);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      toast.error('Errore salvataggio: ' + (e?.message || 'sconosciuto'));
+      toast.error('Errore salvataggio: ' + ((e as Error)?.message || 'sconosciuto'));
       setStage('review');
     }
   }

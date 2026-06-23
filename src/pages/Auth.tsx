@@ -76,6 +76,7 @@ export default function Auth() {
     if (acceptingInviteRef.current || inviteAccepted) return false;
     acceptingInviteRef.current = true;
     setAcceptingInvite(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).rpc('accept_society_invitation', { _token: token });
     acceptingInviteRef.current = false;
     setAcceptingInvite(false);
@@ -103,6 +104,7 @@ export default function Auth() {
     setInviteError(null);
     setInviteAccepted(false);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .rpc('get_invitation_by_token', { _token: inviteToken })
       .then(({ data, error }: { data: InviteInfo[] | null; error: Error | null }) => {
@@ -145,7 +147,7 @@ export default function Auth() {
       return;
     }
     navigate(from, { replace: true });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [user, authLoading, inviteToken, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -38,7 +38,7 @@ export default function MatchAnalysisMulti() {
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .in('id', ids)
         .order('match_date', { ascending: true });
-      setMatches((m as any) || []);
+      setMatches(((m ?? []) as unknown as typeof matches));
 
       const map = new Map<string, DbAction[]>();
       for (const matchId of ids) {
@@ -53,7 +53,7 @@ export default function MatchAnalysisMulti() {
             .order('set_number').order('rally_index').order('action_index')
             .range(from, from + PAGE - 1);
           if (error || !data || data.length === 0) break;
-          all.push(...(data as any));
+          all.push(...((data ?? []) as unknown as DbAction[]));
           if (data.length < PAGE) break;
           from += PAGE;
         }

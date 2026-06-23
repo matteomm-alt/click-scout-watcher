@@ -30,7 +30,7 @@ export function ReportStagioneView() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [trainings, setTrainings] = useState<any[]>([]);
+  const [trainings, setTrainings] = useState<Array<{ id: string; scheduled_date: string | null; duration_min: number | null; status: string | null }>>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAthlete, setSelectedAthlete] = useState<string>('all');
 
@@ -46,11 +46,11 @@ export function ReportStagioneView() {
       ]);
       // Partite DVW
       const { data: m } = await supabase.from('scout_matches').select('id, home_sets_won, away_sets_won, home_team_id, away_team_id, match_date').eq('coach_id', user.id);
-      setAthletes((at as any) || []);
-      setEvaluations((ev as any) || []);
-      setAttendances((att as any) || []);
-      setTrainings((tr as any) || []);
-      setMatches((m as any) || []);
+      setAthletes(((at ?? []) as unknown as Athlete[]));
+      setEvaluations(((ev ?? []) as unknown as Evaluation[]));
+      setAttendances(((att ?? []) as unknown as Attendance[]));
+      setTrainings(((tr ?? []) as unknown as typeof trainings));
+      setMatches(((m ?? []) as unknown as Match[]));
       setLoading(false);
     })();
   }, [societyId, user]);
@@ -83,7 +83,7 @@ export function ReportStagioneView() {
   const athleteEvals = useMemo(() => {
     const filteredEvs = selectedAthlete === 'all' ? evaluations : evaluations.filter(e => e.athlete_id === selectedAthlete);
     return FONDAMENTALI_DEFAULT.map(fond => {
-      const row: Record<string, any> = { name: fond.nome.length > 15 ? fond.nome.slice(0, 15) + '…' : fond.nome };
+      const row: Record<string, string | number> = { name: fond.nome.length > 15 ? fond.nome.slice(0, 15) + '…' : fond.nome };
       FASE_ORDER.forEach(fase => {
         const evs = filteredEvs.filter(e =>
           e.fundamental.startsWith(fond.id + '_') && e.season_phase === fase
@@ -159,11 +159,11 @@ export function ReportStagioneView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={110} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                 <ReferenceLine x={70} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: '70%', fontSize: 9, fill: 'hsl(var(--destructive))' }} />
                 <Bar dataKey="pct" name="Presenze%" radius={[0,3,3,0]}
                   fill="hsl(var(--primary))"
-                  label={{ position: 'right', fontSize: 9, fill: 'hsl(var(--muted-foreground))', formatter: (v: any) => `${v}%` }}
+                  label={{ position: 'right', fontSize: 9, fill: 'hsl(var(--muted-foreground))', formatter: (v: number | string) => `${v}%` }}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -217,7 +217,7 @@ export function ReportStagioneView() {
                     <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                     <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} />
                     <Radar name="Profilo" dataKey="Valore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${Math.round(v / 20 * 10) / 10}/5`]} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${Math.round(Number(v) / 20 * 10) / 10}/5`]} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>

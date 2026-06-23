@@ -73,7 +73,7 @@ export function ValutazioniView() {
       const { data } = await supabase.from('athletes')
         .select('id, last_name, first_name, number, role')
         .eq('society_id', societyId).order('last_name');
-      setAthletes((data as any) || []);
+      setAthletes(((data ?? []) as unknown as typeof athletes));
     })();
   }, [societyId]);
 
@@ -84,7 +84,7 @@ export function ValutazioniView() {
       const { data } = await supabase.from('athlete_evaluations')
         .select('*').eq('athlete_id', selectedAthleteId)
         .order('evaluated_at', { ascending: false });
-      setEvaluations((data as any) || []);
+      setEvaluations(((data ?? []) as unknown as typeof evaluations));
       setLoading(false);
     })();
   }, [selectedAthleteId]);
@@ -136,7 +136,7 @@ export function ValutazioniView() {
 
   // Radar data: una entry per fondamentale, una serie per fase con dati
   const radarData = useMemo(() => fondamentaliAttivi.map(f => {
-    const entry: any = { fondamentale: f.nome };
+    const entry: Record<string, string | number> = { fondamentale: f.nome };
     PHASES.forEach(p => {
       const m = mediaFond(f.id, f.subAspetti, p.id);
       if (m > 0) entry[p.id] = Number(m.toFixed(2));

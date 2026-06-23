@@ -68,9 +68,9 @@ export function MagazzinoView() {
       supabase.from('inventory_assignments').select('*, athletes(last_name, first_name, number), inventory_items(name)')
         .eq('society_id', societyId).is('returned_at', null).order('assigned_at', { ascending: false }),
     ]);
-    setItems((it as any) || []);
-    setAthletes((at as any) || []);
-    setAssignments((as_ as any) || []);
+    setItems(((it ?? []) as unknown as typeof items));
+    setAthletes(((at ?? []) as unknown as typeof athletes));
+    setAssignments(((as_ ?? []) as unknown as typeof assignments));
     setLoading(false);
   };
 

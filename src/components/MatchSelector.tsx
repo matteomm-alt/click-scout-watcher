@@ -30,7 +30,7 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
         .select(`id, match_date, league, home_sets_won, away_sets_won,
                  home_team:home_team_id(name), away_team:away_team_id(name)`)
         .order('match_date', { ascending: false });
-      const list = ((data as any) || []) as MatchListItem[];
+      const list = ((data ?? []) as unknown as MatchListItem[]);
       const counts = await Promise.all(
         list.map(async (m) => {
           const { count } = await supabase
@@ -54,7 +54,7 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
   const selectNone = () => onChange(new Set(currentMatchId ? [currentMatchId] : []));
   const toggle = (id: string) => {
     const next = new Set(selectedIds);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id); else next.add(id);
     onChange(next);
   };
 

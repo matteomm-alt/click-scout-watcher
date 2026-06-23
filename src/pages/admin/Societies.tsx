@@ -116,7 +116,7 @@ export default function AdminSocieties() {
 
     const coachRolesArr = (coachRoles || []) as { id: string; user_id: string; society_id: string | null; role: string }[];
     const coachUserIds = Array.from(new Set(coachRolesArr.map((c) => c.user_id)));
-    let profilesMap = new Map<string, { full_name: string | null }>();
+    const profilesMap = new Map<string, { full_name: string | null }>();
     if (coachUserIds.length > 0) {
       const { data: profs } = await supabase
         .from('profiles')
@@ -127,6 +127,7 @@ export default function AdminSocieties() {
 
     let emailsByUser = new Map<string, string>();
     if (coachUserIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: emailRows, error: emailErr } = await (supabase as any)
         .rpc('get_user_emails', { _user_ids: coachUserIds });
       if (emailErr) {

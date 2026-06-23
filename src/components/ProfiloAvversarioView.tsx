@@ -52,11 +52,11 @@ export function ProfiloAvversarioView() {
         supabase.from('scout_teams').select('id, name, short_name, is_own_team').eq('coach_id', user.id).order('name'),
         supabase.from('scout_matches').select('id, match_date, league, home_sets_won, away_sets_won, home_team_id, away_team_id').eq('coach_id', user.id).order('match_date', { ascending: false }),
       ]);
-      const allTeams = (t as any) || [];
-      const allMatches = (m as any) || [];
+      const allTeams = ((t ?? []) as unknown as Team[]);
+      const allMatches = ((m ?? []) as unknown as Match[]);
       // Solo squadre avversarie che hanno almeno una partita
-      const matchTeamIds = new Set([...allMatches.map((m: any) => m.home_team_id), ...allMatches.map((m: any) => m.away_team_id)]);
-      setTeams(allTeams.filter((t: any) => !t.is_own_team && matchTeamIds.has(t.id)));
+      const matchTeamIds = new Set<string>([...allMatches.map((mm) => mm.home_team_id), ...allMatches.map((mm) => mm.away_team_id)]);
+      setTeams(allTeams.filter((tt) => !tt.is_own_team && matchTeamIds.has(tt.id)));
       setMatches(allMatches);
       setLoading(false);
     })();
@@ -74,7 +74,7 @@ export function ProfiloAvversarioView() {
       for (const m of teamMatches) {
         const { data } = await supabase.from('scout_actions').select('*')
           .eq('scout_match_id', m.id).eq('scout_team_id', selectedTeam.id);
-        if (data) all.push(...(data as any));
+        if (data) all.push(...((data as unknown) as DbAction[]));
       }
       setActions(all);
       setLoadingActions(false);
@@ -227,7 +227,7 @@ export function ProfiloAvversarioView() {
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                           <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                           <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={70} />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
                           <Bar dataKey="Pos%" fill="#1D9E75" radius={[0,3,3,0]} />
                           <Bar dataKey="Err%" fill="hsl(var(--destructive))" radius={[0,3,3,0]} />
@@ -270,7 +270,7 @@ export function ProfiloAvversarioView() {
                           <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} />
                           <Radar name="Positivi%" dataKey="Positivi" stroke="#1D9E75" fill="#1D9E75" fillOpacity={0.2} strokeWidth={2} />
                           <Radar name="Errori%" dataKey="Errori" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.15} strokeWidth={2} />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
                         </RadarChart>
                       </ResponsiveContainer>
@@ -286,7 +286,7 @@ export function ProfiloAvversarioView() {
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                             <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                             <YAxis domain={[-50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                             <Legend wrapperStyle={{ fontSize: 11 }} />
                             <Line type="monotone" dataKey="AttEff" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                             <Line type="monotone" dataKey="RicPos" stroke="#1D9E75" strokeWidth={2} dot={{ r: 3 }} />

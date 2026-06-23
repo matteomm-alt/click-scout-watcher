@@ -299,6 +299,7 @@ export default function Allenamenti() {
         roles: b.roles,
       }));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: resultId, error } = await (supabase as any).rpc('save_training_with_blocks', {
         _training_id: form.id ?? null,
         _society_id: societyId,

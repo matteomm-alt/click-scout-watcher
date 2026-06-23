@@ -52,7 +52,7 @@ export function PresenzeView() {
     (async () => {
       const { data } = await supabase.from('events').select('id, title, start_at, event_type')
         .eq('society_id', societyId).order('start_at', { ascending: false }).limit(50);
-      const list = (data as any) || [];
+      const list = ((data ?? []) as unknown as Event[]);
       setEvents(list);
       if (trainingParam) {
         const fromTraining = list.find(
@@ -76,14 +76,15 @@ export function PresenzeView() {
     (async () => {
       const { data } = await supabase.from('athletes').select('id, last_name, first_name, number, role')
         .eq('society_id', societyId).order('last_name');
-      setAthletes((data as any) || []);
+      setAthletes(((data ?? []) as unknown as Athlete[]));
       if (injuriesEnabled) {
         const { data: inj } = await supabase
           .from('athlete_injuries')
           .select('athlete_id')
           .eq('society_id', societyId)
           .eq('status', 'attivo');
-        setInjuredIds(new Set(((inj as any) || []).map((r: { athlete_id: string }) => r.athlete_id)));
+        const injRows = ((inj ?? []) as Array<{ athlete_id: string }>);
+        setInjuredIds(new Set(injRows.map((r) => r.athlete_id)));
       }
     })();
   }, [societyId, injuriesEnabled]);
@@ -94,7 +95,7 @@ export function PresenzeView() {
     (async () => {
       const { data } = await supabase.from('attendances').select('athlete_id, status, note').eq('event_id', selectedEventId);
       const map: Record<string, Attendance> = {};
-      for (const a of (data as any) || []) map[a.athlete_id] = a;
+      for (const a of ((data ?? []) as unknown as Attendance[])) map[a.athlete_id] = a;
       setAttendances(map);
       setLoading(false);
     })();
@@ -156,7 +157,7 @@ export function PresenzeView() {
       .from('attendances')
       .select('athlete_id, status')
       .eq('society_id', societyId);
-    const rows = (data as any) || [];
+    const rows = ((data ?? []) as Array<{ athlete_id: string; status: string }>);
     const byAth: Record<string, { p: number; t: number }> = {};
     for (const a of athletes) byAth[a.id] = { p: 0, t: 0 };
     rows.forEach((r: { athlete_id: string; status: string }) => {
@@ -326,7 +327,7 @@ export function PresenzeView() {
                     <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} />
                     <Tooltip
                       contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                      formatter={(val: number, _n, p: any) => [`${val}% (${p?.payload?.totali ?? 0} eventi)`, 'Presenze']}
+                      formatter={(val: number, _n, p: { payload?: { totali?: number } }) => [`${val}% (${p?.payload?.totali ?? 0} eventi)`, 'Presenze']}
                     />
                     <ReferenceLine x={SOGLIA} stroke="#DC2626" strokeDasharray="4 4"
                       label={{ value: `Soglia ${SOGLIA}%`, fill: '#DC2626', position: 'top', fontSize: 10 }} />
