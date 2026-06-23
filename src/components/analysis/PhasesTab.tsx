@@ -38,7 +38,6 @@ export function PhasesTab({
   );
   const k1 = phases.find(p => p.phase === 'K1');
   const k2 = phases.find(p => p.phase === 'K2');
-  const k2 = phases.find(p => p.phase === 'K2');
 
   const PHASE_META: Record<'K1' | 'K2', { title: string; subtitle: string; metric: string }> = {
     K1: {
