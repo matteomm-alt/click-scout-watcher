@@ -52,11 +52,11 @@ export function ProfiloAvversarioView() {
         supabase.from('scout_teams').select('id, name, short_name, is_own_team').eq('coach_id', user.id).order('name'),
         supabase.from('scout_matches').select('id, match_date, league, home_sets_won, away_sets_won, home_team_id, away_team_id').eq('coach_id', user.id).order('match_date', { ascending: false }),
       ]);
-      const allTeams = (t as any) || [];
-      const allMatches = (m as any) || [];
+      const allTeams = ((t ?? []) as unknown as Team[]);
+      const allMatches = ((m ?? []) as unknown as Match[]);
       // Solo squadre avversarie che hanno almeno una partita
-      const matchTeamIds = new Set([...allMatches.map((m: any) => m.home_team_id), ...allMatches.map((m: any) => m.away_team_id)]);
-      setTeams(allTeams.filter((t: any) => !t.is_own_team && matchTeamIds.has(t.id)));
+      const matchTeamIds = new Set<string>([...allMatches.map((mm) => mm.home_team_id), ...allMatches.map((mm) => mm.away_team_id)]);
+      setTeams(allTeams.filter((tt) => !tt.is_own_team && matchTeamIds.has(tt.id)));
       setMatches(allMatches);
       setLoading(false);
     })();
@@ -74,7 +74,7 @@ export function ProfiloAvversarioView() {
       for (const m of teamMatches) {
         const { data } = await supabase.from('scout_actions').select('*')
           .eq('scout_match_id', m.id).eq('scout_team_id', selectedTeam.id);
-        if (data) all.push(...(data as any));
+        if (data) all.push(...((data as unknown) as DbAction[]));
       }
       setActions(all);
       setLoadingActions(false);
