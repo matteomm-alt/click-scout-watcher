@@ -473,3 +473,43 @@ export function phaseBreakdown(
   });
 }
 
+/* -------------------- Combinazioni di alzata (attack_combo) -------------------- */
+
+export interface ComboStats {
+  code: string;
+  total: number;
+  kills: number;
+  errors: number;
+  positive: number;
+  efficiency: number;
+  killPct: number;
+  errorPct: number;
+}
+
+/**
+ * Aggrega gli attacchi per `attack_combo` (es. X1, X5, PP, BC).
+ * Ignora le azioni senza combo o con skill diverso da 'A'.
+ */
+export function statsByAttackCombo(actions: DbAction[]): ComboStats[] {
+  const map = new Map<string, ComboStats>();
+  for (const a of actions) {
+    if (a.skill !== 'A' || !a.attack_combo) continue;
+    let s = map.get(a.attack_combo);
+    if (!s) {
+      s = { code: a.attack_combo, total: 0, kills: 0, errors: 0, positive: 0, efficiency: 0, killPct: 0, errorPct: 0 };
+      map.set(a.attack_combo, s);
+    }
+    s.total++;
+    if (a.evaluation === '#') { s.kills++; s.positive++; }
+    else if (a.evaluation === '+') { s.positive++; }
+    else if (a.evaluation === '=' || a.evaluation === '/') { s.errors++; }
+  }
+  for (const s of map.values()) {
+    s.efficiency = s.total ? ((s.kills - s.errors) / s.total) * 100 : 0;
+    s.killPct = s.total ? (s.kills / s.total) * 100 : 0;
+    s.errorPct = s.total ? (s.errors / s.total) * 100 : 0;
+  }
+  return [...map.values()].sort((a, b) => b.total - a.total);
+}
+
+
