@@ -188,7 +188,7 @@ export function AtletiView() {
         injuriesEnabled
           ? supabase.from('athlete_injuries').select('body_part, severity, status, start_date')
               .eq('athlete_id', a.id).order('start_date', { ascending: false }).limit(10)
-          : Promise.resolve({ data: [] as any[], error: null }),
+          : Promise.resolve({ data: [] as unknown[], error: null }),
       ]);
       const att = (attRes.data ?? []) as { status: string }[];
       const presences = att.filter(x => x.status === 'presente').length;
@@ -211,10 +211,10 @@ export function AtletiView() {
         attendancePct,
         presences,
         totalEvents,
-        evaluations: ((evalRes.data ?? []) as any[]).map(e => ({
+        evaluations: ((evalRes.data ?? []) as Array<{ fundamental: string; score: number; evaluation_date: string }>).map(e => ({
           fundamental: e.fundamental, score: e.score, date: e.evaluation_date,
         })),
-        injuries: ((injRes.data ?? []) as any[]).map(i => ({
+        injuries: ((injRes.data ?? []) as Array<{ body_part: string; severity: string; status: string; start_date: string }>).map(i => ({
           bodyPart: i.body_part, severity: i.severity, status: i.status, startDate: i.start_date,
         })),
         societyName: null,

@@ -45,9 +45,9 @@ export default function Inventario() {
         .select('id, item_id, athlete_id, quantity, size, assigned_at, returned_at, inventory_items(name, category)')
         .eq('society_id', societyId).order('assigned_at', { ascending: false }),
     ]);
-    setAthletes((ath as any) || []);
-    setAssignments((ass as any) || []);
-    if (!selectedId && ath && ath.length > 0) setSelectedId((ath[0] as any).id);
+    setAthletes(((ath ?? []) as unknown as typeof athletes));
+    setAssignments(((ass ?? []) as unknown as typeof assignments));
+    if (!selectedId && ath && ath.length > 0) setSelectedId((ath[0] as { id: string }).id);
     setLoading(false);
   };
 

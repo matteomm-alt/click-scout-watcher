@@ -41,7 +41,7 @@ export function ComunicazioniView() {
     setLoading(true);
     const { data } = await supabase.from('communications').select('*')
       .eq('society_id', societyId).order('pinned', { ascending: false }).order('created_at', { ascending: false });
-    const list = ((data as any) || []) as Communication[];
+    const list = ((data ?? []) as unknown as Communication[]);
     setComms(list);
 
     if (list.length > 0 && user) {
@@ -52,7 +52,7 @@ export function ComunicazioniView() {
         .in('communication_id', ids);
       const counts: Record<string, number> = {};
       const mine: Record<string, boolean> = {};
-      ((reads as any) || []).forEach((r: { communication_id: string; user_id: string }) => {
+      ((reads ?? []) as Array<{ communication_id: string; user_id: string }>).forEach((r) => {
         counts[r.communication_id] = (counts[r.communication_id] || 0) + 1;
         if (r.user_id === user.id) mine[r.communication_id] = true;
       });

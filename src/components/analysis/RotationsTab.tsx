@@ -42,9 +42,9 @@ export function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; t
 
 
   const skillRotGrid = useMemo(() => {
-    const grid: Record<number, Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>> = {} as any;
+    const grid: Record<number, Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>> = {} as Record<number, Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>>;
     for (let r = 1; r <= 6; r++) {
-      grid[r] = {} as any;
+      grid[r] = {} as Record<GridSkill, { total: number; perfect: number; errors: number; eff: number }>;
       for (const sk of GRID_SKILLS) grid[r][sk] = { total: 0, perfect: 0, errors: 0, eff: 0 };
     }
     for (const a of actions) {

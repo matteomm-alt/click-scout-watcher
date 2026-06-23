@@ -57,7 +57,7 @@ export default function Archive() {
         .select(`id, match_date, league, home_sets_won, away_sets_won, source_filename,
                  home_team:home_team_id(name), away_team:away_team_id(name)`)
         .order('match_date', { ascending: false });
-      setMatches((m as any) || []);
+      setMatches(((m ?? []) as unknown as typeof matches));
       const { data: t } = await supabase
         .from('scout_teams')
         .select('id,name,is_own_team,city')

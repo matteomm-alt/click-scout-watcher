@@ -72,7 +72,7 @@ export default function Obiettivi() {
       supabase.from('season_phases').select('id, name, season_plans!inner(name, society_id)').eq('season_plans.society_id', societyId).order('name'),
     ]);
     setObjectives((objRes.data as Objective[]) ?? []);
-    setPhases(((phRes.data ?? []) as any[]).map((p) => ({
+    setPhases(((phRes.data ?? []) as Array<{ id: string; name: string; season_plans?: { name?: string } | null }>).map((p) => ({
       id: p.id, name: p.name, plan_name: p.season_plans?.name ?? '',
     })));
     setLoading(false);

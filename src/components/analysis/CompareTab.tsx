@@ -36,7 +36,7 @@ export function CompareTab({ actions, match, currentTeamId }: { actions: DbActio
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .neq('id', match.id)
         .order('match_date', { ascending: false });
-      setMatches((data as any) || []);
+      setMatches(((data ?? []) as unknown as MatchListItem[]));
     })();
   }, [match.id]);
 
@@ -55,7 +55,7 @@ export function CompareTab({ actions, match, currentTeamId }: { actions: DbActio
           .order('set_number').order('rally_index').order('action_index')
           .range(from, from + PAGE - 1);
         if (error || !data || data.length === 0) break;
-        all.push(...(data as any));
+        all.push(...((data ?? []) as unknown as DbAction[]));
         if (data.length < PAGE) break;
         from += PAGE;
       }

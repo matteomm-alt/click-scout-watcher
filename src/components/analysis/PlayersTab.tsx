@@ -137,7 +137,7 @@ export function PlayersTab({ actions, allActions, playerNames, match, teamName, 
       const x = gridX + col * cellW, yy = gridY + row * cellH;
       const c = zoneCounts[z] || 0;
       const intensity = c / maxZ;
-      doc.setFillColor(249, 115, 22, intensity * 255 as any);
+      doc.setFillColor(249, 115, 22, (intensity * 255) as unknown as number);
       doc.setDrawColor(180);
       doc.rect(x, yy, cellW - 1, cellH - 1, c > 0 ? 'FD' : 'D');
       doc.setFontSize(7); doc.setTextColor(120);

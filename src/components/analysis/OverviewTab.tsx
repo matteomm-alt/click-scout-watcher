@@ -2,7 +2,7 @@ import { type DbAction, statsBySkill, SKILL_NAMES } from '@/lib/scoutAnalysis';
 import { Card } from '@/components/ui/card';
 import { KpiCard } from './shared/KpiCard';
 
-export function OverviewTab({ actions, setResults }: { actions: DbAction[]; setResults: any }) {
+export function OverviewTab({ actions, setResults }: { actions: DbAction[]; setResults: unknown }) {
   const skills = statsBySkill(actions);
   return (
     <div className="space-y-6">
@@ -36,7 +36,7 @@ export function OverviewTab({ actions, setResults }: { actions: DbAction[]; setR
         <Card className="p-5">
           <h3 className="text-sm font-bold uppercase italic mb-4">Andamento set</h3>
           <div className="space-y-2">
-            {setResults.map((s: any, i: number) => (
+            {(setResults as Array<{ intermediates?: number[]; duration?: number }>).map((s, i: number) => (
               <div key={i} className="flex items-center gap-4 text-sm">
                 <span className="font-bold w-12">Set {i + 1}</span>
                 <span className="font-mono text-muted-foreground">{s.intermediates?.join(' → ')}</span>
