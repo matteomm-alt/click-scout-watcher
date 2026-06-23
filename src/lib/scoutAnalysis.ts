@@ -371,3 +371,105 @@ export function gameSpeedStats(actions: DbAction[]): GameSpeedStats[] {
   }
   return out;
 }
+
+/* -------------------- Statistiche per fase K1/K2 -------------------- */
+
+export interface PhaseSkillBreakdown {
+  skill: string;
+  total: number;
+  positivePct: number;
+  errorPct: number;
+  efficiency: number;
+}
+
+export interface PhaseBreakdown {
+  phase: Phase;
+  totalActions: number;
+  rallies: number;
+  ralliesWon: number;
+  winPct: number; // side-out% for K1, point-win% for K2
+  skills: PhaseSkillBreakdown[];
+}
+
+/**
+ * Suddivide le azioni della squadra `side` per fase (K1 = ricezione, K2 = battuta)
+ * e calcola, per ogni fase, il side-out% / point-win% ed efficienza per skill.
+ * Usa `allActions` (entrambe le squadre) per attribuire i vincitori dei rally.
+ */
+export function phaseBreakdown(
+  allActions: DbAction[],
+  teamId: string,
+  side: 'home' | 'away',
+): PhaseBreakdown[] {
+  const mine = allActions.filter(a => a.scout_team_id === teamId);
+
+  // raggruppo per rally per determinare il vincitore
+  const rallies = new Map<string, DbAction[]>();
+  for (const a of allActions) {
+    const k = `${a.set_number}-${a.rally_index}`;
+    if (!rallies.has(k)) rallies.set(k, []);
+    rallies.get(k)!.push(a);
+  }
+
+  const winnerOf = (rally: DbAction[]): 'home' | 'away' | null => {
+    for (let i = rally.length - 1; i >= 0; i--) {
+      const a = rally[i];
+      if (a.evaluation === '#') {
+        if (['A', 'B', 'S'].includes(a.skill)) return a.side;
+        if (a.skill === 'E' && (a.skill_type === 'T' || a.skill_type === 'H')) return a.side;
+      }
+      if (a.evaluation === '=' || a.evaluation === '/') {
+        return a.side === 'home' ? 'away' : 'home';
+      }
+    }
+    const last = rally[rally.length - 1];
+    if (!last) return null;
+    return last.home_score > last.away_score ? 'home'
+      : last.away_score > last.home_score ? 'away' : null;
+  };
+
+  const rallyPhase = new Map<string, Phase | null>();
+  const rallyWinner = new Map<string, 'home' | 'away' | null>();
+  for (const [k, rally] of rallies) {
+    const ref = rally.find(a => a.scout_team_id === teamId) ?? rally[0];
+    rallyPhase.set(k, phaseOf(ref, side));
+    rallyWinner.set(k, winnerOf(rally));
+  }
+
+  const acc: Record<Phase, { actions: DbAction[]; rallies: Set<string>; won: number }> = {
+    K1: { actions: [], rallies: new Set(), won: 0 },
+    K2: { actions: [], rallies: new Set(), won: 0 },
+  };
+
+  for (const a of mine) {
+    const k = `${a.set_number}-${a.rally_index}`;
+    const p = rallyPhase.get(k);
+    if (!p) continue;
+    acc[p].actions.push(a);
+    if (!acc[p].rallies.has(k)) {
+      acc[p].rallies.add(k);
+      if (rallyWinner.get(k) === side) acc[p].won++;
+    }
+  }
+
+  return (['K1', 'K2'] as Phase[]).map(phase => {
+    const a = acc[phase];
+    const totalRallies = a.rallies.size;
+    const skills = statsBySkill(a.actions).map(s => ({
+      skill: s.skill,
+      total: s.total,
+      positivePct: s.positivePct,
+      errorPct: s.errorPct,
+      efficiency: s.efficiency,
+    }));
+    return {
+      phase,
+      totalActions: a.actions.length,
+      rallies: totalRallies,
+      ralliesWon: a.won,
+      winPct: totalRallies ? (a.won / totalRallies) * 100 : 0,
+      skills,
+    };
+  });
+}
+
