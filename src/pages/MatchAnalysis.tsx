@@ -619,6 +619,7 @@ export default function MatchAnalysis() {
               {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'phases' && teamId && <PhasesTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'combos' && <CombosTab actions={filteredTeamActions} />}
+              {tab === 'patterns' && teamId && <PatternsTab allActions={filteredAllActions} myTeamId={teamId} opponentName={teamFilter === 'home' ? match.away_team.name : match.home_team.name} />}
               {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
               {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
             </TabErrorBoundary>
