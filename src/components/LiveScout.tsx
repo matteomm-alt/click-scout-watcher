@@ -61,6 +61,20 @@ export function LiveScout() {
   const [recentActionPlayer, setRecentActionPlayer] = useState<{ number: number; team: 'home' | 'away'; evaluation?: string } | null>(null);
   const [lastSkillByTeam, setLastSkillByTeam] = useState<{ home: Skill | null; away: Skill | null }>({ home: null, away: null });
   const [suggestion, setSuggestion] = useState<TouchSuggestion | null>(null);
+  // Zona di partenza del servizio pre-impostata cliccando la strip dietro la
+  // baseline della squadra che serve (vedi VolleyballCourt). Applicata come
+  // startZone alla prossima azione skill='S' che parte dalla stessa squadra.
+  const [pendingServeStartZone, setPendingServeStartZone] = useState<{ team: 'home' | 'away'; zone: number } | null>(null);
+
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ team: 'home' | 'away'; zone: number }>).detail;
+      if (!detail) return;
+      setPendingServeStartZone(detail);
+    };
+    window.addEventListener('scout-serve-start-zone', handler as EventListener);
+    return () => window.removeEventListener('scout-serve-start-zone', handler as EventListener);
+  }, []);
 
   // Primo suggerimento della partita: l'operatore ha già scelto chi serve
   // per primo in MatchConfig.tsx (matchState.servingTeam), ma quella scelta
