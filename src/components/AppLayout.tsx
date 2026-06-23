@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
+import { ClaimSuperAdminBadge } from '@/components/ClaimSuperAdminBadge';
 
 export default function AppLayout() {
   return (
@@ -15,6 +16,7 @@ export default function AppLayout() {
             <Outlet />
           </main>
         </div>
+        <ClaimSuperAdminBadge />
       </div>
     </SidebarProvider>
   );

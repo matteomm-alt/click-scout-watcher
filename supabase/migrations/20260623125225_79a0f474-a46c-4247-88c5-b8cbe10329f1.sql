@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.accept_society_invitation(text) TO authenticated;

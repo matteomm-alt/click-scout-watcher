@@ -49,6 +49,7 @@ interface CoachRow {
   role_id: string;
   user_id: string;
   society_id: string;
+  role: 'society_admin' | 'coach';
   full_name: string | null;
   email: string | null;
 }
@@ -106,7 +107,7 @@ export default function AdminSocieties() {
       supabase.from('societies').select('id, name, slug, created_at, features').order('created_at', { ascending: false }),
       supabase.from('society_invitations').select('id, email, token, expires_at, accepted_at, society_id, role').order('created_at', { ascending: false }),
       supabase.from('user_roles').select('society_id, role').eq('user_id', user.id),
-      supabase.from('user_roles').select('id, user_id, society_id, role').eq('role', 'coach'),
+      supabase.from('user_roles').select('id, user_id, society_id, role').in('role', ['coach', 'society_admin']),
     ]);
     if (sErr) toast({ title: 'Errore caricamento società', description: sErr.message, variant: 'destructive' });
     if (iErr) console.warn('inviti', iErr);
@@ -143,6 +144,7 @@ export default function AdminSocieties() {
         role_id: c.id,
         user_id: c.user_id,
         society_id: c.society_id as string,
+        role: c.role as 'society_admin' | 'coach',
         full_name: profilesMap.get(c.user_id)?.full_name ?? null,
         email: emailsByUser.get(c.user_id) ?? null,
       }));
@@ -348,7 +350,9 @@ export default function AdminSocieties() {
             const socInvites = invitations.filter((i) => i.society_id === s.id);
             const pendingAdmin = socInvites.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date() && i.role === 'society_admin');
             const pendingCoach = socInvites.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date() && i.role === 'coach');
-            const socCoaches = coaches.filter((c) => c.society_id === s.id);
+            const socMembers = coaches.filter((c) => c.society_id === s.id);
+            const socAdmins = socMembers.filter((c) => c.role === 'society_admin');
+            const socCoaches = socMembers.filter((c) => c.role === 'coach');
             return (
               <article
                 key={s.id}
@@ -360,6 +364,11 @@ export default function AdminSocieties() {
                     <p className="text-xs text-muted-foreground font-mono">{s.slug}</p>
                   </div>
                   <div className="flex flex-col gap-1 items-end shrink-0">
+                    {socAdmins.length > 0 && (
+                      <Badge variant="outline" className="border-primary/50 text-primary text-[10px]">
+                        {socAdmins.length} admin
+                      </Badge>
+                    )}
                     <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
                       {socCoaches.length} coach
                     </Badge>
@@ -371,27 +380,34 @@ export default function AdminSocieties() {
                   </div>
                 </header>
 
-                {/* Lista coach attivi */}
-                {socCoaches.length > 0 && (
+                {/* Lista membri attivi (admin + coach) */}
+                {socMembers.length > 0 && (
                   <div className="space-y-1.5">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
-                      <Users className="w-3 h-3" /> Coach attivi
+                      <Users className="w-3 h-3" /> Membri attivi
                     </p>
-                    {socCoaches.map((c) => (
+                    {[...socAdmins, ...socCoaches].map((c) => (
                       <div
                         key={c.role_id}
                         className="flex items-center gap-2 text-xs bg-muted/40 border border-border rounded px-2 py-1.5"
                       >
-                        <UserCog className="w-3.5 h-3.5 text-primary shrink-0" />
+                        {c.role === 'society_admin' ? (
+                          <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+                        ) : (
+                          <UserCog className="w-3.5 h-3.5 text-primary shrink-0" />
+                        )}
                         <span className="truncate flex-1" title={c.email || c.full_name || c.user_id}>
                           {c.full_name || <span className="font-mono text-muted-foreground">{c.user_id.slice(0, 8)}…</span>}
                           {c.email && <span className="text-muted-foreground"> · {c.email}</span>}
+                          <span className="ml-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+                            {c.role === 'society_admin' ? 'admin' : 'coach'}
+                          </span>
                         </span>
                         <button
                           type="button"
                           onClick={() => setRemoveCoach(c)}
                           className="text-destructive hover:underline inline-flex items-center gap-1 shrink-0"
-                          title="Rimuovi coach"
+                          title={c.role === 'society_admin' ? 'Rimuovi admin' : 'Rimuovi coach'}
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
