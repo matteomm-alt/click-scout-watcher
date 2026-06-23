@@ -385,7 +385,25 @@ export const useMatchStore = create<MatchStore>()(
         set((s) => addEventAndApply(s, event));
       },
 
-      rotateTeam: (team) => get().addPoint(team),
+      rotateTeam: (team) => {
+        const { matchState } = get();
+        const lineup = team === 'home'
+          ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+        const setterPos = team === 'home'
+          ? matchState.homeSetterPosition : matchState.awaySetterPosition;
+        const benchedMb = team === 'home'
+          ? matchState.homeBenchedMb : matchState.awayBenchedMb;
+        const event: MatchEvent = {
+          type: 'rotation',
+          id: crypto.randomUUID(),
+          timestamp: nowTime(),
+          team,
+          lineupBefore: [...lineup],
+          setterPositionBefore: setterPos,
+          benchedMbBefore: benchedMb ?? null,
+        };
+        set((s) => addEventAndApply(s, event));
+      },
 
       endSet: () => {
         const { matchState, homeTeam, awayTeam, homeLineup, awayLineup } = get();
