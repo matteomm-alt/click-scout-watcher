@@ -12,18 +12,18 @@ export function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; for
   const cells = zoneStats(filtered, side);
   const maxTotal = Math.max(1, ...cells.map(c => c.total));
 
-  const coordKeyX = side === 'start' ? 'start_x' : 'end_x';
-  const coordKeyY = side === 'start' ? 'start_y' : 'end_y';
+  const coordKeyX: 'start_x' | 'end_x' = side === 'start' ? 'start_x' : 'end_x';
+  const coordKeyY: 'start_y' | 'end_y' = side === 'start' ? 'start_y' : 'end_y';
   const pointsWithCoords = filtered.filter(
-    a => (a as any)[coordKeyX] != null && (a as any)[coordKeyY] != null
+    a => a[coordKeyX] != null && a[coordKeyY] != null
   );
   const hasRealCoords = filtered.length > 0 && pointsWithCoords.length > filtered.length * 0.5;
 
   const kdeGrid = useMemo(() => {
     if (!hasRealCoords) return null;
     const pts = pointsWithCoords.map(a => ({
-      x: (a as any)[coordKeyX] as number,
-      y: (a as any)[coordKeyY] as number,
+      x: a[coordKeyX] as number,
+      y: a[coordKeyY] as number,
     }));
     return computeKDE(pts);
   }, [pointsWithCoords, hasRealCoords, coordKeyX, coordKeyY]);
@@ -89,8 +89,8 @@ export function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; for
               <line x1="0" y1="82.5" x2="300" y2="82.5" stroke="hsl(var(--foreground))" strokeWidth="1.2" strokeDasharray="4 3" />
               <text x="295" y="79" textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">RETE</text>
               {pointsWithCoords.map((a, i) => {
-                const xVal = (a as any)[coordKeyX] as number;
-                const yVal = (a as any)[coordKeyY] as number;
+                const xVal = a[coordKeyX] as number;
+                const yVal = a[coordKeyY] as number;
                 const cx = 10 + xVal * 280;
                 const cy = 5 + yVal * 155;
                 const color =

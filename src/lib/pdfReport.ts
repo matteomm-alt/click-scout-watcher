@@ -296,7 +296,7 @@ function drawHeatmap(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.text(title, x0, y0);
-  let y = y0 + 4;
+  const y = y0 + 4;
 
   const stats = zoneStats(actions, which);
   const max = Math.max(1, ...stats.map(s => s.total));
@@ -579,7 +579,7 @@ export function generateAthleteCard(data: AthleteCardData): jsPDF {
       doc.text(i.startDate, MARGIN, y);
       doc.setTextColor(...DARK);
       doc.text(`${i.bodyPart} (${i.severity})`, MARGIN + 28, y);
-      doc.setTextColor(i.status === 'attivo' ? (ORANGE as any) : (MUTED as any));
+      doc.setTextColor(...(i.status === 'attivo' ? ORANGE : MUTED));
       doc.text(i.status, PAGE_W - MARGIN, y, { align: 'right' });
       y += 5;
     }

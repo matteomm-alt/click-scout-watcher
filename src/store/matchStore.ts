@@ -251,7 +251,7 @@ export const useMatchStore = create<MatchStore>()(
             ...get().validateLineup('away').map(e => `Ospite: ${e}`),
           ];
           errs.forEach(e => toast.warning(e, { duration: 4000 }));
-        } catch {}
+        } catch { /* ignore */ }
       },
 
       addAction: (actionData) => {
@@ -433,7 +433,7 @@ export const useMatchStore = create<MatchStore>()(
             JSON.stringify({ lineup: get().homeLineup }));
           localStorage.setItem('last_lineup_away',
             JSON.stringify({ lineup: get().awayLineup }));
-        } catch {}
+        } catch { /* ignore */ }
       },
 
       undoLastAction: () => {
@@ -465,7 +465,7 @@ export const useMatchStore = create<MatchStore>()(
           libere = !!JSON.parse(
             localStorage.getItem('scout_settings') || '{}',
           ).sostituzioniLibere;
-        } catch {}
+        } catch { /* ignore */ }
         if (!libere && matchState[usedKey] >= 6) {
           toast.error('Limite sostituzioni raggiunto (6/6)');
           return;
@@ -510,7 +510,7 @@ export const useMatchStore = create<MatchStore>()(
           libere = !!JSON.parse(
             localStorage.getItem('scout_settings') || '{}',
           ).sostituzioniLibere;
-        } catch {}
+        } catch { /* ignore */ }
         if (!libere && matchState[usedKey] >= 5) {
           toast.error('Sostituzioni insufficienti per doppio cambio');
           return;
