@@ -27,19 +27,8 @@ interface SessionCache {
 
 const sessionCache = new Map<string, SessionCache>();
 
-type SbAny = {
-  from: (t: string) => {
-    select: (cols: string) => {
-      eq: (c: string, v: unknown) => {
-        ilike: (c: string, v: string) => { maybeSingle: () => Promise<{ data: { id: string } | null; error: unknown }> };
-      };
-    };
-    insert: (v: unknown) => {
-      select: (c: string) => { single: () => Promise<{ data: { id: string } | null; error: unknown }> };
-    };
-    upsert: (v: Record<string, unknown> | Record<string, unknown>[], o?: { onConflict?: string; ignoreDuplicates?: boolean }) => Promise<{ error: unknown }>;
-  };
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SbAny = any;
 
 async function resolveTeamId(coachId: string, name: string): Promise<string | null> {
   if (!name?.trim()) return null;
