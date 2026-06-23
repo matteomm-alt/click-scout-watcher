@@ -137,6 +137,17 @@ export function VolleyballCourt({
     }
   }, [matchState.servingTeam, matchState.homeScore, matchState.awayScore]);
 
+  // Zona di partenza del servizio selezionata (highlight per ~2s)
+  const [serveStartHighlight, setServeStartHighlight] = useState<{ team: 'home' | 'away'; zone: number } | null>(null);
+  const handleServeStartClick = (team: 'home' | 'away', zone: number) => {
+    setServeStartHighlight({ team, zone });
+    window.setTimeout(() => setServeStartHighlight((cur) => (cur?.zone === zone && cur.team === team ? null : cur)), 2200);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('scout-serve-start-zone', { detail: { team, zone } }));
+    }
+  };
+
+
   const getPlayerInfo = (num: number, team: 'home' | 'away') => {
     const teamData = team === 'home' ? homeTeam : awayTeam;
     const player = teamData.players.find((p) => p.number === num);
@@ -256,7 +267,49 @@ export function VolleyballCourt({
           </span>
         )}
 
+        {/* Zone di partenza del servizio (7/8/9) — visibili solo per la squadra che serve.
+            Renderizzate "dietro" al campo (sotto z dei giocatori) lungo la linea di fondo.
+            Click → registra la zona di inizio servizio per la prossima azione skill='S'. */}
+        {matchState.servingTeam === team && !simplifiedView && (() => {
+          // HOME baseline a x=100, AWAY baseline a x=0. Strip larga 12%.
+          const isHome = team === 'home';
+          const stripStyle: React.CSSProperties = isHome
+            ? { left: '88%', top: 0, width: '12%', height: '100%' }
+            : { left: 0, top: 0, width: '12%', height: '100%' };
+          // Ordine top→bottom delle zone per ciascun lato (cfr. ZONE_CENTERS_*)
+          const orderTopToBottom = isHome ? [9, 8, 7] : [7, 8, 9];
+          return (
+            <div className="absolute z-[15] pointer-events-none" style={stripStyle}>
+              <div className="relative h-full w-full flex flex-col">
+                {orderTopToBottom.map((zone) => {
+                  const active = serveStartHighlight?.team === team && serveStartHighlight.zone === zone;
+                  return (
+                    <button
+                      key={`serve-${team}-${zone}`}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleServeStartClick(team, zone); }}
+                      className={`pointer-events-auto flex-1 border border-dashed transition-colors flex items-center justify-center text-[10px] font-black uppercase tracking-wider ${
+                        active
+                          ? 'bg-primary/70 border-primary text-primary-foreground'
+                          : 'bg-black/25 border-white/40 text-white/80 hover:bg-primary/30 hover:border-primary/70'
+                      }`}
+                      title={`Servizio da zona ${zone}`}
+                      aria-label={`Servizio da zona ${zone}`}
+                    >
+                      {zone}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider text-white/70 whitespace-nowrap">
+                Battuta
+              </span>
+            </div>
+          );
+        })()}
+
         {/* Giocatrici */}
+
         {[1, 2, 3, 4, 5, 6].map((pos) => {
           const playerNum = lineup[pos - 1];
           if (!playerNum) return null;
@@ -270,8 +323,8 @@ export function VolleyballCourt({
 
           const logRole = logicalRoleForSlot(pos, setterPosition);
           const isSetter = logRole === 'setter';
-          const isOpposite = logRole === 'opposite';
           const isLibero = Boolean(info.isLibero || info.role === 'L');
+          const isFrontRow = [2, 3, 4].includes(pos);
           const isServer = pos === 1 && matchState.servingTeam === team;
           const isSelected = selectedPlayer?.number === playerNum && selectedPlayer.team === team;
           const isHighlighted = highlightTeam === team && highlightPlayerNumber === playerNum;
@@ -283,18 +336,22 @@ export function VolleyballCourt({
             : recentEval === '/' ? 'ring-amber-400'
             : 'ring-primary';
 
-          // Colori per ruolo
-          let colorCls: string;
+          // Colori del cerchio: distinguiamo solo Libero (giallo) e
+          // Palleggiatore (blu). Tutti gli altri ruoli usano lo stesso
+          // bianco neutro, perché il segnale di team viene dato dal
+          // BORDO (colore squadra) e dal lato del campo.
+          const teamBorderVar = team === 'home' ? '--cs-team-a' : '--cs-team-b';
+          let bgCls: string;
+          let textCls: string;
           if (isLibero) {
-            colorCls = 'bg-violet-400 border-violet-200 text-slate-900';
+            bgCls = 'bg-amber-300';
+            textCls = 'text-slate-900';
           } else if (isSetter) {
-            colorCls = 'bg-blue-700 border-blue-300 text-white';
-          } else if (isOpposite) {
-            colorCls = 'bg-violet-700 border-violet-300 text-white';
-          } else if (logRole === 'middle') {
-            colorCls = 'bg-slate-100 border-slate-400 text-slate-900';
+            bgCls = 'bg-blue-700';
+            textCls = 'text-white';
           } else {
-            colorCls = 'bg-white border-slate-400 text-slate-900';
+            bgCls = 'bg-white';
+            textCls = 'text-slate-900';
           }
 
           const ringCls = [
@@ -303,6 +360,7 @@ export function VolleyballCourt({
             isHighlighted ? 'ring-4 ring-primary' : '',
             isRecent ? `ring-4 ${recentColor} animate-ping-once` : '',
           ].filter(Boolean).join(' ');
+
 
           const clickable = !!onPlayerClick;
           return (
@@ -315,17 +373,28 @@ export function VolleyballCourt({
                 type="button"
                 disabled={!clickable}
                 onClick={() => clickable && onPlayerClick?.(playerNum, team)}
-                className={`relative flex size-12 md:size-14 items-center justify-center rounded-full text-base md:text-lg font-black border-2 shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${colorCls} ${ringCls} ${clickable ? 'cursor-pointer active:scale-95 transition-transform hover:brightness-110' : 'cursor-default'}`}
+                style={{ borderColor: `hsl(var(${teamBorderVar}))` }}
+                className={`relative flex size-12 md:size-14 items-center justify-center rounded-full text-base md:text-lg font-black border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${bgCls} ${textCls} ${ringCls} ${clickable ? 'cursor-pointer active:scale-95 transition-transform hover:brightness-110' : 'cursor-default'}`}
                 aria-label={`Giocatrice ${info.number}`}
               >
+                {/* Marker front (F arancio) / back (B grigio) row */}
+                <span
+                  className={`absolute -left-1.5 -top-1.5 rounded px-1 py-0.5 text-[9px] font-black border border-white/40 ${
+                    isFrontRow ? 'bg-orange-500 text-white' : 'bg-slate-600 text-white'
+                  }`}
+                  title={isFrontRow ? 'Prima linea' : 'Seconda linea'}
+                >
+                  {isFrontRow ? 'F' : 'B'}
+                </span>
                 {info.number}
                 {isSetter && (
                   <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-900 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">S</span>
                 )}
                 {isLibero && (
-                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-violet-900 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">L</span>
+                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">L</span>
                 )}
               </button>
+
               {!simplifiedView && (
                 <span className="mt-0.5 max-w-16 truncate text-[11px] font-bold text-white/95 drop-shadow">{info.name}</span>
               )}
