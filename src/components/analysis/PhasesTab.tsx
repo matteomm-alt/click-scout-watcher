@@ -93,6 +93,37 @@ export function PhasesTab({
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
+        {([
+          { key: 'K1', title: 'Side-out% per rotazione', data: k1Data, color: CHART_COLORS.receive, empty: 'Nessun rally in ricezione.' },
+          { key: 'K2', title: 'Point-win% per rotazione', data: k2Data, color: CHART_COLORS.serve, empty: 'Nessun rally in battuta.' },
+        ] as const).map(chart => (
+          <Card key={chart.key} className="p-5">
+            <h3 className="text-sm font-bold uppercase italic mb-4">{chart.title}</h3>
+            {chart.data.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{chart.empty}</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chart.data} margin={{ top: 16, right: 8, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="rot" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={v => `${v}%`} />
+                  <Tooltip
+                    contentStyle={getTooltipStyle()}
+                    formatter={(v: number, _n, p: any) => [`${v}% (${p.payload.rallies} rally)`, chart.key]}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {chart.data.map((_, i) => <Cell key={i} fill={chart.color} />)}
+                    <LabelList dataKey="value" position="top" formatter={(v: number) => `${v}%`} fontSize={11} fill="hsl(var(--foreground))" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+
         {[k1, k2].filter(Boolean).map(p => (
           <Card key={p!.phase} className="p-5">
             <h3 className="text-sm font-bold uppercase italic mb-4">
