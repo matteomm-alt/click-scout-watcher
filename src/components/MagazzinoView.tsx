@@ -91,12 +91,13 @@ export function MagazzinoView() {
     if (!form.name || !societyId || !user) return;
     const { error } = await supabase.from('inventory_items').insert({
       name: form.name, category: form.category, quantity: form.quantity,
+      min_quantity: form.minQuantity,
       size: form.size || null, notes: form.notes || null,
       society_id: societyId, created_by: user.id,
     });
     if (error) { toast.error('Errore creazione'); return; }
     setDialogOpen(false);
-    setForm({ name: '', category: 'Divise', quantity: 1, size: '', notes: '' });
+    setForm({ name: '', category: 'Divise', quantity: 1, minQuantity: 0, size: '', notes: '' });
     toast.success('Articolo aggiunto');
     load();
   };
