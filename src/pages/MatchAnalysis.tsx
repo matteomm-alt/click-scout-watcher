@@ -32,8 +32,11 @@ const AdvancedTab = lazy(() =>
 const PlayersTab = lazy(() =>
   import('@/components/analysis/PlayersTab').then(m => ({ default: m.PlayersTab }))
 );
+const PatternsTab = lazy(() =>
+  import('@/components/analysis/PatternsTab').then(m => ({ default: m.PatternsTab }))
+);
 
-type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'phases' | 'combos' | 'compare' | 'charts' | 'advanced';
+type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'phases' | 'combos' | 'patterns' | 'compare' | 'charts' | 'advanced';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Panoramica' },
@@ -43,6 +46,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'rotations', label: 'Rotazioni' },
   { key: 'phases', label: 'Fasi K1/K2' },
   { key: 'combos', label: 'Combo alzata' },
+  { key: 'patterns', label: 'Pattern avv.' },
   { key: 'compare', label: 'Confronto' },
   { key: 'advanced', label: 'Avanzate' },
 ];
@@ -615,6 +619,7 @@ export default function MatchAnalysis() {
               {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'phases' && teamId && <PhasesTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'combos' && <CombosTab actions={filteredTeamActions} />}
+              {tab === 'patterns' && teamId && <PatternsTab allActions={filteredAllActions} myTeamId={teamId} opponentName={teamFilter === 'home' ? match.away_team.name : match.home_team.name} />}
               {tab === 'compare' && <CompareTab actions={filteredAllActions} match={match} currentTeamId={teamId || ''} />}
               {tab === 'advanced' && <AdvancedTab actions={filteredTeamActions} allActions={filteredAllActions} teamId={teamId || ''} side={teamFilter} />}
             </TabErrorBoundary>
