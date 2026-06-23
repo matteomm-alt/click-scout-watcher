@@ -330,8 +330,9 @@ export function MagazzinoView() {
                 <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div><Label>Quantità</Label><Input type="number" min={0} value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
+              <div><Label>Soglia minima</Label><Input type="number" min={0} value={form.minQuantity} onChange={e => setForm(f => ({ ...f, minQuantity: +e.target.value }))} placeholder="0" /></div>
               <div><Label>Taglia</Label><Input value={form.size} onChange={e => setForm(f => ({ ...f, size: e.target.value }))} placeholder="S, M, L, XL..." /></div>
             </div>
           </div>
