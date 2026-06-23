@@ -21,6 +21,7 @@ import type { MatchRow, PlayerRow } from '@/components/analysis/types';
 import { OverviewTab } from '@/components/analysis/OverviewTab';
 import { HeatmapTab } from '@/components/analysis/HeatmapTab';
 import { RotationsTab } from '@/components/analysis/RotationsTab';
+import { PhasesTab } from '@/components/analysis/PhasesTab';
 import { CompareTab } from '@/components/analysis/CompareTab';
 import { TabErrorBoundary } from '@/components/analysis/TabErrorBoundary';
 
