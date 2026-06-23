@@ -16,6 +16,7 @@ import ImportDvw from "./pages/ImportDvw.tsx";
 import MatchAnalysisMulti from "./pages/MatchAnalysisMulti.tsx";
 import Archive from "./pages/Archive.tsx";
 import Auth from "./pages/Auth.tsx";
+import AcceptInvitation from "./pages/AcceptInvitation.tsx";
 import ClaimSuperAdmin from "./pages/ClaimSuperAdmin.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import Support from "./pages/Support.tsx";
@@ -101,6 +102,7 @@ const App = () => (
           <Suspense fallback={<PageSkeleton />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/accept-invitation" element={<AcceptInvitation />} />
               <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
               <Route path="/analisi-pubblica/:matchId" element={<AnalisiPubblica />} />
               <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
