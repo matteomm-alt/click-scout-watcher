@@ -193,6 +193,13 @@ export function LiveScout() {
     if (team) {
       setLastSkillByTeam((prev) => ({ ...prev, [team]: skill }));
     }
+    // Battuta: se l'operatore ha pre-cliccato la zona di partenza nella strip
+    // dietro la baseline (VolleyballCourt), applicala come startZone qui.
+    if (skill === 'S' && team && actionId && pendingServeStartZone?.team === team) {
+      updateAction(actionId, { startZone: pendingServeStartZone.zone });
+      setPendingServeStartZone(null);
+    }
+
     // Flusso semplificato: per Ricezione e Attacco, la zona si deduce automaticamente
     // dalla posizione del giocatore selezionato (confermato dal manuale Click&Scout:
     // "the direction of the serve corresponds to the position of the receiver on court").
