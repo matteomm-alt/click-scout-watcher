@@ -121,10 +121,19 @@ export interface ServingTeamSetEvent extends BaseEvent {
   team: 'home' | 'away';
 }
 
+export interface RotationEvent extends BaseEvent {
+  type: 'rotation';
+  team: 'home' | 'away';
+  lineupBefore: number[];
+  setterPositionBefore: number;
+  benchedMbBefore: number | null;
+}
+
 export type MatchEvent =
   | MatchStartedEvent
   | TouchEvent
   | PointEvent
+  | RotationEvent
   | SetEndedEvent
   | SubstitutionEvent
   | TimeoutEvent

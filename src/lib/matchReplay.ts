@@ -370,6 +370,36 @@ export function applyEvent(
         teamTacticalPhases: getInitialPhases(event.team),
       };
 
+    case 'rotation': {
+      const teamData = event.team === 'home' ? ctx.homeTeam : ctx.awayTeam;
+      const teamLineup = event.team === 'home' ? ctx.homeLineup : ctx.awayLineup;
+      const lineup = [...event.lineupBefore];
+      const first = lineup[0];
+      for (let i = 0; i < 5; i++) lineup[i] = lineup[i + 1];
+      lineup[5] = first;
+      const newSetterPos = event.setterPositionBefore === 1
+        ? 6 : event.setterPositionBefore - 1;
+      const liberoNum = teamData.players
+        .find(p => p.id === teamLineup.libero1)?.number ?? null;
+      const swapped = applyLiberoAutoSwap(
+        lineup, teamData, liberoNum, event.benchedMbBefore,
+      );
+      if (event.team === 'home') {
+        return {
+          ...state,
+          homeCurrentLineup: swapped.lineup,
+          homeSetterPosition: newSetterPos,
+          homeBenchedMb: swapped.benchedMb,
+        };
+      }
+      return {
+        ...state,
+        awayCurrentLineup: swapped.lineup,
+        awaySetterPosition: newSetterPos,
+        awayBenchedMb: swapped.benchedMb,
+      };
+    }
+
     default:
       return state;
   }
