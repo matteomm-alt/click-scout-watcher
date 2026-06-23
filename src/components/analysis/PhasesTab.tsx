@@ -20,7 +20,24 @@ export function PhasesTab({
     () => phaseBreakdown(actions, teamId, side),
     [actions, teamId, side],
   );
+  const rotations = useMemo(
+    () => rotationStats(actions, teamId, { side }),
+    [actions, teamId, side],
+  );
+  const k1Data = useMemo(
+    () => rotations
+      .filter(r => r.receptionRallies > 0)
+      .map(r => ({ rot: `P${r.setterPos}`, value: Math.round(r.sideOutPct), rallies: r.receptionRallies })),
+    [rotations],
+  );
+  const k2Data = useMemo(
+    () => rotations
+      .filter(r => r.serveRallies > 0)
+      .map(r => ({ rot: `P${r.setterPos}`, value: Math.round(r.pointWinPct), rallies: r.serveRallies })),
+    [rotations],
+  );
   const k1 = phases.find(p => p.phase === 'K1');
+  const k2 = phases.find(p => p.phase === 'K2');
   const k2 = phases.find(p => p.phase === 'K2');
 
   const PHASE_META: Record<'K1' | 'K2', { title: string; subtitle: string; metric: string }> = {
