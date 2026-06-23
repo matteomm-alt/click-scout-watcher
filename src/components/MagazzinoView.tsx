@@ -56,7 +56,7 @@ export function MagazzinoView() {
   const [selectedAthlete, setSelectedAthlete] = useState<string>('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', category: 'Divise', quantity: 1, size: '', notes: '' });
+  const [form, setForm] = useState({ name: '', category: 'Divise', quantity: 1, minQuantity: 0, size: '', notes: '' });
   const [assignForm, setAssignForm] = useState({ athlete_id: '', item_id: '', size: '', quantity: 1 });
 
   const load = async () => {
