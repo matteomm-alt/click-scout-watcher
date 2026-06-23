@@ -49,6 +49,7 @@ interface CoachRow {
   role_id: string;
   user_id: string;
   society_id: string;
+  role: 'society_admin' | 'coach';
   full_name: string | null;
   email: string | null;
 }
@@ -106,7 +107,7 @@ export default function AdminSocieties() {
       supabase.from('societies').select('id, name, slug, created_at, features').order('created_at', { ascending: false }),
       supabase.from('society_invitations').select('id, email, token, expires_at, accepted_at, society_id, role').order('created_at', { ascending: false }),
       supabase.from('user_roles').select('society_id, role').eq('user_id', user.id),
-      supabase.from('user_roles').select('id, user_id, society_id, role').eq('role', 'coach'),
+      supabase.from('user_roles').select('id, user_id, society_id, role').in('role', ['coach', 'society_admin']),
     ]);
     if (sErr) toast({ title: 'Errore caricamento società', description: sErr.message, variant: 'destructive' });
     if (iErr) console.warn('inviti', iErr);
@@ -143,6 +144,7 @@ export default function AdminSocieties() {
         role_id: c.id,
         user_id: c.user_id,
         society_id: c.society_id as string,
+        role: c.role as 'society_admin' | 'coach',
         full_name: profilesMap.get(c.user_id)?.full_name ?? null,
         email: emailsByUser.get(c.user_id) ?? null,
       }));
