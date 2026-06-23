@@ -89,6 +89,7 @@ export default function Auth() {
     const accepted = Array.isArray(data) ? data[0] : data;
     setInviteAccepted(true);
     localStorage.removeItem('pending_invite_token');
+    localStorage.removeItem('pending_invite_saved_at');
     await refreshRoles();
     toast.success(`Invito accettato: ${accepted?.accepted_society_name ?? 'società'} (${roleLabels[accepted?.invited_role as InviteInfo['invited_role']] ?? accepted?.invited_role})`);
     return true;
