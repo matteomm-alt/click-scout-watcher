@@ -32,7 +32,7 @@ const PlayersTab = lazy(() =>
   import('@/components/analysis/PlayersTab').then(m => ({ default: m.PlayersTab }))
 );
 
-type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'compare' | 'charts' | 'advanced';
+type TabKey = 'overview' | 'heatmap' | 'players' | 'rotations' | 'phases' | 'compare' | 'charts' | 'advanced';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Panoramica' },
@@ -40,6 +40,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'heatmap', label: 'Heatmap' },
   { key: 'players', label: 'Giocatori' },
   { key: 'rotations', label: 'Rotazioni' },
+  { key: 'phases', label: 'Fasi K1/K2' },
   { key: 'compare', label: 'Confronto' },
   { key: 'advanced', label: 'Avanzate' },
 ];
