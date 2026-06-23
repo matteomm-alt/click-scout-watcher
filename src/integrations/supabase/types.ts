@@ -2164,6 +2164,27 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      save_training_with_blocks: {
+        Args: {
+          _blocks: Json
+          _created_by: string
+          _duration_min: number
+          _goal: string
+          _is_template: boolean
+          _notes: string
+          _participating_athlete_ids: string[]
+          _players_count: number
+          _roles: string[]
+          _scheduled_date: string
+          _society_id: string
+          _status: string
+          _team_id: string
+          _template_name: string
+          _title: string
+          _training_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "super_admin" | "society_admin" | "coach"
