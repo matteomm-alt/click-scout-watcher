@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useMatchStore } from '@/store/matchStore';
 import type { Skill, Evaluation, SkillType } from '@/types/volleyball';
 import { useScoutSettings } from '@/lib/scoutSettings';
+import { suggestCombos } from '@/lib/attackCombos';
 import { X } from 'lucide-react';
+
 
 /* ------------------------------------------------------------------ */
 /* ActionPanel — bottom sheet contestuale: fondamentale + valutazione  */
@@ -59,10 +61,12 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
   const { settings } = useScoutSettings();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(suggestedSkill ?? null);
   const [selectedSkillType, setSelectedSkillType] = useState<SkillType>('H');
+  const [selectedCombo, setSelectedCombo] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedSkill(suggestedSkill ?? null);
     setSelectedSkillType('H');
+    setSelectedCombo(null);
   }, [player?.number, player?.team, suggestedSkill]);
 
   if (!player) return null;
@@ -101,6 +105,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       skillType,
       evaluation,
       code,
+      attackCode: skill === 'A' ? selectedCombo ?? undefined : undefined,
     });
 
     // Auto-score (autoPoint)
