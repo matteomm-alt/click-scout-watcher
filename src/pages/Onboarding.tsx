@@ -64,13 +64,12 @@ export default function Onboarding() {
       const baseSlug = safeSlugify(teamName);
       const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
-      const { data: soc, error: socErr } = await supabase
-        .from('societies')
-        .insert({
-          name: teamName.trim(),
-          slug,
-          created_by: user.id,
-          features: {
+      const { data: societyId2, error: socErr } = await (supabase as any).rpc(
+        'create_society_self_onboarding',
+        {
+          _name: teamName.trim(),
+          _slug: slug,
+          _features: {
             athletes: true,
             exercises: true,
             dvw_export: true,
@@ -82,27 +81,12 @@ export default function Onboarding() {
             training_calendar: true,
             injuries: true,
             category,
-          } as never,
-        })
-        .select('id')
-        .single();
+          },
+        },
+      );
       if (socErr) throw socErr;
 
-      const { error: roleErr } = await supabase.from('user_roles').insert({
-        user_id: user.id,
-        society_id: soc.id,
-        role: 'society_admin',
-      });
-      if (roleErr) throw roleErr;
-
-      // Anche ruolo coach per accedere alle pagine coach
-      await supabase.from('user_roles').insert({
-        user_id: user.id,
-        society_id: soc.id,
-        role: 'coach',
-      });
-
-      setSocietyId(soc.id);
+      setSocietyId(societyId2 as string);
       await refreshRoles();
       toast.success(`Società "${teamName}" creata!`);
       setStep(2);

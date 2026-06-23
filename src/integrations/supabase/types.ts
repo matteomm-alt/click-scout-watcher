@@ -2099,6 +2099,10 @@ export type Database = {
           invited_role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      create_society_self_onboarding: {
+        Args: { _features: Json; _name: string; _slug: string }
+        Returns: string
+      }
       get_invitation_by_token: {
         Args: { _token: string }
         Returns: {
