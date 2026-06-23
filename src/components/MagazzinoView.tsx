@@ -198,6 +198,9 @@ export function MagazzinoView() {
                                 <p className="font-semibold text-sm truncate">{item.name}</p>
                                 {item.size && <p className="text-xs text-muted-foreground">Taglia: {item.size}</p>}
                               </div>
+                              {item.min_quantity > 0 && item.quantity < item.min_quantity && (
+                                <Badge variant="destructive" className="text-[10px]">Scorta bassa</Badge>
+                              )}
                               <Badge variant="outline">×{item.quantity}</Badge>
                               <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
                                 onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>
