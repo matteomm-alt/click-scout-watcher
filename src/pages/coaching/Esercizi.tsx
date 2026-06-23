@@ -516,6 +516,10 @@ export default function Esercizi() {
                   <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
                 )}
 
+                {ex.objective && (
+                  <p className="text-xs text-primary line-clamp-2">🎯 {ex.objective}</p>
+                )}
+
                 {(ex.equipment || ex.video_url) && (
                   <div className="text-xs text-muted-foreground space-y-1">
                     {ex.equipment && <div><span className="font-semibold">Attrezzatura:</span> {ex.equipment}</div>}
@@ -568,6 +572,10 @@ export default function Esercizi() {
               <Textarea id="ex-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="ex-obj">Obiettivo</Label>
+              <Input id="ex-obj" value={objective} onChange={(e) => setObjective(e.target.value)} placeholder="Es: Migliorare la velocità di reazione in muro" />
+            </div>
+            <div className="grid gap-2">
               <Label>Fondamentali</Label>
               <p className="text-xs text-muted-foreground">
                 Un esercizio può allenare più fondamentali (es. <em>Ricezione + Difesa</em>).
@@ -599,14 +607,31 @@ export default function Esercizi() {
                 <Input id="ex-rep" value={repetitions} onChange={(e) => setRepetitions(e.target.value)} placeholder="Es. 3 serie da 10, 5 min a rotazione" />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="grid gap-2">
                 <Label htmlFor="ex-eq">Attrezzatura</Label>
                 <Input id="ex-eq" value={equipment} onChange={(e) => setEquipment(e.target.value)} placeholder="Es: 6 palloni, coni" />
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="ex-space">Spazio necessario</Label>
+                <Input id="ex-space" value={space} onChange={(e) => setSpace(e.target.value)} placeholder="Es: mezzo campo" />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="ex-vid">Video URL</Label>
                 <Input id="ex-vid" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Approfondimenti (opzionali)</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="ex-var">Varianti</Label>
+                  <Textarea id="ex-var" value={variants} onChange={(e) => setVariants(e.target.value)} rows={2} placeholder="Es: con muro passivo, a tempo, in superiorità numerica..." />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="ex-prog">Progressione didattica</Label>
+                  <Textarea id="ex-prog" value={progression} onChange={(e) => setProgression(e.target.value)} rows={2} placeholder="Es: prima senza muro, poi con muro statico, poi attivo..." />
+                </div>
               </div>
             </div>
             <div className="grid gap-2">
