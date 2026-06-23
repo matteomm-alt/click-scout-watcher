@@ -611,7 +611,7 @@ export default function MatchAnalysis() {
               {tab === 'overview' && <OverviewTab actions={filteredTeamActions} setResults={match.set_results} />}
               {tab === 'charts' && <ChartsTab actions={filteredTeamActions} playerNames={playerNames} />}
               {tab === 'heatmap' && <HeatmapTab actions={filteredTeamActions} forcedSkills={filters.skills} />}
-              {tab === 'players' && <PlayersTab actions={filteredTeamActions} playerNames={playerNames} match={match} teamName={teamFilter === 'home' ? match.home_team.name : match.away_team.name} />}
+              {tab === 'players' && teamId && <PlayersTab actions={filteredTeamActions} allActions={filteredAllActions} playerNames={playerNames} match={match} teamName={teamFilter === 'home' ? match.home_team.name : match.away_team.name} teamId={teamId} side={teamFilter} />}
               {tab === 'rotations' && teamId && <RotationsTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'phases' && teamId && <PhasesTab actions={filteredAllActions} teamId={teamId} side={teamFilter} />}
               {tab === 'combos' && <CombosTab actions={filteredTeamActions} />}

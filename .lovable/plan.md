@@ -1,63 +1,56 @@
-## Riprogettazione Click&Scout — Tablet landscape (1024–1366 × 768–900)
+# Roadmap analisi DVW
 
-Riferimento: manuale Click&Scout Data Project (capp. 5.1–5.5).
+Obiettivo: implementare i blocchi 1-5 del brief (escluso il 6 "integrazione app"). Lavoro grosso, va diviso in fasi spedibili e verificabili una alla volta.
 
-### Fase 1 — FATTO
-- Sidebar rotazioni collassabile (default chiusa, 28px / 180px aperta).
+## Fase 1 — KPI avanzati per giocatore
+File: `src/lib/scoutAnalysis.ts`, `src/components/analysis/PlayersTab.tsx`
+- Aggiungere calcolo per ogni giocatore di:
+  - Attack efficiency separata K1 (side-out) vs K2 (break point).
+  - Attack% per zona di alzata (1/2/3/4/6/pipe) e per tempo (1°, 2°, super, fast, pipe).
+  - Expected points su ricezione: somma pesata (R#=1.0 / R+=0.8 / R!=0.5 / R/=0.2 / R==0) / n ricezioni.
+  - Serve pressure index: % ricezioni avversarie ≤ R! sulle proprie battute.
+- UI: nuovi sotto-tab dentro PlayersTab ("Attacco K1/K2", "Per zona/tempo", "Ricezione+", "Battuta+").
 
-### Fase 2 — FATTO
-- Densificazione tablet (`max-[900px]`): padding 3→2, gap 2→1, action panel 192→176/144px.
-- Flag `singleTeamMode` + toggle nel pannello Impostazioni, sincronizzato con `matchState.singleTeamMode` via `useEffect`. ActionPanel rendera UI dedicata (PUNTO AVVERSARIO + MURO) quando attivo.
-- Valutazione "suggerita in giallo": ring 4px warning + badge "💡 Suggerito: X" con bottone "Conferma X" 1-tap. Default: R=ricezionePredefinita, D/E/F=`+`, altri=`#`.
+## Fase 2 — Pattern e tendenze
+Nuovo file: `src/lib/scoutPatterns.ts`, nuovo tab `src/components/analysis/PatternsTab.tsx`
+- Distribuzione palleggiatore avversario condizionata a (rotazione, zona alzatore, qualità ricezione). Tabella + heatmap.
+- Heatmap di battuta avversaria → ricevitore nostro, con esito medio (asse colore = R-rating medio).
+- Catene perdenti: estrarre sequenze di 3+ azioni che terminano in break dell'avversario, aggregare per pattern ricorrenti (es. `Q-low-serve → R= → no-attack`).
 
-### Fase 3 — FATTO
-- Schermata fine partita: overlay full-screen con punteggio set, "▶ Continua Rilevazione" (resetta `isMatchEnded=false`) e "✕ Nuova Partita" (resetMatch con conferma).
+## Fase 3 — Scouting pre-partita
+Nuovo tab `src/components/analysis/PreMatchTab.tsx`
+- Confronto rotazione per rotazione (P1…P6) side-out% delle due squadre, tabella affiancata + bar chart.
+- Top 3 combinazioni preferite per ogni alzatore avversario (riutilizzare `attackCombos.ts`), con suggerimento muro (banale: la zona attaccata più spesso).
+- Per ogni giocatore avversario: confronto tendenze in K1 vs K2 (zona attacco preferita, tempo preferito).
 
-### Fase 4 — FATTO (audit memory + collegamenti mancanti)
-- Rimossi gialli fuori-brand: `CSRallyHistory` (+ / !), `ActionPanel` tempo T e valutazione !, alias `--cs-cta-yellow` ora arancio. Conforme a Core memory "MAI giallo fluo".
-- Side-rail SOST: ora dispatcha `scout-open-sub` con team → ActionPanel apre il flow sostituzione pre-impostato sulla squadra giusta (era solo `toast.info`).
+## Fase 4 — Comparativi temporali
+Estendere `src/pages/MatchAnalysisMulti.tsx` o nuovo `TrendsTab.tsx`
+- Trend ultime N partite per giocatore selezionato: efficienza attacco, % positiva ricezione, ace/error ratio.
+- Delta set-by-set dentro la stessa partita: tabella per giocatore con valore per set 1..5 e variazione vs media.
 
-### Fase 5 — FATTO (velocità inserimento + campo proporzionato)
-- **Skip contestuali** (`handleEvaluationSelect` / `handleStartZone`): `S=` finalizza subito (errore servizio, no traiettoria); `A#` salta endZone (attacco punto, destinazione fuori campo). Riduce flusso medio da ~5.8 a ~4.2 tap.
-- **Ripeti ultima azione** (`repeatLastAction`): bottone ↺ nella quick-bar che re-inserisce l'ultima action con timestamp aggiornato + auto-punto. Utile per muri/ricezioni consecutive.
-- **Fast Mode reale**: con `settings.fastMode=true`, lo step skill mostra valutazione suggerita in badge angolo; 1 tap su skill = `fastFire()` che salva azione + auto-punto + followServe, saltando tutti gli step intermedi.
-- **Campo proporzionato** (`ZoneCourt`): `gridTemplateRows: 25% 35% 40%` (front corta, fondo profonda); sfondo per area (front più chiaro, deep più scuro); numero zona piccolo in angolo + label area al centro (Primo tempo, Pipe, Pipe, Fondo cent…); linea 3m piena, retro tratteggiata; aggiornati i centri Y per le frecce traiettoria.
+## Fase 5 — UX e workflow
+File coinvolti: `src/pages/MatchAnalysis.tsx`, tutti i tab in `src/components/analysis/`
+- Filtro globale "rotazione" (Select 1-6 + "tutte") che si propaga a tutti i tab via context o prop.
+- Drill-down: click su KPI → Dialog con elenco azioni che lo compongono + mini-replay sul `VolleyballCourt` esistente.
+- Export PDF report pre-partita: estendere `pdfReport.ts` con sezione che impagina i contenuti delle fasi 2-3.
+- Confronto multi-partita stabilizzato (riusare MatchAnalysisMulti): caricare più DVW della stessa squadra, mostrare medie ± deviazione.
 
-### Fase 6 — FATTO (gap parità Click&Scout)
-- **Info partita** (`onInfo` in CSToolbar): dialog con set/score/set vinti/battuta + ricostruzione rally corrente (slice da ultimo terminale #/=//) + bottone "Annulla rally corrente".
-- **Modifiche azioni** (`onModify`): dialog con ultime 20 azioni → Modifica (riusa editingAction) / Elimina + fallback a Controlli avanzati (ScoreBoard).
-- **Sostituzioni libere**: `substitutePlayer` legge `scout_settings.sostituzioniLibere` da localStorage; se true ignora il limite 6/6.
-- **Area di battuta 2-tap** (`showServeStartZone`): toggle nei settings; se attivo per skill=S, step `startZone` PRIMA del tipo battuta (poi serveType/evaluation).
-- **Auto-correlation visibile**: badge arancio nello step Evaluation che mostra l'inferenza ("R → alzata stessa squadra", "S → ricezione avversaria"…) quando `autoCorrelation=true`.
-- **Storico rally collassabile** (`showRallyHistory`): toggle 1-tap accanto al titolo "Inserimento Azione" + setting persistente.
-- **Undo rally**: nuovo `undoRally()` nello store (rimuove tutte le azioni dal rally corrente fino all'ultimo terminale) + bottone "Rally" nella quick-bar di ActionPanel + evento `scout-undo-rally`.
-- **Indicatore "attendendo input"**: barra arancio sottile animata sotto al campo, larghezza proporzionale allo step corrente (team→endZone), via evento `scout-waiting`.
+## Ordine di consegna proposto
 
-### Note implementative
-- Nessuna modifica a schema DB / RLS.
-- `RotationDirections` accessibile sia dalla sidebar collassabile sia dal Sheet "Dir".
+1. **Fase 1** (KPI avanzati) — base, sblocca tutto il resto.
+2. **Fase 5 filtro rotazione + drill-down** — UX trasversale, meglio prima di moltiplicare i tab.
+3. **Fase 2** (pattern).
+4. **Fase 3** (pre-partita).
+5. **Fase 4** (trend temporali).
+6. **Fase 5 PDF + multi-partita** — chiusura.
 
-### Fase 8 — FATTO (parità rotazioni & posizioni Click&Scout)
-- **Libero auto-swap** (`applyLiberoAutoSwap` in store): a ogni rotazione (`addPoint`/`rotateTeam`/`startMatch`/`endSet`) il libero entra al posto del centrale di seconda linea (P1/P5/P6) ed esce quando il MB ruota in prima linea. Tracking persistente via `matchState.home/awayBenchedMb`, incluso negli snapshot per `undoLastAction`.
-- **Animazione rotazione**: `transition-all duration-300 ease-out` sui cerchi giocatori in `VolleyballCourt` → spostamenti fluidi su sideout/rotazione manuale.
-- **Validazione lineup** (`validateLineup`): controllo duplicati/posizioni vuote eseguito a `startMatch` con toast warning.
-- **Badge front/back row**: marker F (arancio) / B (grigio) in alto-sx dei cerchi → distingue prima linea (attaccanti) da seconda linea (no attacco da dentro 3m).
-- **Doppio cambio 5-1** (`doubleSwitch51(team)`): bottone "5-1" nella quick-bar di `ActionPanel`. Trova S+OP in campo e riserve in panchina, esegue lo scambio incrociato (S→OP-riserva, OP→S-riserva), consuma 2 sostituzioni (0 in modalità libere).
+## Note tecniche
 
-Note:
-- FIVB alignment P1-P6 visivo: skip (internamente coerente, eventuale fix futuro impatta anche `zoneLabels` e frecce).
-- Nessuna modifica DB.
+- Tutto il calcolo va in `src/lib/`, mai dentro i componenti.
+- Riutilizzare i tipi esistenti in `src/components/analysis/types.ts` e `scoutAnalysis.ts`; aggiungere nuovi tipi accanto, non rimpiazzare.
+- Niente nuove dipendenze npm: bastano i grafici già usati (recharts) e `VolleyballCourt` per heatmap.
+- Ogni fase chiude con: build verde, tsgo verde, screenshot del nuovo tab.
 
-### Fase 9 — FATTO (rifinitura parità C&S)
-- **Validazione ruoli/overlap** (`validateLineup`): libero in prima linea = errore; nessun S in campo = errore. Toast warning a `startMatch`.
-- **Cartellini Y/R nel rail laterale** (`CSSideRail`): bottoni giallo/rosso (cartellino squadra, playerNumber=null) collegati a `addSanction`. Toast feedback.
-- **Pallina animata ultima azione**: cerchio arancio che traccia start→end via `<animateMotion>` sull'ultima azione con traiettoria (durata 0.7s + fade), key cambiata a ogni nuova action per re-trigger.
-- **Top giocatori live** in `InSetStatsPanel`: breakdown per (team × giocatore × skill) con #/=/eff%, filtro tot≥2, top 6 per volume nel set corrente.
-### Fase 10 — FATTO (velocità operatore + correttezza dati)
-- **FIVB overlap validation** (`validateLineup`): controlla coppie opposte P1↔P4 / P2↔P5 / P3↔P6 per S+OP (5-1), 2×S (5-2), 2×M e 2×O. Toast warning a `startMatch` per ogni violazione.
-- **Combo chain** (`settings.comboChain`): dopo un'azione NON terminale (terminale = S=, A#/=//, B#/=//) mantiene team+player e salta direttamente allo step skill. Cumulabile con followServe (chain ha priorità).
-- **Scorciatoie tastiera** (`settings.keyboardShortcuts`, default ON): H/V = home/away, cifre 1-99 con commit auto a 600ms o 2 cifre / Enter = giocatore, S/R/A/B/D/E/F = skill, #/+/-/=//! = valutazione, 1-9 = zone, Esc = indietro. Ignora input quando il focus è su INPUT/TEXTAREA/SELECT.
+## Domanda prima di partire
 
-### Fase 11 — FATTO (snapshot completo + layout FIVB)
-- **Snapshot 6 giocatori per azione** (`ScoutAction`): aggiunti campi `servingTeam`, `homeBenchedMb`, `awayBenchedMb`, `rallyId` (`${set}-${homeScore}-${awayScore}`), `phase` (K1 sideout / K2 break). Popolati in `addAction`. Sblocca mappe ricezione retrospettive corrette, raggruppamento per rally, calcolo efficienza K1/K2.
-- **Layout FIVB / DataVolley** (`VolleyballCourt`): riscritte `positions` (away) e `positionsHome` per usare l'asse X come front/back row (vicino/lontano dalla rete) invece di Y. Convenzione FIVB rispettata: P2=front-right, P3=front-center, P4=front-left, P1=back-right (battitore), P6=back-center, P5=back-left. Watermark zone (`zoneLabels` / `zoneLabelsHome`) aggiornati di conseguenza con zona 1/5/6 in back-row e 7/8/9 in area servizio.
+Procedo nell'ordine sopra **una fase per volta** (consegno e aspetto feedback), oppure preferisci che spari **tutto insieme in una mega-PR**? La prima è molto più sicura, la seconda più veloce ma con rischio regressioni alto sui tab esistenti.
