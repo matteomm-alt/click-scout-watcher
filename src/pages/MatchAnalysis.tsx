@@ -105,7 +105,7 @@ export default function MatchAnalysis() {
             .order('set_number').order('rally_index').order('action_index')
             .range(from, from + PAGE - 1);
           if (error || !data || data.length === 0) break;
-          out.push(...(data as any));
+          out.push(...((data ?? []) as unknown as DbAction[]));
           if (data.length < PAGE) break;
           from += PAGE;
         }
@@ -128,7 +128,7 @@ export default function MatchAnalysis() {
         .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename, share_token,
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .eq('id', id).single();
-      if (m) setMatch(m as any);
+      if (m) setMatch(m as unknown as MatchRow);
 
       const all: DbAction[] = [];
       let from = 0;
@@ -144,19 +144,19 @@ export default function MatchAnalysis() {
           .range(from, from + PAGE - 1);
         if (error) { console.error(error); break; }
         if (!data || data.length === 0) break;
-        all.push(...(data as any));
+        all.push(...((data ?? []) as unknown as DbAction[]));
         if (data.length < PAGE) break;
         from += PAGE;
       }
       setActions(all);
 
       if (m) {
-        const teamIds = [(m as any).home_team.id, (m as any).away_team.id];
+        const teamIds = [(m as unknown as MatchRow).home_team.id, (m as unknown as MatchRow).away_team.id];
         const { data: pl } = await supabase
           .from('scout_players')
           .select('scout_team_id, number, last_name, first_name, role')
           .in('scout_team_id', teamIds);
-        setPlayers((pl as any) || []);
+        setPlayers(((pl ?? []) as unknown as PlayerRow[]));
       }
       setLoading(false);
     })();
@@ -435,7 +435,7 @@ export default function MatchAnalysis() {
         date: match.match_date,
         league: match.league,
         venue: match.venue,
-        setResults: Array.isArray(match.set_results) ? (match.set_results as any) : [],
+        setResults: Array.isArray(match.set_results) ? (match.set_results as unknown as Array<{ home: number; away: number }>) : [],
         homeTeamId: match.home_team.id,
         awayTeamId: match.away_team.id,
       },
