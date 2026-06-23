@@ -159,11 +159,11 @@ export function ReportStagioneView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={110} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                 <ReferenceLine x={70} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: '70%', fontSize: 9, fill: 'hsl(var(--destructive))' }} />
                 <Bar dataKey="pct" name="Presenze%" radius={[0,3,3,0]}
                   fill="hsl(var(--primary))"
-                  label={{ position: 'right', fontSize: 9, fill: 'hsl(var(--muted-foreground))', formatter: (v: any) => `${v}%` }}
+                  label={{ position: 'right', fontSize: 9, fill: 'hsl(var(--muted-foreground))', formatter: (v: number | string) => `${v}%` }}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -217,7 +217,7 @@ export function ReportStagioneView() {
                     <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                     <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} />
                     <Radar name="Profilo" dataKey="Valore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${Math.round(v / 20 * 10) / 10}/5`]} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${Math.round(v / 20 * 10) / 10}/5`]} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>

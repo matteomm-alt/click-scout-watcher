@@ -227,7 +227,7 @@ export function ProfiloAvversarioView() {
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                           <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                           <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={70} />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
                           <Bar dataKey="Pos%" fill="#1D9E75" radius={[0,3,3,0]} />
                           <Bar dataKey="Err%" fill="hsl(var(--destructive))" radius={[0,3,3,0]} />
@@ -270,7 +270,7 @@ export function ProfiloAvversarioView() {
                           <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} />
                           <Radar name="Positivi%" dataKey="Positivi" stroke="#1D9E75" fill="#1D9E75" fillOpacity={0.2} strokeWidth={2} />
                           <Radar name="Errori%" dataKey="Errori" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.15} strokeWidth={2} />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                           <Legend wrapperStyle={{ fontSize: 11 }} />
                         </RadarChart>
                       </ResponsiveContainer>
@@ -286,7 +286,7 @@ export function ProfiloAvversarioView() {
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                             <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                             <YAxis domain={[-50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}%`]} />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number | string) => [`${v}%`]} />
                             <Legend wrapperStyle={{ fontSize: 11 }} />
                             <Line type="monotone" dataKey="AttEff" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                             <Line type="monotone" dataKey="RicPos" stroke="#1D9E75" strokeWidth={2} dot={{ r: 3 }} />

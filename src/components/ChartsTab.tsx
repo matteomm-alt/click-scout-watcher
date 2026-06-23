@@ -284,7 +284,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     label={({ pct }) => `${pct}%`} labelLine={false}>
                     {evalData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP} formatter={(v: any, n: any) => [`${v} azioni`, n]} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string, n: string) => [`${v} azioni`, n]} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -298,7 +298,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
                   <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                  <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => [`${v}%`]} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => [`${v}%`]} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <ReferenceLine y={0} stroke="hsl(var(--border))" />
                   <Bar dataKey="Pos" name="Positivi%" fill="#1D9E75" radius={[3,3,0,0]} />
@@ -369,7 +369,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
                     <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={130} />
-                    <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
+                    <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => v !== null ? [`${v}%`] : ['—']} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
                     <ReferenceLine x={0} stroke="hsl(var(--border))" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
@@ -395,7 +395,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                    <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
+                    <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => v !== null ? [`${v}%`] : ['—']} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                     {['Ricezione','Attacco','Battuta','Muro','Difesa'].map((sk, i) => (
@@ -456,7 +456,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                   <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <Radar name="Positivi%" dataKey="Positivi" stroke="#1D9E75" fill="#1D9E75" fillOpacity={0.2} strokeWidth={2} />
                   <Radar name="Errori%" dataKey="Errori" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.15} strokeWidth={2} />
-                  <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => [`${v}%`]} />
+                  <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => [`${v}%`]} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </RadarChart>
               </ResponsiveContainer>
@@ -524,7 +524,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
                       <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} unit="%" />
-                      <Tooltip contentStyle={TOOLTIP} formatter={(v: any) => v !== null ? [`${v}%`] : ['—']} />
+                      <Tooltip contentStyle={TOOLTIP} formatter={(v: number | string) => v !== null ? [`${v}%`] : ['—']} />
                       <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <Line type="monotone" dataKey={SKILL_NAMES[trendSkill]}
                         stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 5, fill: 'hsl(var(--primary))' }}
