@@ -3,17 +3,31 @@ import { type DbAction, zoneStats, SKILL_NAMES } from '@/lib/scoutAnalysis';
 import { Card } from '@/components/ui/card';
 import { computeKDE } from './shared/computeKDE';
 
+type SideMode = 'start' | 'end' | 'landing';
+
 export function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; forcedSkills: string[] }) {
   const initialSkill = forcedSkills.length === 1 ? forcedSkills[0] : 'A';
   const [skill, setSkill] = useState<string>(initialSkill);
-  const [side, setSide] = useState<'start' | 'end'>('end');
+  const [side, setSide] = useState<SideMode>('end');
   const [showKde, setShowKde] = useState(true);
   const filtered = actions.filter(a => a.skill === skill);
-  const cells = zoneStats(filtered, side);
+
+  // Per la modalità 'landing' (solo Attacchi) sostituiamo end_zone con landing_zone
+  // così zoneStats riusa la stessa logica senza biforcazioni.
+  const filteredForZones = useMemo(() => {
+    if (side !== 'landing') return filtered;
+    return filtered.map(a => ({ ...a, end_zone: a.landing_zone ?? null }));
+  }, [filtered, side]);
+  const cells = zoneStats(filteredForZones, side === 'start' ? 'start' : 'end');
   const maxTotal = Math.max(1, ...cells.map(c => c.total));
 
-  const coordKeyX: 'start_x' | 'end_x' = side === 'start' ? 'start_x' : 'end_x';
-  const coordKeyY: 'start_y' | 'end_y' = side === 'start' ? 'start_y' : 'end_y';
+  const landingAvailable = skill === 'A' && filtered.some(a => a.landing_zone != null || a.landing_x != null);
+  const landingCount = filtered.filter(a => a.landing_zone != null).length;
+
+  const coordKeyX: 'start_x' | 'end_x' | 'landing_x' =
+    side === 'start' ? 'start_x' : side === 'landing' ? 'landing_x' : 'end_x';
+  const coordKeyY: 'start_y' | 'end_y' | 'landing_y' =
+    side === 'start' ? 'start_y' : side === 'landing' ? 'landing_y' : 'end_y';
   const pointsWithCoords = filtered.filter(
     a => a[coordKeyX] != null && a[coordKeyY] != null
   );
@@ -28,24 +42,34 @@ export function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; for
     return computeKDE(pts);
   }, [pointsWithCoords, hasRealCoords, coordKeyX, coordKeyY]);
 
+  const sideLabel = side === 'start' ? 'partenza' : side === 'landing' ? 'punto di caduta' : 'zona del colpo';
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {Object.entries(SKILL_NAMES).map(([k, name]) => (
-          <button key={k} onClick={() => setSkill(k)}
+          <button key={k} onClick={() => { setSkill(k); if (k !== 'A' && side === 'landing') setSide('end'); }}
             className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${skill === k ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
           >{name}</button>
         ))}
       </div>
       <div className="flex gap-2 flex-wrap">
         <button onClick={() => setSide('start')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'start' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona partenza</button>
-        <button onClick={() => setSide('end')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'end' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Zona arrivo</button>
+        <button onClick={() => setSide('end')} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'end' ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>{skill === 'A' ? 'Zona del colpo' : 'Zona arrivo'}</button>
+        {skill === 'A' && (
+          <button
+            disabled={!landingAvailable}
+            onClick={() => setSide('landing')}
+            className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${side === 'landing' ? 'bg-secondary' : 'bg-muted text-muted-foreground'} disabled:opacity-40 disabled:cursor-not-allowed`}
+            title={landingAvailable ? '' : 'Nessun punto di caduta registrato — abilita "Zona caduta attacco" nello scout live.'}
+          >Punto di caduta</button>
+        )}
         {hasRealCoords && (
           <button onClick={() => setShowKde(v => !v)} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${showKde ? 'bg-secondary' : 'bg-muted text-muted-foreground'}`}>Density</button>
         )}
       </div>
       <Card className="p-6">
-        <h3 className="text-sm font-bold uppercase italic mb-4">{SKILL_NAMES[skill]} — {side === 'start' ? 'partenza' : 'arrivo'}</h3>
+        <h3 className="text-sm font-bold uppercase italic mb-4">{SKILL_NAMES[skill]} — {sideLabel}</h3>
         <div className="grid grid-cols-3 gap-2 max-w-md">
           {[4,3,2,7,8,9,5,6,1].map(z => {
             const c = cells.find(x => x.zone === z)!;
@@ -62,8 +86,13 @@ export function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; for
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-4">Intensità del colore = volume azioni. Numero = totale, eff% = (perfette − errori) / totale.</p>
-        {!hasRealCoords && (
+        <p className="text-xs text-muted-foreground mt-4">
+          Intensità = volume azioni · Numero = totale · eff% = (perfette − errori) / totale.
+          {skill === 'A' && (
+            <> <br /><span className="italic">Zona del colpo = da dove parte l'attacco. Punto di caduta = dove la palla atterra (richiede tracciamento durante lo scout live{landingCount > 0 ? `, ${landingCount}/${filtered.length} azioni tracciate` : ''}).</span></>
+          )}
+        </p>
+        {!hasRealCoords && side !== 'landing' && (
           <p className="text-xs text-muted-foreground mt-2 italic">
             Scatter non disponibile — il file DVW non contiene coordinate precise. Disponibile con file DataVolley 4 o VolleyStation.
           </p>

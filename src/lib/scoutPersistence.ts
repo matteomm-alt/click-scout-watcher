@@ -181,6 +181,7 @@ function buildActionRow(
     evaluation: a.evaluation,
     start_zone: a.startZone ?? null,
     end_zone: a.endZone ?? null,
+    landing_zone: a.landingZone ?? null,
     attack_combo: a.attackCode ?? null,
     home_score: a.homeScore,
     away_score: a.awayScore,

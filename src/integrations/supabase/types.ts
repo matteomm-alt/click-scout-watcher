@@ -1178,6 +1178,9 @@ export type Database = {
           home_score: number
           home_setter_pos: number | null
           id: string
+          landing_x: number | null
+          landing_y: number | null
+          landing_zone: number | null
           player_number: number | null
           rally_index: number
           raw_code: string
@@ -1210,6 +1213,9 @@ export type Database = {
           home_score?: number
           home_setter_pos?: number | null
           id?: string
+          landing_x?: number | null
+          landing_y?: number | null
+          landing_zone?: number | null
           player_number?: number | null
           rally_index: number
           raw_code: string
@@ -1242,6 +1248,9 @@ export type Database = {
           home_score?: number
           home_setter_pos?: number | null
           id?: string
+          landing_x?: number | null
+          landing_y?: number | null
+          landing_zone?: number | null
           player_number?: number | null
           rally_index?: number
           raw_code?: string

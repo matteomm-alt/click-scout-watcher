@@ -123,10 +123,15 @@ export function PlayersTab({ actions, allActions, playerNames, match, teamName, 
 
     y += 6;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
-    doc.text('Heatmap zone (volume azioni)', 14, y); y += 4;
+    doc.text('Heatmap zone', 14, y); y += 4;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text('Attacchi: punto di caduta reale se rilevato, altrimenti zona del colpo. Altri fondamentali: zona di partenza.', 14, y); y += 5;
+    doc.setTextColor(0);
     const zoneCounts: Record<number, number> = {};
     playerActions.forEach(a => {
-      const z = (a.skill === 'A') ? a.end_zone : a.start_zone;
+      const z = (a.skill === 'A')
+        ? (a.landing_zone ?? a.end_zone)
+        : a.start_zone;
       if (z && z >= 1 && z <= 9) zoneCounts[z] = (zoneCounts[z] || 0) + 1;
     });
     const maxZ = Math.max(1, ...Object.values(zoneCounts));
