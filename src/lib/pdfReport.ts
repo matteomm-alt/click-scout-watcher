@@ -400,7 +400,16 @@ export function generateMatchReport(
   y += 6;
   const homeAttack = homeActs.filter(a => a.skill === 'A');
   const homeRec = homeActs.filter(a => a.skill === 'R');
-  drawHeatmap(doc, 'Attacco (zona arrivo)', homeAttack, 'end', MARGIN, y);
+  const homeAttackLanding = homeAttack
+    .filter(a => a.landing_zone != null)
+    .map(a => ({ ...a, end_zone: a.landing_zone! }));
+  const homeAttackLabel = homeAttackLanding.length >= homeAttack.length * 0.5 && homeAttackLanding.length > 0
+    ? 'Attacco (punto di caduta)'
+    : 'Attacco (zona del colpo)';
+  const homeAttackData = homeAttackLanding.length >= homeAttack.length * 0.5 && homeAttackLanding.length > 0
+    ? homeAttackLanding
+    : homeAttack;
+  drawHeatmap(doc, homeAttackLabel, homeAttackData, 'end', MARGIN, y);
   drawHeatmap(doc, 'Ricezione (zona partenza)', homeRec, 'start', MARGIN + 90, y);
 
   y += 80;
@@ -411,7 +420,16 @@ export function generateMatchReport(
   y += 6;
   const awayAttack = awayActs.filter(a => a.skill === 'A');
   const awayRec = awayActs.filter(a => a.skill === 'R');
-  drawHeatmap(doc, 'Attacco (zona arrivo)', awayAttack, 'end', MARGIN, y);
+  const awayAttackLanding = awayAttack
+    .filter(a => a.landing_zone != null)
+    .map(a => ({ ...a, end_zone: a.landing_zone! }));
+  const awayAttackLabel = awayAttackLanding.length >= awayAttack.length * 0.5 && awayAttackLanding.length > 0
+    ? 'Attacco (punto di caduta)'
+    : 'Attacco (zona del colpo)';
+  const awayAttackData = awayAttackLanding.length >= awayAttack.length * 0.5 && awayAttackLanding.length > 0
+    ? awayAttackLanding
+    : awayAttack;
+  drawHeatmap(doc, awayAttackLabel, awayAttackData, 'end', MARGIN, y);
   drawHeatmap(doc, 'Ricezione (zona partenza)', awayRec, 'start', MARGIN + 90, y);
 
   drawFooter(doc);
