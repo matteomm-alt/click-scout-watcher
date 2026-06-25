@@ -23,6 +23,14 @@ interface TouchFlowPanelProps {
   suggestedSkill?: Skill | null;
   suggestedEvaluation?: Evaluation | null;
   teamName: string;
+  selectedAttackType: AttackType;
+  onAttackTypeSelect: (type: AttackType) => void;
+  isMiddleBlocker?: boolean;
+  selectedMiddleCombo?: string | null;
+  onMiddleComboSelect?: (code: string) => void;
+  selectedOtherCombo?: string | null;
+  onOtherComboSelect?: (code: string) => void;
+  selectedPlayerZone?: number | null;
   onSkillSelect: (skill: Skill | null) => void;
   onEvaluationSelect: (evaluation: Evaluation) => void;
   onCancel: () => void;
