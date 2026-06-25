@@ -67,7 +67,10 @@ const ADVANCED_EVALS: { key: Evaluation; label: string; color: string }[] = [
 
 export function TouchFlowPanel({
   selectedPlayer, selectedSkill, mode, suggestedSkill, suggestedEvaluation,
-  teamName, onSkillSelect, onEvaluationSelect, onCancel,
+  teamName, selectedAttackType, onAttackTypeSelect,
+  isMiddleBlocker, selectedMiddleCombo, onMiddleComboSelect,
+  selectedOtherCombo, onOtherComboSelect, selectedPlayerZone,
+  onSkillSelect, onEvaluationSelect, onCancel,
 }: TouchFlowPanelProps) {
   const visibleSkills = SKILLS_CFG.filter(s =>
     mode === 'simple' ? !s.advancedOnly : true
@@ -77,6 +80,10 @@ export function TouchFlowPanel({
   const effectiveSkill: Skill | null =
     selectedSkill ??
     (mode === 'simple' && suggestedSkill ? suggestedSkill : null);
+
+  const showAttackType = effectiveSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
+  const showMiddleCombo = effectiveSkill === 'A' && mode === 'advanced' && !!isMiddleBlocker;
+  const showOtherCombos = effectiveSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
 
   const teamBorder = selectedPlayer?.team === 'home'
     ? 'border-blue-500/30 bg-blue-500/10'
