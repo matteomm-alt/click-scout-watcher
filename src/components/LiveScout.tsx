@@ -501,6 +501,14 @@ export function LiveScout() {
                 teamName={selectedPlayer.team === 'home'
                   ? (homeTeam.name || 'Casa')
                   : (awayTeam.name || 'Ospite')}
+                selectedAttackType={pendingAttackType}
+                onAttackTypeSelect={setPendingAttackType}
+                isMiddleBlocker={isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team)}
+                selectedPlayerZone={computeZoneForPlayer(selectedPlayer.number, selectedPlayer.team)}
+                selectedMiddleCombo={pendingMiddleCombo}
+                onMiddleComboSelect={setPendingMiddleCombo}
+                selectedOtherCombo={pendingOtherCombo}
+                onOtherComboSelect={setPendingOtherCombo}
                 onSkillSelect={(skill) => {
                   if (skill === null) { setPendingSkill(null); return; }
                   setPendingSkill(skill);
