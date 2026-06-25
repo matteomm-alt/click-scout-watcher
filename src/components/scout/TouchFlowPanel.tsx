@@ -205,6 +205,93 @@ export function TouchFlowPanel({
               })()}
             </div>
 
+            {showAttackType && (
+              <div className="mb-2">
+                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
+                  Tipo
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {ATTACK_TYPES.map(t => {
+                    const isActive = t.key === selectedAttackType;
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => onAttackTypeSelect(t.key)}
+                        title={t.description}
+                        className={cn(
+                          'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                          isActive
+                            ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                            : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                        )}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {showMiddleCombo && (
+              <div className="mb-2">
+                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
+                  Combo
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {MIDDLE_COMBOS.map(c => {
+                    const isActive = c.code === selectedMiddleCombo;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => onMiddleComboSelect?.(c.code)}
+                        title={c.description}
+                        className={cn(
+                          'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                          isActive
+                            ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                            : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                        )}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {showOtherCombos && (
+              <div className="mb-2">
+                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
+                  Combo
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {filterOtherCombosByZone(selectedPlayerZone ?? null).map(c => {
+                    const isActive = c.code === selectedOtherCombo;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => onOtherComboSelect?.(c.code)}
+                        title={c.description}
+                        className={cn(
+                          'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                          isActive
+                            ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                            : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                        )}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
               Valutazione
             </div>
