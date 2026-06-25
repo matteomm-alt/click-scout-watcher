@@ -1,7 +1,15 @@
-import type { Skill, Evaluation } from '@/types/volleyball';
+import type { Skill, Evaluation, AttackType } from '@/types/volleyball';
+import { ATTACK_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
 import { cn } from '@/lib/utils';
 
 export type ScoutingMode = 'simple' | 'advanced';
+
+const MIDDLE_COMBOS = ATTACK_COMBOS.filter((c) => c.position === 'C');
+const ALL_OTHER_COMBOS = ATTACK_COMBOS.filter((c) => c.position !== 'C');
+function filterOtherCombosByZone(zone: number | null): typeof ALL_OTHER_COMBOS {
+  if (zone == null) return ALL_OTHER_COMBOS;
+  return ALL_OTHER_COMBOS.filter((c) => !c.zones || c.zones.includes(zone));
+}
 
 interface TouchFlowPanelProps {
   selectedPlayer: {
