@@ -203,9 +203,9 @@ export function ScoreBoard() {
       </div>
 
       {/* Set indicator */}
-      <div className="ml-2 px-3 py-1 rounded-lg bg-secondary text-center">
-        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Set</div>
-        <div className="text-2xl font-bold text-primary">{matchState.currentSet}</div>
+      <div className="ml-1 px-2 py-0.5 rounded-md bg-secondary text-center">
+        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Set</div>
+        <div className="text-lg font-bold text-primary leading-none">{matchState.currentSet}</div>
       </div>
 
       {/* Sanction dialog */}
