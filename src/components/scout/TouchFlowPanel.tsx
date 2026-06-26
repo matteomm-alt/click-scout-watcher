@@ -95,12 +95,13 @@ export function TouchFlowPanel({
   else active = 'eval';
 
   // Steps shown in the stepper header
-  const steps: { key: StepKey; n: number; label: string; show: boolean }[] = [
+  const allSteps: { key: StepKey; n: number; label: string; show: boolean }[] = [
     { key: 'player', n: 1, label: 'Giocatore',    show: true },
     { key: 'skill',  n: 2, label: 'Fondamentale', show: true },
     { key: 'combo',  n: 3, label: 'Tipo/Combo',   show: mode === 'advanced' },
     { key: 'eval',   n: mode === 'advanced' ? 4 : 3, label: 'Valutazione', show: true },
-  ].filter(s => s.show);
+  ];
+  const steps = allSteps.filter(s => s.show);
 
   const teamAccent = selectedPlayer?.team === 'home' ? 'blue' : 'red';
   const teamBorderActive = teamAccent === 'blue'
