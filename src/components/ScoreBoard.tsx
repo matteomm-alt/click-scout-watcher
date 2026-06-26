@@ -154,16 +154,16 @@ export function ScoreBoard() {
         >
           T-out
         </button>
-        <div className={`text-5xl font-black tabular-nums transition-all ${
-          matchState.servingTeam === 'home' ? 'text-warning' : 'text-foreground'
+        <div className={`text-3xl font-black tabular-nums transition-all ${
+          matchState.servingTeam === 'home' ? 'text-warning' : 'text-foreground/80'
         }`}>
           {matchState.homeScore}
         </div>
         {matchState.servingTeam === 'home' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
-        <div className="text-2xl text-muted-foreground font-light">:</div>
+        <div className="text-lg text-muted-foreground font-light">:</div>
         {matchState.servingTeam === 'away' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
-        <div className={`text-5xl font-black tabular-nums transition-all ${
-          matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground'
+        <div className={`text-3xl font-black tabular-nums transition-all ${
+          matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground/80'
         }`}>
           {matchState.awayScore}
         </div>
