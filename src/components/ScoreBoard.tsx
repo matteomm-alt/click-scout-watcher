@@ -127,7 +127,7 @@ export function ScoreBoard() {
             <ServingDot active={matchState.servingTeam === 'home'} />
             <span className="text-xs text-muted-foreground uppercase tracking-wider">Casa</span>
           </div>
-          <div className="text-lg font-bold text-foreground truncate max-w-[140px] flex items-center justify-end gap-2">
+          <div className="text-sm font-bold text-foreground/80 truncate max-w-[120px] flex items-center justify-end gap-1.5">
             <span className="truncate">{homeTeam.name || 'Casa'}</span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-primary/20 text-primary tabular-nums">R{matchState.homeSetterPosition}</span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-warning/20 text-warning tabular-nums">#{matchState.homeCurrentLineup[0]}</span>
