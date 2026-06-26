@@ -170,7 +170,7 @@ export function ScoreBoard() {
         <button
           type="button"
           onClick={() => handleTimeout('away')}
-          className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-sm font-bold active:scale-95"
+          className="min-h-10 px-2.5 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-[10px] font-bold active:scale-95"
           title="Time-out Ospite"
         >
           T-out
