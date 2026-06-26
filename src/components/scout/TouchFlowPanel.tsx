@@ -41,29 +41,31 @@ const SKILLS_CFG: {
   advancedOnly: boolean;
 }[] = [
   { key:'S', label:'S', fullLabel:'Battuta',   advancedOnly:false },
-  { key:'R', label:'R', fullLabel:'Ricezione',  advancedOnly:false },
-  { key:'A', label:'A', fullLabel:'Attacco',    advancedOnly:false },
-  { key:'B', label:'B', fullLabel:'Muro',       advancedOnly:false },
-  { key:'E', label:'E', fullLabel:'Alzata',     advancedOnly:true  },
-  { key:'D', label:'D', fullLabel:'Difesa',     advancedOnly:true  },
-  { key:'F', label:'F', fullLabel:'Freeball',   advancedOnly:true  },
+  { key:'R', label:'R', fullLabel:'Ricezione', advancedOnly:false },
+  { key:'A', label:'A', fullLabel:'Attacco',   advancedOnly:false },
+  { key:'B', label:'B', fullLabel:'Muro',      advancedOnly:false },
+  { key:'E', label:'E', fullLabel:'Alzata',    advancedOnly:true  },
+  { key:'D', label:'D', fullLabel:'Difesa',    advancedOnly:true  },
+  { key:'F', label:'F', fullLabel:'Freeball',  advancedOnly:true  },
 ];
 
 const SIMPLE_EVALS: { key: Evaluation; label: string; color: string }[] = [
-  { key:'#', label:'Kill / Ace',  color:'bg-green-600' },
-  { key:'+', label:'Positivo',    color:'bg-lime-500'  },
-  { key:'/', label:'Errore',      color:'bg-red-500'   },
-  { key:'=', label:'Fuori',       color:'bg-red-700'   },
+  { key:'#', label:'Kill / Ace', color:'bg-green-600 border-green-700' },
+  { key:'+', label:'Positivo',   color:'bg-lime-500 border-lime-600 text-lime-950' },
+  { key:'/', label:'Errore',     color:'bg-red-500 border-red-600' },
+  { key:'=', label:'Fuori',      color:'bg-red-700 border-red-800' },
 ];
 
 const ADVANCED_EVALS: { key: Evaluation; label: string; color: string }[] = [
-  { key:'#', label:'Kill / Ace',    color:'bg-green-600' },
-  { key:'+', label:'Positivo',      color:'bg-lime-500'  },
-  { key:'!', label:'Accettabile',   color:'bg-amber-500' },
-  { key:'-', label:'Negativo',      color:'bg-orange-500'},
-  { key:'/', label:'Errore',        color:'bg-red-500'   },
-  { key:'=', label:'Fuori',         color:'bg-red-700'   },
+  { key:'#', label:'Kill / Ace',  color:'bg-green-600 border-green-700' },
+  { key:'+', label:'Positivo',    color:'bg-lime-500 border-lime-600 text-lime-950' },
+  { key:'!', label:'Accettabile', color:'bg-amber-500 border-amber-600 text-amber-950' },
+  { key:'-', label:'Negativo',    color:'bg-orange-500 border-orange-600' },
+  { key:'/', label:'Errore',      color:'bg-red-500 border-red-600' },
+  { key:'=', label:'Fuori',       color:'bg-red-700 border-red-800' },
 ];
+
+type StepKey = 'player' | 'skill' | 'combo' | 'eval';
 
 export function TouchFlowPanel({
   selectedPlayer, selectedSkill, mode, suggestedSkill, suggestedEvaluation,
@@ -81,136 +83,180 @@ export function TouchFlowPanel({
     selectedSkill ??
     (mode === 'simple' && suggestedSkill ? suggestedSkill : null);
 
-  const showAttackType = effectiveSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
-  const showMiddleCombo = effectiveSkill === 'A' && mode === 'advanced' && !!isMiddleBlocker;
-  const showOtherCombos = effectiveSkill === 'A' && mode === 'advanced' && !isMiddleBlocker;
+  const needsCombo = effectiveSkill === 'A' && mode === 'advanced';
+  const comboPicked = !needsCombo
+    || (isMiddleBlocker ? !!selectedMiddleCombo : !!selectedOtherCombo);
 
-  const teamBorder = selectedPlayer?.team === 'home'
-    ? 'border-blue-500/30 bg-blue-500/10'
-    : 'border-red-500/30 bg-red-500/10';
-  const teamText = selectedPlayer?.team === 'home'
-    ? 'text-blue-400' : 'text-red-400';
+  // Determine active step
+  let active: StepKey;
+  if (!selectedPlayer) active = 'player';
+  else if (!effectiveSkill) active = 'skill';
+  else if (needsCombo && !comboPicked) active = 'combo';
+  else active = 'eval';
 
-  const padY = mode === 'simple' ? 'py-3.5' : 'py-2.5';
+  // Steps shown in the stepper header
+  const steps: { key: StepKey; n: number; label: string; show: boolean }[] = [
+    { key: 'player', n: 1, label: 'Giocatore',    show: true },
+    { key: 'skill',  n: 2, label: 'Fondamentale', show: true },
+    { key: 'combo',  n: 3, label: 'Tipo/Combo',   show: mode === 'advanced' },
+    { key: 'eval',   n: mode === 'advanced' ? 4 : 3, label: 'Valutazione', show: true },
+  ].filter(s => s.show);
+
+  const teamAccent = selectedPlayer?.team === 'home' ? 'blue' : 'red';
+  const teamBorderActive = teamAccent === 'blue'
+    ? 'border-blue-500/40 bg-blue-500/10' : 'border-red-500/40 bg-red-500/10';
+  const teamText = teamAccent === 'blue' ? 'text-blue-400' : 'text-red-400';
 
   return (
     <div className="flex flex-col h-full glass rounded-xl overflow-hidden border border-border/50">
-      {/* Header */}
-      <div className={cn('px-3 py-2.5 border-b border-border/40 flex items-center gap-3', teamBorder)}>
-        {selectedPlayer ? (
-          <>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <span className={cn('text-xl font-black tabular-nums', teamText)}>
-                  #{selectedPlayer.number}
-                </span>
-                <span className="text-sm font-bold truncate">
-                  {selectedPlayer.lastName}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                {selectedPlayer.role && (
-                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                    {selectedPlayer.role}
+      {/* STEPPER HEADER */}
+      <div className="px-2 py-2 border-b border-border/40 bg-background/40">
+        <div className="flex items-stretch gap-1">
+          {steps.map((s, idx) => {
+            const done =
+              (s.key === 'player' && !!selectedPlayer) ||
+              (s.key === 'skill' && !!effectiveSkill) ||
+              (s.key === 'combo' && comboPicked && needsCombo) ||
+              (s.key === 'eval' && false);
+            const isActive = s.key === active;
+            return (
+              <div key={s.key} className="flex items-center gap-1 flex-1 min-w-0">
+                <div
+                  className={cn(
+                    'flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1.5 rounded-md border transition-all',
+                    isActive
+                      ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))] shadow-md'
+                      : done
+                        ? 'bg-secondary/40 text-foreground/80 border-border/60'
+                        : 'bg-background/50 text-muted-foreground/60 border-border/40',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'size-5 flex items-center justify-center rounded-full text-[10px] font-black tabular-nums shrink-0',
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : done
+                          ? 'bg-emerald-500/80 text-white'
+                          : 'bg-background/60 text-muted-foreground/70',
+                    )}
+                  >
+                    {done && !isActive ? '✓' : s.n}
                   </span>
+                  <span
+                    className={cn(
+                      'text-[10px] font-black uppercase tracking-wider truncate',
+                      !isActive && 'hidden sm:inline',
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <span className="text-muted-foreground/40 text-[10px]">›</span>
                 )}
-                <span className={cn('text-[10px] font-black uppercase tracking-wider', teamText)}>
-                  {teamName}
-                </span>
               </div>
-            </div>
+            );
+          })}
+        </div>
+
+        {/* Selected player chip — compact */}
+        {selectedPlayer && (
+          <div className={cn(
+            'mt-2 flex items-center gap-2 px-2 py-1 rounded-md border',
+            teamBorderActive,
+          )}>
+            <span className={cn('text-base font-black tabular-nums', teamText)}>
+              #{selectedPlayer.number}
+            </span>
+            <span className="text-xs font-bold truncate flex-1">
+              {selectedPlayer.lastName}
+            </span>
+            {selectedPlayer.role && (
+              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">
+                {selectedPlayer.role}
+              </span>
+            )}
+            <span className={cn('text-[9px] font-black uppercase tracking-wider truncate max-w-[80px]', teamText)}>
+              {teamName}
+            </span>
             <button
               type="button"
               onClick={onCancel}
-              className="size-8 rounded-md hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              className="size-6 rounded hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center text-xs"
               aria-label="Chiudi"
             >
               ✕
             </button>
-          </>
-        ) : (
-          <div className="flex-1 text-center text-xs text-muted-foreground py-2">
-            Tocca una giocatrice sul campo
           </div>
         )}
       </div>
 
-      {/* Body */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
-        {!effectiveSkill && (
-          <>
-            <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
-              Fondamentale
+      {/* ACTIVE STEP BODY */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-3">
+        {active === 'player' && (
+          <div className="h-full flex flex-col items-center justify-center text-center gap-2 py-8">
+            <div className="size-12 rounded-full bg-[hsl(var(--cs-rail))] text-white flex items-center justify-center text-xl font-black animate-pulse">
+              1
             </div>
-            {visibleSkills.map(s => {
-              const isSugg = s.key === suggestedSkill;
-              return (
-                <button
-                  key={s.key}
-                  type="button"
-                  onClick={() => onSkillSelect(s.key)}
-                  disabled={!selectedPlayer}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 rounded-xl',
-                    'font-bold text-sm transition-all active:scale-[0.97]',
-                    'disabled:opacity-20 disabled:cursor-not-allowed',
-                    padY,
-                    'bg-secondary/50 hover:bg-secondary/80',
-                    isSugg && 'ring-2 ring-primary',
-                  )}
-                >
-                  <span className="size-8 flex items-center justify-center rounded-lg bg-black/20 font-black">
-                    {s.key}
-                  </span>
-                  <span className="flex-1 text-left">{s.fullLabel}</span>
-                  {isSugg && (
-                    <span className="text-[10px] uppercase tracking-wider opacity-90">
-                      → suggerito
+            <div className="text-sm font-black uppercase tracking-wider">Tocca una giocatrice</div>
+            <div className="text-xs text-muted-foreground max-w-[220px]">
+              Seleziona sul campo chi sta eseguendo l'azione.
+            </div>
+          </div>
+        )}
+
+        {active === 'skill' && (
+          <>
+            <StepTitle n={2} label="Scegli il fondamentale" />
+            <div className="grid grid-cols-2 gap-2">
+              {visibleSkills.map(s => {
+                const isSugg = s.key === suggestedSkill;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => onSkillSelect(s.key)}
+                    className={cn(
+                      'min-h-[56px] flex items-center gap-2 px-3 rounded-xl',
+                      'font-black text-sm transition-all active:scale-[0.97]',
+                      'border-2',
+                      isSugg
+                        ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))] shadow-md ring-2 ring-primary/40'
+                        : 'bg-secondary/60 hover:bg-secondary border-border text-foreground',
+                    )}
+                  >
+                    <span className={cn(
+                      'size-9 flex items-center justify-center rounded-lg font-black text-base',
+                      isSugg ? 'bg-white/20' : 'bg-background/60',
+                    )}>
+                      {s.key}
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    <span className="flex-1 text-left uppercase tracking-wider text-xs">
+                      {s.fullLabel}
+                    </span>
+                    {isSugg && (
+                      <span className="text-[9px] uppercase tracking-wider opacity-90">
+                        ★
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </>
         )}
 
-        {effectiveSkill && (
+        {active === 'combo' && (
           <>
-            <div className="flex items-center gap-2 mb-1">
-              {(() => {
-                const sk = SKILLS_CFG.find(s => s.key === effectiveSkill);
-                if (!sk) return null;
-                return (
-                  <>
-                    <span className="size-7 flex items-center justify-center rounded-lg bg-secondary text-foreground font-black text-sm border border-border">
-                      {sk.key}
-                    </span>
-                    <span className="text-sm font-bold">{sk.fullLabel}</span>
-                    {mode === 'simple' && !selectedSkill && (
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        inferita
-                      </span>
-                    )}
-                    {mode === 'advanced' && (
-                      <button
-                        type="button"
-                        onClick={() => onSkillSelect(null)}
-                        className="ml-auto text-[11px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-secondary/60 transition-colors"
-                      >
-                        ← cambia
-                      </button>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
+            <StepTitle n={3} label={isMiddleBlocker ? 'Combo (Centrale)' : 'Tipo e combo'} />
 
-            {showAttackType && (
-              <div className="mb-2">
-                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
-                  Tipo
+            {!isMiddleBlocker && (
+              <div className="mb-3">
+                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1.5">
+                  Tipo di attacco
                 </div>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {ATTACK_TYPES.map(t => {
                     const isActive = t.key === selectedAttackType;
                     return (
@@ -220,7 +266,7 @@ export function TouchFlowPanel({
                         onClick={() => onAttackTypeSelect(t.key)}
                         title={t.description}
                         className={cn(
-                          'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
+                          'min-h-[40px] px-3 rounded-md text-xs font-black uppercase tracking-wider transition-all active:scale-95 border-2',
                           isActive
                             ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
                             : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
@@ -234,110 +280,112 @@ export function TouchFlowPanel({
               </div>
             )}
 
-            {showMiddleCombo && (
-              <div className="mb-2">
-                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
-                  Combo
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {MIDDLE_COMBOS.map(c => {
-                    const isActive = c.code === selectedMiddleCombo;
-                    return (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => onMiddleComboSelect?.(c.code)}
-                        title={c.description}
-                        className={cn(
-                          'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
-                          isActive
-                            ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
-                            : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
-                        )}
-                      >
-                        {c.label}
-                      </button>
-                    );
-                  })}
-                </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1.5">
+                Combo
               </div>
-            )}
-
-            {showOtherCombos && (
-              <div className="mb-2">
-                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
-                  Combo
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {filterOtherCombosByZone(selectedPlayerZone ?? null).map(c => {
-                    const isActive = c.code === selectedOtherCombo;
-                    return (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => onOtherComboSelect?.(c.code)}
-                        title={c.description}
-                        className={cn(
-                          'min-h-[30px] px-2.5 rounded-md text-xs font-bold transition-all active:scale-95 border',
-                          isActive
-                            ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
-                            : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
-                        )}
-                      >
-                        {c.label}
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(isMiddleBlocker
+                  ? MIDDLE_COMBOS
+                  : filterOtherCombosByZone(selectedPlayerZone ?? null)
+                ).map(c => {
+                  const selected = isMiddleBlocker ? selectedMiddleCombo : selectedOtherCombo;
+                  const isActive = c.code === selected;
+                  const handler = isMiddleBlocker ? onMiddleComboSelect : onOtherComboSelect;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => handler?.(c.code)}
+                      title={c.description}
+                      className={cn(
+                        'min-h-[40px] px-3 rounded-md text-xs font-black uppercase tracking-wider transition-all active:scale-95 border-2',
+                        isActive
+                          ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))]'
+                          : 'bg-background text-muted-foreground border-border hover:bg-secondary/60',
+                      )}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-
-            <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1">
-              Valutazione
             </div>
-            {evals.map(e => {
-              const isSuggEval = e.key === suggestedEvaluation;
-              return (
-                <button
-                  key={e.key}
-                  type="button"
-                  onClick={() => onEvaluationSelect(e.key)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 rounded-xl',
-                    'font-bold text-sm transition-all active:scale-[0.97]',
-                    padY,
-                    isSuggEval
-                      ? `${e.color} text-white shadow-md ring-2 ring-white/40`
-                      : 'bg-secondary/50 hover:bg-secondary/80',
-                  )}
-                >
-                  <span className={cn('size-8 flex items-center justify-center rounded-lg text-white font-black', e.color)}>
-                    {e.key}
-                  </span>
-                  <span className="flex-1 text-left">{e.label}</span>
-                  {isSuggEval && (
-                    <span className="text-[10px] uppercase tracking-wider opacity-90">
-                      → suggerito
+
+            <div className="mt-3 text-[10px] text-muted-foreground/80 italic px-1">
+              Seleziona tipo e combo, poi appare la valutazione.
+            </div>
+          </>
+        )}
+
+        {active === 'eval' && (
+          <>
+            <StepTitle n={mode === 'advanced' ? 4 : 3} label="Valuta il tocco" />
+            <div className="grid grid-cols-2 gap-2">
+              {evals.map(e => {
+                const isSugg = e.key === suggestedEvaluation;
+                return (
+                  <button
+                    key={e.key}
+                    type="button"
+                    onClick={() => onEvaluationSelect(e.key)}
+                    className={cn(
+                      'min-h-[60px] flex items-center gap-2.5 px-3 rounded-xl',
+                      'font-black text-sm transition-all active:scale-[0.97]',
+                      'border-2 text-white shadow-md',
+                      e.color,
+                      isSugg && 'ring-2 ring-white/60 scale-[1.02]',
+                    )}
+                  >
+                    <span className="size-10 flex items-center justify-center rounded-lg bg-black/30 font-black text-lg">
+                      {e.key}
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    <span className="flex-1 text-left uppercase tracking-wider text-xs">
+                      {e.label}
+                    </span>
+                    {isSugg && <span className="text-[9px] uppercase tracking-wider">★</span>}
+                  </button>
+                );
+              })}
+            </div>
           </>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-3 py-2 border-t border-border/40 flex items-center justify-between text-[10px] uppercase tracking-wider">
+      {/* FOOTER: status + back */}
+      <div className="px-3 py-2 border-t border-border/40 flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
         <span className="font-black text-muted-foreground">
           {mode === 'simple' ? '⚡ Simple' : '📊 Advanced'}
         </span>
-        <span className="text-muted-foreground/70">
-          {!selectedPlayer ? 'Tocca campo'
-            : !effectiveSkill ? 'Scegli fondamentale'
-            : 'Scegli valutazione'}
-        </span>
+        <div className="flex items-center gap-2">
+          {effectiveSkill && active !== 'player' && (
+            <button
+              type="button"
+              onClick={() => onSkillSelect(null)}
+              className="px-2 py-1 rounded hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors font-bold"
+            >
+              ← cambia
+            </button>
+          )}
+          <span className="text-muted-foreground/70 font-bold">
+            {active === 'player' ? 'Step 1 di ' + steps.length
+              : active === 'skill' ? `Step 2 di ${steps.length}`
+              : active === 'combo' ? `Step 3 di ${steps.length}`
+              : `Step ${steps.length} di ${steps.length}`}
+          </span>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function StepTitle({ n, label }: { n: number; label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="size-7 flex items-center justify-center rounded-full bg-[hsl(var(--cs-rail))] text-white text-xs font-black tabular-nums">
+        {n}
+      </span>
+      <span className="text-sm font-black uppercase tracking-wider">{label}</span>
     </div>
   );
 }
