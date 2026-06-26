@@ -118,7 +118,7 @@ export function ScoreBoard() {
   const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
 
   return (
-    <div className="glass rounded-xl px-6 py-3 flex items-center justify-between gap-4">
+    <div className="glass rounded-xl px-4 py-1.5 flex items-center justify-between gap-3">
       {/* HOME */}
       <div className="flex items-center gap-4 min-w-0">
         <div className="text-right min-w-0">
