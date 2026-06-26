@@ -118,7 +118,7 @@ export function ScoreBoard() {
   const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
 
   return (
-    <div className="glass rounded-xl px-6 py-3 flex items-center justify-between gap-4">
+    <div className="glass rounded-xl px-4 py-1.5 flex items-center justify-between gap-3">
       {/* HOME */}
       <div className="flex items-center gap-4 min-w-0">
         <div className="text-right min-w-0">
@@ -127,7 +127,7 @@ export function ScoreBoard() {
             <ServingDot active={matchState.servingTeam === 'home'} />
             <span className="text-xs text-muted-foreground uppercase tracking-wider">Casa</span>
           </div>
-          <div className="text-lg font-bold text-foreground truncate max-w-[140px] flex items-center justify-end gap-2">
+          <div className="text-sm font-bold text-foreground/80 truncate max-w-[120px] flex items-center justify-end gap-1.5">
             <span className="truncate">{homeTeam.name || 'Casa'}</span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-primary/20 text-primary tabular-nums">R{matchState.homeSetterPosition}</span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-warning/20 text-warning tabular-nums">#{matchState.homeCurrentLineup[0]}</span>
@@ -149,28 +149,28 @@ export function ScoreBoard() {
         <button
           type="button"
           onClick={() => handleTimeout('home')}
-          className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-sm font-bold active:scale-95"
+          className="min-h-10 px-2.5 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-[10px] font-bold active:scale-95"
           title="Time-out Casa"
         >
           T-out
         </button>
-        <div className={`text-5xl font-black tabular-nums transition-all ${
-          matchState.servingTeam === 'home' ? 'text-warning' : 'text-foreground'
+        <div className={`text-3xl font-black tabular-nums transition-all ${
+          matchState.servingTeam === 'home' ? 'text-warning' : 'text-foreground/80'
         }`}>
           {matchState.homeScore}
         </div>
         {matchState.servingTeam === 'home' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
-        <div className="text-2xl text-muted-foreground font-light">:</div>
+        <div className="text-lg text-muted-foreground font-light">:</div>
         {matchState.servingTeam === 'away' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
-        <div className={`text-5xl font-black tabular-nums transition-all ${
-          matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground'
+        <div className={`text-3xl font-black tabular-nums transition-all ${
+          matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground/80'
         }`}>
           {matchState.awayScore}
         </div>
         <button
           type="button"
           onClick={() => handleTimeout('away')}
-          className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-sm font-bold active:scale-95"
+          className="min-h-10 px-2.5 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-[10px] font-bold active:scale-95"
           title="Time-out Ospite"
         >
           T-out
@@ -189,7 +189,7 @@ export function ScoreBoard() {
             <ServingDot active={matchState.servingTeam === 'away'} />
             <TeamSanctions team="away" />
           </div>
-          <div className="text-lg font-bold text-foreground truncate max-w-[140px] flex items-center gap-2">
+          <div className="text-sm font-bold text-foreground/80 truncate max-w-[120px] flex items-center gap-1.5">
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-warning/20 text-warning tabular-nums">#{matchState.awayCurrentLineup[0]}</span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-primary/20 text-primary tabular-nums">R{matchState.awaySetterPosition}</span>
             <span className="truncate">{awayTeam.name || 'Ospite'}</span>
@@ -203,9 +203,9 @@ export function ScoreBoard() {
       </div>
 
       {/* Set indicator */}
-      <div className="ml-2 px-3 py-1 rounded-lg bg-secondary text-center">
-        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Set</div>
-        <div className="text-2xl font-bold text-primary">{matchState.currentSet}</div>
+      <div className="ml-1 px-2 py-0.5 rounded-md bg-secondary text-center">
+        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Set</div>
+        <div className="text-lg font-bold text-primary leading-none">{matchState.currentSet}</div>
       </div>
 
       {/* Sanction dialog */}
