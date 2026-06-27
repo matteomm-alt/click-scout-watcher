@@ -431,29 +431,35 @@ export function VolleyballCourt({
   };
 
   if (layout === 'single') {
+    // Mezzo campo reale = quadrato 9m x 9m
     return (
-      <div className="w-full h-full">
-        {renderHalf('home')}
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="aspect-square h-full max-w-full mx-auto" style={{ maxHeight: '100%' }}>
+          {renderHalf('home')}
+        </div>
       </div>
     );
   }
 
+  // Campo intero reale = 18m x 9m → due quadrati 9x9 affiancati (aspect 2:1)
   const sideOrder: ('home' | 'away')[] = swapSides ? ['home', 'away'] : ['away', 'home'];
   return (
-    <div className="w-full h-full flex gap-2 items-stretch">
-      {sideOrder.map((side, idx) => (
-        <Fragment key={side}>
-          <div className="flex-1 min-w-0 relative">
-            <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-              {side === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
-            </span>
-            {renderHalf(side)}
-          </div>
-          {idx === 0 && (
-            <div className="w-1 self-stretch bg-white/70 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" aria-hidden />
-          )}
-        </Fragment>
-      ))}
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="flex gap-2 items-stretch aspect-[2/1] w-full max-h-full mx-auto" style={{ maxWidth: '100%' }}>
+        {sideOrder.map((side, idx) => (
+          <Fragment key={side}>
+            <div className="relative aspect-square h-full">
+              <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                {side === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
+              </span>
+              {renderHalf(side)}
+            </div>
+            {idx === 0 && (
+              <div className="w-1 self-stretch bg-white/70 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" aria-hidden />
+            )}
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
