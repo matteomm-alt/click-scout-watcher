@@ -409,9 +409,10 @@ export function LiveScout() {
 
 
       {/* DESKTOP layout (≥ md) */}
-      <div className="hidden md:flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
+      <div className="hidden md:flex flex-1 min-h-0 gap-1.5 p-1.5 overflow-hidden">
         {/* Colonna campi */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+
           {/* CSServePanel + banner suggerimento + toggle pulito */}
           <div className="flex items-center gap-2">
             <CSServePanel />
