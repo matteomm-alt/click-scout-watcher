@@ -481,7 +481,7 @@ export function LiveScout() {
         </div>
 
         {/* Pannello laterale destro */}
-        <div className="w-[320px] shrink-0 flex flex-col gap-2 min-h-0">
+        <div className="w-[280px] shrink-0 flex flex-col gap-1.5 min-h-0">
           {selectedPlayer ? (
             <div className="flex-1 min-h-0">
               <TouchFlowPanel
