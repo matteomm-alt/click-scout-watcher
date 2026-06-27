@@ -367,42 +367,46 @@ export function LiveScout() {
         <ScoreBoard />
       </div>
 
-      {/* FOOTER FISSA skill+evaluation, stile OpenVolleyScout: sempre visibile, sopra il campo */}
-      <LiveFooter
-        selectedPlayer={selectedPlayer}
-        selectedSkill={pendingSkill}
-        mode={scoutingMode}
-        suggestedSkill={selectedPlayer && suggestion?.team === selectedPlayer.team ? suggestion.skill : null}
-        selectedAttackType={pendingAttackType}
-        onAttackTypeSelect={setPendingAttackType}
-        isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
-        selectedPlayerZone={selectedPlayer ? computeZoneForPlayer(selectedPlayer.number, selectedPlayer.team) : null}
-        selectedMiddleCombo={pendingMiddleCombo}
-        onMiddleComboSelect={setPendingMiddleCombo}
-        selectedOtherCombo={pendingOtherCombo}
-        onOtherComboSelect={setPendingOtherCombo}
-        onSkillSelect={(skill) => setPendingSkill(skill)}
-        onEvaluationSelect={(evaluation) => {
-          if (!selectedPlayer || !pendingSkill) return;
-          const id = addAction({
-            team: selectedPlayer.team,
-            playerNumber: selectedPlayer.number,
-            skill: pendingSkill,
-            skillType: pendingSkill === 'A' ? pendingAttackType : 'H',
-            evaluation,
-            timestamp: '',
-            code: '',
-          });
-          if (settings.autoPoint && evaluation === '#' && (pendingSkill === 'S' || pendingSkill === 'A' || pendingSkill === 'B')) {
-            addPoint(selectedPlayer.team);
-          } else if (settings.autoPoint && evaluation === '='
-              && (pendingSkill === 'S' || pendingSkill === 'A')) {
-            const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
-            addPoint(opp);
-          }
-          handleActionComplete(id, pendingSkill);
-        }}
-      />
+      {/* FOOTER FISSA skill+evaluation (SOLO MOBILE: su desktop il wizard è nel pannello laterale destro,
+          avere anche LiveFooter qui duplicherebbe gli stessi comandi). */}
+      <div className="md:hidden">
+        <LiveFooter
+          selectedPlayer={selectedPlayer}
+          selectedSkill={pendingSkill}
+          mode={scoutingMode}
+          suggestedSkill={selectedPlayer && suggestion?.team === selectedPlayer.team ? suggestion.skill : null}
+          selectedAttackType={pendingAttackType}
+          onAttackTypeSelect={setPendingAttackType}
+          isMiddleBlocker={selectedPlayer ? isPlayerMiddleBlocker(selectedPlayer.number, selectedPlayer.team) : false}
+          selectedPlayerZone={selectedPlayer ? computeZoneForPlayer(selectedPlayer.number, selectedPlayer.team) : null}
+          selectedMiddleCombo={pendingMiddleCombo}
+          onMiddleComboSelect={setPendingMiddleCombo}
+          selectedOtherCombo={pendingOtherCombo}
+          onOtherComboSelect={setPendingOtherCombo}
+          onSkillSelect={(skill) => setPendingSkill(skill)}
+          onEvaluationSelect={(evaluation) => {
+            if (!selectedPlayer || !pendingSkill) return;
+            const id = addAction({
+              team: selectedPlayer.team,
+              playerNumber: selectedPlayer.number,
+              skill: pendingSkill,
+              skillType: pendingSkill === 'A' ? pendingAttackType : 'H',
+              evaluation,
+              timestamp: '',
+              code: '',
+            });
+            if (settings.autoPoint && evaluation === '#' && (pendingSkill === 'S' || pendingSkill === 'A' || pendingSkill === 'B')) {
+              addPoint(selectedPlayer.team);
+            } else if (settings.autoPoint && evaluation === '='
+                && (pendingSkill === 'S' || pendingSkill === 'A')) {
+              const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
+              addPoint(opp);
+            }
+            handleActionComplete(id, pendingSkill);
+          }}
+        />
+      </div>
+
 
       {/* DESKTOP layout (≥ md) */}
       <div className="hidden md:flex flex-1 min-h-0 gap-2 p-2 overflow-hidden">
