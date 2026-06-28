@@ -284,7 +284,7 @@ export function ScoreBoard() {
       </Dialog>
 
       <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
-        <DialogTrigger asChild><button type="button" className="min-h-10 px-3 text-xs font-bold bg-secondary rounded-lg">✎ Correzione</button></DialogTrigger>
+        <DialogTrigger asChild><button type="button" className="h-7 px-1.5 text-[9px] font-bold bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground rounded uppercase tracking-wider">✎ Corr</button></DialogTrigger>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Correzione</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => adjustScore('home', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>
