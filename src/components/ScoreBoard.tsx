@@ -303,10 +303,10 @@ export function ScoreBoard() {
       <button
         type="button"
         onClick={() => setResetConfirmOpen(true)}
-        className="min-h-12 min-w-12 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors active:scale-95"
+        className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors active:scale-95"
         title="Reset partita"
       >
-        <RotateCcw className="w-4 h-4" />
+        <RotateCcw className="w-3.5 h-3.5" />
       </button>
       <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
         <AlertDialogContent>
