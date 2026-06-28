@@ -39,14 +39,32 @@ interface TouchFlowPanelProps {
 const SKILLS_CFG: {
   key: Skill; label: string; fullLabel: string;
   advancedOnly: boolean;
+  /** colore fisso per fondamentale (selezionato/suggerito) */
+  color: string;
+  /** versione tenue (non selezionato) */
+  colorMuted: string;
 }[] = [
-  { key:'S', label:'S', fullLabel:'Battuta',   advancedOnly:false },
-  { key:'R', label:'R', fullLabel:'Ricezione', advancedOnly:false },
-  { key:'A', label:'A', fullLabel:'Attacco',   advancedOnly:false },
-  { key:'B', label:'B', fullLabel:'Muro',      advancedOnly:false },
-  { key:'E', label:'E', fullLabel:'Alzata',    advancedOnly:true  },
-  { key:'D', label:'D', fullLabel:'Difesa',    advancedOnly:true  },
-  { key:'F', label:'F', fullLabel:'Freeball',  advancedOnly:true  },
+  { key:'S', label:'S', fullLabel:'Battuta',   advancedOnly:false,
+    color:'bg-orange-500 text-white border-orange-500',
+    colorMuted:'bg-orange-500/10 text-orange-400 border-orange-500/40 hover:bg-orange-500/20' },
+  { key:'R', label:'R', fullLabel:'Ricezione', advancedOnly:false,
+    color:'bg-blue-500 text-white border-blue-500',
+    colorMuted:'bg-blue-500/10 text-blue-400 border-blue-500/40 hover:bg-blue-500/20' },
+  { key:'A', label:'A', fullLabel:'Attacco',   advancedOnly:false,
+    color:'bg-red-600 text-white border-red-600',
+    colorMuted:'bg-red-500/10 text-red-400 border-red-500/40 hover:bg-red-500/20' },
+  { key:'B', label:'B', fullLabel:'Muro',      advancedOnly:false,
+    color:'bg-purple-600 text-white border-purple-600',
+    colorMuted:'bg-purple-500/10 text-purple-400 border-purple-500/40 hover:bg-purple-500/20' },
+  { key:'E', label:'E', fullLabel:'Alzata',    advancedOnly:true,
+    color:'bg-yellow-500 text-yellow-950 border-yellow-500',
+    colorMuted:'bg-yellow-500/10 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/20' },
+  { key:'D', label:'D', fullLabel:'Difesa',    advancedOnly:true,
+    color:'bg-emerald-600 text-white border-emerald-600',
+    colorMuted:'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/20' },
+  { key:'F', label:'F', fullLabel:'Freeball',  advancedOnly:true,
+    color:'bg-cyan-600 text-white border-cyan-600',
+    colorMuted:'bg-cyan-500/10 text-cyan-400 border-cyan-500/40 hover:bg-cyan-500/20' },
 ];
 
 const SIMPLE_EVALS: { key: Evaluation; label: string; color: string }[] = [
