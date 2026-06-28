@@ -204,7 +204,7 @@ export function ScoreBoard() {
         <DialogTrigger asChild>
           <button
             type="button"
-            className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-sm font-bold uppercase tracking-wider active:scale-95"
+            className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider active:scale-95"
             title="Cartellino / Sanzione"
           >
             <Square className="w-3 h-3" />
