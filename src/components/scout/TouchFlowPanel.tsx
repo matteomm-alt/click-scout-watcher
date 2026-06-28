@@ -241,13 +241,13 @@ export function TouchFlowPanel({
                       'font-black text-sm transition-all active:scale-[0.97]',
                       'border-2',
                       isSugg
-                        ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))] shadow-md ring-2 ring-primary/40'
-                        : 'bg-secondary/60 hover:bg-secondary border-border text-foreground',
+                        ? cn(s.color, 'shadow-md ring-2 ring-white/40')
+                        : s.colorMuted,
                     )}
                   >
                     <span className={cn(
                       'size-9 flex items-center justify-center rounded-lg font-black text-base',
-                      isSugg ? 'bg-white/20' : 'bg-background/60',
+                      isSugg ? 'bg-black/25' : 'bg-background/60',
                     )}>
                       {s.key}
                     </span>
