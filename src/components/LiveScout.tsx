@@ -178,7 +178,14 @@ export function LiveScout() {
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
-    if (suggestion?.team === team && (suggestion.skill === 'R' || suggestion.skill === 'A')) {
+    // Auto-suggest aggressivo: se la sua squadra sta servendo e il giocatore
+    // è in zona 1 (server "naturale"), preseleziona Battuta — l'operatore
+    // salta direttamente alla valutazione. Altrimenti applica il suggerimento
+    // contestuale (R/A/S) quando proviene dalla stessa squadra.
+    const zone = computeZoneForPlayer(num, team);
+    if (team === matchState.servingTeam && zone === 1) {
+      setPendingSkill('S');
+    } else if (suggestion?.team === team && suggestion.skill && suggestion.skill !== 'S') {
       setPendingSkill(suggestion.skill);
     }
     if (typeof window !== 'undefined' && window.innerWidth < 768) {

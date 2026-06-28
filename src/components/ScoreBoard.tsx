@@ -118,102 +118,93 @@ export function ScoreBoard() {
   const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
 
   return (
-    <div className="glass rounded-xl px-4 py-1.5 flex items-center justify-between gap-3">
-      {/* HOME */}
-      <div className="flex items-center gap-4 min-w-0">
-        <div className="text-right min-w-0">
-          <div className="flex items-center justify-end gap-2">
-            <TeamSanctions team="home" />
-            <ServingDot active={matchState.servingTeam === 'home'} />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Casa</span>
-          </div>
-          <div className="text-sm font-bold text-foreground/80 truncate max-w-[120px] flex items-center justify-end gap-1.5">
-            <span className="truncate">{homeTeam.name || 'Casa'}</span>
-            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-primary/20 text-primary tabular-nums">R{matchState.homeSetterPosition}</span>
-            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-warning/20 text-warning tabular-nums">#{matchState.homeCurrentLineup[0]}</span>
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-0.5">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
-            <TimeoutDots used={matchState.homeTimeoutsUsed} />
-          </div>
-          <span className="text-xs text-muted-foreground font-bold">SOST {matchState.homeSubstitutionsUsed}/6</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-muted-foreground">Set</span>
-          <span className="text-xl font-bold text-primary">{matchState.homeSetsWon}</span>
-        </div>
-      </div>
-
-      {/* SCORE */}
-      <div className="flex items-center gap-3">
+    <div className="glass rounded-lg px-2 py-1 flex items-center gap-2 text-xs">
+      {/* HOME compact */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
+        <TeamSanctions team="home" />
+        <ServingDot active={matchState.servingTeam === 'home'} />
+        <span className="text-[10px] text-muted-foreground/80 truncate max-w-[80px] font-bold uppercase tracking-wider">
+          {homeTeam.name || 'Casa'}
+        </span>
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-primary tabular-nums">
+          R{matchState.homeSetterPosition}
+        </span>
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-warning tabular-nums">
+          #{matchState.homeCurrentLineup[0]}
+        </span>
+        <TimeoutDots used={matchState.homeTimeoutsUsed} />
         <button
           type="button"
           onClick={() => handleTimeout('home')}
-          className="min-h-10 px-2.5 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-[10px] font-bold active:scale-95"
+          className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-[9px] font-bold uppercase tracking-wider active:scale-95"
           title="Time-out Casa"
         >
           T-out
         </button>
-        <div className={`text-3xl font-black tabular-nums transition-all ${
+      </div>
+
+      {/* SETS + SCORE — riga unica compatta */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="text-base font-bold text-primary tabular-nums">{matchState.homeSetsWon}</span>
+        <span className="text-[9px] font-bold text-muted-foreground uppercase">Set</span>
+        <span className="text-muted-foreground/40">·</span>
+        <div className={`text-2xl font-black tabular-nums leading-none transition-all ${
           matchState.servingTeam === 'home' ? 'text-warning' : 'text-foreground/80'
         }`}>
           {matchState.homeScore}
         </div>
-        {matchState.servingTeam === 'home' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
-        <div className="text-lg text-muted-foreground font-light">:</div>
-        {matchState.servingTeam === 'away' && <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />}
-        <div className={`text-3xl font-black tabular-nums transition-all ${
+        {matchState.servingTeam === 'home' && (
+          <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />
+        )}
+        <span className="text-sm text-muted-foreground font-light">:</span>
+        {matchState.servingTeam === 'away' && (
+          <ServeAnalysisButton open={serveAnalysisOpen} setOpen={setServeAnalysisOpen} serverNumber={serverNumber} serveActions={serveActions} zonePos={zonePos} pct={pct} />
+        )}
+        <div className={`text-2xl font-black tabular-nums leading-none transition-all ${
           matchState.servingTeam === 'away' ? 'text-warning' : 'text-foreground/80'
         }`}>
           {matchState.awayScore}
         </div>
+        <span className="text-muted-foreground/40">·</span>
+        <span className="text-[9px] font-bold text-muted-foreground uppercase">Set</span>
+        <span className="text-base font-bold text-primary tabular-nums">{matchState.awaySetsWon}</span>
+        <span className="ml-1 px-1.5 py-0.5 rounded bg-secondary text-center">
+          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Set</span>
+          <span className="text-xs font-bold text-primary tabular-nums">{matchState.currentSet}</span>
+        </span>
+      </div>
+
+      {/* AWAY compact */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
         <button
           type="button"
           onClick={() => handleTimeout('away')}
-          className="min-h-10 px-2.5 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider text-[10px] font-bold active:scale-95"
+          className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-[9px] font-bold uppercase tracking-wider active:scale-95"
           title="Time-out Ospite"
         >
           T-out
         </button>
+        <TimeoutDots used={matchState.awayTimeoutsUsed} />
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-warning tabular-nums">
+          #{matchState.awayCurrentLineup[0]}
+        </span>
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-primary tabular-nums">
+          R{matchState.awaySetterPosition}
+        </span>
+        <span className="text-[10px] text-muted-foreground/80 truncate max-w-[80px] font-bold uppercase tracking-wider">
+          {awayTeam.name || 'Ospite'}
+        </span>
+        <ServingDot active={matchState.servingTeam === 'away'} />
+        <TeamSanctions team="away" />
       </div>
 
-      {/* AWAY */}
-      <div className="flex items-center gap-4 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-primary">{matchState.awaySetsWon}</span>
-          <span className="text-xs font-bold text-muted-foreground">Set</span>
-        </div>
-        <div className="text-left min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Ospite</span>
-            <ServingDot active={matchState.servingTeam === 'away'} />
-            <TeamSanctions team="away" />
-          </div>
-          <div className="text-sm font-bold text-foreground/80 truncate max-w-[120px] flex items-center gap-1.5">
-            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-warning/20 text-warning tabular-nums">#{matchState.awayCurrentLineup[0]}</span>
-            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-primary/20 text-primary tabular-nums">R{matchState.awaySetterPosition}</span>
-            <span className="truncate">{awayTeam.name || 'Ospite'}</span>
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">T-out</span>
-            <TimeoutDots used={matchState.awayTimeoutsUsed} />
-          </div>
-          <span className="text-xs text-muted-foreground font-bold">SOST {matchState.awaySubstitutionsUsed}/6</span>
-        </div>
-      </div>
-
-      {/* Set indicator */}
-      <div className="ml-1 px-2 py-0.5 rounded-md bg-secondary text-center">
-        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Set</div>
-        <div className="text-lg font-bold text-primary leading-none">{matchState.currentSet}</div>
-      </div>
 
       {/* Sanction dialog */}
       <Dialog open={sanctionOpen} onOpenChange={setSanctionOpen}>
         <DialogTrigger asChild>
           <button
             type="button"
-            className="min-h-14 px-4 rounded-md bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-sm font-bold uppercase tracking-wider active:scale-95"
+            className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider active:scale-95"
             title="Cartellino / Sanzione"
           >
             <Square className="w-3 h-3" />
@@ -293,7 +284,7 @@ export function ScoreBoard() {
       </Dialog>
 
       <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
-        <DialogTrigger asChild><button type="button" className="min-h-10 px-3 text-xs font-bold bg-secondary rounded-lg">✎ Correzione</button></DialogTrigger>
+        <DialogTrigger asChild><button type="button" className="h-7 px-1.5 text-[9px] font-bold bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground rounded uppercase tracking-wider">✎ Corr</button></DialogTrigger>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Correzione</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => adjustScore('home', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>
@@ -312,10 +303,10 @@ export function ScoreBoard() {
       <button
         type="button"
         onClick={() => setResetConfirmOpen(true)}
-        className="min-h-12 min-w-12 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors active:scale-95"
+        className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors active:scale-95"
         title="Reset partita"
       >
-        <RotateCcw className="w-4 h-4" />
+        <RotateCcw className="w-3.5 h-3.5" />
       </button>
       <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
         <AlertDialogContent>
