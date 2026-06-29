@@ -81,7 +81,16 @@ export default function Auth() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
   const [inviteAccepted, setInviteAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const acceptingInviteRef = useRef(false);
+  const firstFieldRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    // Autofocus al primo campo utile al cambio modalità
+    firstFieldRef.current?.focus();
+  }, [mode]);
 
   const from = (location.state as { from?: string })?.from ?? '/';
 
