@@ -7,7 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { AlertCircle, Loader2, Volleyball } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2, Volleyball } from 'lucide-react';
+
+function passwordStrength(pw: string): { score: 0 | 1 | 2 | 3 | 4; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+  const map = [
+    { label: 'Troppo corta', color: 'bg-destructive' },
+    { label: 'Debole', color: 'bg-destructive' },
+    { label: 'Discreta', color: 'bg-amber-500' },
+    { label: 'Buona', color: 'bg-emerald-500' },
+    { label: 'Ottima', color: 'bg-emerald-600' },
+  ] as const;
+  return { score: score as 0 | 1 | 2 | 3 | 4, ...map[score] };
+}
 
 type Mode = 'signin' | 'signup';
 type InviteInfo = {
