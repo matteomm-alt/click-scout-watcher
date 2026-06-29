@@ -7,7 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { AlertCircle, Loader2, Volleyball } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2, Volleyball } from 'lucide-react';
+
+function passwordStrength(pw: string): { score: 0 | 1 | 2 | 3 | 4; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+  const map = [
+    { label: 'Troppo corta', color: 'bg-destructive' },
+    { label: 'Debole', color: 'bg-destructive' },
+    { label: 'Discreta', color: 'bg-amber-500' },
+    { label: 'Buona', color: 'bg-emerald-500' },
+    { label: 'Ottima', color: 'bg-emerald-600' },
+  ] as const;
+  return { score: score as 0 | 1 | 2 | 3 | 4, ...map[score] };
+}
 
 type Mode = 'signin' | 'signup';
 type InviteInfo = {
@@ -65,7 +81,16 @@ export default function Auth() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
   const [inviteAccepted, setInviteAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const acceptingInviteRef = useRef(false);
+  const firstFieldRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    // Autofocus al primo campo utile al cambio modalità
+    firstFieldRef.current?.focus();
+  }, [mode]);
 
   const from = (location.state as { from?: string })?.from ?? '/';
 
@@ -150,13 +175,26 @@ export default function Auth() {
   
   }, [user, authLoading, inviteToken, navigate, from]);
 
+  const translateAuthError = (raw: string): string => {
+    const m = raw.toLowerCase();
+    if (m.includes('invalid login')) return 'Email o password errate.';
+    if (m.includes('email not confirmed')) return 'Email non confermata. Controlla la casella di posta.';
+    if (m.includes('user already registered')) return 'Esiste già un account con questa email. Prova ad accedere.';
+    if (m.includes('password should be')) return 'Password troppo debole. Usa almeno 8 caratteri.';
+    if (m.includes('rate limit')) return 'Troppi tentativi. Attendi qualche minuto e riprova.';
+    if (m.includes('pwned') || m.includes('compromised')) return 'Questa password è stata compromessa in passato. Scegline un’altra.';
+    return raw;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
+    setFormError(null);
 
     try {
       if (mode === 'signup') {
+        if (password.length < 8) throw new Error('Password should be at least 8 characters');
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -185,7 +223,9 @@ export default function Auth() {
         }
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Errore imprevisto';
+      const raw = err instanceof Error ? err.message : 'Errore imprevisto';
+      const msg = translateAuthError(raw);
+      setFormError(msg);
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -251,12 +291,13 @@ export default function Auth() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {mode === 'signup' && (
             <div className="space-y-1.5">
               <Label htmlFor="fullName">Nome completo</Label>
               <Input
                 id="fullName"
+                ref={firstFieldRef}
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -271,6 +312,7 @@ export default function Auth() {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              ref={mode === 'signin' ? firstFieldRef : undefined}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -283,28 +325,79 @@ export default function Auth() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              minLength={8}
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            />
-            {mode === 'signup' && (
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              {capsLockOn && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-500">
+                  Caps Lock attivo
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyUp={(e) => setCapsLockOn(e.getModifierState && e.getModifierState('CapsLock'))}
+                onKeyDown={(e) => setCapsLockOn(e.getModifierState && e.getModifierState('CapsLock'))}
+                placeholder="••••••••"
+                required
+                minLength={8}
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {mode === 'signup' && password.length > 0 && (() => {
+              const s = passwordStrength(password);
+              return (
+                <div className="space-y-1 pt-0.5">
+                  <div className="flex gap-1" aria-hidden="true">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={`h-1 flex-1 rounded-full transition-colors ${i < s.score ? s.color : 'bg-muted'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Forza password: <span className="font-medium text-foreground">{s.label}</span>
+                  </p>
+                </div>
+              );
+            })()}
+            {mode === 'signup' && password.length === 0 && (
               <p className="text-xs text-muted-foreground">
                 Minimo 8 caratteri. Le password compromesse verranno rifiutate.
               </p>
             )}
           </div>
 
+          {formError && (
+            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2.5 text-xs text-destructive">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{formError}</span>
+            </div>
+          )}
+
           <Button type="submit" className="w-full" disabled={submitting || inviteLoading || (mode === 'signup' && Boolean(inviteError) && !inviteInfo?.is_accepted) || acceptingInvite}>
             {(submitting || acceptingInvite) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {acceptingInvite ? 'Accettazione invito…' : null}
-            {!acceptingInvite && (mode === 'signin' ? 'Accedi' : 'Crea account')}
+            {acceptingInvite
+              ? 'Accettazione invito…'
+              : submitting
+                ? (mode === 'signin' ? 'Accesso in corso…' : 'Creazione account…')
+                : inviteToken
+                  ? (mode === 'signin' ? 'Accedi e accetta invito' : 'Registrati e accetta invito')
+                  : (mode === 'signin' ? 'Accedi' : 'Crea account')}
           </Button>
 
           {mode === 'signin' && !inviteToken && (
