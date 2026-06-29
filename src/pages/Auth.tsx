@@ -175,13 +175,26 @@ export default function Auth() {
   
   }, [user, authLoading, inviteToken, navigate, from]);
 
+  const translateAuthError = (raw: string): string => {
+    const m = raw.toLowerCase();
+    if (m.includes('invalid login')) return 'Email o password errate.';
+    if (m.includes('email not confirmed')) return 'Email non confermata. Controlla la casella di posta.';
+    if (m.includes('user already registered')) return 'Esiste già un account con questa email. Prova ad accedere.';
+    if (m.includes('password should be')) return 'Password troppo debole. Usa almeno 8 caratteri.';
+    if (m.includes('rate limit')) return 'Troppi tentativi. Attendi qualche minuto e riprova.';
+    if (m.includes('pwned') || m.includes('compromised')) return 'Questa password è stata compromessa in passato. Scegline un’altra.';
+    return raw;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
+    setFormError(null);
 
     try {
       if (mode === 'signup') {
+        if (password.length < 8) throw new Error('Password should be at least 8 characters');
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -210,7 +223,9 @@ export default function Auth() {
         }
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Errore imprevisto';
+      const raw = err instanceof Error ? err.message : 'Errore imprevisto';
+      const msg = translateAuthError(raw);
+      setFormError(msg);
       toast.error(msg);
     } finally {
       setSubmitting(false);
