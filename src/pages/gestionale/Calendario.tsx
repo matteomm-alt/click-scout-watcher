@@ -658,10 +658,12 @@ export default function Calendario() {
               />
             </div>
 
-            {!editingEvent && (
+            {(!editingEvent || !isPartOfSeries(editingEvent)) && (
               <div className="space-y-3 border border-border rounded-lg p-3 bg-secondary/30">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs uppercase tracking-wider">Ripeti evento</Label>
+                  <Label className="text-xs uppercase tracking-wider">
+                    {editingEvent ? 'Rendi ricorrente da qui' : 'Ripeti evento'}
+                  </Label>
                   <button
                     type="button"
                     onClick={() => setRecurrence((r) => ({ ...r, enabled: !r.enabled }))}
