@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { MapPin } from 'lucide-react';
+import { MapPin, Repeat } from 'lucide-react';
 import { getEventMeta } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
@@ -73,6 +73,9 @@ export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
                       <span className={cn('font-bold truncate', meta.textClass)}>
                         {timeLabel}
                       </span>
+                      {(evt.recurrence_parent_id || evt.recurrence_rule) && (
+                        <Repeat className={cn('w-2.5 h-2.5 shrink-0', meta.textClass)} />
+                      )}
                     </div>
                     <p className="font-semibold truncate text-foreground mt-0.5">{evt.title}</p>
                     {evt.location && (
