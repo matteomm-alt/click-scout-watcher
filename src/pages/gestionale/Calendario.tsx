@@ -745,7 +745,7 @@ export default function Calendario() {
             {editingEvent && (
               <Button
                 variant="destructive"
-                onClick={deleteEvent}
+                onClick={() => isPartOfSeries(editingEvent) ? setPendingScopeAction('delete') : deleteEvent('single')}
                 disabled={savingEvent}
                 className="mr-auto"
               >
@@ -760,7 +760,7 @@ export default function Calendario() {
               Annulla
             </Button>
             <Button
-              onClick={saveEvent}
+              onClick={() => editingEvent && isPartOfSeries(editingEvent) ? setPendingScopeAction('save') : saveEvent('single')}
               disabled={!eventForm.title.trim() || !eventForm.start_at || savingEvent}
               className="gap-2"
             >
@@ -780,6 +780,44 @@ export default function Calendario() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={pendingScopeAction !== null} onOpenChange={(o) => !o && setPendingScopeAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingScopeAction === 'delete' ? "Eliminare l'evento?" : 'Salvare le modifiche?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Questo evento fa parte di una serie ricorrente. Vuoi applicare
+              {pendingScopeAction === 'delete' ? " l'eliminazione" : ' la modifica'} solo a questo
+              evento o a tutta la serie?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingScopeAction === 'delete') deleteEvent('single');
+                else saveEvent('single');
+                setPendingScopeAction(null);
+              }}
+            >
+              Solo questo evento
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingScopeAction === 'delete') deleteEvent('series');
+                else saveEvent('series');
+                setPendingScopeAction(null);
+              }}
+            >
+              Tutta la serie
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
