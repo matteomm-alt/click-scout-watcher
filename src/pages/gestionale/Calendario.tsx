@@ -242,7 +242,7 @@ export default function Calendario() {
     return dates;
   }, [recurrence, eventForm.start_at]);
 
-  const saveEvent = async () => {
+  const saveEvent = async (scope: 'single' | 'series' = 'single') => {
     if (!societyId || !user || !eventForm.title.trim() || !eventForm.start_at) return;
     setSavingEvent(true);
     const payload = {
@@ -256,14 +256,70 @@ export default function Calendario() {
     };
 
     if (editingEvent) {
-      const { error } = await supabase
-        .from('events').update(payload).eq('id', editingEvent.id);
-      if (error) { toast.error('Errore aggiornamento evento'); setSavingEvent(false); return; }
-      toast.success('Evento aggiornato');
+      if (scope === 'series') {
+        const parentId = editingEvent.recurrence_parent_id ?? editingEvent.id;
+        const { title, event_type, location, description, team_label } = payload;
+        const { error } = await supabase
+          .from('events')
+          .update({ title, event_type, location, description, team_label })
+          .or(`id.eq.${parentId},recurrence_parent_id.eq.${parentId}`);
+        if (error) { toast.error('Errore aggiornamento serie'); setSavingEvent(false); return; }
+        toast.success('Serie di eventi aggiornata');
+      } else {
+        const { error } = await supabase
+          .from('events').update(payload).eq('id', editingEvent.id);
+        if (error) { toast.error('Errore aggiornamento evento'); setSavingEvent(false); return; }
+
+        if (recurrence.enabled && recurrenceDates.length > 0) {
+          const durationMs = eventForm.end_at
+            ? new Date(eventForm.end_at).getTime() - new Date(eventForm.start_at).getTime()
+            : 0;
+          const lastRecurrenceDate = recurrenceDates[recurrenceDates.length - 1].toISOString();
+          await supabase
+            .from('events')
+            .update({ recurrence_rule: recurrence.interval, recurrence_until: lastRecurrenceDate })
+            .eq('id', editingEvent.id);
+          const { error: recErr } = await supabase.from('events').insert(
+            recurrenceDates.map((d) => ({
+              society_id: societyId,
+              created_by: user.id,
+              title: payload.title,
+              event_type: payload.event_type,
+              start_at: d.toISOString(),
+              end_at: durationMs > 0
+                ? new Date(d.getTime() + durationMs).toISOString()
+                : null,
+              location: payload.location,
+              description: payload.description,
+              team_label: payload.team_label,
+              recurrence_parent_id: editingEvent.id,
+            })),
+          );
+          if (recErr) {
+            toast.error('Evento aggiornato, ma errore creando gli eventi ricorrenti');
+          } else {
+            toast.success(`Evento reso ricorrente: aggiunti ${recurrenceDates.length} eventi`);
+          }
+        } else {
+          toast.success('Evento aggiornato');
+        }
+      }
     } else {
-      const { error } = await supabase
-        .from('events').insert({ ...payload, society_id: societyId, created_by: user.id });
-      if (error) { toast.error('Errore creazione evento'); setSavingEvent(false); return; }
+      const lastRecurrenceDate = recurrence.enabled && recurrenceDates.length > 0
+        ? recurrenceDates[recurrenceDates.length - 1].toISOString()
+        : null;
+      const { data: parentEvent, error } = await supabase
+        .from('events')
+        .insert({
+          ...payload,
+          society_id: societyId,
+          created_by: user.id,
+          recurrence_rule: recurrence.enabled ? recurrence.interval : null,
+          recurrence_until: lastRecurrenceDate,
+        })
+        .select('id')
+        .single();
+      if (error || !parentEvent) { toast.error('Errore creazione evento'); setSavingEvent(false); return; }
 
       if (recurrence.enabled && recurrenceDates.length > 0) {
         const durationMs = eventForm.end_at
@@ -282,6 +338,7 @@ export default function Calendario() {
             location: payload.location,
             description: payload.description,
             team_label: payload.team_label,
+            recurrence_parent_id: parentEvent.id,
           })),
         );
         if (recErr) {
@@ -299,14 +356,28 @@ export default function Calendario() {
     setRefreshKey((v) => v + 1);
   };
 
-  const deleteEvent = async () => {
+  const isPartOfSeries = (evt: CalendarEvent) =>
+    !!evt.recurrence_parent_id || !!evt.recurrence_rule;
+
+  const deleteEvent = async (scope: 'single' | 'series' = 'single') => {
     if (!editingEvent) return;
     setSavingEvent(true);
-    const { error } = await supabase
-      .from('events').delete().eq('id', editingEvent.id);
-    setSavingEvent(false);
-    if (error) { toast.error('Errore eliminazione evento'); return; }
-    toast.success('Evento eliminato');
+    if (scope === 'series') {
+      const parentId = editingEvent.recurrence_parent_id ?? editingEvent.id;
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .or(`id.eq.${parentId},recurrence_parent_id.eq.${parentId}`);
+      setSavingEvent(false);
+      if (error) { toast.error('Errore eliminazione serie'); return; }
+      toast.success('Serie di eventi eliminata');
+    } else {
+      const { error } = await supabase
+        .from('events').delete().eq('id', editingEvent.id);
+      setSavingEvent(false);
+      if (error) { toast.error('Errore eliminazione evento'); return; }
+      toast.success('Evento eliminato');
+    }
     setNewEventOpen(false);
     setRefreshKey((v) => v + 1);
   };
