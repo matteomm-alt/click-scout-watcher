@@ -90,6 +90,9 @@ export function MonthView({ anchor, events, onEventClick }: Props) {
                         title={`${timeLabel} ${evt.title}${evt.location ? ' @ ' + evt.location : ''}`}
                       >
                         <span className="font-bold mr-1">{timeLabel}</span>
+                        {(evt.recurrence_parent_id || evt.recurrence_rule) && (
+                          <Repeat className="w-2 h-2 inline-block mr-0.5 text-muted-foreground" />
+                        )}
                         <span className="text-foreground">{evt.title}</span>
                       </button>
                       {evt.event_type === 'partita' && (
