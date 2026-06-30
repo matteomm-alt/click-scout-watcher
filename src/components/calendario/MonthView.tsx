@@ -4,6 +4,7 @@ import {
   addDays, isSameDay, isSameMonth,
 } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { Repeat } from 'lucide-react';
 import { getEventMeta } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
