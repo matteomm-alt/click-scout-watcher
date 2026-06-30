@@ -224,6 +224,7 @@ export default function Calendario() {
       description: evt.description ?? '',
       team_label: evt.team_label ?? '',
     });
+    setRecurrence({ enabled: false, interval: 'week', count: 8 });
     setNewEventOpen(true);
   };
 
