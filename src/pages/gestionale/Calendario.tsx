@@ -25,6 +25,10 @@ import { ExcelImportDialog, type ExcelEventPreview } from '@/components/calendar
 import type { CalendarEvent } from '@/components/calendario/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type ViewMode = 'week' | 'month' | 'season';
 
