@@ -68,6 +68,7 @@ export default function Calendario() {
     description: '',
     team_label: '',
   });
+  const [pendingScopeAction, setPendingScopeAction] = useState<'save' | 'delete' | null>(null);
   const [recurrence, setRecurrence] = useState<{
     enabled: boolean;
     interval: 'week' | 'biweek' | 'month';
