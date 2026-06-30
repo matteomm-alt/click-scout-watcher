@@ -73,6 +73,9 @@ export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
                       <span className={cn('font-bold truncate', meta.textClass)}>
                         {timeLabel}
                       </span>
+                      {(evt.recurrence_parent_id || evt.recurrence_rule) && (
+                        <Repeat className={cn('w-2.5 h-2.5 shrink-0', meta.textClass)} />
+                      )}
                     </div>
                     <p className="font-semibold truncate text-foreground mt-0.5">{evt.title}</p>
                     {evt.location && (
