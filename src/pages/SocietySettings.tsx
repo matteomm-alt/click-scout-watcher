@@ -19,7 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle, Plus, Pencil, Shield } from 'lucide-react';
 import { ROLE_LABELS, SOCIETY_ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';
 
 interface SocietyRow {
@@ -115,6 +115,74 @@ export default function SocietySettings() {
   const [inviteRole, setInviteRole] = useState<AppRole>('coach');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
+
+  // ── Squadre ──────────────────────────────────────────────
+  interface TeamRow { id: string; name: string; category: string | null; age_group: string | null; season: string | null; notes: string | null; }
+  const [teams, setTeams] = useState<TeamRow[]>([]);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<TeamRow | null>(null);
+  const [teamForm, setTeamForm] = useState({ name: '', category: '', age_group: '', season: '', notes: '' });
+  const [deleteTeamId, setDeleteTeamId] = useState<string | null>(null);
+
+  const loadTeams = async () => {
+    if (!societyId) return;
+    const { data, error } = await supabase.from('teams')
+      .select('id, name, category, age_group, season, notes')
+      .eq('society_id', societyId)
+      .order('name');
+    if (error) { toast.error('Errore caricamento squadre'); return; }
+    setTeams((data ?? []) as TeamRow[]);
+  };
+
+  useEffect(() => { loadTeams(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId]);
+
+  const openTeamCreate = () => {
+    setEditingTeam(null);
+    setTeamForm({ name: '', category: '', age_group: '', season: '', notes: '' });
+    setTeamDialogOpen(true);
+  };
+  const openTeamEdit = (t: TeamRow) => {
+    setEditingTeam(t);
+    setTeamForm({
+      name: t.name,
+      category: t.category ?? '',
+      age_group: t.age_group ?? '',
+      season: t.season ?? '',
+      notes: t.notes ?? '',
+    });
+    setTeamDialogOpen(true);
+  };
+  const saveTeam = async () => {
+    if (!societyId || !user || !teamForm.name.trim()) {
+      toast.error('Nome squadra obbligatorio'); return;
+    }
+    const payload = {
+      name: teamForm.name.trim(),
+      category: teamForm.category.trim() || null,
+      age_group: teamForm.age_group.trim() || null,
+      season: teamForm.season.trim() || null,
+      notes: teamForm.notes.trim() || null,
+    };
+    if (editingTeam) {
+      const { error } = await supabase.from('teams').update(payload).eq('id', editingTeam.id);
+      if (error) { toast.error(error.message || 'Errore salvataggio'); return; }
+      toast.success('Squadra aggiornata');
+    } else {
+      const { error } = await supabase.from('teams').insert({ ...payload, society_id: societyId, coach_id: user.id });
+      if (error) { toast.error(error.message || 'Errore creazione'); return; }
+      toast.success('Squadra creata');
+    }
+    setTeamDialogOpen(false);
+    await loadTeams();
+  };
+  const deleteTeam = async () => {
+    if (!deleteTeamId) return;
+    const { error } = await supabase.from('teams').delete().eq('id', deleteTeamId);
+    if (error) { toast.error(error.message || 'Errore eliminazione'); return; }
+    toast.success('Squadra eliminata');
+    setDeleteTeamId(null);
+    await loadTeams();
+  };
 
   const loadMembers = async () => {
     if (!societyId) return;
