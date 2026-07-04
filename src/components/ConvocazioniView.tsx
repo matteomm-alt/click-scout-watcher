@@ -307,7 +307,16 @@ export function ConvocazioniView() {
           </Card>
 
           <Card className="p-5 space-y-3">
-            <h3 className="text-sm font-bold uppercase italic">Aggiungi atleti</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold uppercase italic">Aggiungi atleti</h3>
+              <Select value={teamFilter} onValueChange={setTeamFilter}>
+                <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutte le squadre</SelectItem>
+                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1 max-h-72 overflow-y-auto">
               {nonConvocati.length === 0 ? <p className="text-sm text-muted-foreground">Tutti convocati.</p> :
                nonConvocati.map(a => (
