@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 
 interface Convocation { id: string; title: string; match_date: string | null; meeting_time: string | null; location: string | null; notes: string | null; created_at: string; }
 interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: string; role_in_match: string | null; notes: string | null; }
-interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
+interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; team_id: string | null; }
+interface TeamLite { id: string; name: string; }
 
 const ROLES = ['Titolare', 'Riserva', 'Libero', 'Fuori lista'];
 const ROLE_TO_DB: Record<string, 'titolare' | 'riserva' | 'libero' | 'non_convocato'> = {
@@ -37,6 +38,8 @@ export function ConvocazioniView() {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ title: '', match_date: '', meeting_time: '', location: '' });
+  const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>('all');
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
