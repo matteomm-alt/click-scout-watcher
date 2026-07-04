@@ -33,7 +33,10 @@ interface Athlete {
   email: string | null;
   notes: string | null;
   medical_cert_expiry: string | null;
+  team_id: string | null;
 }
+
+interface TeamLite { id: string; name: string; }
 
 const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Libero', 'Universale'];
 
@@ -41,6 +44,7 @@ const emptyForm = {
   number: '', last_name: '', first_name: '', role: '',
   is_libero: false, is_captain: false, birth_date: '',
   phone: '', email: '', notes: '', medical_cert_expiry: '',
+  team_id: '',
 };
 
 export function AtletiView() {
@@ -54,6 +58,7 @@ export function AtletiView() {
   const [form, setForm] = useState(emptyForm);
   const [injuriesAthlete, setInjuriesAthlete] = useState<Athlete | null>(null);
   const [search, setSearch] = useState('');
+  const [teamFilter, setTeamFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'number' | 'last_name' | 'role'>('number');
 
   // ── Queries ─────────────────────────────────────────────
@@ -81,6 +86,19 @@ export function AtletiView() {
     },
     enabled: !!societyId,
   });
+
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams-lite', societyId ?? ''],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teams').select('id, name')
+        .eq('society_id', societyId!).order('name');
+      if (error) throw error;
+      return (data as TeamLite[]) ?? [];
+    },
+    enabled: !!societyId,
+  });
+  const teamMap = new Map(teams.map(t => [t.id, t.name]));
 
   // ── Mutations ───────────────────────────────────────────
   const invalidate = () => {
