@@ -383,6 +383,11 @@ export function AtletiView() {
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
+                        {a.team_id && teamMap.get(a.team_id) && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/40 text-primary">
+                            {teamMap.get(a.team_id)}
+                          </Badge>
+                        )}
                         {a.birth_date && <span className="text-xs text-muted-foreground">· {new Date(a.birth_date).getFullYear()}</span>}
                         {/* Contatti cliccabili */}
                         {a.phone && (
