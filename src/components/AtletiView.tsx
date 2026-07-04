@@ -316,6 +316,15 @@ export function AtletiView() {
             className="flex-1 min-w-40 min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
           />
           <select
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+            className="min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
+          >
+            <option value="all">Tutte le squadre</option>
+            <option value="none">Senza squadra</option>
+            {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+          <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
