@@ -139,7 +139,9 @@ export function ConvocazioniView() {
 
   const selected = convocations.find(c => c.id === selectedId);
   const convocati = players.map(p => ({ player: p, athlete: athletes.find(a => a.id === p.athlete_id)! })).filter(x => x.athlete);
-  const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
+  const nonConvocati = athletes
+    .filter(a => !players.find(p => p.athlete_id === a.id))
+    .filter(a => teamFilter === 'all' || a.team_id === teamFilter);
 
 
   const generatePdf = async () => {
