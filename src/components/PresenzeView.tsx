@@ -17,7 +17,8 @@ import { isFeatureEnabled } from '@/lib/societyFeatures';
 import { toast } from 'sonner';
 
 interface Event { id: string; title: string; start_at: string; event_type: string; }
-interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
+interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; team_id: string | null; }
+interface TeamLite { id: string; name: string; }
 interface Attendance { athlete_id: string; status: 'presente' | 'assente' | 'giustificato'; note: string | null; }
 
 const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
@@ -35,6 +36,8 @@ export function PresenzeView() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [attendances, setAttendances] = useState<Record<string, Attendance>>({});
   const [injuredIds, setInjuredIds] = useState<Set<string>>(new Set());
+  const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [noteDialog, setNoteDialog] = useState<{ athleteId: string; status: 'assente' | 'giustificato' } | null>(null);
@@ -74,9 +77,11 @@ export function PresenzeView() {
   useEffect(() => {
     if (!societyId) return;
     (async () => {
-      const { data } = await supabase.from('athletes').select('id, last_name, first_name, number, role')
+      const { data } = await supabase.from('athletes').select('id, last_name, first_name, number, role, team_id')
         .eq('society_id', societyId).order('last_name');
       setAthletes(((data ?? []) as unknown as Athlete[]));
+      const { data: tData } = await supabase.from('teams').select('id, name').eq('society_id', societyId).order('name');
+      setTeams(((tData ?? []) as TeamLite[]));
       if (injuriesEnabled) {
         const { data: inj } = await supabase
           .from('athlete_injuries')
@@ -224,6 +229,15 @@ export function PresenzeView() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="min-w-[180px]">
+              <Select value={teamFilter} onValueChange={setTeamFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutte le squadre</SelectItem>
+                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {selectedEvent && (
               <Button variant="outline" onClick={exportCsv} className="gap-2">
                 <Download className="w-4 h-4" /> Export CSV
@@ -252,7 +266,7 @@ export function PresenzeView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {athletes.map(a => {
+                    {athletes.filter(a => teamFilter === 'all' || a.team_id === teamFilter).map(a => {
                       const status = attendances[a.id]?.status;
                       const injured = injuredIds.has(a.id);
                       return (

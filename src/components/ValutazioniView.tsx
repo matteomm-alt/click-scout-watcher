@@ -34,8 +34,9 @@ function getTappa(media: number) {
 }
 
 interface Athlete {
-  id: string; last_name: string; first_name: string | null; number: number | null; role: string | null;
+  id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; team_id: string | null;
 }
+interface TeamLite { id: string; name: string; }
 interface Evaluation {
   id: string; athlete_id: string; fundamental: string; score: number; evaluated_at: string;
   notes: string | null; season_phase: Phase | null;
@@ -60,6 +61,8 @@ export function ValutazioniView() {
     return [...standard, ...custom];
   }, [template]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>('all');
   const [selectedAthleteId, setSelectedAthleteId] = useState('');
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,9 +74,11 @@ export function ValutazioniView() {
     if (!societyId) return;
     (async () => {
       const { data } = await supabase.from('athletes')
-        .select('id, last_name, first_name, number, role')
+        .select('id, last_name, first_name, number, role, team_id')
         .eq('society_id', societyId).order('last_name');
       setAthletes(((data ?? []) as unknown as typeof athletes));
+      const { data: tData } = await supabase.from('teams').select('id, name').eq('society_id', societyId).order('name');
+      setTeams(((tData ?? []) as TeamLite[]));
     })();
   }, [societyId]);
 
@@ -257,11 +262,20 @@ export function ValutazioniView() {
 
       {/* Selettore atleta + PDF */}
       <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-[180px]">
+          <Select value={teamFilter} onValueChange={(v) => { setTeamFilter(v); setSelectedAthleteId(''); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutte le squadre</SelectItem>
+              {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex-1 min-w-[260px] max-w-lg">
           <Select value={selectedAthleteId} onValueChange={setSelectedAthleteId}>
             <SelectTrigger><SelectValue placeholder="Seleziona atleta..." /></SelectTrigger>
             <SelectContent>
-              {athletes.map(a => (
+              {athletes.filter(a => teamFilter === 'all' || a.team_id === teamFilter).map(a => (
                 <SelectItem key={a.id} value={a.id}>
                   #{a.number} {a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''} {a.role ? `— ${a.role}` : ''}
                 </SelectItem>

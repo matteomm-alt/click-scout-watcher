@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 
 interface Convocation { id: string; title: string; match_date: string | null; meeting_time: string | null; location: string | null; notes: string | null; created_at: string; }
 interface ConvocationPlayer { id: string; convocation_id: string; athlete_id: string; role_in_match: string | null; notes: string | null; }
-interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
+interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; team_id: string | null; }
+interface TeamLite { id: string; name: string; }
 
 const ROLES = ['Titolare', 'Riserva', 'Libero', 'Fuori lista'];
 const ROLE_TO_DB: Record<string, 'titolare' | 'riserva' | 'libero' | 'non_convocato'> = {
@@ -37,6 +38,8 @@ export function ConvocazioniView() {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ title: '', match_date: '', meeting_time: '', location: '' });
+  const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [teamFilter, setTeamFilter] = useState<string>('all');
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -60,13 +63,15 @@ export function ConvocazioniView() {
   useEffect(() => {
     if (!societyId) return;
     (async () => {
-      const [{ data: c }, { data: a }] = await Promise.all([
+      const [{ data: c }, { data: a }, { data: t }] = await Promise.all([
         supabase.from('convocations').select('*').eq('society_id', societyId).order('created_at', { ascending: false }),
-        supabase.from('athletes').select('id, last_name, first_name, number, role').eq('society_id', societyId).order('number'),
+        supabase.from('athletes').select('id, last_name, first_name, number, role, team_id').eq('society_id', societyId).order('number'),
+        supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
       ]);
       const convs = ((c ?? []) as unknown as Convocation[]);
       setConvocations(convs);
       setAthletes(((a ?? []) as unknown as Athlete[]));
+      setTeams(((t ?? []) as TeamLite[]));
       if (convs.length > 0) setSelectedId(convs[0].id);
     })();
   }, [societyId]);
@@ -134,7 +139,9 @@ export function ConvocazioniView() {
 
   const selected = convocations.find(c => c.id === selectedId);
   const convocati = players.map(p => ({ player: p, athlete: athletes.find(a => a.id === p.athlete_id)! })).filter(x => x.athlete);
-  const nonConvocati = athletes.filter(a => !players.find(p => p.athlete_id === a.id));
+  const nonConvocati = athletes
+    .filter(a => !players.find(p => p.athlete_id === a.id))
+    .filter(a => teamFilter === 'all' || a.team_id === teamFilter);
 
 
   const generatePdf = async () => {
@@ -300,7 +307,16 @@ export function ConvocazioniView() {
           </Card>
 
           <Card className="p-5 space-y-3">
-            <h3 className="text-sm font-bold uppercase italic">Aggiungi atleti</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold uppercase italic">Aggiungi atleti</h3>
+              <Select value={teamFilter} onValueChange={setTeamFilter}>
+                <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutte le squadre</SelectItem>
+                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1 max-h-72 overflow-y-auto">
               {nonConvocati.length === 0 ? <p className="text-sm text-muted-foreground">Tutti convocati.</p> :
                nonConvocati.map(a => (

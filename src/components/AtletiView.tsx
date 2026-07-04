@@ -33,7 +33,10 @@ interface Athlete {
   email: string | null;
   notes: string | null;
   medical_cert_expiry: string | null;
+  team_id: string | null;
 }
+
+interface TeamLite { id: string; name: string; }
 
 const ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Libero', 'Universale'];
 
@@ -41,6 +44,7 @@ const emptyForm = {
   number: '', last_name: '', first_name: '', role: '',
   is_libero: false, is_captain: false, birth_date: '',
   phone: '', email: '', notes: '', medical_cert_expiry: '',
+  team_id: '',
 };
 
 export function AtletiView() {
@@ -54,6 +58,7 @@ export function AtletiView() {
   const [form, setForm] = useState(emptyForm);
   const [injuriesAthlete, setInjuriesAthlete] = useState<Athlete | null>(null);
   const [search, setSearch] = useState('');
+  const [teamFilter, setTeamFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'number' | 'last_name' | 'role'>('number');
 
   // ── Queries ─────────────────────────────────────────────
@@ -82,6 +87,19 @@ export function AtletiView() {
     enabled: !!societyId,
   });
 
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams-lite', societyId ?? ''],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teams').select('id, name')
+        .eq('society_id', societyId!).order('name');
+      if (error) throw error;
+      return (data as TeamLite[]) ?? [];
+    },
+    enabled: !!societyId,
+  });
+  const teamMap = new Map(teams.map(t => [t.id, t.name]));
+
   // ── Mutations ───────────────────────────────────────────
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.athletes.all(societyId ?? '') });
@@ -100,6 +118,7 @@ export function AtletiView() {
     email: string | null;
     notes: string | null;
     medical_cert_expiry: string | null;
+    team_id: string | null;
   };
   const saveMutation = useMutation({
     mutationFn: async (payload: AthletePayload) => {
@@ -150,6 +169,7 @@ export function AtletiView() {
       email: a.email || '',
       notes: a.notes || '',
       medical_cert_expiry: a.medical_cert_expiry || '',
+      team_id: a.team_id || '',
     });
     setDialogOpen(true);
   };
@@ -168,6 +188,7 @@ export function AtletiView() {
       email: form.email || null,
       notes: form.notes || null,
       medical_cert_expiry: form.medical_cert_expiry || null,
+      team_id: form.team_id || null,
     };
     saveMutation.mutate(payload);
   };
@@ -235,6 +256,9 @@ export function AtletiView() {
 
   const filtered = athletes
     .filter(a => {
+      if (teamFilter !== 'all') {
+        if (teamFilter === 'none' ? a.team_id : a.team_id !== teamFilter) return false;
+      }
       if (!search) return true;
       const q = search.toLowerCase();
       return (
@@ -291,6 +315,15 @@ export function AtletiView() {
             placeholder="Cerca per nome o numero..."
             className="flex-1 min-w-40 min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
           />
+          <select
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+            className="min-h-10 rounded-lg bg-muted/50 border border-border px-3 text-sm"
+          >
+            <option value="all">Tutte le squadre</option>
+            <option value="none">Senza squadra</option>
+            {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
@@ -350,6 +383,11 @@ export function AtletiView() {
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
+                        {a.team_id && teamMap.get(a.team_id) && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/40 text-primary">
+                            {teamMap.get(a.team_id)}
+                          </Badge>
+                        )}
                         {a.birth_date && <span className="text-xs text-muted-foreground">· {new Date(a.birth_date).getFullYear()}</span>}
                         {/* Contatti cliccabili */}
                         {a.phone && (
@@ -414,6 +452,15 @@ export function AtletiView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Numero maglia</Label><Input type="number" value={form.number} onChange={e => setForm(f => ({ ...f, number: e.target.value }))} placeholder="es. 7" /></div>
               <div><Label>Data di nascita</Label><Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} /></div>
+            </div>
+            <div><Label>Squadra</Label>
+              <Select value={form.team_id || 'none'} onValueChange={v => setForm(f => ({ ...f, team_id: v === 'none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Seleziona squadra..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nessuna squadra</SelectItem>
+                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div><Label>Scadenza certificato medico</Label><Input type="date" value={form.medical_cert_expiry} onChange={e => setForm(f => ({ ...f, medical_cert_expiry: e.target.value }))} /></div>
             <div><Label>Ruolo</Label>

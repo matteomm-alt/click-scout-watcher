@@ -19,7 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle, Plus, Pencil, Shield } from 'lucide-react';
 import { ROLE_LABELS, SOCIETY_ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';
 
 interface SocietyRow {
@@ -115,6 +115,74 @@ export default function SocietySettings() {
   const [inviteRole, setInviteRole] = useState<AppRole>('coach');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
+
+  // ── Squadre ──────────────────────────────────────────────
+  interface TeamRow { id: string; name: string; category: string | null; age_group: string | null; season: string | null; notes: string | null; }
+  const [teams, setTeams] = useState<TeamRow[]>([]);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<TeamRow | null>(null);
+  const [teamForm, setTeamForm] = useState({ name: '', category: '', age_group: '', season: '', notes: '' });
+  const [deleteTeamId, setDeleteTeamId] = useState<string | null>(null);
+
+  const loadTeams = async () => {
+    if (!societyId) return;
+    const { data, error } = await supabase.from('teams')
+      .select('id, name, category, age_group, season, notes')
+      .eq('society_id', societyId)
+      .order('name');
+    if (error) { toast.error('Errore caricamento squadre'); return; }
+    setTeams((data ?? []) as TeamRow[]);
+  };
+
+  useEffect(() => { loadTeams(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId]);
+
+  const openTeamCreate = () => {
+    setEditingTeam(null);
+    setTeamForm({ name: '', category: '', age_group: '', season: '', notes: '' });
+    setTeamDialogOpen(true);
+  };
+  const openTeamEdit = (t: TeamRow) => {
+    setEditingTeam(t);
+    setTeamForm({
+      name: t.name,
+      category: t.category ?? '',
+      age_group: t.age_group ?? '',
+      season: t.season ?? '',
+      notes: t.notes ?? '',
+    });
+    setTeamDialogOpen(true);
+  };
+  const saveTeam = async () => {
+    if (!societyId || !user || !teamForm.name.trim()) {
+      toast.error('Nome squadra obbligatorio'); return;
+    }
+    const payload = {
+      name: teamForm.name.trim(),
+      category: teamForm.category.trim() || null,
+      age_group: teamForm.age_group.trim() || null,
+      season: teamForm.season.trim() || null,
+      notes: teamForm.notes.trim() || null,
+    };
+    if (editingTeam) {
+      const { error } = await supabase.from('teams').update(payload).eq('id', editingTeam.id);
+      if (error) { toast.error(error.message || 'Errore salvataggio'); return; }
+      toast.success('Squadra aggiornata');
+    } else {
+      const { error } = await supabase.from('teams').insert({ ...payload, society_id: societyId, coach_id: user.id });
+      if (error) { toast.error(error.message || 'Errore creazione'); return; }
+      toast.success('Squadra creata');
+    }
+    setTeamDialogOpen(false);
+    await loadTeams();
+  };
+  const deleteTeam = async () => {
+    if (!deleteTeamId) return;
+    const { error } = await supabase.from('teams').delete().eq('id', deleteTeamId);
+    if (error) { toast.error(error.message || 'Errore eliminazione'); return; }
+    toast.success('Squadra eliminata');
+    setDeleteTeamId(null);
+    await loadTeams();
+  };
 
   const loadMembers = async () => {
     if (!societyId) return;
@@ -577,6 +645,95 @@ export default function SocietySettings() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Squadre ─────────────────────────────────── */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-primary" /> Squadre</CardTitle>
+            <CardDescription>Gestisci le squadre della società (categoria, fascia d'età, stagione).</CardDescription>
+          </div>
+          <Button size="sm" onClick={openTeamCreate}>
+            <Plus className="h-4 w-4 mr-2" /> Aggiungi squadra
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {teams.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessuna squadra ancora. Aggiungine una per iniziare.</p>
+          ) : (
+            teams.map((t) => (
+              <div key={t.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2 gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{t.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {[t.category, t.age_group, t.season].filter(Boolean).join(' • ') || 'Nessun dettaglio'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => openTeamEdit(t)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteTeamId(t.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={teamDialogOpen} onOpenChange={setTeamDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTeam ? 'Modifica squadra' : 'Nuova squadra'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Nome *</Label>
+              <Input value={teamForm.name} onChange={(e) => setTeamForm(f => ({ ...f, name: e.target.value }))} placeholder="Es. Under 18" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Categoria</Label>
+                <Input value={teamForm.category} onChange={(e) => setTeamForm(f => ({ ...f, category: e.target.value }))} placeholder="Es. Serie D" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Fascia età</Label>
+                <Input value={teamForm.age_group} onChange={(e) => setTeamForm(f => ({ ...f, age_group: e.target.value }))} placeholder="Es. U18" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Stagione</Label>
+              <Input value={teamForm.season} onChange={(e) => setTeamForm(f => ({ ...f, season: e.target.value }))} placeholder="Es. 2025/2026" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Note</Label>
+              <Input value={teamForm.notes} onChange={(e) => setTeamForm(f => ({ ...f, notes: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setTeamDialogOpen(false)}>Annulla</Button>
+            <Button onClick={saveTeam}>{editingTeam ? 'Salva' : 'Crea'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTeamId} onOpenChange={(o) => !o && setDeleteTeamId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la squadra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Gli atleti associati resteranno ma senza squadra. Azione irreversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteTeam} className="bg-destructive text-destructive-foreground">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <Dialog open={inviteDialogOpen} onOpenChange={(o) => { setInviteDialogOpen(o); if (!o) setGeneratedLink(''); }}>
         <DialogContent>
