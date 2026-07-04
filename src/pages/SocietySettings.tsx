@@ -646,6 +646,95 @@ export default function SocietySettings() {
         </CardContent>
       </Card>
 
+      {/* ── Squadre ─────────────────────────────────── */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-primary" /> Squadre</CardTitle>
+            <CardDescription>Gestisci le squadre della società (categoria, fascia d'età, stagione).</CardDescription>
+          </div>
+          <Button size="sm" onClick={openTeamCreate}>
+            <Plus className="h-4 w-4 mr-2" /> Aggiungi squadra
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {teams.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessuna squadra ancora. Aggiungine una per iniziare.</p>
+          ) : (
+            teams.map((t) => (
+              <div key={t.id} className="flex items-center justify-between border border-border rounded-md px-3 py-2 gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{t.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {[t.category, t.age_group, t.season].filter(Boolean).join(' • ') || 'Nessun dettaglio'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => openTeamEdit(t)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteTeamId(t.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={teamDialogOpen} onOpenChange={setTeamDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTeam ? 'Modifica squadra' : 'Nuova squadra'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Nome *</Label>
+              <Input value={teamForm.name} onChange={(e) => setTeamForm(f => ({ ...f, name: e.target.value }))} placeholder="Es. Under 18" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Categoria</Label>
+                <Input value={teamForm.category} onChange={(e) => setTeamForm(f => ({ ...f, category: e.target.value }))} placeholder="Es. Serie D" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Fascia età</Label>
+                <Input value={teamForm.age_group} onChange={(e) => setTeamForm(f => ({ ...f, age_group: e.target.value }))} placeholder="Es. U18" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Stagione</Label>
+              <Input value={teamForm.season} onChange={(e) => setTeamForm(f => ({ ...f, season: e.target.value }))} placeholder="Es. 2025/2026" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Note</Label>
+              <Input value={teamForm.notes} onChange={(e) => setTeamForm(f => ({ ...f, notes: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setTeamDialogOpen(false)}>Annulla</Button>
+            <Button onClick={saveTeam}>{editingTeam ? 'Salva' : 'Crea'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTeamId} onOpenChange={(o) => !o && setDeleteTeamId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la squadra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Gli atleti associati resteranno ma senza squadra. Azione irreversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteTeam} className="bg-destructive text-destructive-foreground">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       <Dialog open={inviteDialogOpen} onOpenChange={(o) => { setInviteDialogOpen(o); if (!o) setGeneratedLink(''); }}>
         <DialogContent>
           <DialogHeader>
