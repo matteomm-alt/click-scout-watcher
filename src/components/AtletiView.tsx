@@ -453,6 +453,15 @@ export function AtletiView() {
               <div><Label>Numero maglia</Label><Input type="number" value={form.number} onChange={e => setForm(f => ({ ...f, number: e.target.value }))} placeholder="es. 7" /></div>
               <div><Label>Data di nascita</Label><Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} /></div>
             </div>
+            <div><Label>Squadra</Label>
+              <Select value={form.team_id || 'none'} onValueChange={v => setForm(f => ({ ...f, team_id: v === 'none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Seleziona squadra..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nessuna squadra</SelectItem>
+                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Scadenza certificato medico</Label><Input type="date" value={form.medical_cert_expiry} onChange={e => setForm(f => ({ ...f, medical_cert_expiry: e.target.value }))} /></div>
             <div><Label>Ruolo</Label>
               <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v, is_libero: v === 'Libero' }))}>
