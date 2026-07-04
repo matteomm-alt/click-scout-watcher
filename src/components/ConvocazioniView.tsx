@@ -63,13 +63,15 @@ export function ConvocazioniView() {
   useEffect(() => {
     if (!societyId) return;
     (async () => {
-      const [{ data: c }, { data: a }] = await Promise.all([
+      const [{ data: c }, { data: a }, { data: t }] = await Promise.all([
         supabase.from('convocations').select('*').eq('society_id', societyId).order('created_at', { ascending: false }),
-        supabase.from('athletes').select('id, last_name, first_name, number, role').eq('society_id', societyId).order('number'),
+        supabase.from('athletes').select('id, last_name, first_name, number, role, team_id').eq('society_id', societyId).order('number'),
+        supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
       ]);
       const convs = ((c ?? []) as unknown as Convocation[]);
       setConvocations(convs);
       setAthletes(((a ?? []) as unknown as Athlete[]));
+      setTeams(((t ?? []) as TeamLite[]));
       if (convs.length > 0) setSelectedId(convs[0].id);
     })();
   }, [societyId]);
