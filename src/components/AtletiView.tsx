@@ -168,6 +168,7 @@ export function AtletiView() {
       email: a.email || '',
       notes: a.notes || '',
       medical_cert_expiry: a.medical_cert_expiry || '',
+      team_id: a.team_id || '',
     });
     setDialogOpen(true);
   };
@@ -186,6 +187,7 @@ export function AtletiView() {
       email: form.email || null,
       notes: form.notes || null,
       medical_cert_expiry: form.medical_cert_expiry || null,
+      team_id: form.team_id || null,
     };
     saveMutation.mutate(payload);
   };
