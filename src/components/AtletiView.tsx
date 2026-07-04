@@ -118,6 +118,7 @@ export function AtletiView() {
     email: string | null;
     notes: string | null;
     medical_cert_expiry: string | null;
+    team_id: string | null;
   };
   const saveMutation = useMutation({
     mutationFn: async (payload: AthletePayload) => {
