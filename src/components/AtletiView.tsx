@@ -256,6 +256,9 @@ export function AtletiView() {
 
   const filtered = athletes
     .filter(a => {
+      if (teamFilter !== 'all') {
+        if (teamFilter === 'none' ? a.team_id : a.team_id !== teamFilter) return false;
+      }
       if (!search) return true;
       const q = search.toLowerCase();
       return (
