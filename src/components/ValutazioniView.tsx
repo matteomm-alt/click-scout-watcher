@@ -262,11 +262,20 @@ export function ValutazioniView() {
 
       {/* Selettore atleta + PDF */}
       <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-[180px]">
+          <Select value={teamFilter} onValueChange={(v) => { setTeamFilter(v); setSelectedAthleteId(''); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutte le squadre</SelectItem>
+              {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex-1 min-w-[260px] max-w-lg">
           <Select value={selectedAthleteId} onValueChange={setSelectedAthleteId}>
             <SelectTrigger><SelectValue placeholder="Seleziona atleta..." /></SelectTrigger>
             <SelectContent>
-              {athletes.map(a => (
+              {athletes.filter(a => teamFilter === 'all' || a.team_id === teamFilter).map(a => (
                 <SelectItem key={a.id} value={a.id}>
                   #{a.number} {a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''} {a.role ? `— ${a.role}` : ''}
                 </SelectItem>
