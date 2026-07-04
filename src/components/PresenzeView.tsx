@@ -229,6 +229,15 @@ export function PresenzeView() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="min-w-[180px]">
+              <Select value={teamFilter} onValueChange={setTeamFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutte le squadre</SelectItem>
+                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {selectedEvent && (
               <Button variant="outline" onClick={exportCsv} className="gap-2">
                 <Download className="w-4 h-4" /> Export CSV
@@ -257,7 +266,7 @@ export function PresenzeView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {athletes.map(a => {
+                    {athletes.filter(a => teamFilter === 'all' || a.team_id === teamFilter).map(a => {
                       const status = attendances[a.id]?.status;
                       const injured = injuredIds.has(a.id);
                       return (
