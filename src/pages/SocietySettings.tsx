@@ -671,6 +671,28 @@ export default function SocietySettings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <TeamAthleteImportDialog
+                    teamId={t.id}
+                    teamName={t.name}
+                    onConfirm={async (rows) => {
+                      if (!societyId || !user) return;
+                      const payload = rows.map(r => ({
+                        last_name: r.lastName,
+                        first_name: r.firstName || null,
+                        role: r.role || null,
+                        number: r.number ?? null,
+                        birth_date: r.birthDate || null,
+                        phone: r.phone || null,
+                        email: r.email || null,
+                        team_id: t.id,
+                        society_id: societyId,
+                        coach_id: user.id,
+                      }));
+                      const { error } = await supabase.from('athletes').insert(payload);
+                      if (error) { toast.error(error.message || 'Errore import giocatori'); return; }
+                      toast.success(`${rows.length} giocatori importati in ${t.name}`);
+                    }}
+                  />
                   <Button variant="ghost" size="sm" onClick={() => openTeamEdit(t)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
