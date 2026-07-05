@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle, Plus, Pencil, Shield } from 'lucide-react';
 import { ROLE_LABELS, SOCIETY_ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';
+import { TeamAthleteImportDialog } from '@/components/teams/TeamAthleteImportDialog';
 
 interface SocietyRow {
   id: string;
