@@ -137,6 +137,14 @@ export default function SocietySettings() {
 
   useEffect(() => { loadTeams(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#squadre') {
+      setTimeout(() => {
+        document.getElementById('squadre')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, []);
+
   const openTeamCreate = () => {
     setEditingTeam(null);
     setTeamForm({ name: '', category: '', age_group: '', season: '', notes: '' });
