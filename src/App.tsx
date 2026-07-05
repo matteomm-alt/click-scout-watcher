@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import AppLayout from "@/components/AppLayout";
 import Home from "./pages/Home.tsx";
@@ -98,65 +99,67 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Suspense fallback={<PageSkeleton />}>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/accept-invitation" element={<AcceptInvitation />} />
-              <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
-              <Route path="/analisi-pubblica/:matchId" element={<AnalisiPubblica />} />
-              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <ErrorBoundary>
+          <AuthProvider>
+            <Suspense fallback={<PageSkeleton />}>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/accept-invitation" element={<AcceptInvitation />} />
+                <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
+                <Route path="/analisi-pubblica/:matchId" element={<AnalisiPubblica />} />
+                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/" element={<Home />} />
-                <Route path="/import" element={<ImportDvw />} />
-                <Route path="/match/:id" element={<MatchAnalysis />} />
-                <Route path="/match-multi" element={<MatchAnalysisMulti />} />
-                <Route path="/archive" element={<Archive />} />
-                <Route path="/scout" element={<Index />} />
-                <Route path="/supporto" element={<Support />} />
+                <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/import" element={<ImportDvw />} />
+                  <Route path="/match/:id" element={<MatchAnalysis />} />
+                  <Route path="/match-multi" element={<MatchAnalysisMulti />} />
+                  <Route path="/archive" element={<Archive />} />
+                  <Route path="/scout" element={<Index />} />
+                  <Route path="/supporto" element={<Support />} />
 
-                {/* Gestionale */}
-                <Route path="/calendario" element={<Calendario />} />
-                <Route path="/presenze" element={<Presenze />} />
-                <Route path="/convocazioni" element={<Convocazioni />} />
-                <Route path="/comunicazioni" element={<Comunicazioni />} />
-                <Route path="/magazzino" element={<Magazzino />} />
+                  {/* Gestionale */}
+                  <Route path="/calendario" element={<Calendario />} />
+                  <Route path="/presenze" element={<Presenze />} />
+                  <Route path="/convocazioni" element={<Convocazioni />} />
+                  <Route path="/comunicazioni" element={<Comunicazioni />} />
+                  <Route path="/magazzino" element={<Magazzino />} />
 
-                {/* Coaching */}
-                <Route path="/esercizi" element={<Esercizi />} />
-                <Route path="/allenamenti" element={<Allenamenti />} />
-                <Route path="/scheletri" element={<Scheletri />} />
-                <Route path="/schemi" element={<Schemi />} />
-                <Route path="/volume" element={<Volume />} />
-                <Route path="/pianificazione" element={<Pianificazione />} />
-                <Route path="/periodizzazione" element={<Periodizzazione />} />
-                <Route path="/obiettivi" element={<Obiettivi />} />
-                <Route path="/guida-tecnica" element={<GuidaTecnica />} />
+                  {/* Coaching */}
+                  <Route path="/esercizi" element={<Esercizi />} />
+                  <Route path="/allenamenti" element={<Allenamenti />} />
+                  <Route path="/scheletri" element={<Scheletri />} />
+                  <Route path="/schemi" element={<Schemi />} />
+                  <Route path="/volume" element={<Volume />} />
+                  <Route path="/pianificazione" element={<Pianificazione />} />
+                  <Route path="/periodizzazione" element={<Periodizzazione />} />
+                  <Route path="/obiettivi" element={<Obiettivi />} />
+                  <Route path="/guida-tecnica" element={<GuidaTecnica />} />
 
-                {/* Analisi */}
-                <Route path="/report-stagione" element={<ReportStagione />} />
-                <Route path="/profilo-avversario" element={<ProfiloAvversario />} />
+                  {/* Analisi */}
+                  <Route path="/report-stagione" element={<ReportStagione />} />
+                  <Route path="/profilo-avversario" element={<ProfiloAvversario />} />
 
-                {/* Atleta */}
-                <Route path="/atleti" element={<Atleti />} />
-                <Route path="/atleti/:id" element={<AtletaDetail />} />
-                <Route path="/valutazioni" element={<Valutazioni />} />
-                <Route path="/inventario" element={<Inventario />} />
-                <Route path="/infortuni" element={<Infortuni />} />
+                  {/* Atleta */}
+                  <Route path="/atleti" element={<Atleti />} />
+                  <Route path="/atleti/:id" element={<AtletaDetail />} />
+                  <Route path="/valutazioni" element={<Valutazioni />} />
+                  <Route path="/inventario" element={<Inventario />} />
+                  <Route path="/infortuni" element={<Infortuni />} />
 
-                {/* Impostazioni società (society_admin) */}
-                <Route path="/impostazioni" element={<SocietySettings />} />
+                  {/* Impostazioni società (society_admin) */}
+                  <Route path="/impostazioni" element={<SocietySettings />} />
 
-                {/* Admin */}
-                <Route path="/admin" element={<AdminSocieties />} />
-                <Route path="/admin/societa/:id/moduli" element={<SocietyFeatures />} />
-              </Route>
+                  {/* Admin */}
+                  <Route path="/admin" element={<AdminSocieties />} />
+                  <Route path="/admin/societa/:id/moduli" element={<SocietyFeatures />} />
+                </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </AuthProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </AuthProvider>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
