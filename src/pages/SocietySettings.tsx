@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Save, Building2, UserPlus, Users, Trash2, Copy, Mail, ShieldCheck, ArrowUpCircle, ArrowDownCircle, Plus, Pencil, Shield } from 'lucide-react';
 import { ROLE_LABELS, SOCIETY_ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';
+import { TeamAthleteImportDialog } from '@/components/teams/TeamAthleteImportDialog';
 
 interface SocietyRow {
   id: string;
@@ -135,6 +136,14 @@ export default function SocietySettings() {
   };
 
   useEffect(() => { loadTeams(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [societyId]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#squadre') {
+      setTimeout(() => {
+        document.getElementById('squadre')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, []);
 
   const openTeamCreate = () => {
     setEditingTeam(null);
@@ -647,7 +656,8 @@ export default function SocietySettings() {
       </Card>
 
       {/* ── Squadre ─────────────────────────────────── */}
-      <Card>
+      <Card id="squadre">
+
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-primary" /> Squadre</CardTitle>
@@ -670,6 +680,28 @@ export default function SocietySettings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <TeamAthleteImportDialog
+                    teamId={t.id}
+                    teamName={t.name}
+                    onConfirm={async (rows) => {
+                      if (!societyId || !user) return;
+                      const payload = rows.map(r => ({
+                        last_name: r.lastName,
+                        first_name: r.firstName || null,
+                        role: r.role || null,
+                        number: r.number ?? null,
+                        birth_date: r.birthDate || null,
+                        phone: r.phone || null,
+                        email: r.email || null,
+                        team_id: t.id,
+                        society_id: societyId,
+                        coach_id: user.id,
+                      }));
+                      const { error } = await supabase.from('athletes').insert(payload);
+                      if (error) { toast.error(error.message || 'Errore import giocatori'); return; }
+                      toast.success(`${rows.length} giocatori importati in ${t.name}`);
+                    }}
+                  />
                   <Button variant="ghost" size="sm" onClick={() => openTeamEdit(t)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
