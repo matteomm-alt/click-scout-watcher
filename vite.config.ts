@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import legacy from "@vitejs/plugin-legacy";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -15,6 +16,10 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    legacy({
+      targets: ["iOS >= 12", "Safari >= 12"],
+      modernPolyfills: true,
+    }),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
