@@ -61,6 +61,8 @@ const Periodizzazione = lazy(() => import("./pages/coaching/Periodizzazione.tsx"
 const Pianificazione = lazy(() => import("./pages/coaching/Pianificazione.tsx"));
 const AdminSocieties = lazy(() => import("./pages/admin/Societies.tsx"));
 const AtletaDetail = lazy(() => import("./pages/atleta/AtletaDetail.tsx"));
+const TeamsHub = lazy(() => import("./pages/TeamsHub.tsx"));
+const TeamDashboard = lazy(() => import("./pages/TeamDashboard.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,6 +150,10 @@ const App = () => (
                   <Route path="/valutazioni" element={<Valutazioni />} />
                   <Route path="/inventario" element={<Inventario />} />
                   <Route path="/infortuni" element={<Infortuni />} />
+
+                  {/* Squadre */}
+                  <Route path="/squadre" element={<TeamsHub />} />
+                  <Route path="/squadre/:id" element={<TeamDashboard />} />
 
                   {/* Impostazioni società (society_admin) */}
                   <Route path="/impostazioni" element={<SocietySettings />} />
