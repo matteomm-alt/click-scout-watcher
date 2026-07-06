@@ -180,7 +180,7 @@ export default function TeamDashboard() {
       .from('athlete_injuries')
       .select('id, body_part, injury_type, start_date, status, athlete_id')
       .in('athlete_id', athleteIds)
-      .eq('status', 'in corso')
+      .eq('status', 'attivo')
       .then(({ data }) => setInjuries((data as Injury[]) ?? []));
   }, [id, flags.injuries, athleteIds]);
 
