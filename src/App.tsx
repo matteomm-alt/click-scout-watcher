@@ -23,6 +23,7 @@ import Onboarding from "./pages/Onboarding.tsx";
 import Support from "./pages/Support.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AnalisiPubblica from "./pages/AnalisiPubblica.tsx";
+import OAuthConsent from "./pages/OAuthConsent.tsx";
 
 // Gestionale
 import Calendario from "./pages/gestionale/Calendario.tsx";
@@ -107,6 +108,7 @@ const App = () => (
                 <Route path="/accept-invitation" element={<AcceptInvitation />} />
                 <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
                 <Route path="/analisi-pubblica/:matchId" element={<AnalisiPubblica />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
                 <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

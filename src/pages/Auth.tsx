@@ -92,7 +92,9 @@ export default function Auth() {
     firstFieldRef.current?.focus();
   }, [mode]);
 
-  const from = (location.state as { from?: string })?.from ?? '/';
+  const nextParam = new URLSearchParams(location.search).get('next');
+  const safeNext = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : null;
+  const from = safeNext ?? (location.state as { from?: string })?.from ?? '/';
 
   const emailMismatch =
     !!(user && inviteInfo && user.email?.toLowerCase() !== inviteInfo.email.toLowerCase());
