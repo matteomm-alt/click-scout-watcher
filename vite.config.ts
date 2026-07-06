@@ -52,6 +52,7 @@ export default defineConfig(({ mode }) => ({
       },
     }),
     mode === "development" && componentTagger(),
+    mcpPlugin(),
   ].filter(Boolean),
   resolve: {
     alias: {
