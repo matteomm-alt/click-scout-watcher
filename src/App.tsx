@@ -151,6 +151,10 @@ const App = () => (
                   <Route path="/inventario" element={<Inventario />} />
                   <Route path="/infortuni" element={<Infortuni />} />
 
+                  {/* Squadre */}
+                  <Route path="/squadre" element={<TeamsHub />} />
+                  <Route path="/squadre/:id" element={<TeamDashboard />} />
+
                   {/* Impostazioni società (society_admin) */}
                   <Route path="/impostazioni" element={<SocietySettings />} />
 
