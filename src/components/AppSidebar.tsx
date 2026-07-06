@@ -294,7 +294,7 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
-                      to="/impostazioni#squadre"
+                      to="/squadre"
                       className="hover:bg-muted/50"
                       activeClassName="bg-primary/10 text-primary font-semibold border-l-2 border-primary"
                     >
