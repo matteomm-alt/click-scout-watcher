@@ -61,6 +61,8 @@ const Periodizzazione = lazy(() => import("./pages/coaching/Periodizzazione.tsx"
 const Pianificazione = lazy(() => import("./pages/coaching/Pianificazione.tsx"));
 const AdminSocieties = lazy(() => import("./pages/admin/Societies.tsx"));
 const AtletaDetail = lazy(() => import("./pages/atleta/AtletaDetail.tsx"));
+const TeamsHub = lazy(() => import("./pages/TeamsHub.tsx"));
+const TeamDashboard = lazy(() => import("./pages/TeamDashboard.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
