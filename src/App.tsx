@@ -108,6 +108,7 @@ const App = () => (
                 <Route path="/accept-invitation" element={<AcceptInvitation />} />
                 <Route path="/claim-super-admin" element={<ProtectedRoute><ClaimSuperAdmin /></ProtectedRoute>} />
                 <Route path="/analisi-pubblica/:matchId" element={<AnalisiPubblica />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
                 <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
