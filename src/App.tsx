@@ -23,6 +23,7 @@ import Onboarding from "./pages/Onboarding.tsx";
 import Support from "./pages/Support.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AnalisiPubblica from "./pages/AnalisiPubblica.tsx";
+import OAuthConsent from "./pages/OAuthConsent.tsx";
 
 // Gestionale
 import Calendario from "./pages/gestionale/Calendario.tsx";
