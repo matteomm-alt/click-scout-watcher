@@ -559,7 +559,7 @@ export default function Esercizi() {
 
       {/* Dialog create/edit */}
       <Dialog open={dlgOpen} onOpenChange={(o) => { if (!o) resetForm(); setDlgOpen(o); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-black italic uppercase tracking-tight">
               {editing ? 'Modifica esercizio' : 'Nuovo esercizio'}
