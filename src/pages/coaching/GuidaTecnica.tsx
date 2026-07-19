@@ -147,7 +147,7 @@ export default function GuidaTecnica() {
     if (error) {
       toast({ title: 'Errore caricamento', description: error.message, variant: 'destructive' });
     } else {
-      setItems((data || []) as Guideline[]);
+      setItems((data || []) as unknown as Guideline[]);
     }
     setLoading(false);
   };
