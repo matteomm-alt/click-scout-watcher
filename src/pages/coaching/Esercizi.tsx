@@ -192,6 +192,8 @@ export default function Esercizi() {
     setSpace(ex.space || '');
     setProgression(ex.progression || '');
     setTags(ex.tags || []);
+    const sd = (ex.scheme_data ?? {}) as { courts?: CourtDiagram[] };
+    setCourts(Array.isArray(sd.courts) ? sd.courts : []);
     setDlgOpen(true);
   };
 
