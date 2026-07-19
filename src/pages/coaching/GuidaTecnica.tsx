@@ -404,14 +404,34 @@ export default function GuidaTecnica() {
                   );
                 })()}
 
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-6">
-                  {g.content}
-                </p>
+                <div className="space-y-2">
+                  {CONTENT_SECTIONS.map((cs) => {
+                    const txt = g.content?.[cs.key];
+                    if (!txt || !txt.trim()) return null;
+                    return (
+                      <div key={cs.key} className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{cs.label}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{txt}</p>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                {g.common_errors && (
-                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-                    <p className="text-xs font-bold text-destructive mb-1">⚠️ Errori comuni</p>
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3">{g.common_errors}</p>
+                {g.common_errors && g.common_errors.length > 0 && (
+                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 space-y-2">
+                    <p className="text-xs font-bold text-destructive">⚠️ Errori comuni</p>
+                    <ul className="space-y-1.5">
+                      {g.common_errors.map((e, i) => (
+                        <li key={i} className="space-y-0.5">
+                          <p className="text-xs font-semibold text-foreground">{e.errore}</p>
+                          {e.causa && (
+                            <p className="text-[11px] text-muted-foreground">
+                              <span className="font-semibold">Causa: </span>{e.causa}
+                            </p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
