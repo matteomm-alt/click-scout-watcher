@@ -652,6 +652,13 @@ export default function Esercizi() {
                 placeholder="Scrivi un tag e premi Invio…"
               />
             </div>
+            <div className="grid gap-2 pt-2 border-t border-border">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Diagrammi campo</Label>
+              <p className="text-xs text-muted-foreground">
+                Disegna uno o più campi (metà o intero) con giocatori, ceste palloni, coni e frecce di movimento.
+              </p>
+              <ExerciseCourtEditor value={courts} onChange={setCourts} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDlgOpen(false)} disabled={submitting}>Annulla</Button>
