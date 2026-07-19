@@ -18,21 +18,45 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink, X } from 'lucide-react';
 import { FUNDAMENTALS, AGE_GROUPS, FUNDAMENTAL_COLOR } from '@/lib/volleyConstants';
+
+type ContentSectionKey =
+  | 'prima_del_contatto'
+  | 'durante_il_contatto'
+  | 'dopo_il_contatto'
+  | 'parametri_posturali'
+  | 'motricita'
+  | 'prerequisiti';
+
+type GuidelineContent = Partial<Record<ContentSectionKey, string>>;
+
+interface CommonError {
+  errore: string;
+  causa: string;
+}
+
+const CONTENT_SECTIONS: { key: ContentSectionKey; label: string }[] = [
+  { key: 'prima_del_contatto', label: 'Prima del contatto' },
+  { key: 'durante_il_contatto', label: 'Durante il contatto' },
+  { key: 'dopo_il_contatto', label: 'Dopo il contatto' },
+  { key: 'parametri_posturali', label: 'Parametri posturali' },
+  { key: 'motricita', label: 'Motricità' },
+  { key: 'prerequisiti', label: 'Prerequisiti fisici e motori' },
+];
 
 interface Guideline {
   id: string;
   society_id: string;
   title: string;
-  content: string;
+  content: GuidelineContent | null;
   category: string | null;
   fundamental: string | null;
   age_group: string | null;
   difficulty: string | null;
   video_url: string | null;
   duration_min: number | null;
-  common_errors: string | null;
+  common_errors: CommonError[] | null;
   progression: string | null;
   tags: string[];
   created_by: string | null;
@@ -44,6 +68,42 @@ const DIFFICULTIES = ['Principiante', 'Intermedio', 'Avanzato'] as const;
 
 const ALL = '__ALL__';
 const NONE = '__NONE__';
+
+const emptyContent = (): Record<ContentSectionKey, string> => ({
+  prima_del_contatto: '',
+  durante_il_contatto: '',
+  dopo_il_contatto: '',
+  parametri_posturali: '',
+  motricita: '',
+  prerequisiti: '',
+});
+
+const parseContent = (raw: unknown): Record<ContentSectionKey, string> => {
+  const base = emptyContent();
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const s of CONTENT_SECTIONS) {
+      const v = (raw as Record<string, unknown>)[s.key];
+      if (typeof v === 'string') base[s.key] = v;
+    }
+  }
+  return base;
+};
+
+const parseErrors = (raw: unknown): CommonError[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((r) => {
+      if (r && typeof r === 'object') {
+        const o = r as Record<string, unknown>;
+        return {
+          errore: typeof o.errore === 'string' ? o.errore : '',
+          causa: typeof o.causa === 'string' ? o.causa : '',
+        };
+      }
+      return { errore: '', causa: '' };
+    })
+    .filter((e) => e.errore.trim() || e.causa.trim());
+};
 
 export default function GuidaTecnica() {
   const { user } = useAuth();
