@@ -18,21 +18,45 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink, X } from 'lucide-react';
 import { FUNDAMENTALS, AGE_GROUPS, FUNDAMENTAL_COLOR } from '@/lib/volleyConstants';
+
+type ContentSectionKey =
+  | 'prima_del_contatto'
+  | 'durante_il_contatto'
+  | 'dopo_il_contatto'
+  | 'parametri_posturali'
+  | 'motricita'
+  | 'prerequisiti';
+
+type GuidelineContent = Partial<Record<ContentSectionKey, string>>;
+
+interface CommonError {
+  errore: string;
+  causa: string;
+}
+
+const CONTENT_SECTIONS: { key: ContentSectionKey; label: string }[] = [
+  { key: 'prima_del_contatto', label: 'Prima del contatto' },
+  { key: 'durante_il_contatto', label: 'Durante il contatto' },
+  { key: 'dopo_il_contatto', label: 'Dopo il contatto' },
+  { key: 'parametri_posturali', label: 'Parametri posturali' },
+  { key: 'motricita', label: 'Motricità' },
+  { key: 'prerequisiti', label: 'Prerequisiti fisici e motori' },
+];
 
 interface Guideline {
   id: string;
   society_id: string;
   title: string;
-  content: string;
+  content: GuidelineContent | null;
   category: string | null;
   fundamental: string | null;
   age_group: string | null;
   difficulty: string | null;
   video_url: string | null;
   duration_min: number | null;
-  common_errors: string | null;
+  common_errors: CommonError[] | null;
   progression: string | null;
   tags: string[];
   created_by: string | null;
@@ -44,6 +68,42 @@ const DIFFICULTIES = ['Principiante', 'Intermedio', 'Avanzato'] as const;
 
 const ALL = '__ALL__';
 const NONE = '__NONE__';
+
+const emptyContent = (): Record<ContentSectionKey, string> => ({
+  prima_del_contatto: '',
+  durante_il_contatto: '',
+  dopo_il_contatto: '',
+  parametri_posturali: '',
+  motricita: '',
+  prerequisiti: '',
+});
+
+const parseContent = (raw: unknown): Record<ContentSectionKey, string> => {
+  const base = emptyContent();
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const s of CONTENT_SECTIONS) {
+      const v = (raw as Record<string, unknown>)[s.key];
+      if (typeof v === 'string') base[s.key] = v;
+    }
+  }
+  return base;
+};
+
+const parseErrors = (raw: unknown): CommonError[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((r) => {
+      if (r && typeof r === 'object') {
+        const o = r as Record<string, unknown>;
+        return {
+          errore: typeof o.errore === 'string' ? o.errore : '',
+          causa: typeof o.causa === 'string' ? o.causa : '',
+        };
+      }
+      return { errore: '', causa: '' };
+    })
+    .filter((e) => e.errore.trim() || e.causa.trim());
+};
 
 export default function GuidaTecnica() {
   const { user } = useAuth();
@@ -61,14 +121,14 @@ export default function GuidaTecnica() {
   const [editing, setEditing] = useState<Guideline | null>(null);
   const [form, setForm] = useState({
     title: '',
-    content: '',
+    content: emptyContent(),
     category: '',
     fundamental: NONE,
     age_group: NONE,
     difficulty: NONE,
     video_url: '',
     duration_min: '',
-    common_errors: '',
+    common_errors: [] as CommonError[],
     progression: '',
     tags: '',
   });
@@ -87,7 +147,7 @@ export default function GuidaTecnica() {
     if (error) {
       toast({ title: 'Errore caricamento', description: error.message, variant: 'destructive' });
     } else {
-      setItems((data || []) as Guideline[]);
+      setItems((data || []) as unknown as Guideline[]);
     }
     setLoading(false);
   };
@@ -103,7 +163,9 @@ export default function GuidaTecnica() {
       if (fFund !== ALL && g.fundamental !== fFund) return false;
       if (fAge !== ALL && g.age_group !== fAge) return false;
       if (s) {
-        const hay = `${g.title} ${g.content} ${g.category ?? ''} ${(g.tags || []).join(' ')}`.toLowerCase();
+        const contentText = CONTENT_SECTIONS.map((cs) => g.content?.[cs.key] ?? '').join(' ');
+        const errorsText = (g.common_errors ?? []).map((e) => `${e.errore} ${e.causa}`).join(' ');
+        const hay = `${g.title} ${contentText} ${errorsText} ${g.category ?? ''} ${(g.tags || []).join(' ')}`.toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
@@ -112,7 +174,12 @@ export default function GuidaTecnica() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', common_errors: '', progression: '', tags: '' });
+    setForm({
+      title: '', content: emptyContent(), category: '',
+      fundamental: NONE, age_group: NONE, difficulty: NONE,
+      video_url: '', duration_min: '', common_errors: [],
+      progression: '', tags: '',
+    });
     setDialogOpen(true);
   };
 
@@ -120,14 +187,14 @@ export default function GuidaTecnica() {
     setEditing(g);
     setForm({
       title: g.title,
-      content: g.content,
+      content: parseContent(g.content),
       category: g.category ?? '',
       fundamental: g.fundamental ?? NONE,
       age_group: g.age_group ?? NONE,
       difficulty: g.difficulty ?? NONE,
       video_url: g.video_url ?? '',
       duration_min: g.duration_min != null ? String(g.duration_min) : '',
-      common_errors: g.common_errors ?? '',
+      common_errors: parseErrors(g.common_errors),
       progression: g.progression ?? '',
       tags: (g.tags || []).join(', '),
     });
@@ -136,27 +203,33 @@ export default function GuidaTecnica() {
 
   const submit = async () => {
     if (!societyId || !user) return;
-    if (!form.title.trim() || !form.content.trim()) {
-      toast({ title: 'Compila titolo e contenuto', variant: 'destructive' });
+    const contentObj: GuidelineContent = {};
+    for (const s of CONTENT_SECTIONS) {
+      const v = form.content[s.key].trim();
+      if (v) contentObj[s.key] = v;
+    }
+    if (!form.title.trim() || Object.keys(contentObj).length === 0) {
+      toast({ title: 'Compila titolo e almeno una sezione di contenuto', variant: 'destructive' });
       return;
     }
+    const errorsArr = form.common_errors
+      .map((e) => ({ errore: e.errore.trim(), causa: e.causa.trim() }))
+      .filter((e) => e.errore || e.causa);
+
     setSaving(true);
     const payload = {
       society_id: societyId,
       title: form.title.trim(),
-      content: form.content.trim(),
+      content: contentObj,
       category: form.category.trim() || null,
       fundamental: form.fundamental === NONE ? null : form.fundamental,
       age_group: form.age_group === NONE ? null : form.age_group,
       difficulty: form.difficulty === NONE ? null : form.difficulty,
       video_url: form.video_url.trim() || null,
       duration_min: form.duration_min ? parseInt(form.duration_min, 10) : null,
-      common_errors: form.common_errors.trim() || null,
+      common_errors: errorsArr.length > 0 ? errorsArr : null,
       progression: form.progression.trim() || null,
-      tags: form.tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
     };
 
     const { error } = editing
@@ -331,14 +404,34 @@ export default function GuidaTecnica() {
                   );
                 })()}
 
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-6">
-                  {g.content}
-                </p>
+                <div className="space-y-2">
+                  {CONTENT_SECTIONS.map((cs) => {
+                    const txt = g.content?.[cs.key];
+                    if (!txt || !txt.trim()) return null;
+                    return (
+                      <div key={cs.key} className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{cs.label}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{txt}</p>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                {g.common_errors && (
-                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-                    <p className="text-xs font-bold text-destructive mb-1">⚠️ Errori comuni</p>
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3">{g.common_errors}</p>
+                {g.common_errors && g.common_errors.length > 0 && (
+                  <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 space-y-2">
+                    <p className="text-xs font-bold text-destructive">⚠️ Errori comuni</p>
+                    <ul className="space-y-1.5">
+                      {g.common_errors.map((e, i) => (
+                        <li key={i} className="space-y-0.5">
+                          <p className="text-xs font-semibold text-foreground">{e.errore}</p>
+                          {e.causa && (
+                            <p className="text-[11px] text-muted-foreground">
+                              <span className="font-semibold">Causa: </span>{e.causa}
+                            </p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
@@ -459,26 +552,80 @@ export default function GuidaTecnica() {
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="content">Contenuto *</Label>
-              <Textarea
-                id="content"
-                value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
-                rows={6}
-                placeholder="Descrizione tecnica, progressioni didattiche…"
-              />
+            <div className="grid gap-3">
+              <Label className="text-sm font-bold uppercase tracking-widest text-primary">Contenuto *</Label>
+              {CONTENT_SECTIONS.map((cs) => (
+                <div key={cs.key} className="grid gap-1.5">
+                  <Label htmlFor={`content-${cs.key}`} className="text-xs">{cs.label}</Label>
+                  <Textarea
+                    id={`content-${cs.key}`}
+                    value={form.content[cs.key]}
+                    onChange={(e) => setForm({
+                      ...form,
+                      content: { ...form.content, [cs.key]: e.target.value },
+                    })}
+                    rows={3}
+                    placeholder={`Descrizione — ${cs.label.toLowerCase()}`}
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="errors">Errori comuni</Label>
-              <Textarea
-                id="errors"
-                value={form.common_errors}
-                onChange={(e) => setForm({ ...form, common_errors: e.target.value })}
-                rows={3}
-                placeholder="Es. Gomiti non paralleli, piedi non orientati verso l'alzatrice"
-              />
+              <Label className="text-sm font-bold uppercase tracking-widest text-primary">Errori comuni</Label>
+              <div className="space-y-2">
+                {form.common_errors.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Nessun errore aggiunto.</p>
+                )}
+                {form.common_errors.map((e, i) => (
+                  <div key={i} className="flex gap-2 items-start">
+                    <Input
+                      value={e.errore}
+                      onChange={(ev) => {
+                        const next = [...form.common_errors];
+                        next[i] = { ...next[i], errore: ev.target.value };
+                        setForm({ ...form, common_errors: next });
+                      }}
+                      placeholder="Errore"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={e.causa}
+                      onChange={(ev) => {
+                        const next = [...form.common_errors];
+                        next[i] = { ...next[i], causa: ev.target.value };
+                        setForm({ ...form, common_errors: next });
+                      }}
+                      placeholder="Causa"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setForm({
+                        ...form,
+                        common_errors: form.common_errors.filter((_, idx) => idx !== i),
+                      })}
+                      aria-label="Rimuovi errore"
+                    >
+                      <X className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setForm({
+                    ...form,
+                    common_errors: [...form.common_errors, { errore: '', causa: '' }],
+                  })}
+                  className="gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Aggiungi errore
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-2">
