@@ -121,14 +121,14 @@ export default function GuidaTecnica() {
   const [editing, setEditing] = useState<Guideline | null>(null);
   const [form, setForm] = useState({
     title: '',
-    content: '',
+    content: emptyContent(),
     category: '',
     fundamental: NONE,
     age_group: NONE,
     difficulty: NONE,
     video_url: '',
     duration_min: '',
-    common_errors: '',
+    common_errors: [] as CommonError[],
     progression: '',
     tags: '',
   });
