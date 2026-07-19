@@ -168,6 +168,7 @@ export default function Esercizi() {
     setSpace('');
     setProgression('');
     setTags([]);
+    setCourts([]);
   };
 
   const openCreate = () => {
