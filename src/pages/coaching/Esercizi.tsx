@@ -220,7 +220,7 @@ export default function Esercizi() {
       space: space.trim() || null,
       progression: progression.trim() || null,
       tags: tags.map((t) => t.trim()).filter(Boolean),
-      scheme_data: { courts },
+      scheme_data: JSON.parse(JSON.stringify({ courts })),
     };
     const { error } = editing
       ? await supabase.from('exercises').update(payload).eq('id', editing.id)
