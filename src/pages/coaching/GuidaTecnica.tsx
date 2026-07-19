@@ -552,26 +552,80 @@ export default function GuidaTecnica() {
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="content">Contenuto *</Label>
-              <Textarea
-                id="content"
-                value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
-                rows={6}
-                placeholder="Descrizione tecnica, progressioni didattiche…"
-              />
+            <div className="grid gap-3">
+              <Label className="text-sm font-bold uppercase tracking-widest text-primary">Contenuto *</Label>
+              {CONTENT_SECTIONS.map((cs) => (
+                <div key={cs.key} className="grid gap-1.5">
+                  <Label htmlFor={`content-${cs.key}`} className="text-xs">{cs.label}</Label>
+                  <Textarea
+                    id={`content-${cs.key}`}
+                    value={form.content[cs.key]}
+                    onChange={(e) => setForm({
+                      ...form,
+                      content: { ...form.content, [cs.key]: e.target.value },
+                    })}
+                    rows={3}
+                    placeholder={`Descrizione — ${cs.label.toLowerCase()}`}
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="errors">Errori comuni</Label>
-              <Textarea
-                id="errors"
-                value={form.common_errors}
-                onChange={(e) => setForm({ ...form, common_errors: e.target.value })}
-                rows={3}
-                placeholder="Es. Gomiti non paralleli, piedi non orientati verso l'alzatrice"
-              />
+              <Label className="text-sm font-bold uppercase tracking-widest text-primary">Errori comuni</Label>
+              <div className="space-y-2">
+                {form.common_errors.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Nessun errore aggiunto.</p>
+                )}
+                {form.common_errors.map((e, i) => (
+                  <div key={i} className="flex gap-2 items-start">
+                    <Input
+                      value={e.errore}
+                      onChange={(ev) => {
+                        const next = [...form.common_errors];
+                        next[i] = { ...next[i], errore: ev.target.value };
+                        setForm({ ...form, common_errors: next });
+                      }}
+                      placeholder="Errore"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={e.causa}
+                      onChange={(ev) => {
+                        const next = [...form.common_errors];
+                        next[i] = { ...next[i], causa: ev.target.value };
+                        setForm({ ...form, common_errors: next });
+                      }}
+                      placeholder="Causa"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setForm({
+                        ...form,
+                        common_errors: form.common_errors.filter((_, idx) => idx !== i),
+                      })}
+                      aria-label="Rimuovi errore"
+                    >
+                      <X className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setForm({
+                    ...form,
+                    common_errors: [...form.common_errors, { errore: '', causa: '' }],
+                  })}
+                  className="gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Aggiungi errore
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-2">
