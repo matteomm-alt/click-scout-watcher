@@ -163,7 +163,9 @@ export default function GuidaTecnica() {
       if (fFund !== ALL && g.fundamental !== fFund) return false;
       if (fAge !== ALL && g.age_group !== fAge) return false;
       if (s) {
-        const hay = `${g.title} ${g.content} ${g.category ?? ''} ${(g.tags || []).join(' ')}`.toLowerCase();
+        const contentText = CONTENT_SECTIONS.map((cs) => g.content?.[cs.key] ?? '').join(' ');
+        const errorsText = (g.common_errors ?? []).map((e) => `${e.errore} ${e.causa}`).join(' ');
+        const hay = `${g.title} ${contentText} ${errorsText} ${g.category ?? ''} ${(g.tags || []).join(' ')}`.toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
@@ -172,7 +174,12 @@ export default function GuidaTecnica() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title: '', content: '', category: '', fundamental: NONE, age_group: NONE, difficulty: NONE, video_url: '', duration_min: '', common_errors: '', progression: '', tags: '' });
+    setForm({
+      title: '', content: emptyContent(), category: '',
+      fundamental: NONE, age_group: NONE, difficulty: NONE,
+      video_url: '', duration_min: '', common_errors: [],
+      progression: '', tags: '',
+    });
     setDialogOpen(true);
   };
 
@@ -180,14 +187,14 @@ export default function GuidaTecnica() {
     setEditing(g);
     setForm({
       title: g.title,
-      content: g.content,
+      content: parseContent(g.content),
       category: g.category ?? '',
       fundamental: g.fundamental ?? NONE,
       age_group: g.age_group ?? NONE,
       difficulty: g.difficulty ?? NONE,
       video_url: g.video_url ?? '',
       duration_min: g.duration_min != null ? String(g.duration_min) : '',
-      common_errors: g.common_errors ?? '',
+      common_errors: parseErrors(g.common_errors),
       progression: g.progression ?? '',
       tags: (g.tags || []).join(', '),
     });
@@ -196,27 +203,33 @@ export default function GuidaTecnica() {
 
   const submit = async () => {
     if (!societyId || !user) return;
-    if (!form.title.trim() || !form.content.trim()) {
-      toast({ title: 'Compila titolo e contenuto', variant: 'destructive' });
+    const contentObj: GuidelineContent = {};
+    for (const s of CONTENT_SECTIONS) {
+      const v = form.content[s.key].trim();
+      if (v) contentObj[s.key] = v;
+    }
+    if (!form.title.trim() || Object.keys(contentObj).length === 0) {
+      toast({ title: 'Compila titolo e almeno una sezione di contenuto', variant: 'destructive' });
       return;
     }
+    const errorsArr = form.common_errors
+      .map((e) => ({ errore: e.errore.trim(), causa: e.causa.trim() }))
+      .filter((e) => e.errore || e.causa);
+
     setSaving(true);
     const payload = {
       society_id: societyId,
       title: form.title.trim(),
-      content: form.content.trim(),
+      content: contentObj,
       category: form.category.trim() || null,
       fundamental: form.fundamental === NONE ? null : form.fundamental,
       age_group: form.age_group === NONE ? null : form.age_group,
       difficulty: form.difficulty === NONE ? null : form.difficulty,
       video_url: form.video_url.trim() || null,
       duration_min: form.duration_min ? parseInt(form.duration_min, 10) : null,
-      common_errors: form.common_errors.trim() || null,
+      common_errors: errorsArr.length > 0 ? errorsArr : null,
       progression: form.progression.trim() || null,
-      tags: form.tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
     };
 
     const { error } = editing
