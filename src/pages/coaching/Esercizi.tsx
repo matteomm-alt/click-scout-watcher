@@ -20,6 +20,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { FUNDAMENTALS } from '@/lib/volleyConstants';
 import { TagPicker } from '@/components/TagPicker';
+import { ExerciseCourtEditor, CourtDiagramPreview, type CourtDiagram } from '@/components/coaching/ExerciseCourtEditor';
 import {
   Dumbbell, Plus, Pencil, Trash2, Search, Download, Upload, Loader2, Tag, Clock, Link as LinkIcon, X,
 } from 'lucide-react';
@@ -93,6 +94,7 @@ export default function Esercizi() {
   const [space, setSpace] = useState('');
   const [progression, setProgression] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [courts, setCourts] = useState<CourtDiagram[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Delete
@@ -166,6 +168,7 @@ export default function Esercizi() {
     setSpace('');
     setProgression('');
     setTags([]);
+    setCourts([]);
   };
 
   const openCreate = () => {
@@ -189,6 +192,8 @@ export default function Esercizi() {
     setSpace(ex.space || '');
     setProgression(ex.progression || '');
     setTags(ex.tags || []);
+    const sd = (ex.scheme_data ?? {}) as { courts?: CourtDiagram[] };
+    setCourts(Array.isArray(sd.courts) ? sd.courts : []);
     setDlgOpen(true);
   };
 
@@ -215,6 +220,7 @@ export default function Esercizi() {
       space: space.trim() || null,
       progression: progression.trim() || null,
       tags: tags.map((t) => t.trim()).filter(Boolean),
+      scheme_data: JSON.parse(JSON.stringify({ courts })),
     };
     const { error } = editing
       ? await supabase.from('exercises').update(payload).eq('id', editing.id)
@@ -516,6 +522,17 @@ export default function Esercizi() {
                   <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
                 )}
 
+                {(() => {
+                  const sd = (ex.scheme_data ?? {}) as { courts?: CourtDiagram[] };
+                  const cs = Array.isArray(sd.courts) ? sd.courts.slice(0, 2) : [];
+                  if (cs.length === 0) return null;
+                  return (
+                    <div className="grid grid-cols-2 gap-2">
+                      {cs.map(c => <CourtDiagramPreview key={c.id} court={c} />)}
+                    </div>
+                  );
+                })()}
+
                 {ex.objective && (
                   <p className="text-xs text-primary line-clamp-2">🎯 {ex.objective}</p>
                 )}
@@ -553,7 +570,7 @@ export default function Esercizi() {
 
       {/* Dialog create/edit */}
       <Dialog open={dlgOpen} onOpenChange={(o) => { if (!o) resetForm(); setDlgOpen(o); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-black italic uppercase tracking-tight">
               {editing ? 'Modifica esercizio' : 'Nuovo esercizio'}
@@ -645,6 +662,13 @@ export default function Esercizi() {
                 suggestions={allUsedTags}
                 placeholder="Scrivi un tag e premi Invio…"
               />
+            </div>
+            <div className="grid gap-2 pt-2 border-t border-border">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Diagrammi campo</Label>
+              <p className="text-xs text-muted-foreground">
+                Disegna uno o più campi (metà o intero) con giocatori, ceste palloni, coni e frecce di movimento.
+              </p>
+              <ExerciseCourtEditor value={courts} onChange={setCourts} />
             </div>
           </div>
           <DialogFooter>
