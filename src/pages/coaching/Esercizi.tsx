@@ -94,6 +94,7 @@ export default function Esercizi() {
   const [space, setSpace] = useState('');
   const [progression, setProgression] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [courts, setCourts] = useState<CourtDiagram[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Delete
