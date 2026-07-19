@@ -1676,8 +1676,8 @@ export type Database = {
         Row: {
           age_group: string | null
           category: string | null
-          common_errors: string | null
-          content: string
+          common_errors: Json | null
+          content: Json
           created_at: string
           created_by: string | null
           difficulty: string | null
@@ -1694,8 +1694,8 @@ export type Database = {
         Insert: {
           age_group?: string | null
           category?: string | null
-          common_errors?: string | null
-          content: string
+          common_errors?: Json | null
+          content: Json
           created_at?: string
           created_by?: string | null
           difficulty?: string | null
@@ -1712,8 +1712,8 @@ export type Database = {
         Update: {
           age_group?: string | null
           category?: string | null
-          common_errors?: string | null
-          content?: string
+          common_errors?: Json | null
+          content?: Json
           created_at?: string
           created_by?: string | null
           difficulty?: string | null
