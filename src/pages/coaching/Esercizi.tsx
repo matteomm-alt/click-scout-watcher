@@ -522,6 +522,17 @@ export default function Esercizi() {
                   <p className="text-sm text-muted-foreground line-clamp-3">{ex.description}</p>
                 )}
 
+                {(() => {
+                  const sd = (ex.scheme_data ?? {}) as { courts?: CourtDiagram[] };
+                  const cs = Array.isArray(sd.courts) ? sd.courts.slice(0, 2) : [];
+                  if (cs.length === 0) return null;
+                  return (
+                    <div className="grid grid-cols-2 gap-2">
+                      {cs.map(c => <CourtDiagramPreview key={c.id} court={c} />)}
+                    </div>
+                  );
+                })()}
+
                 {ex.objective && (
                   <p className="text-xs text-primary line-clamp-2">🎯 {ex.objective}</p>
                 )}
