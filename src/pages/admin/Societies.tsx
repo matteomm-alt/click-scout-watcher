@@ -85,6 +85,10 @@ export default function AdminSocieties() {
   const [removeCoach, setRemoveCoach] = useState<CoachRow | null>(null);
   const [removing, setRemoving] = useState(false);
 
+  // Conferma eliminazione società
+  const [deleteSocietyTarget, setDeleteSocietyTarget] = useState<Society | null>(null);
+  const [deletingSociety, setDeletingSociety] = useState(false);
+
   // Toggle moduli inline (id società → in saving)
   const [savingFeatures, setSavingFeatures] = useState<string | null>(null);
   const [expandedFeatures, setExpandedFeatures] = useState<string | null>(null);
@@ -275,6 +279,59 @@ export default function AdminSocieties() {
     toast({ title: 'Coach rimosso' });
     setRemoveCoach(null);
     load();
+  };
+
+  const deleteSociety = async (s: Society) => {
+    setDeletingSociety(true);
+    // Elimina in ordine rispettando le FK
+    try {
+      // 1. Recupera IDs di atleti e convocazioni per cascade manuale
+      const { data: athletesRows, error: aErr } = await supabase
+        .from('athletes').select('id').eq('society_id', s.id);
+      if (aErr) throw aErr;
+      const athleteIds = (athletesRows ?? []).map((r) => r.id);
+
+      const { data: convocationsRows, error: cErr } = await supabase
+        .from('convocations').select('id').eq('society_id', s.id);
+      if (cErr) throw cErr;
+      const convocationIds = (convocationsRows ?? []).map((r) => r.id);
+
+      const steps: Array<{ label: string; run: () => Promise<{ error: unknown }> }> = [];
+      if (athleteIds.length > 0) {
+        steps.push({ label: 'athlete_evaluations', run: async () => await supabase.from('athlete_evaluations').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'attendances', run: async () => await supabase.from('attendances').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'athlete_injuries', run: async () => await supabase.from('athlete_injuries').delete().in('athlete_id', athleteIds) });
+      }
+      if (convocationIds.length > 0) {
+        steps.push({ label: 'convocation_players', run: async () => await supabase.from('convocation_players').delete().in('convocation_id', convocationIds) });
+      }
+      steps.push({ label: 'convocations', run: async () => await supabase.from('convocations').delete().eq('society_id', s.id) });
+      steps.push({ label: 'trainings', run: async () => await supabase.from('trainings').delete().eq('society_id', s.id) });
+      steps.push({ label: 'events', run: async () => await supabase.from('events').delete().eq('society_id', s.id) });
+      steps.push({ label: 'athletes', run: async () => await supabase.from('athletes').delete().eq('society_id', s.id) });
+      steps.push({ label: 'teams', run: async () => await supabase.from('teams').delete().eq('society_id', s.id) });
+      steps.push({ label: 'technical_guidelines', run: async () => await supabase.from('technical_guidelines').delete().eq('society_id', s.id) });
+      steps.push({ label: 'society_invitations', run: async () => await supabase.from('society_invitations').delete().eq('society_id', s.id) });
+      steps.push({ label: 'user_roles', run: async () => await supabase.from('user_roles').delete().eq('society_id', s.id) });
+      steps.push({ label: 'societies', run: async () => await supabase.from('societies').delete().eq('id', s.id) });
+
+      for (const step of steps) {
+        const { error } = await step.run();
+        if (error) {
+          const msg = (error as { message?: string })?.message ?? String(error);
+          throw new Error(`Errore su ${step.label}: ${msg}`);
+        }
+      }
+
+      toast({ title: 'Società eliminata', description: s.name });
+      setDeleteSocietyTarget(null);
+      await load();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Errore sconosciuto';
+      toast({ title: 'Eliminazione interrotta', description: msg, variant: 'destructive' });
+    } finally {
+      setDeletingSociety(false);
+    }
   };
 
   const inviteLink = (token: string) =>
@@ -557,6 +614,15 @@ export default function AdminSocieties() {
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Accedi a questa società
                   </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setDeleteSocietyTarget(s)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Elimina società
+                  </Button>
                 </footer>
               </article>
             );
@@ -661,6 +727,32 @@ export default function AdminSocieties() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {removing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Rimozione…</> : 'Rimuovi'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Conferma eliminazione società */}
+      <AlertDialog open={!!deleteSocietyTarget} onOpenChange={(o) => !o && !deletingSociety && setDeleteSocietyTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Elimina società {deleteSocietyTarget?.name}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione è irreversibile. Verranno eliminati tutti i dati associati:
+              squadre, atleti, allenamenti, eventi, inviti, valutazioni, presenze, infortuni,
+              comunicazioni, guide tecniche.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingSociety}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); if (deleteSocietyTarget) deleteSociety(deleteSocietyTarget); }}
+              disabled={deletingSociety}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingSociety ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Eliminazione…</> : 'Elimina definitivamente'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
