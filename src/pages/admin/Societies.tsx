@@ -297,6 +297,7 @@ export default function AdminSocieties() {
       const convocationIds = (convocationsRows ?? []).map((r) => r.id);
 
       const steps: Array<{ label: string; run: () => Promise<{ error: unknown }> }> = [];
+      const wrap = (p: PromiseLike<{ error: unknown }>) => Promise.resolve(p);
       if (athleteIds.length > 0) {
         steps.push({ label: 'athlete_evaluations', run: () => supabase.from('athlete_evaluations').delete().in('athlete_id', athleteIds) });
         steps.push({ label: 'attendances', run: () => supabase.from('attendances').delete().in('athlete_id', athleteIds) });
