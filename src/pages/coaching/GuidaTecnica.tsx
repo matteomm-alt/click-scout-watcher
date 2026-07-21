@@ -195,7 +195,7 @@ export default function GuidaTecnica() {
 
     const { error } = await supabase
       .from('technical_guidelines')
-      .upsert(payloads as never, { onConflict: 'title,society_id' });
+      .insert(payloads as never);
 
     setImporting(false);
     if (error) {
