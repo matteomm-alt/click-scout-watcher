@@ -85,6 +85,10 @@ export default function AdminSocieties() {
   const [removeCoach, setRemoveCoach] = useState<CoachRow | null>(null);
   const [removing, setRemoving] = useState(false);
 
+  // Conferma eliminazione società
+  const [deleteSocietyTarget, setDeleteSocietyTarget] = useState<Society | null>(null);
+  const [deletingSociety, setDeletingSociety] = useState(false);
+
   // Toggle moduli inline (id società → in saving)
   const [savingFeatures, setSavingFeatures] = useState<string | null>(null);
   const [expandedFeatures, setExpandedFeatures] = useState<string | null>(null);
