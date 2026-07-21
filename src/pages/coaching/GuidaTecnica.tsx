@@ -359,9 +359,14 @@ export default function GuidaTecnica() {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="w-4 h-4" /> Nuova guida
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="w-4 h-4" /> Importa guide da JSON
+            </Button>
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="w-4 h-4" /> Nuova guida
+            </Button>
+          </div>
         )}
       </div>
 
