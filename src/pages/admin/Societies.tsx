@@ -614,6 +614,15 @@ export default function AdminSocieties() {
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Accedi a questa società
                   </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setDeleteSocietyTarget(s)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Elimina società
+                  </Button>
                 </footer>
               </article>
             );
