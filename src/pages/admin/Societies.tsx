@@ -281,6 +281,59 @@ export default function AdminSocieties() {
     load();
   };
 
+  const deleteSociety = async (s: Society) => {
+    setDeletingSociety(true);
+    // Elimina in ordine rispettando le FK
+    try {
+      // 1. Recupera IDs di atleti e convocazioni per cascade manuale
+      const { data: athletesRows, error: aErr } = await supabase
+        .from('athletes').select('id').eq('society_id', s.id);
+      if (aErr) throw aErr;
+      const athleteIds = (athletesRows ?? []).map((r) => r.id);
+
+      const { data: convocationsRows, error: cErr } = await supabase
+        .from('convocations').select('id').eq('society_id', s.id);
+      if (cErr) throw cErr;
+      const convocationIds = (convocationsRows ?? []).map((r) => r.id);
+
+      const steps: Array<{ label: string; run: () => Promise<{ error: unknown }> }> = [];
+      if (athleteIds.length > 0) {
+        steps.push({ label: 'athlete_evaluations', run: () => supabase.from('athlete_evaluations').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'attendances', run: () => supabase.from('attendances').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'athlete_injuries', run: () => supabase.from('athlete_injuries').delete().in('athlete_id', athleteIds) });
+      }
+      if (convocationIds.length > 0) {
+        steps.push({ label: 'convocation_players', run: () => supabase.from('convocation_players').delete().in('convocation_id', convocationIds) });
+      }
+      steps.push({ label: 'convocations', run: () => supabase.from('convocations').delete().eq('society_id', s.id) });
+      steps.push({ label: 'trainings', run: () => supabase.from('trainings').delete().eq('society_id', s.id) });
+      steps.push({ label: 'events', run: () => supabase.from('events').delete().eq('society_id', s.id) });
+      steps.push({ label: 'athletes', run: () => supabase.from('athletes').delete().eq('society_id', s.id) });
+      steps.push({ label: 'teams', run: () => supabase.from('teams').delete().eq('society_id', s.id) });
+      steps.push({ label: 'technical_guidelines', run: () => supabase.from('technical_guidelines').delete().eq('society_id', s.id) });
+      steps.push({ label: 'society_invitations', run: () => supabase.from('society_invitations').delete().eq('society_id', s.id) });
+      steps.push({ label: 'user_roles', run: () => supabase.from('user_roles').delete().eq('society_id', s.id) });
+      steps.push({ label: 'societies', run: () => supabase.from('societies').delete().eq('id', s.id) });
+
+      for (const step of steps) {
+        const { error } = await step.run();
+        if (error) {
+          const msg = (error as { message?: string })?.message ?? String(error);
+          throw new Error(`Errore su ${step.label}: ${msg}`);
+        }
+      }
+
+      toast({ title: 'Società eliminata', description: s.name });
+      setDeleteSocietyTarget(null);
+      await load();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Errore sconosciuto';
+      toast({ title: 'Eliminazione interrotta', description: msg, variant: 'destructive' });
+    } finally {
+      setDeletingSociety(false);
+    }
+  };
+
   const inviteLink = (token: string) =>
     `${window.location.origin}/accept-invitation?token=${token}`;
 
