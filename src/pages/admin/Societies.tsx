@@ -297,24 +297,23 @@ export default function AdminSocieties() {
       const convocationIds = (convocationsRows ?? []).map((r) => r.id);
 
       const steps: Array<{ label: string; run: () => Promise<{ error: unknown }> }> = [];
-      const wrap = (p: PromiseLike<{ error: unknown }>) => Promise.resolve(p);
       if (athleteIds.length > 0) {
-        steps.push({ label: 'athlete_evaluations', run: () => supabase.from('athlete_evaluations').delete().in('athlete_id', athleteIds) });
-        steps.push({ label: 'attendances', run: () => supabase.from('attendances').delete().in('athlete_id', athleteIds) });
-        steps.push({ label: 'athlete_injuries', run: () => supabase.from('athlete_injuries').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'athlete_evaluations', run: async () => await supabase.from('athlete_evaluations').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'attendances', run: async () => await supabase.from('attendances').delete().in('athlete_id', athleteIds) });
+        steps.push({ label: 'athlete_injuries', run: async () => await supabase.from('athlete_injuries').delete().in('athlete_id', athleteIds) });
       }
       if (convocationIds.length > 0) {
-        steps.push({ label: 'convocation_players', run: () => supabase.from('convocation_players').delete().in('convocation_id', convocationIds) });
+        steps.push({ label: 'convocation_players', run: async () => await supabase.from('convocation_players').delete().in('convocation_id', convocationIds) });
       }
-      steps.push({ label: 'convocations', run: () => supabase.from('convocations').delete().eq('society_id', s.id) });
-      steps.push({ label: 'trainings', run: () => supabase.from('trainings').delete().eq('society_id', s.id) });
-      steps.push({ label: 'events', run: () => supabase.from('events').delete().eq('society_id', s.id) });
-      steps.push({ label: 'athletes', run: () => supabase.from('athletes').delete().eq('society_id', s.id) });
-      steps.push({ label: 'teams', run: () => supabase.from('teams').delete().eq('society_id', s.id) });
-      steps.push({ label: 'technical_guidelines', run: () => supabase.from('technical_guidelines').delete().eq('society_id', s.id) });
-      steps.push({ label: 'society_invitations', run: () => supabase.from('society_invitations').delete().eq('society_id', s.id) });
-      steps.push({ label: 'user_roles', run: () => supabase.from('user_roles').delete().eq('society_id', s.id) });
-      steps.push({ label: 'societies', run: () => supabase.from('societies').delete().eq('id', s.id) });
+      steps.push({ label: 'convocations', run: async () => await supabase.from('convocations').delete().eq('society_id', s.id) });
+      steps.push({ label: 'trainings', run: async () => await supabase.from('trainings').delete().eq('society_id', s.id) });
+      steps.push({ label: 'events', run: async () => await supabase.from('events').delete().eq('society_id', s.id) });
+      steps.push({ label: 'athletes', run: async () => await supabase.from('athletes').delete().eq('society_id', s.id) });
+      steps.push({ label: 'teams', run: async () => await supabase.from('teams').delete().eq('society_id', s.id) });
+      steps.push({ label: 'technical_guidelines', run: async () => await supabase.from('technical_guidelines').delete().eq('society_id', s.id) });
+      steps.push({ label: 'society_invitations', run: async () => await supabase.from('society_invitations').delete().eq('society_id', s.id) });
+      steps.push({ label: 'user_roles', run: async () => await supabase.from('user_roles').delete().eq('society_id', s.id) });
+      steps.push({ label: 'societies', run: async () => await supabase.from('societies').delete().eq('id', s.id) });
 
       for (const step of steps) {
         const { error } = await step.run();
