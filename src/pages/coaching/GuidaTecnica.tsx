@@ -18,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink, X } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink, X, Upload } from 'lucide-react';
 import { FUNDAMENTALS, AGE_GROUPS, FUNDAMENTAL_COLOR } from '@/lib/volleyConstants';
 
 type ContentSectionKey =
