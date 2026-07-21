@@ -18,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink, X } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, Search, Filter, ExternalLink, X, Upload } from 'lucide-react';
 import { FUNDAMENTALS, AGE_GROUPS, FUNDAMENTAL_COLOR } from '@/lib/volleyConstants';
 
 type ContentSectionKey =
@@ -135,6 +135,78 @@ export default function GuidaTecnica() {
   const [saving, setSaving] = useState(false);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const [importOpen, setImportOpen] = useState(false);
+  const [importRows, setImportRows] = useState<Array<Record<string, unknown>>>([]);
+  const [importFileName, setImportFileName] = useState('');
+  const [importing, setImporting] = useState(false);
+
+  const importStats = useMemo(() => {
+    const funds = new Set<string>();
+    for (const r of importRows) {
+      const f = (r as { fundamental?: unknown }).fundamental;
+      if (typeof f === 'string' && f.trim()) funds.add(f);
+    }
+    return { count: importRows.length, fundamentals: funds.size };
+  }, [importRows]);
+
+  const handleImportFile = async (file: File | undefined) => {
+    if (!file) return;
+    setImportFileName(file.name);
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const arr = Array.isArray(parsed) ? parsed : Array.isArray((parsed as { guidelines?: unknown }).guidelines) ? (parsed as { guidelines: unknown[] }).guidelines : [];
+      setImportRows(arr as Array<Record<string, unknown>>);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'File non valido';
+      toast({ title: 'JSON non valido', description: msg, variant: 'destructive' });
+      setImportRows([]);
+    }
+  };
+
+  const resetImport = () => {
+    setImportRows([]);
+    setImportFileName('');
+  };
+
+  const confirmImport = async () => {
+    if (!societyId || !user || importRows.length === 0) return;
+    setImporting(true);
+    const payloads = importRows.map((r) => {
+      const rec = r as Record<string, unknown>;
+      const tagsRaw = rec.tags;
+      let tags: string[] = [];
+      if (typeof tagsRaw === 'string') tags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
+      else if (Array.isArray(tagsRaw)) tags = tagsRaw.map((t) => String(t).trim()).filter(Boolean);
+      return {
+        society_id: societyId,
+        created_by: user.id,
+        fundamental: (rec.fundamental as string) ?? null,
+        age_group: (rec.age_group as string) ?? null,
+        title: (rec.title as string) ?? '',
+        content: (rec.content as GuidelineContent) ?? {},
+        common_errors: (rec.common_errors as CommonError[]) ?? null,
+        tags,
+        category: (rec.category as string) ?? null,
+        video_url: null as string | null,
+      };
+    }).filter((p) => p.title.trim());
+
+    const { error } = await supabase
+      .from('technical_guidelines')
+      .upsert(payloads as never, { onConflict: 'title,society_id' });
+
+    setImporting(false);
+    if (error) {
+      toast({ title: 'Errore import', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: `Import completato`, description: `${payloads.length} guide importate.` });
+    setImportOpen(false);
+    resetImport();
+    load();
+  };
 
   const load = async () => {
     if (!societyId) return;
@@ -287,9 +359,14 @@ export default function GuidaTecnica() {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="w-4 h-4" /> Nuova guida
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="w-4 h-4" /> Importa guide da JSON
+            </Button>
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="w-4 h-4" /> Nuova guida
+            </Button>
+          </div>
         )}
       </div>
 
@@ -661,6 +738,41 @@ export default function GuidaTecnica() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={importOpen} onOpenChange={(o) => { setImportOpen(o); if (!o) resetImport(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="uppercase italic flex items-center gap-2">
+              <Upload className="w-4 h-4" /> Importa guide da JSON
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="border border-dashed border-border bg-muted/20 p-4 rounded-lg">
+              <Input
+                type="file"
+                accept="application/json,.json"
+                onChange={(e) => handleImportFile(e.target.files?.[0])}
+              />
+              {importFileName && <p className="mt-2 text-xs text-muted-foreground">File: {importFileName}</p>}
+            </div>
+            {importRows.length > 0 && (
+              <div className="rounded-lg border border-border bg-card p-3 text-sm">
+                Trovate <span className="font-bold text-primary">{importStats.count}</span> guide per{' '}
+                <span className="font-bold text-primary">{importStats.fundamentals}</span> fondamentali.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImportOpen(false); resetImport(); }} disabled={importing}>
+              Annulla
+            </Button>
+            <Button onClick={confirmImport} disabled={importing || importRows.length === 0} className="gap-2">
+              <Upload className="w-4 h-4" />
+              {importing ? 'Import in corso…' : `Conferma import (${importRows.length})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
