@@ -738,6 +738,41 @@ export default function GuidaTecnica() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={importOpen} onOpenChange={(o) => { setImportOpen(o); if (!o) resetImport(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="uppercase italic flex items-center gap-2">
+              <Upload className="w-4 h-4" /> Importa guide da JSON
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="border border-dashed border-border bg-muted/20 p-4 rounded-lg">
+              <Input
+                type="file"
+                accept="application/json,.json"
+                onChange={(e) => handleImportFile(e.target.files?.[0])}
+              />
+              {importFileName && <p className="mt-2 text-xs text-muted-foreground">File: {importFileName}</p>}
+            </div>
+            {importRows.length > 0 && (
+              <div className="rounded-lg border border-border bg-card p-3 text-sm">
+                Trovate <span className="font-bold text-primary">{importStats.count}</span> guide per{' '}
+                <span className="font-bold text-primary">{importStats.fundamentals}</span> fondamentali.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImportOpen(false); resetImport(); }} disabled={importing}>
+              Annulla
+            </Button>
+            <Button onClick={confirmImport} disabled={importing || importRows.length === 0} className="gap-2">
+              <Upload className="w-4 h-4" />
+              {importing ? 'Import in corso…' : `Conferma import (${importRows.length})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
