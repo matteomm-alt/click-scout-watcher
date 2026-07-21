@@ -731,6 +731,32 @@ export default function AdminSocieties() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Conferma eliminazione società */}
+      <AlertDialog open={!!deleteSocietyTarget} onOpenChange={(o) => !o && !deletingSociety && setDeleteSocietyTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Elimina società {deleteSocietyTarget?.name}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione è irreversibile. Verranno eliminati tutti i dati associati:
+              squadre, atleti, allenamenti, eventi, inviti, valutazioni, presenze, infortuni,
+              comunicazioni, guide tecniche.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingSociety}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); if (deleteSocietyTarget) deleteSociety(deleteSocietyTarget); }}
+              disabled={deletingSociety}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingSociety ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Eliminazione…</> : 'Elimina definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
