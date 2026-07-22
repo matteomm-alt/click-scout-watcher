@@ -18,12 +18,12 @@ export function applyLiberoAutoSwap(
   const out = [...lineup];
   let benched: number | null = benchedMb ?? null;
   const liberoIdx = out.indexOf(liberoNum);
-  if (benched != null && liberoIdx >= 0 && [1, 2, 3].includes(liberoIdx)) {
+  if (benched != null && liberoIdx >= 0 && [0, 1, 2, 3].includes(liberoIdx)) {
     out[liberoIdx] = benched;
     benched = null;
   }
   if (benched == null) {
-    for (const idx of [0, 4, 5]) {
+    for (const idx of [4, 5]) {
       const num = out[idx];
       if (num && num !== liberoNum && roleOf(num) === 'M') {
         benched = num;

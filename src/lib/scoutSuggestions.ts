@@ -27,7 +27,10 @@ export function suggestNextTouch(
     case 'E':
       return { skill: 'A', team: prevTeam };
     case 'A':
-      if (prevEvaluation === '#' || prevEvaluation === '=') return { skill: null, team: null };
+      // Kill: la squadra attaccante ha fatto punto → serve al tocco successivo.
+      if (prevEvaluation === '#') return { skill: 'S', team: prevTeam };
+      // Errore o out: punto avversario → l'avversario serve.
+      if (prevEvaluation === '=' || prevEvaluation === '/') return { skill: 'S', team: opp };
       return { skill: 'A', team: opp };
     case 'B':
       if (prevEvaluation === '#') return { skill: null, team: null };

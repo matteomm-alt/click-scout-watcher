@@ -1,3 +1,4 @@
+import { safeUUID } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import {
   DndContext, DragEndEvent, KeyboardSensor, PointerSensor, closestCenter,
@@ -133,7 +134,7 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
 
   const addBlock = () => {
     const newBlock: BlockDraft = {
-      key: crypto.randomUUID(),
+      key: safeUUID(),
       title: `Blocco ${value.blocks.length + 1}`,
       description: '',
       exercise_id: null,
@@ -261,7 +262,7 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
                     if (!skel) return;
                     const sedute = settimane[selectedWeekIndex]?.sedute ?? [];
                     const newBlocks: BlockDraft[] = sedute.map((s, i) => ({
-                      key: crypto.randomUUID(),
+                      key: safeUUID(),
                       title: s.fondamentale ?? `Blocco ${i + 1}`,
                       description: s.note ?? '',
                       exercise_id: null,

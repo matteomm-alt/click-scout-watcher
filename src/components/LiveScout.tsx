@@ -8,6 +8,7 @@ import { upsertScoutSession } from '@/lib/scoutPersistence';
 import { useAuth } from '@/contexts/AuthContext';
 import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
 import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
+import { safeUUID } from '@/lib/utils';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt, logicalRoleForSlot } from '@/components/VolleyballCourt';
@@ -98,7 +99,7 @@ export function LiveScout() {
   const [quickOpen, setQuickOpen] = useState(false);
 
   const { user } = useAuth();
-  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const sessionIdRef = useRef<string>(safeUUID());
 
   // Apri dialog fine set quando setOverPending
 
@@ -331,6 +332,15 @@ export function LiveScout() {
 
   // Export DVW
   const handleExportDVW = () => {
+    // Salvataggio forzato prima dell'esportazione: garantisce che l'ultima
+    // versione dello scout sia persistita anche se non è ancora scattato
+    // il modulo-5 dell'autosave.
+    if (user) {
+      upsertScoutSession(
+        sessionIdRef.current, user.id,
+        matchInfo, homeTeam, awayTeam, matchState,
+      );
+    }
     const dvw = generateDVW(
       matchInfo, homeTeam, awayTeam, homeLineup, awayLineup,
       matchState.actions, matchState.setResults,
@@ -713,7 +723,19 @@ export function LiveScout() {
               </button>
               <button
                 type="button"
-                onClick={() => { endSet(); setEndSetDialog(false); }}
+                onClick={() => {
+                  // Salvataggio forzato a fine set: chiude in modo sicuro il
+                  // set corrente su Supabase, indipendentemente dal modulo-5
+                  // dell'autosave e dal fatto che il dialog sia stato aperto
+                  // manualmente o dal setOverPending.
+                  if (user) {
+                    upsertScoutSession(
+                      sessionIdRef.current, user.id,
+                      matchInfo, homeTeam, awayTeam, matchState,
+                    );
+                  }
+                  endSet(); setEndSetDialog(false);
+                }}
                 className="min-h-12 flex-1 rounded bg-primary font-black text-primary-foreground"
               >
                 Conferma
