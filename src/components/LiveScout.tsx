@@ -723,7 +723,19 @@ export function LiveScout() {
               </button>
               <button
                 type="button"
-                onClick={() => { endSet(); setEndSetDialog(false); }}
+                onClick={() => {
+                  // Salvataggio forzato a fine set: chiude in modo sicuro il
+                  // set corrente su Supabase, indipendentemente dal modulo-5
+                  // dell'autosave e dal fatto che il dialog sia stato aperto
+                  // manualmente o dal setOverPending.
+                  if (user) {
+                    upsertScoutSession(
+                      sessionIdRef.current, user.id,
+                      matchInfo, homeTeam, awayTeam, matchState,
+                    );
+                  }
+                  endSet(); setEndSetDialog(false);
+                }}
                 className="min-h-12 flex-1 rounded bg-primary font-black text-primary-foreground"
               >
                 Conferma
