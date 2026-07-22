@@ -421,20 +421,33 @@ export default function AdminSocieties() {
                     <h3 className="font-black italic uppercase tracking-tight leading-tight truncate">{s.name}</h3>
                     <p className="text-xs text-muted-foreground font-mono">{s.slug}</p>
                   </div>
-                  <div className="flex flex-col gap-1 items-end shrink-0">
-                    {socAdmins.length > 0 && (
-                      <Badge variant="outline" className="border-primary/50 text-primary text-[10px]">
-                        {socAdmins.length} admin
-                      </Badge>
+                  <div className="flex items-start gap-1.5 shrink-0">
+                    {isSuperAdmin && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        title="Elimina società"
+                        onClick={() => setDeleteSocietyTarget(s)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     )}
-                    <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
-                      {socCoaches.length} coach
-                    </Badge>
-                    {(pendingAdmin.length + pendingCoach.length) > 0 && (
-                      <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px]">
-                        {pendingAdmin.length + pendingCoach.length} invito{(pendingAdmin.length + pendingCoach.length) === 1 ? '' : 'i'}
+                    <div className="flex flex-col gap-1 items-end">
+                      {socAdmins.length > 0 && (
+                        <Badge variant="outline" className="border-primary/50 text-primary text-[10px]">
+                          {socAdmins.length} admin
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+                        {socCoaches.length} coach
                       </Badge>
-                    )}
+                      {(pendingAdmin.length + pendingCoach.length) > 0 && (
+                        <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px]">
+                          {pendingAdmin.length + pendingCoach.length} invito{(pendingAdmin.length + pendingCoach.length) === 1 ? '' : 'i'}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </header>
 
