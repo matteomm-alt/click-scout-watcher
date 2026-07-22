@@ -566,6 +566,8 @@ export const useMatchStore = create<MatchStore>()(
         const liberoFront = [1, 2, 3].some(idx =>
           roleOf(lineup[idx] ?? 0) === 'L');
         if (liberoFront) errors.push('Libero in prima linea (illegale)');
+        const liberoServing = roleOf(lineup[0] ?? 0) === 'L';
+        if (liberoServing) errors.push('Libero in posizione di battuta (illegale)');
         const onCourtRoles = lineup.map(n => roleOf(n)).filter(Boolean);
         if (!onCourtRoles.includes('S'))
           errors.push('Nessun palleggiatore in campo');

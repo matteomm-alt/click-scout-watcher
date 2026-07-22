@@ -99,7 +99,7 @@ export function LiveScout() {
   const [quickOpen, setQuickOpen] = useState(false);
 
   const { user } = useAuth();
-  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const sessionIdRef = useRef<string>(safeUUID());
 
   // Apri dialog fine set quando setOverPending
 
@@ -332,6 +332,15 @@ export function LiveScout() {
 
   // Export DVW
   const handleExportDVW = () => {
+    // Salvataggio forzato prima dell'esportazione: garantisce che l'ultima
+    // versione dello scout sia persistita anche se non è ancora scattato
+    // il modulo-5 dell'autosave.
+    if (user) {
+      upsertScoutSession(
+        sessionIdRef.current, user.id,
+        matchInfo, homeTeam, awayTeam, matchState,
+      );
+    }
     const dvw = generateDVW(
       matchInfo, homeTeam, awayTeam, homeLineup, awayLineup,
       matchState.actions, matchState.setResults,
