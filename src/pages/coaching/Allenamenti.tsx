@@ -1,3 +1,4 @@
+import { safeUUID } from '@/lib/utils';
 import { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -231,7 +232,7 @@ export default function Allenamenti() {
       return null;
     }
     const blocks: BlockDraft[] = (blRes.data as BlockRow[]).map((b) => ({
-      key: crypto.randomUUID(),
+      key: safeUUID(),
       id: asNew ? undefined : b.id,
       title: b.title,
       description: b.description || '',

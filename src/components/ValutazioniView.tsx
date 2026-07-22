@@ -1,3 +1,4 @@
+import { safeUUID } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import { Star, ChevronDown, ChevronUp, FileDown, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -131,7 +132,7 @@ export function ValutazioniView() {
     if (error) { toast.error('Errore salvataggio'); }
     else {
       setEvaluations(prev => [
-        { id: crypto.randomUUID(), athlete_id: selectedAthleteId, fundamental: key, score, evaluated_at: today, notes: null, season_phase: phase },
+        { id: safeUUID(), athlete_id: selectedAthleteId, fundamental: key, score, evaluated_at: today, notes: null, season_phase: phase },
         ...prev,
       ]);
       toast.success(`Salvato (${PHASES.find(p2 => p2.id === phase)?.short})`);

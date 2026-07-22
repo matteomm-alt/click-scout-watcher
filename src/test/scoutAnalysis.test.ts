@@ -12,7 +12,7 @@ import {
 
 function makeAction(overrides: Partial<DbAction> = {}): DbAction {
   return {
-    id: crypto.randomUUID(),
+    id: safeUUID(),
     scout_match_id: 'm1',
     scout_team_id: 'home-team',
     side: 'home',

@@ -1,3 +1,4 @@
+import { safeUUID } from '@/lib/utils';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
@@ -234,7 +235,7 @@ export const useMatchStore = create<MatchStore>()(
         const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null);
         const event: MatchEvent = {
           type: 'match_started',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           homeLineup: home.lineup,
           awayLineup: away.lineup,
@@ -256,7 +257,7 @@ export const useMatchStore = create<MatchStore>()(
 
       addAction: (actionData) => {
         const { matchState } = get();
-        const id = crypto.randomUUID();
+        const id = safeUUID();
         const rallyId = `${matchState.currentSet}-${matchState.homeScore}-${matchState.awayScore}`;
         const phase: 'K1' | 'K2' = matchState.servingTeam === actionData.team
           ? 'K2' : 'K1';
@@ -347,7 +348,7 @@ export const useMatchStore = create<MatchStore>()(
       adjustScore: (team, delta) => {
         const event: MatchEvent = {
           type: 'score_adjustment',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
           delta,
@@ -358,7 +359,7 @@ export const useMatchStore = create<MatchStore>()(
       setServingTeam: (team) => {
         const event: MatchEvent = {
           type: 'serving_team_set',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
         };
@@ -369,7 +370,7 @@ export const useMatchStore = create<MatchStore>()(
         const { matchState } = get();
         const event: MatchEvent = {
           type: 'point',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
           homeScoreBefore: matchState.homeScore,
@@ -395,7 +396,7 @@ export const useMatchStore = create<MatchStore>()(
           ? matchState.homeBenchedMb : matchState.awayBenchedMb;
         const event: MatchEvent = {
           type: 'rotation',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
           lineupBefore: [...lineup],
@@ -417,7 +418,7 @@ export const useMatchStore = create<MatchStore>()(
         const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null);
         const event: MatchEvent = {
           type: 'set_ended',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           setNumber: matchState.currentSet,
           homeScore: matchState.homeScore,
@@ -472,7 +473,7 @@ export const useMatchStore = create<MatchStore>()(
         }
         const event: MatchEvent = {
           type: 'substitution',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
           playerOut: outNumber,
@@ -525,12 +526,12 @@ export const useMatchStore = create<MatchStore>()(
         };
         const ev1: MatchEvent = {
           ...base, type: 'substitution',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           playerOut: setterOnCourt, playerIn: reserveOpp.number,
         };
         const ev2: MatchEvent = {
           ...base, type: 'substitution',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           playerOut: oppOnCourt, playerIn: reserveSetter.number,
         };
         set((s) => {
@@ -600,7 +601,7 @@ export const useMatchStore = create<MatchStore>()(
         if (matchState[usedKey] >= 2) return false;
         const event: MatchEvent = {
           type: 'timeout',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
           setNumber: matchState.currentSet,
@@ -615,7 +616,7 @@ export const useMatchStore = create<MatchStore>()(
         const { matchState } = get();
         const event: MatchEvent = {
           type: 'sanction',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           team,
           sanctionType: type,
@@ -699,7 +700,7 @@ export const useMatchStore = create<MatchStore>()(
         const away = applyLiberoAutoSwap(awayBase, demoAwayTeam, awayLib, null);
         const startEvent: MatchEvent = {
           type: 'match_started',
-          id: crypto.randomUUID(),
+          id: safeUUID(),
           timestamp: nowTime(),
           homeLineup: home.lineup,
           awayLineup: away.lineup,

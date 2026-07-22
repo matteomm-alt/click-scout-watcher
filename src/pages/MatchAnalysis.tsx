@@ -1,3 +1,4 @@
+import { safeUUID } from '@/lib/utils';
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,7 +72,7 @@ export default function MatchAnalysis() {
     if (!id) return;
     let token = match?.share_token ?? null;
     if (!token) {
-      token = crypto.randomUUID();
+      token = safeUUID();
       await supabase.from('scout_matches').update({ share_token: token }).eq('id', id);
     }
     setShareUrl(`${window.location.origin}/analisi-pubblica/${id}?t=${token}`);

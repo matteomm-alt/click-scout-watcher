@@ -1,3 +1,4 @@
+import { safeUUID } from '@/lib/utils';
 import { useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import type { Player, PlayerRole, Team } from '@/types/volleyball';
@@ -177,7 +178,7 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
       { number: 11, lastName: 'Giocatore 11', role: 'L' as PlayerRole, isLibero: true, isCaptain: false }, { number: 12, lastName: 'Giocatore 12', role: 'L' as PlayerRole, isLibero: true, isCaptain: false },
       { number: 13, lastName: 'Giocatore 13', role: 'U' as PlayerRole, isLibero: false, isCaptain: false }, { number: 14, lastName: 'Giocatore 14', role: 'U' as PlayerRole, isLibero: false, isCaptain: false },
     ];
-    template.forEach((player) => addPlayer(side, { ...player, id: crypto.randomUUID(), firstName: '' }));
+    template.forEach((player) => addPlayer(side, { ...player, id: safeUUID(), firstName: '' }));
     toast.success('✅ 14 giocatori aggiunti');
   };
 
@@ -243,7 +244,7 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
       </div>
 
       <PlayerForm
-        onAdd={(p) => addPlayer(side, { ...p, id: crypto.randomUUID() })}
+        onAdd={(p) => addPlayer(side, { ...p, id: safeUUID() })}
       />
 
       <div className="space-y-1">
