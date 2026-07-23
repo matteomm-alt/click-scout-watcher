@@ -11,10 +11,15 @@ import {
 import { EVENT_TYPES, type EventType } from '@/lib/eventTypes';
 import { cn } from '@/lib/utils';
 
+interface TeamOption {
+  id: string;
+  name: string;
+}
+
 interface CalendarFiltersProps {
   selectedTypes: EventType[];
   onTypesChange: (types: EventType[]) => void;
-  teams: string[];
+  teams: TeamOption[];
   selectedTeam: string;
   onTeamChange: (team: string) => void;
 }
@@ -75,8 +80,8 @@ export function CalendarFilters({
             <SelectContent>
               <SelectItem value="all">Tutte le squadre</SelectItem>
               {teams.map((team) => (
-                <SelectItem key={team} value={team}>
-                  {team}
+                <SelectItem key={team.id} value={team.id}>
+                  {team.name}
                 </SelectItem>
               ))}
             </SelectContent>
