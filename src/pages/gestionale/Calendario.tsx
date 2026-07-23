@@ -149,7 +149,7 @@ export default function Calendario() {
         query = query.in('event_type', selectedEventTypes);
       }
       if (teamFilter !== 'all') {
-        query = query.eq('team_label', teamFilter);
+        query = query.eq('team_id', teamFilter);
       }
 
       const { data, error } = await query;
