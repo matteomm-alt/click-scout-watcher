@@ -13,6 +13,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -32,6 +39,11 @@ import {
 
 type ViewMode = 'week' | 'month' | 'season';
 
+interface TeamLite {
+  id: string;
+  name: string;
+}
+
 interface EventForm {
   title: string;
   event_type: EventType;
@@ -39,7 +51,7 @@ interface EventForm {
   end_at: string;
   location: string;
   description: string;
-  team_label: string;
+  team_id: string;
 }
 
 export default function Calendario() {
@@ -50,7 +62,7 @@ export default function Calendario() {
   const [anchor, setAnchor] = useState<Date>(new Date());
   const [selectedEventTypes, setSelectedEventTypes] = useState<EventType[]>([]);
   const [teamFilter, setTeamFilter] = useState('all');
-  const [teams, setTeams] = useState<string[]>([]);
+  const [teams, setTeams] = useState<TeamLite[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -66,7 +78,7 @@ export default function Calendario() {
     end_at: '',
     location: '',
     description: '',
-    team_label: '',
+    team_id: '',
   });
   const [pendingScopeAction, setPendingScopeAction] = useState<'save' | 'delete' | null>(null);
   const [recurrence, setRecurrence] = useState<{
@@ -101,25 +113,22 @@ export default function Calendario() {
     if (!societyId || !user) return;
     let cancelled = false;
     (async () => {
-      const [{ data: athletesData, error: athletesError }, { data: teamsData, error: teamsError }] =
-        await Promise.all([
-          supabase.from('athletes').select('teams').eq('society_id', societyId),
-          supabase.from('teams').select('name').eq('society_id', societyId),
-        ]);
+      const { data: teamsData, error: teamsError } = await supabase
+        .from('teams')
+        .select('id, name')
+        .eq('society_id', societyId)
+        .order('name');
 
       if (cancelled) return;
-      if (athletesError || teamsError) {
-        console.error('teams load error', athletesError || teamsError);
+      if (teamsError) {
+        console.error('teams load error', teamsError);
         setTeams([]);
         return;
       }
 
-      const labels = new Set<string>();
-      (athletesData ?? []).forEach((athlete) => {
-        athlete.teams?.forEach((team) => team && labels.add(team));
-      });
-      (teamsData ?? []).forEach((team) => team.name && labels.add(team.name));
-      setTeams(Array.from(labels).sort((a, b) => a.localeCompare(b, 'it')));
+      setTeams(
+        ((teamsData ?? []) as TeamLite[]).sort((a, b) => a.name.localeCompare(b.name, 'it')),
+      );
     })();
     return () => {
       cancelled = true;
@@ -147,7 +156,7 @@ export default function Calendario() {
         query = query.in('event_type', selectedEventTypes);
       }
       if (teamFilter !== 'all') {
-        query = query.eq('team_label', teamFilter);
+        query = query.eq('team_id', teamFilter);
       }
 
       const { data, error } = await query;
@@ -207,7 +216,7 @@ export default function Calendario() {
     setEditingEvent(null);
     setEventForm({
       title: '', event_type: 'allenamento', start_at: '',
-      end_at: '', location: '', description: '', team_label: '',
+      end_at: '', location: '', description: '', team_id: '',
     });
     setRecurrence({ enabled: false, interval: 'week', count: 8 });
     setNewEventOpen(true);
@@ -222,7 +231,7 @@ export default function Calendario() {
       end_at: evt.end_at ? evt.end_at.slice(0, 16) : '',
       location: evt.location ?? '',
       description: evt.description ?? '',
-      team_label: evt.team_label ?? '',
+      team_id: evt.team_id ?? '',
     });
     setRecurrence({ enabled: false, interval: 'week', count: 8 });
     setNewEventOpen(true);
@@ -252,16 +261,16 @@ export default function Calendario() {
       end_at: eventForm.end_at ? new Date(eventForm.end_at).toISOString() : null,
       location: eventForm.location.trim() || null,
       description: eventForm.description.trim() || null,
-      team_label: eventForm.team_label.trim() || null,
+      team_id: eventForm.team_id || null,
     };
 
     if (editingEvent) {
       if (scope === 'series') {
         const parentId = editingEvent.recurrence_parent_id ?? editingEvent.id;
-        const { title, event_type, location, description, team_label } = payload;
+        const { title, event_type, location, description, team_id } = payload;
         const { error } = await supabase
           .from('events')
-          .update({ title, event_type, location, description, team_label })
+          .update({ title, event_type, location, description, team_id })
           .or(`id.eq.${parentId},recurrence_parent_id.eq.${parentId}`);
         if (error) { toast.error('Errore aggiornamento serie'); setSavingEvent(false); return; }
         toast.success('Serie di eventi aggiornata');
@@ -291,7 +300,7 @@ export default function Calendario() {
                 : null,
               location: payload.location,
               description: payload.description,
-              team_label: payload.team_label,
+              team_id: payload.team_id,
               recurrence_parent_id: editingEvent.id,
             })),
           );
@@ -337,7 +346,7 @@ export default function Calendario() {
               : null,
             location: payload.location,
             description: payload.description,
-            team_label: payload.team_label,
+            team_id: payload.team_id,
             recurrence_parent_id: parentEvent.id,
           })),
         );
@@ -641,11 +650,20 @@ export default function Calendario() {
 
             <div className="space-y-1.5">
               <Label className="text-xs uppercase tracking-wider">Squadra</Label>
-              <Input
-                value={eventForm.team_label}
-                onChange={(e) => setEventForm((f) => ({ ...f, team_label: e.target.value }))}
-                placeholder="Es. U18 Femminile"
-              />
+              <Select
+                value={eventForm.team_id}
+                onValueChange={(v) => setEventForm((f) => ({ ...f, team_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona squadra…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nessuna squadra</SelectItem>
+                  {teams.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
