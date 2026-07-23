@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { safeUUID } from '@/lib/utils';
 import {
   statsBySkill,
   statsByPlayer,
