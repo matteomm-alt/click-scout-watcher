@@ -32,6 +32,11 @@ import {
 
 type ViewMode = 'week' | 'month' | 'season';
 
+interface TeamLite {
+  id: string;
+  name: string;
+}
+
 interface EventForm {
   title: string;
   event_type: EventType;
@@ -39,7 +44,7 @@ interface EventForm {
   end_at: string;
   location: string;
   description: string;
-  team_label: string;
+  team_id: string;
 }
 
 export default function Calendario() {
@@ -50,7 +55,7 @@ export default function Calendario() {
   const [anchor, setAnchor] = useState<Date>(new Date());
   const [selectedEventTypes, setSelectedEventTypes] = useState<EventType[]>([]);
   const [teamFilter, setTeamFilter] = useState('all');
-  const [teams, setTeams] = useState<string[]>([]);
+  const [teams, setTeams] = useState<TeamLite[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -66,7 +71,7 @@ export default function Calendario() {
     end_at: '',
     location: '',
     description: '',
-    team_label: '',
+    team_id: '',
   });
   const [pendingScopeAction, setPendingScopeAction] = useState<'save' | 'delete' | null>(null);
   const [recurrence, setRecurrence] = useState<{
