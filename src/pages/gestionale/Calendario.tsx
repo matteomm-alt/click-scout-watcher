@@ -650,11 +650,20 @@ export default function Calendario() {
 
             <div className="space-y-1.5">
               <Label className="text-xs uppercase tracking-wider">Squadra</Label>
-              <Input
-                value={eventForm.team_label}
-                onChange={(e) => setEventForm((f) => ({ ...f, team_label: e.target.value }))}
-                placeholder="Es. U18 Femminile"
-              />
+              <Select
+                value={eventForm.team_id}
+                onValueChange={(v) => setEventForm((f) => ({ ...f, team_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona squadra…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nessuna squadra</SelectItem>
+                  {teams.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
