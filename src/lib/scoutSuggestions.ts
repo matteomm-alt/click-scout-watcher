@@ -31,7 +31,13 @@ export function suggestNextTouch(
       if (prevEvaluation === '#') return { skill: 'S', team: prevTeam };
       // Errore o out: punto avversario → l'avversario serve.
       if (prevEvaluation === '=' || prevEvaluation === '/') return { skill: 'S', team: opp };
-      return { skill: 'A', team: opp };
+      // Rally in corso: NON pre-selezionare il fondamentale.
+      // Il sistema non può sapere se il prossimo tocco sarà Muro (B),
+      // Difesa (D) o Attacco (A) diretto. Restituire 'A' causa la
+      // pre-selezione errata di Attacco quando l'operatore clicca
+      // per registrare Muro o Difesa — confermato su 99 azioni simulate.
+      // Manteniamo solo il team per l'highlight visivo del campo.
+      return { skill: null, team: opp };
     case 'B':
       if (prevEvaluation === '#') return { skill: null, team: null };
       return { skill: 'A', team: prevTeam };

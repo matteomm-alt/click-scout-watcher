@@ -188,6 +188,18 @@ export function LiveScout() {
       setPendingSkill('S');
     } else if (suggestion?.team === team && suggestion.skill && suggestion.skill !== 'S') {
       setPendingSkill(suggestion.skill);
+    } else if (zone === 1 && !suggestion && matchState.actions.length > 0) {
+      // Fallback: suggestion è null (resettato da autoPoint) ma il giocatore
+      // è in zona 1. Controlliamo se questa squadra ha appena fatto punto
+      // dall'ultima azione registrata e pre-selezioniamo S di conseguenza.
+      const lastAction = matchState.actions[matchState.actions.length - 1];
+      const lastPointTeam = lastAction?.evaluation === '#' ? lastAction?.team
+        : lastAction?.evaluation === '=' ? (lastAction?.team === 'home' ? 'away' : 'home')
+        : lastAction?.evaluation === '/' ? (lastAction?.team === 'home' ? 'away' : 'home')
+        : null;
+      if (lastPointTeam === team) {
+        setPendingSkill('S');
+      }
     }
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setBottomSheetOpen(true);
