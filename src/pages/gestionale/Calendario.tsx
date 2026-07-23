@@ -209,7 +209,7 @@ export default function Calendario() {
     setEditingEvent(null);
     setEventForm({
       title: '', event_type: 'allenamento', start_at: '',
-      end_at: '', location: '', description: '', team_label: '',
+      end_at: '', location: '', description: '', team_id: '',
     });
     setRecurrence({ enabled: false, interval: 'week', count: 8 });
     setNewEventOpen(true);
@@ -224,7 +224,7 @@ export default function Calendario() {
       end_at: evt.end_at ? evt.end_at.slice(0, 16) : '',
       location: evt.location ?? '',
       description: evt.description ?? '',
-      team_label: evt.team_label ?? '',
+      team_id: evt.team_id ?? '',
     });
     setRecurrence({ enabled: false, interval: 'week', count: 8 });
     setNewEventOpen(true);
