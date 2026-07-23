@@ -254,16 +254,16 @@ export default function Calendario() {
       end_at: eventForm.end_at ? new Date(eventForm.end_at).toISOString() : null,
       location: eventForm.location.trim() || null,
       description: eventForm.description.trim() || null,
-      team_label: eventForm.team_label.trim() || null,
+      team_id: eventForm.team_id || null,
     };
 
     if (editingEvent) {
       if (scope === 'series') {
         const parentId = editingEvent.recurrence_parent_id ?? editingEvent.id;
-        const { title, event_type, location, description, team_label } = payload;
+        const { title, event_type, location, description, team_id } = payload;
         const { error } = await supabase
           .from('events')
-          .update({ title, event_type, location, description, team_label })
+          .update({ title, event_type, location, description, team_id })
           .or(`id.eq.${parentId},recurrence_parent_id.eq.${parentId}`);
         if (error) { toast.error('Errore aggiornamento serie'); setSavingEvent(false); return; }
         toast.success('Serie di eventi aggiornata');
@@ -293,7 +293,7 @@ export default function Calendario() {
                 : null,
               location: payload.location,
               description: payload.description,
-              team_label: payload.team_label,
+              team_id: payload.team_id,
               recurrence_parent_id: editingEvent.id,
             })),
           );
@@ -339,7 +339,7 @@ export default function Calendario() {
               : null,
             location: payload.location,
             description: payload.description,
-            team_label: payload.team_label,
+            team_id: payload.team_id,
             recurrence_parent_id: parentEvent.id,
           })),
         );
