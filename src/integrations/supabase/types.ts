@@ -654,7 +654,7 @@ export type Database = {
           season: string | null
           society_id: string
           start_at: string
-          team_label: string | null
+          team_id: string | null
           title: string
           updated_at: string
         }
@@ -673,7 +673,7 @@ export type Database = {
           season?: string | null
           society_id: string
           start_at: string
-          team_label?: string | null
+          team_id?: string | null
           title: string
           updated_at?: string
         }
@@ -692,7 +692,7 @@ export type Database = {
           season?: string | null
           society_id?: string
           start_at?: string
-          team_label?: string | null
+          team_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -702,6 +702,13 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
