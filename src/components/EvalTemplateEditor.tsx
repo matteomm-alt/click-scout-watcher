@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Plus, Trash2, Eye, EyeOff, RotateCcw, Download, Upload, Check } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, RotateCcw, Download, Upload, Check, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,12 @@ function mergeTemplates(current: EvalTemplate, incoming: EvalTemplate): EvalTemp
     ...(incoming.renamedSubAspects ?? {}),
     ...(current.renamedSubAspects ?? {}),
   };
-  return { visibleFundamentals, customFundamentals, extraSubAspects, renamedSubAspects };
+  const renamedFundamentals: Record<string, string> = {
+    ...(incoming.renamedFundamentals ?? {}),
+    ...(current.renamedFundamentals ?? {}),
+  };
+  const fundamentalsOrder = current.fundamentalsOrder ?? incoming.fundamentalsOrder ?? null;
+  return { visibleFundamentals, customFundamentals, extraSubAspects, renamedSubAspects, renamedFundamentals, fundamentalsOrder };
 }
 
 interface Props {
@@ -107,6 +112,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
   const [newFondSubs, setNewFondSubs] = useState('');
   const [newSubAspect, setNewSubAspect] = useState<Record<string, string>>({});
   const [editingSub, setEditingSub] = useState<{ fondId: string; subIndex: number; currentValue: string } | null>(null);
+  const [editingFond, setEditingFond] = useState<{ id: string; currentValue: string } | null>(null);
 
   const renameSubAspect = async (fondId: string, subIndex: number, newName: string) => {
     const trimmed = newName.trim();
@@ -122,6 +128,27 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
     setEditingSub(null);
     await onSave({ renamedSubAspects: updated });
   };
+
+  const renameFundamental = async (id: string, newName: string) => {
+    const trimmed = newName.trim();
+    const defaultName = FONDAMENTALI_DEFAULT.find(f => f.id === id)?.nome ?? '';
+    const updated = { ...template.renamedFundamentals };
+    if (!trimmed || trimmed === defaultName) delete updated[id];
+    else updated[id] = trimmed;
+    setEditingFond(null);
+    await onSave({ renamedFundamentals: updated });
+  };
+
+  const reorderFundamentals = async (newOrder: string[]) => {
+    await onSave({ fundamentalsOrder: newOrder });
+  };
+
+  const orderedFonds = (
+    template.fundamentalsOrder ??
+    FONDAMENTALI_DEFAULT.map(f => f.id)
+  )
+    .map((id: string) => FONDAMENTALI_DEFAULT.find(f => f.id === id))
+    .filter((f): f is (typeof FONDAMENTALI_DEFAULT)[number] => !!f);
 
   const [importPreview, setImportPreview] = useState<{
     file: TemplateExportFile;
@@ -288,18 +315,67 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
             Fondamentali standard
           </p>
           <div className="space-y-2">
-            {FONDAMENTALI_DEFAULT.map(f => {
+            {orderedFonds.map((f, idx) => {
               const visible = isVisible(f.id);
               const extras = template.extraSubAspects[f.id] ?? [];
+              const displayFondName = template.renamedFundamentals[f.id] ?? f.nome;
+              const isRenamedFond = !!template.renamedFundamentals[f.id];
+              const isEditingFond = editingFond?.id === f.id;
+              const isFirst = idx === 0;
+              const isLast = idx === orderedFonds.length - 1;
+              const moveTo = (dir: -1 | 1) => {
+                const ids = orderedFonds.map(x => x.id);
+                const j = idx + dir;
+                if (j < 0 || j >= ids.length) return;
+                [ids[idx], ids[j]] = [ids[j], ids[idx]];
+                reorderFundamentals(ids);
+              };
               return (
                 <div key={f.id} className="rounded-lg border border-border bg-card">
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className={`text-sm font-bold ${visible ? '' : 'text-muted-foreground line-through'}`}>{f.nome}</span>
-                    <button type="button" onClick={() => toggleVisible(f.id)}
-                      className={`p-1.5 rounded-md transition-colors ${visible ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-secondary'}`}
-                      title={visible ? 'Nascondi' : 'Mostra'}>
-                      {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
+                  <div className="flex items-center justify-between px-3 py-2 gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      {isEditingFond ? (
+                        <Input
+                          autoFocus
+                          defaultValue={editingFond!.currentValue}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') renameFundamental(f.id, e.currentTarget.value);
+                            if (e.key === 'Escape') setEditingFond(null);
+                          }}
+                          onBlur={(e) => renameFundamental(f.id, e.target.value)}
+                          className="h-7 text-sm px-2"
+                        />
+                      ) : (
+                        <>
+                          <span className={`text-sm font-bold truncate ${visible ? '' : 'text-muted-foreground line-through'} ${isRenamedFond ? 'text-primary' : ''}`}>
+                            {displayFondName}
+                          </span>
+                          <button type="button"
+                            onClick={() => setEditingFond({ id: f.id, currentValue: displayFondName })}
+                            className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            title="Rinomina fondamentale">
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button type="button" onClick={() => moveTo(-1)} disabled={isFirst}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Sposta su">
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button type="button" onClick={() => moveTo(1)} disabled={isLast}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Sposta giù">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button type="button" onClick={() => toggleVisible(f.id)}
+                        className={`p-1.5 rounded-md transition-colors ${visible ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-secondary'}`}
+                        title={visible ? 'Nascondi' : 'Mostra'}>
+                        {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                   {visible && (
                     <div className="px-3 pb-3 space-y-2">

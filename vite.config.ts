@@ -60,4 +60,30 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'recharts': ['recharts'],
+          'xlsx': ['xlsx'],
+          'html2canvas': ['html2canvas'],
+          'dnd-kit': [
+            '@dnd-kit/core',
+            '@dnd-kit/sortable',
+            '@dnd-kit/utilities',
+          ],
+          'supabase': ['@supabase/supabase-js'],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-switch',
+          ],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 }));
