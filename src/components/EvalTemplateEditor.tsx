@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Plus, Trash2, Eye, EyeOff, RotateCcw, Download, Upload, Check } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, RotateCcw, Download, Upload, Check, Pencil, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,6 +107,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
   const [newFondSubs, setNewFondSubs] = useState('');
   const [newSubAspect, setNewSubAspect] = useState<Record<string, string>>({});
   const [editingSub, setEditingSub] = useState<{ fondId: string; subIndex: number; currentValue: string } | null>(null);
+  const [editingFond, setEditingFond] = useState<{ id: string; currentValue: string } | null>(null);
 
   const renameSubAspect = async (fondId: string, subIndex: number, newName: string) => {
     const trimmed = newName.trim();
@@ -122,6 +123,27 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
     setEditingSub(null);
     await onSave({ renamedSubAspects: updated });
   };
+
+  const renameFundamental = async (id: string, newName: string) => {
+    const trimmed = newName.trim();
+    const defaultName = FONDAMENTALI_DEFAULT.find(f => f.id === id)?.nome ?? '';
+    const updated = { ...template.renamedFundamentals };
+    if (!trimmed || trimmed === defaultName) delete updated[id];
+    else updated[id] = trimmed;
+    setEditingFond(null);
+    await onSave({ renamedFundamentals: updated });
+  };
+
+  const reorderFundamentals = async (newOrder: string[]) => {
+    await onSave({ fundamentalsOrder: newOrder });
+  };
+
+  const orderedFonds = (
+    template.fundamentalsOrder ??
+    FONDAMENTALI_DEFAULT.map(f => f.id)
+  )
+    .map((id: string) => FONDAMENTALI_DEFAULT.find(f => f.id === id))
+    .filter((f): f is (typeof FONDAMENTALI_DEFAULT)[number] => !!f);
 
   const [importPreview, setImportPreview] = useState<{
     file: TemplateExportFile;
