@@ -54,7 +54,12 @@ function mergeTemplates(current: EvalTemplate, incoming: EvalTemplate): EvalTemp
     ...(incoming.renamedSubAspects ?? {}),
     ...(current.renamedSubAspects ?? {}),
   };
-  return { visibleFundamentals, customFundamentals, extraSubAspects, renamedSubAspects };
+  const renamedFundamentals: Record<string, string> = {
+    ...(incoming.renamedFundamentals ?? {}),
+    ...(current.renamedFundamentals ?? {}),
+  };
+  const fundamentalsOrder = current.fundamentalsOrder ?? incoming.fundamentalsOrder ?? null;
+  return { visibleFundamentals, customFundamentals, extraSubAspects, renamedSubAspects, renamedFundamentals, fundamentalsOrder };
 }
 
 interface Props {
