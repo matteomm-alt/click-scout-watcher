@@ -24,6 +24,7 @@ import { CSLiveString } from '@/components/scout/CSLiveString';
 import { ScoutSettingsPanel } from '@/components/scout/ScoutSettingsPanel';
 import { TouchFlowPanel, type ScoutingMode } from '@/components/scout/TouchFlowPanel';
 import { LiveFooter } from '@/components/scout/LiveFooter';
+import { LiveKpiPanel, LiveKpiBanner } from '@/components/scout/LiveKpiPanel';
 import { suggestNextTouch, SKILL_BANNER, type TouchSuggestion } from '@/lib/scoutSuggestions';
 import { resolvePlayerPosition, nearestZone, getMiddleComboPosition } from '@/lib/courtPositionResolver';
 import { FullscreenToggle } from '@/components/FullscreenToggle';
@@ -31,7 +32,7 @@ import { FullscreenToggle } from '@/components/FullscreenToggle';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-type RightTab = 'log' | 'stats' | 'heat' | 'quick';
+type RightTab = 'log' | 'stats' | 'heat' | 'quick' | 'kpi';
 
 const SKILLS_WITH_ZONE: Skill[] = ['A', 'S', 'R', 'D'];
 
@@ -399,6 +400,7 @@ export function LiveScout() {
       {/* FOOTER FISSA skill+evaluation (SOLO MOBILE: su desktop il wizard è nel pannello laterale destro,
           avere anche LiveFooter qui duplicherebbe gli stessi comandi). */}
       <div className="md:hidden">
+        <LiveKpiBanner actions={matchState.actions} currentSet={matchState.currentSet} />
         <LiveFooter
           selectedPlayer={selectedPlayer}
           selectedSkill={pendingSkill}
@@ -579,10 +581,10 @@ export function LiveScout() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
-                {(['log', 'stats', 'heat', 'quick'] as const).map((t) => {
+              <div className="grid grid-cols-5 gap-0.5 p-0.5 rounded-md bg-secondary/40 border border-border/50">
+                {(['log', 'stats', 'heat', 'quick', 'kpi'] as const).map((t) => {
                   const active = rightTab === t;
-                  const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick' };
+                  const labels: Record<RightTab, string> = { log: 'Log', stats: 'Stats', heat: 'Heatmap', quick: 'Quick', kpi: 'KPI' };
                   return (
                     <button
                       key={t}
@@ -607,6 +609,16 @@ export function LiveScout() {
                 )}
                 {rightTab === 'heat' && <AttackHeatmap team="all" />}
                 {rightTab === 'quick' && <QuickActions />}
+                {rightTab === 'kpi' && (
+                  <LiveKpiPanel
+                    actions={matchState.actions}
+                    homeTeamName={homeTeam?.name ?? 'Casa'}
+                    awayTeamName={awayTeam?.name ?? 'Ospite'}
+                    homeScore={matchState.homeScore}
+                    awayScore={matchState.awayScore}
+                    currentSet={matchState.currentSet}
+                  />
+                )}
               </div>
             </>
           )}
