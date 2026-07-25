@@ -134,8 +134,7 @@ const App = () => (
                   <Route path="/scheletri" element={<Scheletri />} />
                   <Route path="/schemi" element={<Schemi />} />
                   <Route path="/volume" element={<Volume />} />
-                  <Route path="/pianificazione" element={<Pianificazione />} />
-                  <Route path="/periodizzazione" element={<Periodizzazione />} />
+                  <Route path="/programmazione" element={<ProgrammazioneStagionale />} />
                   <Route path="/obiettivi" element={<Obiettivi />} />
                   <Route path="/guida-tecnica" element={<GuidaTecnica />} />
 
