@@ -148,7 +148,7 @@ export default function Periodizzazione() {
         <Card className="p-10 text-center space-y-3">
           <Workflow className="w-10 h-10 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">Nessun piano stagionale trovato.</p>
-          <Link to="/pianificazione">
+          <Link to="/programmazione">
             <Button size="sm">Crea un piano</Button>
           </Link>
         </Card>
@@ -171,7 +171,7 @@ export default function Periodizzazione() {
 
           {!grid ? (
             <Card className="p-10 text-center">
-              <p className="text-muted-foreground">Aggiungi date inizio/fine al piano in <Link to="/pianificazione" className="text-primary underline">Pianificazione</Link> per vedere la timeline.</p>
+              <p className="text-muted-foreground">Aggiungi date inizio/fine al piano in <Link to="/programmazione" className="text-primary underline">Pianificazione</Link> per vedere la timeline.</p>
             </Card>
           ) : (
             <Card className="p-6 overflow-x-auto">

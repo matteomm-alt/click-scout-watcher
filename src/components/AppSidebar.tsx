@@ -23,7 +23,7 @@ import { isFeatureEnabled, type FeatureKey } from '@/lib/societyFeatures';
 import {
   Home, FileUp, Activity, Library,
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
-  Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, CalendarRange, BookOpen,
+  Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, LayoutGrid, BookOpen,
   PieChart, UserCircle, Star, HeartPulse,
   LogOut, Shield, Boxes, Settings, HelpCircle, Bell, Zap,
 } from 'lucide-react';
@@ -62,8 +62,7 @@ const COACHING: NavItem[] = [
   { title: 'Scheletri', url: '/scheletri', icon: LayoutTemplate, feature: 'training_calendar' },
   { title: 'Schemi', url: '/schemi', icon: GitBranch, feature: 'training_calendar' },
   { title: 'Volume', url: '/volume', icon: BarChart3, feature: 'training_calendar' },
-  { title: 'Pianificazione', url: '/pianificazione', icon: CalendarRange, feature: 'training_calendar' },
-  { title: 'Periodizzazione', url: '/periodizzazione', icon: Workflow, feature: 'training_calendar' },
+  { title: 'Programmazione', url: '/programmazione', icon: LayoutGrid, feature: 'training_calendar' },
   { title: 'Obiettivi', url: '/obiettivi', icon: Target },
   { title: 'Guida Tecnica', url: '/guida-tecnica', icon: BookOpen, feature: 'guidelines' },
 ];
