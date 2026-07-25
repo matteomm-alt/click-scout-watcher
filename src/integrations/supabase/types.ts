@@ -1462,32 +1462,44 @@ export type Database = {
         Row: {
           end_date: string | null
           goals: string | null
+          grid_data: Json
           id: string
+          lavoro_tattico: Json
+          lavoro_tecnico: Json
           load_level: string | null
           name: string
           order_index: number
           plan_id: string
           start_date: string | null
+          tecnica_individuale: Json
         }
         Insert: {
           end_date?: string | null
           goals?: string | null
+          grid_data?: Json
           id?: string
+          lavoro_tattico?: Json
+          lavoro_tecnico?: Json
           load_level?: string | null
           name: string
           order_index?: number
           plan_id: string
           start_date?: string | null
+          tecnica_individuale?: Json
         }
         Update: {
           end_date?: string | null
           goals?: string | null
+          grid_data?: Json
           id?: string
+          lavoro_tattico?: Json
+          lavoro_tecnico?: Json
           load_level?: string | null
           name?: string
           order_index?: number
           plan_id?: string
           start_date?: string | null
+          tecnica_individuale?: Json
         }
         Relationships: [
           {
