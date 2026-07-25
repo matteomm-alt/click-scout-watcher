@@ -63,7 +63,6 @@ const COACHING: NavItem[] = [
   { title: 'Schemi', url: '/schemi', icon: GitBranch, feature: 'training_calendar' },
   { title: 'Volume', url: '/volume', icon: BarChart3, feature: 'training_calendar' },
   { title: 'Programmazione', url: '/programmazione', icon: LayoutGrid, feature: 'training_calendar' },
-  { title: 'Periodizzazione', url: '/programmazione', icon: Workflow, feature: 'training_calendar' },
   { title: 'Obiettivi', url: '/obiettivi', icon: Target },
   { title: 'Guida Tecnica', url: '/guida-tecnica', icon: BookOpen, feature: 'guidelines' },
 ];
