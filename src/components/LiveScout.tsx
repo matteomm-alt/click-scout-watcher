@@ -6,6 +6,7 @@ import { useScoutSettings } from '@/lib/scoutSettings';
 import { generateDVW } from '@/lib/dvwExporter';
 import { upsertScoutSession } from '@/lib/scoutPersistence';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
 import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
 import { safeUUID } from '@/lib/utils';
@@ -100,6 +101,7 @@ export function LiveScout() {
   const [quickOpen, setQuickOpen] = useState(false);
 
   const { user } = useAuth();
+  const { societyId } = useActiveSociety();
   const sessionIdRef = useRef<string>(safeUUID());
 
   // Apri dialog fine set quando setOverPending
@@ -366,6 +368,76 @@ export function LiveScout() {
     a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
     toast.success(`File DVW scaricato: ${filename}`);
+  };
+
+  // Report PDF immediato da scout live
+  const handleGenerateReportLive = async () => {
+    const homeTeamId = homeTeam.id || 'home';
+    const awayTeamId = awayTeam.id || 'away';
+    const actions: DbAction[] = matchState.actions.map((a, i) => ({
+      id: a.id,
+      scout_match_id: sessionIdRef.current,
+      scout_team_id: a.team === 'home' ? homeTeamId : awayTeamId,
+      side: a.team,
+      set_number: a.setNumber,
+      rally_index: 0,
+      action_index: i,
+      player_number: a.playerNumber,
+      skill: a.skill,
+      skill_type: a.skillType ?? null,
+      evaluation: a.evaluation,
+      start_zone: a.startZone ?? null,
+      end_zone: a.endZone ?? null,
+      end_subzone: null,
+      attack_combo: a.attackCode ?? null,
+      home_score: a.homeScore,
+      away_score: a.awayScore,
+      home_rotation: a.homeLineup ?? null,
+      away_rotation: a.awayLineup ?? null,
+      home_setter_pos: a.homeSetterPosition ?? null,
+      away_setter_pos: a.awaySetterPosition ?? null,
+      serving_side: a.servingTeam ?? null,
+      landing_zone: a.landingZone ?? null,
+      timestamp_clock: a.timestamp ?? null,
+    }));
+    const mapPlayers = (team: typeof homeTeam, teamId: string) =>
+      (team.players ?? []).map(p => ({
+        scout_team_id: teamId,
+        number: p.number,
+        last_name: p.lastName || String(p.number),
+        first_name: p.firstName || null,
+        role: p.role ?? null,
+      }));
+    const players = [
+      ...mapPlayers(homeTeam, homeTeamId),
+      ...mapPlayers(awayTeam, awayTeamId),
+    ];
+    const meta = {
+      homeName: homeTeam.name || 'Casa',
+      awayName: awayTeam.name || 'Ospite',
+      homeTeamId,
+      awayTeamId,
+      date: matchInfo.date,
+      venue: matchInfo.venue || '',
+      league: matchInfo.league || '',
+      setResults: matchState.setResults.map(r => ({
+        intermediates: [`${r.homeScore}-${r.awayScore}`],
+        duration: r.duration,
+      })),
+      homeSetsWon: matchState.homeSetsWon,
+      awaySetsWon: matchState.awaySetsWon,
+    };
+    const { downloadMatchReport, logReportGenerated } = await import('@/lib/pdfReport');
+    downloadMatchReport(meta, actions, players);
+    if (user && societyId) {
+      try {
+        await logReportGenerated(
+          supabase, societyId, user.id,
+          sessionIdRef.current, meta, 'live',
+        );
+      } catch { /* no-op */ }
+    }
+    toast.success('Report PDF generato');
   };
 
   // Sostituzione
@@ -737,6 +809,10 @@ export function LiveScout() {
             <div className="text-center text-3xl font-black">
               {homeTeam.name || 'Casa'} {matchState.homeScore} — {matchState.awayScore} {awayTeam.name || 'Ospite'}
             </div>
+            <Button variant="outline" onClick={handleGenerateReportLive} className="w-full">
+              <FileText className="w-4 h-4 mr-2" />
+              Genera report PDF
+            </Button>
             <div className="flex gap-2">
               <button
                 type="button"
