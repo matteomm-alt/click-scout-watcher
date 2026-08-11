@@ -10,7 +10,7 @@ import {
   statsBySkill, statsByPlayer, zoneStats, SKILL_NAMES, type DbAction,
 } from './scoutAnalysis';
 
-interface MatchMeta {
+export interface MatchMeta {
   homeName: string;
   awayName: string;
   homeSetsWon: number;
@@ -631,4 +631,30 @@ export function generateAthleteCard(data: AthleteCardData): jsPDF {
 export function downloadAthleteCard(data: AthleteCardData) {
   const doc = generateAthleteCard(data);
   doc.save(`scheda_${safeName(data.lastName)}${data.number ?? ''}.pdf`);
+}
+
+// ============================================================
+// Log report generati su Supabase (best-effort)
+// ============================================================
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+export async function logReportGenerated(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  societyId: string,
+  userId: string,
+  matchId: string,
+  meta: MatchMeta,
+  source: 'live' | 'archive',
+) {
+  await supabase.from('report_pdfs').insert({
+    society_id: societyId,
+    scout_match_id: matchId,
+    created_by: userId,
+    match_label: `${meta.homeName} vs ${meta.awayName}`,
+    home_team: meta.homeName,
+    away_team: meta.awayName,
+    match_date: meta.date,
+    generated_from: source,
+  });
 }
