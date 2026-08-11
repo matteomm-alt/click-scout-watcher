@@ -1168,6 +1168,60 @@ export type Database = {
         }
         Relationships: []
       }
+      report_pdfs: {
+        Row: {
+          away_team: string
+          created_at: string
+          created_by: string | null
+          generated_from: string
+          home_team: string
+          id: string
+          match_date: string | null
+          match_label: string
+          scout_match_id: string | null
+          society_id: string | null
+        }
+        Insert: {
+          away_team: string
+          created_at?: string
+          created_by?: string | null
+          generated_from?: string
+          home_team: string
+          id?: string
+          match_date?: string | null
+          match_label: string
+          scout_match_id?: string | null
+          society_id?: string | null
+        }
+        Update: {
+          away_team?: string
+          created_at?: string
+          created_by?: string | null
+          generated_from?: string
+          home_team?: string
+          id?: string
+          match_date?: string | null
+          match_label?: string
+          scout_match_id?: string | null
+          society_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_pdfs_scout_match_id_fkey"
+            columns: ["scout_match_id"]
+            isOneToOne: false
+            referencedRelation: "scout_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_pdfs_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scout_actions: {
         Row: {
           action_index: number

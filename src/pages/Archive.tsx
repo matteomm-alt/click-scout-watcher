@@ -11,6 +11,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ReportPdfList } from '@/components/ReportPdfList';
 import { ArrowLeft, FileUp, Users, Trash2, BarChart3 } from 'lucide-react';
 
 interface MatchListItem {
@@ -89,8 +91,16 @@ export default function Archive() {
       </header>
 
       <div className="container py-8 grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-3">
-          <h2 className="text-2xl font-black italic uppercase mb-2">Partite importate</h2>
+        <div className="md:col-span-2">
+          <Tabs defaultValue="partite" className="space-y-3">
+            <TabsList>
+              <TabsTrigger value="partite">Partite importate</TabsTrigger>
+              <TabsTrigger value="report">Report PDF</TabsTrigger>
+            </TabsList>
+            <TabsContent value="report" className="space-y-3">
+              <ReportPdfList />
+            </TabsContent>
+            <TabsContent value="partite" className="space-y-3">
 
           <div className="flex flex-wrap gap-2 mb-3">
             <input
@@ -204,6 +214,8 @@ export default function Archive() {
               </AlertDialog>
             </div>
           ))}
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="space-y-3">

@@ -344,6 +344,14 @@ export default function ProgrammazioneStagionale() {
   const [gridPhaseId, setGridPhaseId] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
 
+  // Creazione piano stagionale
+  const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [newPlanName, setNewPlanName] = useState('');
+  const [newPlanSeason, setNewPlanSeason] = useState('');
+  const [newPlanStart, setNewPlanStart] = useState('');
+  const [newPlanEnd, setNewPlanEnd] = useState('');
+  const [creatingPlan, setCreatingPlan] = useState(false);
+
   // Custom + colors
   const [custom, setCustom] = useState<CustomFond[]>(() => safeGet<CustomFond[]>(LS_CUSTOM, []));
   const [colorsOverride, setColorsOverride] = useState<Record<string, FondColor>>(
@@ -366,18 +374,50 @@ export default function ProgrammazioneStagionale() {
   }, [colorsOverride, custom]);
 
   /* Load plans */
-  useEffect(() => {
+  const loadPlans = useCallback(async () => {
     if (!societyId) return;
-    (async () => {
-      setLoading(true);
-      const { data } = await supabase.from('season_plans')
-        .select('*').eq('society_id', societyId).order('season', { ascending: false });
-      const list = (data ?? []) as Plan[];
-      setPlans(list);
-      if (list.length > 0 && !planId) setPlanId(list[0].id);
-      setLoading(false);
-    })();
-  }, [societyId, planId]);
+    setLoading(true);
+    const { data } = await supabase.from('season_plans')
+      .select('*').eq('society_id', societyId).order('season', { ascending: false });
+    const list = (data ?? []) as Plan[];
+    setPlans(list);
+    setPlanId(prev => prev ?? (list.length > 0 ? list[0].id : null));
+    setLoading(false);
+  }, [societyId]);
+
+  useEffect(() => { loadPlans(); }, [loadPlans]);
+
+  const handleCreatePlan = async () => {
+    if (!newPlanName.trim() || !newPlanSeason.trim()) {
+      toast.error('Nome e stagione obbligatori');
+      return;
+    }
+    if (!societyId || !user) {
+      toast.error('Società non caricata, riprova');
+      return;
+    }
+    setCreatingPlan(true);
+    const { data, error } = await supabase
+      .from('season_plans')
+      .insert({
+        name: newPlanName.trim(),
+        season: newPlanSeason.trim(),
+        start_date: newPlanStart || null,
+        end_date: newPlanEnd || null,
+        society_id: societyId,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+    setCreatingPlan(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Piano creato');
+    setShowCreatePlan(false);
+    setNewPlanName(''); setNewPlanSeason('');
+    setNewPlanStart(''); setNewPlanEnd('');
+    await loadPlans();
+    setPlanId(data.id);
+  };
 
   /* Load phases */
   const loadPhases = useCallback(async (pid: string) => {
@@ -636,6 +676,9 @@ export default function ProgrammazioneStagionale() {
               {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.name} · {p.season}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button size="sm" variant="outline" onClick={() => setShowCreatePlan(true)}>
+            <Plus className="w-3 h-3 mr-1" /> Nuovo piano
+          </Button>
           <Button variant="outline" onClick={() => setPrintOpen(true)}>
             <Printer className="w-4 h-4 mr-2" /> Stampa / PDF
           </Button>
@@ -644,7 +687,14 @@ export default function ProgrammazioneStagionale() {
 
       {plans.length === 0 ? (
         <Card className="p-10 text-center">
-          <p className="text-muted-foreground">Nessun piano stagionale. Crea prima un piano dalla Periodizzazione.</p>
+          <div className="flex flex-col items-center gap-6 py-20">
+            <p className="text-muted-foreground text-sm">
+              Nessun piano stagionale ancora.
+            </p>
+            <Button onClick={() => setShowCreatePlan(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Crea piano stagionale
+            </Button>
+          </div>
         </Card>
       ) : (
         <Tabs value={tab} onValueChange={setTab} className="no-print">
@@ -871,7 +921,54 @@ export default function ProgrammazioneStagionale() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showCreatePlan} onOpenChange={setShowCreatePlan}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuovo piano stagionale</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div>
+              <Label>Nome piano *</Label>
+              <Input
+                placeholder="es. Stagione 2025/26"
+                value={newPlanName}
+                onChange={e => setNewPlanName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Stagione *</Label>
+              <Input
+                placeholder="es. 2025/26"
+                value={newPlanSeason}
+                onChange={e => setNewPlanSeason(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data inizio</Label>
+                <Input type="date" value={newPlanStart}
+                  onChange={e => setNewPlanStart(e.target.value)} />
+              </div>
+              <div>
+                <Label>Data fine</Label>
+                <Input type="date" value={newPlanEnd}
+                  onChange={e => setNewPlanEnd(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreatePlan(false)}>
+              Annulla
+            </Button>
+            <Button onClick={handleCreatePlan} disabled={creatingPlan}>
+              {creatingPlan ? 'Creazione...' : 'Crea piano'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
