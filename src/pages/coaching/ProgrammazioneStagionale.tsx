@@ -921,7 +921,54 @@ export default function ProgrammazioneStagionale() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showCreatePlan} onOpenChange={setShowCreatePlan}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuovo piano stagionale</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div>
+              <Label>Nome piano *</Label>
+              <Input
+                placeholder="es. Stagione 2025/26"
+                value={newPlanName}
+                onChange={e => setNewPlanName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Stagione *</Label>
+              <Input
+                placeholder="es. 2025/26"
+                value={newPlanSeason}
+                onChange={e => setNewPlanSeason(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data inizio</Label>
+                <Input type="date" value={newPlanStart}
+                  onChange={e => setNewPlanStart(e.target.value)} />
+              </div>
+              <div>
+                <Label>Data fine</Label>
+                <Input type="date" value={newPlanEnd}
+                  onChange={e => setNewPlanEnd(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreatePlan(false)}>
+              Annulla
+            </Button>
+            <Button onClick={handleCreatePlan} disabled={creatingPlan}>
+              {creatingPlan ? 'Creazione...' : 'Crea piano'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
