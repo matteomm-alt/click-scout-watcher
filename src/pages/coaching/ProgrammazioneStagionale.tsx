@@ -676,6 +676,9 @@ export default function ProgrammazioneStagionale() {
               {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.name} · {p.season}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button size="sm" variant="outline" onClick={() => setShowCreatePlan(true)}>
+            <Plus className="w-3 h-3 mr-1" /> Nuovo piano
+          </Button>
           <Button variant="outline" onClick={() => setPrintOpen(true)}>
             <Printer className="w-4 h-4 mr-2" /> Stampa / PDF
           </Button>
@@ -684,7 +687,14 @@ export default function ProgrammazioneStagionale() {
 
       {plans.length === 0 ? (
         <Card className="p-10 text-center">
-          <p className="text-muted-foreground">Nessun piano stagionale. Crea prima un piano dalla Periodizzazione.</p>
+          <div className="flex flex-col items-center gap-6 py-20">
+            <p className="text-muted-foreground text-sm">
+              Nessun piano stagionale ancora.
+            </p>
+            <Button onClick={() => setShowCreatePlan(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Crea piano stagionale
+            </Button>
+          </div>
         </Card>
       ) : (
         <Tabs value={tab} onValueChange={setTab} className="no-print">
