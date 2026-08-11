@@ -374,18 +374,50 @@ export default function ProgrammazioneStagionale() {
   }, [colorsOverride, custom]);
 
   /* Load plans */
-  useEffect(() => {
+  const loadPlans = useCallback(async () => {
     if (!societyId) return;
-    (async () => {
-      setLoading(true);
-      const { data } = await supabase.from('season_plans')
-        .select('*').eq('society_id', societyId).order('season', { ascending: false });
-      const list = (data ?? []) as Plan[];
-      setPlans(list);
-      if (list.length > 0 && !planId) setPlanId(list[0].id);
-      setLoading(false);
-    })();
-  }, [societyId, planId]);
+    setLoading(true);
+    const { data } = await supabase.from('season_plans')
+      .select('*').eq('society_id', societyId).order('season', { ascending: false });
+    const list = (data ?? []) as Plan[];
+    setPlans(list);
+    setPlanId(prev => prev ?? (list.length > 0 ? list[0].id : null));
+    setLoading(false);
+  }, [societyId]);
+
+  useEffect(() => { loadPlans(); }, [loadPlans]);
+
+  const handleCreatePlan = async () => {
+    if (!newPlanName.trim() || !newPlanSeason.trim()) {
+      toast.error('Nome e stagione obbligatori');
+      return;
+    }
+    if (!societyId || !user) {
+      toast.error('Società non caricata, riprova');
+      return;
+    }
+    setCreatingPlan(true);
+    const { data, error } = await supabase
+      .from('season_plans')
+      .insert({
+        name: newPlanName.trim(),
+        season: newPlanSeason.trim(),
+        start_date: newPlanStart || null,
+        end_date: newPlanEnd || null,
+        society_id: societyId,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+    setCreatingPlan(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Piano creato');
+    setShowCreatePlan(false);
+    setNewPlanName(''); setNewPlanSeason('');
+    setNewPlanStart(''); setNewPlanEnd('');
+    await loadPlans();
+    setPlanId(data.id);
+  };
 
   /* Load phases */
   const loadPhases = useCallback(async (pid: string) => {
