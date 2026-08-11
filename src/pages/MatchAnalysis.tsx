@@ -17,6 +17,8 @@ import { ChartsTab } from '@/components/ChartsTab';
 import { MatchSelector } from '@/components/MatchSelector';
 
 import { downloadMatchReport } from '@/lib/pdfReport';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 
 import type { MatchRow, PlayerRow } from '@/components/analysis/types';
 import { OverviewTab } from '@/components/analysis/OverviewTab';
@@ -54,6 +56,8 @@ const TABS: { key: TabKey; label: string }[] = [
 
 export default function MatchAnalysis() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const { societyId } = useActiveSociety();
   const [match, setMatch] = useState<MatchRow | null>(null);
   const [actions, setActions] = useState<DbAction[]>([]);
   const [players, setPlayers] = useState<PlayerRow[]>([]);
@@ -427,8 +431,7 @@ export default function MatchAnalysis() {
 
   const exportReportPdf = () => {
     if (!match) return;
-    downloadMatchReport(
-      {
+    const reportMeta = {
         homeName: match.home_team.name,
         awayName: match.away_team.name,
         homeSetsWon: match.home_sets_won,
@@ -437,12 +440,19 @@ export default function MatchAnalysis() {
         league: match.league,
         venue: match.venue,
         setResults: Array.isArray(match.set_results) ? (match.set_results as unknown as Array<{ intermediates?: string[]; duration?: string | number }>) : [],
-        homeTeamId: match.home_team.id,
-        awayTeamId: match.away_team.id,
-      },
-      filteredAllActions,
-      players,
-    );
+      homeTeamId: match.home_team.id,
+      awayTeamId: match.away_team.id,
+    };
+    downloadMatchReport(reportMeta, filteredAllActions, players);
+    // Log report generato (best-effort)
+    if (user && societyId && match?.id) {
+      import('@/lib/pdfReport').then(({ logReportGenerated }) => {
+        logReportGenerated(
+          supabase, societyId, user.id,
+          match.id, reportMeta, 'archive',
+        ).catch(() => {});
+      });
+    }
     toast.success('Report PDF generato');
   };
 
