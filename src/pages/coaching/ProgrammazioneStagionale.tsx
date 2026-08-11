@@ -344,6 +344,14 @@ export default function ProgrammazioneStagionale() {
   const [gridPhaseId, setGridPhaseId] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
 
+  // Creazione piano stagionale
+  const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [newPlanName, setNewPlanName] = useState('');
+  const [newPlanSeason, setNewPlanSeason] = useState('');
+  const [newPlanStart, setNewPlanStart] = useState('');
+  const [newPlanEnd, setNewPlanEnd] = useState('');
+  const [creatingPlan, setCreatingPlan] = useState(false);
+
   // Custom + colors
   const [custom, setCustom] = useState<CustomFond[]>(() => safeGet<CustomFond[]>(LS_CUSTOM, []));
   const [colorsOverride, setColorsOverride] = useState<Record<string, FondColor>>(
