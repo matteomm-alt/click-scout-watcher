@@ -225,11 +225,13 @@ export default function AtletaDetail() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="info">
-        <TabsList className="grid grid-cols-4 w-full md:w-auto">
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full md:w-auto">
           <TabsTrigger value="info" className="gap-2"><UserCircle className="w-4 h-4" />Info</TabsTrigger>
           <TabsTrigger value="evals" className="gap-2"><Star className="w-4 h-4" />Valutazioni</TabsTrigger>
           <TabsTrigger value="attendance" className="gap-2"><ClipboardCheck className="w-4 h-4" />Presenze</TabsTrigger>
+          <TabsTrigger value="trainings" className="gap-2"><Dumbbell className="w-4 h-4" />Allenamenti</TabsTrigger>
+          <TabsTrigger value="scout" className="gap-2"><BarChart2 className="w-4 h-4" />Scout</TabsTrigger>
           <TabsTrigger value="injuries" className="gap-2">
             <HeartPulse className="w-4 h-4" />Infortuni
             {activeInjuries.length > 0 && (
@@ -239,6 +241,17 @@ export default function AtletaDetail() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* ALLENAMENTI */}
+        <TabsContent value="trainings" className="mt-4">
+          <AtletaAllenamentiTab athleteId={id!} active={tab === 'trainings'} />
+        </TabsContent>
+
+        {/* SCOUT */}
+        <TabsContent value="scout" className="mt-4">
+          <AtletaScoutTab number={athlete.number} active={tab === 'scout'} />
+        </TabsContent>
+
 
         {/* INFO */}
         <TabsContent value="info" className="space-y-4 mt-4">
