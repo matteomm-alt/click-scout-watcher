@@ -14,7 +14,9 @@ import { TagPicker } from '@/components/TagPicker';
 import { FUNDAMENTALS } from '@/lib/volleyConstants';
 import {
   BarChart3, Loader2, Tag as TagIcon, Clock, Calendar as CalendarIcon, X, TrendingUp,
+  AlertTriangle,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts';
@@ -176,6 +178,13 @@ export default function Volume() {
     () => Array.from(new Set(exercises.flatMap((e) => e.tags))).sort(),
     [exercises]
   );
+
+  /** Allenamenti esclusi dal calcolo volume perché privi di data programmata */
+  const skippedTrainings = useMemo(
+    () => trainings.filter((t) => !t.scheduled_date).length,
+    [trainings]
+  );
+
 
   // ── Filtri ─────────────────────────────────────────────────────────────────
   const filteredUnits = useMemo(() => {
@@ -409,6 +418,23 @@ export default function Volume() {
               )}
             </div>
           </div>
+
+          {skippedTrainings > 0 && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{skippedTrainings}</span>{' '}
+                {skippedTrainings === 1 ? 'allenamento non ha' : 'allenamenti non hanno'} una data programmata
+                e non {skippedTrainings === 1 ? 'viene conteggiato' : 'vengono conteggiati'} nel volume.{' '}
+                <Link to="/allenamenti" className="text-primary hover:underline font-semibold">
+                  Apri Allenamenti
+                </Link>{' '}
+                e assegna una data per includerli.
+              </p>
+            </div>
+          )}
+
+
 
           {/* GRAFICO TEMPORALE */}
           <div className="rounded-xl border border-border bg-card p-5">

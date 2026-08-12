@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SeasonSelector } from '@/components/SeasonSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -222,6 +223,14 @@ export function AppSidebar() {
             </Popover>
           )}
         </div>
+        {!collapsed && (
+          <div className="mx-2 mb-2 flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold shrink-0">
+              Stagione
+            </span>
+            <SeasonSelector className="flex-1" />
+          </div>
+        )}
         {!collapsed && (
           <button
             type="button"

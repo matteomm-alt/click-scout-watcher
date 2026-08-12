@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Package, Plus, X, UserCheck, RotateCcw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Package, Plus, X, UserCheck, RotateCcw, Download, History } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,12 @@ interface Assignment {
   athletes?: { last_name: string; first_name: string | null; number: number | null };
   inventory_items?: { name: string };
 }
+interface StoricoRow {
+  id: string; assigned_at: string; returned_at: string | null;
+  quantity: number; size: string | null; notes: string | null;
+  athletes: { last_name: string; first_name: string | null; number: number | null } | null;
+  inventory_items: { name: string } | null;
+}
 interface Athlete {
   id: string; last_name: string; first_name: string | null; number: number | null;
 }
@@ -47,9 +53,10 @@ interface Athlete {
 export function MagazzinoView() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
-  const [tab, setTab] = useState<'inventario' | 'consegne' | 'atleta'>('inventario');
+  const [tab, setTab] = useState<'inventario' | 'consegne' | 'atleta' | 'storico'>('inventario');
   const [items, setItems] = useState<Item[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [storico, setStorico] = useState<StoricoRow[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -58,21 +65,72 @@ export function MagazzinoView() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: '', category: 'Divise', quantity: 1, minQuantity: 0, size: '', notes: '' });
   const [assignForm, setAssignForm] = useState({ athlete_id: '', item_id: '', size: '', quantity: 1 });
+  // Filtri storico
+  const [stSearch, setStSearch] = useState('');
+  const [stType, setStType] = useState<'all' | 'consegne' | 'rientri'>('all');
+  const [stFrom, setStFrom] = useState('');
+  const [stTo, setStTo] = useState('');
+
 
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
-    const [{ data: it }, { data: at }, { data: as_ }] = await Promise.all([
+    const [{ data: it }, { data: at }, { data: as_ }, { data: hist, error: histErr }] = await Promise.all([
       supabase.from('inventory_items').select('*').eq('society_id', societyId).order('category').order('name'),
       supabase.from('athletes').select('id, last_name, first_name, number').eq('society_id', societyId).order('last_name'),
       supabase.from('inventory_assignments').select('*, athletes(last_name, first_name, number), inventory_items(name)')
         .eq('society_id', societyId).is('returned_at', null).order('assigned_at', { ascending: false }),
+      supabase.from('inventory_assignments')
+        .select('id, assigned_at, returned_at, quantity, size, notes, athletes(last_name, first_name, number), inventory_items(name)')
+        .eq('society_id', societyId)
+        .order('assigned_at', { ascending: false })
+        .limit(200),
     ]);
+    if (histErr) toast.error('Errore caricamento storico');
     setItems(((it ?? []) as unknown as typeof items));
     setAthletes(((at ?? []) as unknown as typeof athletes));
     setAssignments(((as_ ?? []) as unknown as typeof assignments));
+    setStorico(((hist ?? []) as unknown as StoricoRow[]));
     setLoading(false);
   };
+
+  const filteredStorico = useMemo(() => {
+    const q = stSearch.trim().toLowerCase();
+    return storico.filter((s) => {
+      if (stType === 'consegne' && s.returned_at) return false;
+      if (stType === 'rientri' && !s.returned_at) return false;
+      const day = s.assigned_at.slice(0, 10);
+      if (stFrom && day < stFrom) return false;
+      if (stTo && day > stTo) return false;
+      if (q) {
+        const hay = `${s.inventory_items?.name ?? ''} ${s.athletes?.last_name ?? ''} ${s.athletes?.first_name ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [storico, stSearch, stType, stFrom, stTo]);
+
+  const exportCsv = () => {
+    const rows = filteredStorico.map((s) => [
+      new Date(s.assigned_at).toLocaleDateString('it-IT'),
+      s.inventory_items?.name ?? '',
+      `${s.athletes?.last_name ?? ''} ${s.athletes?.first_name ?? ''}`.trim(),
+      s.returned_at ? 'Rientrato' : 'Consegna',
+      String(s.quantity),
+      s.size ?? '',
+      (s.notes ?? '').replace(/[\r\n;]/g, ' '),
+    ]);
+    const csv = [
+      ['Data', 'Articolo', 'Atleta', 'Tipo', 'Quantità', 'Taglia', 'Note'],
+      ...rows,
+    ].map((r) => r.join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'storico_magazzino.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
@@ -164,7 +222,7 @@ export function MagazzinoView() {
 
       {/* Tab */}
       <div className="flex gap-1">
-        {([['inventario', 'Inventario'], ['consegne', 'Consegne'], ['atleta', 'Per Atleta']] as const).map(([id, label]) => (
+        {([['inventario', 'Inventario'], ['consegne', 'Consegne'], ['atleta', 'Per Atleta'], ['storico', 'Storico']] as const).map(([id, label]) => (
           <Button key={id} size="sm" variant={tab === id ? 'default' : 'outline'} onClick={() => setTab(id)}>
             {label}
           </Button>
@@ -315,7 +373,89 @@ export function MagazzinoView() {
               )}
             </div>
           )}
+
+          {/* TAB STORICO */}
+          {tab === 'storico' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                  <Label className="text-xs">Cerca</Label>
+                  <Input value={stSearch} onChange={e => setStSearch(e.target.value)} placeholder="Atleta o articolo..." />
+                </div>
+                <div>
+                  <Label className="text-xs">Tipo</Label>
+                  <Select value={stType} onValueChange={v => setStType(v as typeof stType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutti</SelectItem>
+                      <SelectItem value="consegne">Solo consegne</SelectItem>
+                      <SelectItem value="rientri">Solo rientri</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Da</Label>
+                  <Input type="date" value={stFrom} onChange={e => setStFrom(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">A</Label>
+                  <Input type="date" value={stTo} onChange={e => setStTo(e.target.value)} />
+                </div>
+              </div>
+
+              {filteredStorico.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <History className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">Nessun movimento trovato.</p>
+                </Card>
+              ) : (
+                <Card className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-border bg-muted/30">
+                      <tr className="text-xs uppercase text-muted-foreground">
+                        <th className="text-left p-3">Data</th>
+                        <th className="text-left p-3">Articolo</th>
+                        <th className="text-left p-3">Atleta</th>
+                        <th className="text-center p-3">Tipo</th>
+                        <th className="text-center p-3">Qt.</th>
+                        <th className="text-center p-3">Taglia</th>
+                        <th className="text-left p-3">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredStorico.map(s => (
+                        <tr key={s.id} className="border-b border-border/40">
+                          <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(s.assigned_at).toLocaleDateString('it-IT')}
+                          </td>
+                          <td className="p-3">{s.inventory_items?.name ?? '—'}</td>
+                          <td className="p-3 font-semibold">
+                            {s.athletes ? `${s.athletes.number != null ? `#${s.athletes.number} ` : ''}${s.athletes.last_name}${s.athletes.first_name ? ` ${s.athletes.first_name}` : ''}` : '—'}
+                          </td>
+                          <td className="p-3 text-center">
+                            {s.returned_at
+                              ? <Badge variant="secondary">Rientrato</Badge>
+                              : <Badge className="bg-green-600 hover:bg-green-600 text-white">Consegna</Badge>}
+                          </td>
+                          <td className="p-3 text-center">{s.quantity}</td>
+                          <td className="p-3 text-center">{s.size ?? '—'}</td>
+                          <td className="p-3 text-xs text-muted-foreground">{s.notes ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
+              )}
+
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" className="gap-2" onClick={exportCsv} disabled={filteredStorico.length === 0}>
+                  <Download className="w-4 h-4" /> Esporta CSV
+                </Button>
+              </div>
+            </div>
+          )}
         </>
+
       )}
 
       {/* Dialog nuovo articolo */}
