@@ -373,7 +373,89 @@ export function MagazzinoView() {
               )}
             </div>
           )}
+
+          {/* TAB STORICO */}
+          {tab === 'storico' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                  <Label className="text-xs">Cerca</Label>
+                  <Input value={stSearch} onChange={e => setStSearch(e.target.value)} placeholder="Atleta o articolo..." />
+                </div>
+                <div>
+                  <Label className="text-xs">Tipo</Label>
+                  <Select value={stType} onValueChange={v => setStType(v as typeof stType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutti</SelectItem>
+                      <SelectItem value="consegne">Solo consegne</SelectItem>
+                      <SelectItem value="rientri">Solo rientri</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Da</Label>
+                  <Input type="date" value={stFrom} onChange={e => setStFrom(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">A</Label>
+                  <Input type="date" value={stTo} onChange={e => setStTo(e.target.value)} />
+                </div>
+              </div>
+
+              {filteredStorico.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <History className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">Nessun movimento trovato.</p>
+                </Card>
+              ) : (
+                <Card className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-border bg-muted/30">
+                      <tr className="text-xs uppercase text-muted-foreground">
+                        <th className="text-left p-3">Data</th>
+                        <th className="text-left p-3">Articolo</th>
+                        <th className="text-left p-3">Atleta</th>
+                        <th className="text-center p-3">Tipo</th>
+                        <th className="text-center p-3">Qt.</th>
+                        <th className="text-center p-3">Taglia</th>
+                        <th className="text-left p-3">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredStorico.map(s => (
+                        <tr key={s.id} className="border-b border-border/40">
+                          <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(s.assigned_at).toLocaleDateString('it-IT')}
+                          </td>
+                          <td className="p-3">{s.inventory_items?.name ?? '—'}</td>
+                          <td className="p-3 font-semibold">
+                            {s.athletes ? `${s.athletes.number != null ? `#${s.athletes.number} ` : ''}${s.athletes.last_name}${s.athletes.first_name ? ` ${s.athletes.first_name}` : ''}` : '—'}
+                          </td>
+                          <td className="p-3 text-center">
+                            {s.returned_at
+                              ? <Badge variant="secondary">Rientrato</Badge>
+                              : <Badge className="bg-green-600 hover:bg-green-600 text-white">Consegna</Badge>}
+                          </td>
+                          <td className="p-3 text-center">{s.quantity}</td>
+                          <td className="p-3 text-center">{s.size ?? '—'}</td>
+                          <td className="p-3 text-xs text-muted-foreground">{s.notes ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
+              )}
+
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" className="gap-2" onClick={exportCsv} disabled={filteredStorico.length === 0}>
+                  <Download className="w-4 h-4" /> Esporta CSV
+                </Button>
+              </div>
+            </div>
+          )}
         </>
+
       )}
 
       {/* Dialog nuovo articolo */}
