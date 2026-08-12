@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, UserCircle, HeartPulse, Star, ClipboardCheck,
-  Phone, Mail, AlertTriangle, FileText,
+  Phone, Mail, AlertTriangle, FileText, Dumbbell, BarChart2,
 } from 'lucide-react';
+import { AtletaAllenamentiTab } from '@/components/atleta/AtletaAllenamentiTab';
+import { AtletaScoutTab } from '@/components/atleta/AtletaScoutTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
