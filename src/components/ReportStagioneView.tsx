@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
+import { toast } from 'sonner';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, RadarChart, Radar, PolarGrid, PolarAngleAxis,
@@ -26,6 +28,7 @@ interface Match { id: string; home_sets_won: number; away_sets_won: number; home
 export function ReportStagioneView() {
   const { user } = useAuth();
   const { societyId, seasonStart, seasonEnd } = useActiveSociety();
+  const { currentSeason, seasonRange } = useCurrentSeason();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
@@ -38,14 +41,32 @@ export function ReportStagioneView() {
     if (!societyId || !user) return;
     setLoading(true);
     (async () => {
-      const [{ data: at }, { data: ev }, { data: att }, { data: tr }] = await Promise.all([
+      const { from: seasonFrom, to: seasonTo } = seasonRange(currentSeason);
+      const evalFrom = seasonStart || seasonFrom;
+      const evalTo = seasonEnd || seasonTo;
+
+      const [{ data: at }, { data: ev, error: evErr }, { data: att }, { data: tr, error: trErr }] = await Promise.all([
         supabase.from('athletes').select('id, last_name, first_name, number, role').eq('society_id', societyId).order('last_name'),
-        supabase.from('athlete_evaluations').select('athlete_id, fundamental, score, season_phase, evaluated_at').eq('society_id', societyId),
+        supabase.from('athlete_evaluations')
+          .select('athlete_id, fundamental, score, season_phase, evaluated_at')
+          .eq('society_id', societyId)
+          .gte('evaluated_at', evalFrom)
+          .lte('evaluated_at', evalTo),
         supabase.from('attendances').select('athlete_id, status').eq('society_id', societyId),
-        supabase.from('trainings').select('id, scheduled_date, duration_min, status').eq('society_id', societyId),
+        supabase.from('trainings').select('id, scheduled_date, duration_min, status')
+          .eq('society_id', societyId)
+          .eq('season', currentSeason),
       ]);
-      // Partite DVW
-      const { data: m } = await supabase.from('scout_matches').select('id, home_sets_won, away_sets_won, home_team_id, away_team_id, match_date').eq('coach_id', user.id);
+      if (evErr) toast.error('Errore caricamento valutazioni');
+      if (trErr) toast.error('Errore caricamento allenamenti');
+      // Partite DVW della stagione
+      const { data: m, error: mErr } = await supabase
+        .from('scout_matches')
+        .select('id, home_sets_won, away_sets_won, home_team_id, away_team_id, match_date')
+        .eq('coach_id', user.id)
+        .gte('match_date', seasonFrom)
+        .lte('match_date', seasonTo);
+      if (mErr) toast.error('Errore caricamento partite');
       setAthletes(((at ?? []) as unknown as Athlete[]));
       setEvaluations(((ev ?? []) as unknown as Evaluation[]));
       setAttendances(((att ?? []) as unknown as Attendance[]));
@@ -53,7 +74,9 @@ export function ReportStagioneView() {
       setMatches(((m ?? []) as unknown as Match[]));
       setLoading(false);
     })();
-  }, [societyId, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [societyId, user, currentSeason, seasonStart, seasonEnd]);
+
 
   // ── KPI squadra ───────────────────────────────────────────────────
   const totPartite = matches.length;
