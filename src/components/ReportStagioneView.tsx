@@ -140,6 +140,7 @@ export function ReportStagioneView() {
         <div className="flex items-center gap-3 mb-1">
           <PieIcon className="w-8 h-8 text-primary" />
           <h1 className="text-4xl font-black italic uppercase leading-none">Report Stagione</h1>
+          <Badge variant="outline" className="text-sm font-bold">{currentSeason}</Badge>
         </div>
         <p className="text-muted-foreground">KPI aggregati della stagione — partite, presenze, valutazioni tecniche.</p>
       </div>
