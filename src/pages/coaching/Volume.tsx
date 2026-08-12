@@ -179,6 +179,13 @@ export default function Volume() {
     [exercises]
   );
 
+  /** Allenamenti esclusi dal calcolo volume perché privi di data programmata */
+  const skippedTrainings = useMemo(
+    () => trainings.filter((t) => !t.scheduled_date).length,
+    [trainings]
+  );
+
+
   // ── Filtri ─────────────────────────────────────────────────────────────────
   const filteredUnits = useMemo(() => {
     const tagFilters = fTags.map((t) => t.toLowerCase());
