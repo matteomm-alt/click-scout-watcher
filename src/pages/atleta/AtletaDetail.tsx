@@ -48,6 +48,8 @@ export default function AtletaDetail() {
   const navigate = useNavigate();
   const { societyId } = useActiveSociety();
   const { template } = useEvalTemplate();
+  const [tab, setTab] = useState('info');
+
 
   const { data: athlete, isLoading } = useQuery({
     queryKey: queryKeys.athletes.detail(id ?? ''),
