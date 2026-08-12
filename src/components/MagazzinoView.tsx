@@ -222,7 +222,7 @@ export function MagazzinoView() {
 
       {/* Tab */}
       <div className="flex gap-1">
-        {([['inventario', 'Inventario'], ['consegne', 'Consegne'], ['atleta', 'Per Atleta']] as const).map(([id, label]) => (
+        {([['inventario', 'Inventario'], ['consegne', 'Consegne'], ['atleta', 'Per Atleta'], ['storico', 'Storico']] as const).map(([id, label]) => (
           <Button key={id} size="sm" variant={tab === id ? 'default' : 'outline'} onClick={() => setTab(id)}>
             {label}
           </Button>
