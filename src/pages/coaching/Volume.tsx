@@ -419,6 +419,23 @@ export default function Volume() {
             </div>
           </div>
 
+          {skippedTrainings > 0 && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{skippedTrainings}</span>{' '}
+                {skippedTrainings === 1 ? 'allenamento non ha' : 'allenamenti non hanno'} una data programmata
+                e non {skippedTrainings === 1 ? 'viene conteggiato' : 'vengono conteggiati'} nel volume.{' '}
+                <Link to="/allenamenti" className="text-primary hover:underline font-semibold">
+                  Apri Allenamenti
+                </Link>{' '}
+                e assegna una data per includerli.
+              </p>
+            </div>
+          )}
+
+
+
           {/* GRAFICO TEMPORALE */}
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
