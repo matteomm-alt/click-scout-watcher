@@ -75,17 +75,62 @@ export function MagazzinoView() {
   const load = async () => {
     if (!societyId) return;
     setLoading(true);
-    const [{ data: it }, { data: at }, { data: as_ }] = await Promise.all([
+    const [{ data: it }, { data: at }, { data: as_ }, { data: hist, error: histErr }] = await Promise.all([
       supabase.from('inventory_items').select('*').eq('society_id', societyId).order('category').order('name'),
       supabase.from('athletes').select('id, last_name, first_name, number').eq('society_id', societyId).order('last_name'),
       supabase.from('inventory_assignments').select('*, athletes(last_name, first_name, number), inventory_items(name)')
         .eq('society_id', societyId).is('returned_at', null).order('assigned_at', { ascending: false }),
+      supabase.from('inventory_assignments')
+        .select('id, assigned_at, returned_at, quantity, size, notes, athletes(last_name, first_name, number), inventory_items(name)')
+        .eq('society_id', societyId)
+        .order('assigned_at', { ascending: false })
+        .limit(200),
     ]);
+    if (histErr) toast.error('Errore caricamento storico');
     setItems(((it ?? []) as unknown as typeof items));
     setAthletes(((at ?? []) as unknown as typeof athletes));
     setAssignments(((as_ ?? []) as unknown as typeof assignments));
+    setStorico(((hist ?? []) as unknown as StoricoRow[]));
     setLoading(false);
   };
+
+  const filteredStorico = useMemo(() => {
+    const q = stSearch.trim().toLowerCase();
+    return storico.filter((s) => {
+      if (stType === 'consegne' && s.returned_at) return false;
+      if (stType === 'rientri' && !s.returned_at) return false;
+      const day = s.assigned_at.slice(0, 10);
+      if (stFrom && day < stFrom) return false;
+      if (stTo && day > stTo) return false;
+      if (q) {
+        const hay = `${s.inventory_items?.name ?? ''} ${s.athletes?.last_name ?? ''} ${s.athletes?.first_name ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [storico, stSearch, stType, stFrom, stTo]);
+
+  const exportCsv = () => {
+    const rows = filteredStorico.map((s) => [
+      new Date(s.assigned_at).toLocaleDateString('it-IT'),
+      s.inventory_items?.name ?? '',
+      `${s.athletes?.last_name ?? ''} ${s.athletes?.first_name ?? ''}`.trim(),
+      s.returned_at ? 'Rientrato' : 'Consegna',
+      String(s.quantity),
+      s.size ?? '',
+      (s.notes ?? '').replace(/[\r\n;]/g, ' '),
+    ]);
+    const csv = [
+      ['Data', 'Articolo', 'Atleta', 'Tipo', 'Quantità', 'Taglia', 'Note'],
+      ...rows,
+    ].map((r) => r.join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'storico_magazzino.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
