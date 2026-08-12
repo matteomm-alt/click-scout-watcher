@@ -40,6 +40,12 @@ interface Assignment {
   athletes?: { last_name: string; first_name: string | null; number: number | null };
   inventory_items?: { name: string };
 }
+interface StoricoRow {
+  id: string; assigned_at: string; returned_at: string | null;
+  quantity: number; size: string | null; notes: string | null;
+  athletes: { last_name: string; first_name: string | null; number: number | null } | null;
+  inventory_items: { name: string } | null;
+}
 interface Athlete {
   id: string; last_name: string; first_name: string | null; number: number | null;
 }
@@ -47,9 +53,10 @@ interface Athlete {
 export function MagazzinoView() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
-  const [tab, setTab] = useState<'inventario' | 'consegne' | 'atleta'>('inventario');
+  const [tab, setTab] = useState<'inventario' | 'consegne' | 'atleta' | 'storico'>('inventario');
   const [items, setItems] = useState<Item[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [storico, setStorico] = useState<StoricoRow[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -58,6 +65,12 @@ export function MagazzinoView() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: '', category: 'Divise', quantity: 1, minQuantity: 0, size: '', notes: '' });
   const [assignForm, setAssignForm] = useState({ athlete_id: '', item_id: '', size: '', quantity: 1 });
+  // Filtri storico
+  const [stSearch, setStSearch] = useState('');
+  const [stType, setStType] = useState<'all' | 'consegne' | 'rientri'>('all');
+  const [stFrom, setStFrom] = useState('');
+  const [stTo, setStTo] = useState('');
+
 
   const load = async () => {
     if (!societyId) return;
