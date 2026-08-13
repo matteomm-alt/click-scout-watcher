@@ -182,6 +182,15 @@ export function LiveScout() {
   };
 
 
+  /** true se l'ultima azione è una battuta non terminale e `team` è chi riceve. */
+  const lastServeNeedsReception = (team: 'home' | 'away'): boolean => {
+    const actions = useMatchStore.getState().matchState.actions;
+    const last = actions[actions.length - 1];
+    if (!last || last.skill !== 'S') return false;
+    if (last.evaluation === '#' || last.evaluation === '=') return false;
+    return last.team !== team;
+  };
+
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
