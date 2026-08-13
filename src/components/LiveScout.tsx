@@ -182,6 +182,15 @@ export function LiveScout() {
   };
 
 
+  /** true se l'ultima azione è una battuta non terminale e `team` è chi riceve. */
+  const lastServeNeedsReception = (team: 'home' | 'away'): boolean => {
+    const actions = useMatchStore.getState().matchState.actions;
+    const last = actions[actions.length - 1];
+    if (!last || last.skill !== 'S') return false;
+    if (last.evaluation === '#' || last.evaluation === '=') return false;
+    return last.team !== team;
+  };
+
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
@@ -194,6 +203,10 @@ export function LiveScout() {
       setPendingSkill('S');
     } else if (suggestion?.team === team && suggestion.skill && suggestion.skill !== 'S') {
       setPendingSkill(suggestion.skill);
+    } else if (lastServeNeedsReception(team)) {
+      // Rete di sicurezza: l'ultima azione è una battuta senza ace/errore e il
+      // giocatore toccato è della squadra che riceve → Ricezione sempre proposta.
+      setPendingSkill('R');
     } else if (zone === 1 && !suggestion && matchState.actions.length > 0) {
       // Fallback: suggestion è null (resettato da autoPoint) ma il giocatore
       // è in zona 1. Controlliamo se questa squadra ha appena fatto punto
@@ -292,19 +305,23 @@ export function LiveScout() {
       setZoneSelectMode(true);
     }
     setSelectedPlayer(null);
+    // Stato FRESCO dallo store: `matchState` nella closure è ancora quello
+    // precedente all'addAction appena eseguito, quindi l'ultima azione letta
+    // sarebbe quella del tocco precedente (causa: dopo una battuta non
+    // terminale la Ricezione non veniva proposta).
+    const freshState = useMatchStore.getState().matchState;
+    const lastAction = freshState.actions[freshState.actions.length - 1];
     if (num !== null && team) {
-      const last = matchState.actions[matchState.actions.length - 1];
-      setRecentActionPlayer({ number: num, team, evaluation: last?.evaluation });
+      setRecentActionPlayer({ number: num, team, evaluation: lastAction?.evaluation });
       window.setTimeout(() => setRecentActionPlayer(null), 700);
     }
-    const lastAction = matchState.actions[matchState.actions.length - 1];
     const nextSugg = suggestNextTouch(
       skill, team, lastAction?.evaluation ?? null,
-      scoutingMode === 'simple', matchState.servingTeam,
+      scoutingMode === 'simple', freshState.servingTeam,
     );
     let suggestedPlayerNumber: number | null = null;
     if (nextSugg.skill === 'S' && nextSugg.team) {
-      const lineup = nextSugg.team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+      const lineup = nextSugg.team === 'home' ? freshState.homeCurrentLineup : freshState.awayCurrentLineup;
       suggestedPlayerNumber = lineup?.[0] ?? null;
     }
     setSuggestion(nextSugg.skill ? { ...nextSugg, playerNumber: suggestedPlayerNumber } : null);
