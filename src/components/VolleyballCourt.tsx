@@ -442,7 +442,7 @@ export function VolleyballCourt({
   }
 
   // Campo intero reale = 18m x 9m → due quadrati 9x9 affiancati (aspect 2:1)
-  const sideOrder: ('home' | 'away')[] = swapSides ? ['home', 'away'] : ['away', 'home'];
+  const sideOrder: ('home' | 'away')[] = swapSides ? ['away', 'home'] : ['home', 'away'];
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="flex gap-2 items-stretch aspect-[2/1] w-full max-h-full mx-auto" style={{ maxWidth: '100%' }}>
