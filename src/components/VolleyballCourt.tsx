@@ -377,15 +377,6 @@ export function VolleyballCourt({
                 className={`relative flex size-12 md:size-14 items-center justify-center rounded-full text-base md:text-lg font-black border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.7)] ${bgCls} ${textCls} ${ringCls} ${clickable ? 'cursor-pointer active:scale-95 transition-transform hover:brightness-110' : 'cursor-default'}`}
                 aria-label={`Giocatrice ${info.number}`}
               >
-                {/* Marker front (F arancio) / back (B grigio) row */}
-                <span
-                  className={`absolute -left-1.5 -top-1.5 rounded px-1 py-0.5 text-[9px] font-black border border-white/40 ${
-                    isFrontRow ? 'bg-orange-500 text-white' : 'bg-slate-600 text-white'
-                  }`}
-                  title={isFrontRow ? 'Prima linea' : 'Seconda linea'}
-                >
-                  {isFrontRow ? 'F' : 'B'}
-                </span>
                 {info.number}
                 {isSetter && (
                   <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-900 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">S</span>
