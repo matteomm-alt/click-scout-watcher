@@ -194,6 +194,10 @@ export function LiveScout() {
       setPendingSkill('S');
     } else if (suggestion?.team === team && suggestion.skill && suggestion.skill !== 'S') {
       setPendingSkill(suggestion.skill);
+    } else if (lastServeNeedsReception(team)) {
+      // Rete di sicurezza: l'ultima azione è una battuta senza ace/errore e il
+      // giocatore toccato è della squadra che riceve → Ricezione sempre proposta.
+      setPendingSkill('R');
     } else if (zone === 1 && !suggestion && matchState.actions.length > 0) {
       // Fallback: suggestion è null (resettato da autoPoint) ma il giocatore
       // è in zona 1. Controlliamo se questa squadra ha appena fatto punto
