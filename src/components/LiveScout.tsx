@@ -292,19 +292,23 @@ export function LiveScout() {
       setZoneSelectMode(true);
     }
     setSelectedPlayer(null);
+    // Stato FRESCO dallo store: `matchState` nella closure è ancora quello
+    // precedente all'addAction appena eseguito, quindi l'ultima azione letta
+    // sarebbe quella del tocco precedente (causa: dopo una battuta non
+    // terminale la Ricezione non veniva proposta).
+    const freshState = useMatchStore.getState().matchState;
+    const lastAction = freshState.actions[freshState.actions.length - 1];
     if (num !== null && team) {
-      const last = matchState.actions[matchState.actions.length - 1];
-      setRecentActionPlayer({ number: num, team, evaluation: last?.evaluation });
+      setRecentActionPlayer({ number: num, team, evaluation: lastAction?.evaluation });
       window.setTimeout(() => setRecentActionPlayer(null), 700);
     }
-    const lastAction = matchState.actions[matchState.actions.length - 1];
     const nextSugg = suggestNextTouch(
       skill, team, lastAction?.evaluation ?? null,
-      scoutingMode === 'simple', matchState.servingTeam,
+      scoutingMode === 'simple', freshState.servingTeam,
     );
     let suggestedPlayerNumber: number | null = null;
     if (nextSugg.skill === 'S' && nextSugg.team) {
-      const lineup = nextSugg.team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
+      const lineup = nextSugg.team === 'home' ? freshState.homeCurrentLineup : freshState.awayCurrentLineup;
       suggestedPlayerNumber = lineup?.[0] ?? null;
     }
     setSuggestion(nextSugg.skill ? { ...nextSugg, playerNumber: suggestedPlayerNumber } : null);
