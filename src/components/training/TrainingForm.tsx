@@ -20,6 +20,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SortableBlockItem, type BlockDraft } from './SortableBlockItem';
+import { ExerciseLibraryPanel, LIB_DRAG_PREFIX, type LibraryExercise } from './ExerciseLibraryPanel';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { VOLLEY_ROLES } from '@/lib/volleyConstants';
 
 interface ExerciseLite {
@@ -83,6 +85,23 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const [selectedSkeletonId, setSelectedSkeletonId] = useState('');
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [skeletonApplied, setSkeletonApplied] = useState(false);
+  const { societyId } = useActiveSociety();
+  const [library, setLibrary] = useState<LibraryExercise[]>([]);
+  const [libOpen, setLibOpen] = useState(false);
+
+  useEffect(() => {
+    if (!societyId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('exercises')
+        .select('id, name, fundamental, duration_min, tags')
+        .eq('society_id', societyId)
+        .order('name');
+      if (!cancelled) setLibrary((data as LibraryExercise[]) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [societyId]);
 
   useEffect(() => {
     if (value.id) { setSkeletonApplied(true); return; }
@@ -153,9 +172,46 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const removeBlock = (key: string) => {
     set('blocks', value.blocks.filter((b) => b.key !== key));
   };
+  const isDefaultTitle = (b: BlockDraft) =>
+    !b.title.trim() || /^Blocco \d+$/.test(b.title.trim()) || (b.roles ?? []).includes(b.title.trim());
+
+  const addExerciseAsBlock = (ex: LibraryExercise) => {
+    const newBlock: BlockDraft = {
+      key: safeUUID(),
+      title: ex.name,
+      description: '',
+      exercise_id: ex.id,
+      duration_min: ex.duration_min ?? null,
+      reps: null,
+      intensity: null,
+      players_count: null,
+      roles: [],
+    };
+    set('blocks', [...value.blocks, newBlock]);
+    toast({ title: 'Esercizio aggiunto', description: ex.name });
+  };
+
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
+    const activeId = String(active.id);
+
+    // Drop di un esercizio dalla libreria su un blocco esistente
+    if (activeId.startsWith(LIB_DRAG_PREFIX)) {
+      const ex = library.find((x) => x.id === activeId.slice(LIB_DRAG_PREFIX.length));
+      if (!ex) return;
+      const target = value.blocks.find((b) => b.key === String(over.id));
+      if (!target) return;
+      updateBlock(target.key, {
+        exercise_id: ex.id,
+        title: isDefaultTitle(target) ? ex.name : target.title,
+        duration_min: target.duration_min ?? ex.duration_min ?? null,
+      });
+      toast({ title: 'Esercizio collegato', description: ex.name });
+      return;
+    }
+
+    if (active.id === over.id) return;
     const oldIndex = value.blocks.findIndex((b) => b.key === active.id);
     const newIndex = value.blocks.findIndex((b) => b.key === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
@@ -470,28 +526,38 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
           </div>
         )}
 
-        {value.blocks.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            Nessun blocco — clicca "Aggiungi blocco" per iniziare a comporre la seduta.
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div className="flex gap-3 items-start">
+            <div className="flex-1 min-w-0">
+              {value.blocks.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                  Nessun blocco — clicca "Aggiungi blocco" per iniziare a comporre la seduta.
+                </div>
+              ) : (
+                <SortableContext items={value.blocks.map((b) => b.key)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {value.blocks.map((b, i) => (
+                      <SortableBlockItem
+                        key={b.key}
+                        block={b}
+                        index={i}
+                        exercises={exercises}
+                        onChange={(p) => updateBlock(b.key, p)}
+                        onRemove={() => removeBlock(b.key)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              )}
+            </div>
+            <ExerciseLibraryPanel
+              exercises={library}
+              open={libOpen}
+              onToggle={() => setLibOpen((o) => !o)}
+              onAdd={addExerciseAsBlock}
+            />
           </div>
-        ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={value.blocks.map((b) => b.key)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {value.blocks.map((b, i) => (
-                  <SortableBlockItem
-                    key={b.key}
-                    block={b}
-                    index={i}
-                    exercises={exercises}
-                    onChange={(p) => updateBlock(b.key, p)}
-                    onRemove={() => removeBlock(b.key)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
+        </DndContext>
       </div>
 
       {/* Note + template */}

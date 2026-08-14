@@ -14,6 +14,7 @@ import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 
 // ── Costanti ──────────────────────────────────────────────────────────
 const TIPI_STRUTTURA = [
@@ -81,6 +82,15 @@ export function StrutturaSettimanaleView() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Struttura | null>(null);
+  const { currentSeason } = useCurrentSeason();
+
+  // Crea allenamento da scheletro
+  const [createFromSkeleton, setCreateFromSkeleton] = useState<Struttura | null>(null);
+  const [cfsTeams, setCfsTeams] = useState<{ id: string; name: string }[]>([]);
+  const [cfsDate, setCfsDate] = useState(new Date().toISOString().slice(0, 10));
+  const [cfsTeamId, setCfsTeamId] = useState<string>('');
+  const [cfsDuration, setCfsDuration] = useState<number>(60);
+  const [cfsSaving, setCfsSaving] = useState(false);
 
   // Form state
   const [nome, setNome] = useState('');
@@ -233,6 +243,71 @@ export function StrutturaSettimanaleView() {
     }));
   };
 
+  useEffect(() => {
+    if (!createFromSkeleton) return;
+    setCfsDate(new Date().toISOString().slice(0, 10));
+    setCfsTeamId('');
+    setCfsDuration(createFromSkeleton.total_duration_min ?? 60);
+    if (!societyId) return;
+    supabase.from('teams').select('id,name').eq('society_id', societyId).order('name')
+      .then(({ data }) => setCfsTeams(data ?? []));
+  }, [createFromSkeleton, societyId]);
+
+  const createTrainingFromSkeleton = async () => {
+    const skeleton = createFromSkeleton;
+    if (!skeleton || !societyId || !user || !cfsDate) return;
+    setCfsSaving(true);
+    try {
+      const allBlocchi = (skeleton.blocks?.settimane ?? [])
+        .flatMap((sett) => sett.sedute ?? [])
+        .flatMap((sed) => sed.blocchi ?? []);
+
+      const { data: training, error } = await supabase
+        .from('trainings')
+        .insert({
+          society_id: societyId,
+          created_by: user.id,
+          title: skeleton.name,
+          scheduled_date: cfsDate,
+          duration_min: cfsDuration || null,
+          team_id: cfsTeamId || null,
+          skeleton_id: skeleton.id,
+          status: 'programmato',
+          season: currentSeason,
+          is_template: false,
+          roles: [],
+          participating_athlete_ids: [],
+          players_count: 12,
+        })
+        .select()
+        .single();
+      if (error || !training) { toast.error(error?.message ?? 'Errore creazione allenamento'); return; }
+
+      if (allBlocchi.length > 0) {
+        const blocks = allBlocchi.map((b, idx) => ({
+          training_id: training.id,
+          title: b.nome || `Blocco ${idx + 1}`,
+          duration_min: Number(b.minuti) || null,
+          order_index: idx,
+          exercise_id: null,
+          description: b.fondamentali?.join(', ') || '',
+          intensity: b.forma || null,
+          reps: null,
+          players_count: null,
+          roles: b.fondamentali ?? [],
+        }));
+        const { error: blkErr } = await supabase.from('training_blocks').insert(blocks);
+        if (blkErr) { toast.error(blkErr.message); return; }
+      }
+
+      toast.success('Allenamento creato');
+      setCreateFromSkeleton(null);
+      navigate(`/allenamenti?open=${training.id}`);
+    } finally {
+      setCfsSaving(false);
+    }
+  };
+
   const tipoLabel = (n: number) => TIPI_STRUTTURA.find(t => t.id === n)?.label || `${n} settimane`;
 
   return (
@@ -287,7 +362,7 @@ export function StrutturaSettimanaleView() {
                   <div className="flex gap-1 flex-shrink-0 items-center">
                     <button
                       type="button"
-                      onClick={() => navigate(`/allenamenti?skeleton_id=${s.id}`)}
+                      onClick={() => setCreateFromSkeleton(s)}
                       className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors"
                     >
                       ➕ Crea allenamento
@@ -462,6 +537,44 @@ export function StrutturaSettimanaleView() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
             <Button onClick={save}>{editing ? 'Salva modifiche' : 'Salva struttura'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog crea allenamento da scheletro */}
+      <Dialog open={!!createFromSkeleton} onOpenChange={(o) => !o && setCreateFromSkeleton(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Crea allenamento da {createFromSkeleton?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Data allenamento *</Label>
+              <Input type="date" value={cfsDate} onChange={(e) => setCfsDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Squadra</Label>
+              <Select value={cfsTeamId || '__NONE__'} onValueChange={(v) => setCfsTeamId(v === '__NONE__' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Nessuna" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__">— Nessuna</SelectItem>
+                  {cfsTeams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Durata (min)</Label>
+              <Input
+                type="number" min="0" value={cfsDuration}
+                onChange={(e) => setCfsDuration(e.target.value ? parseInt(e.target.value, 10) : 0)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateFromSkeleton(null)}>Annulla</Button>
+            <Button onClick={createTrainingFromSkeleton} disabled={!cfsDate || cfsSaving}>
+              {cfsSaving ? 'Creazione…' : 'Crea allenamento'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
