@@ -526,28 +526,38 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
           </div>
         )}
 
-        {value.blocks.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            Nessun blocco — clicca "Aggiungi blocco" per iniziare a comporre la seduta.
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div className="flex gap-3 items-start">
+            <div className="flex-1 min-w-0">
+              {value.blocks.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                  Nessun blocco — clicca "Aggiungi blocco" per iniziare a comporre la seduta.
+                </div>
+              ) : (
+                <SortableContext items={value.blocks.map((b) => b.key)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {value.blocks.map((b, i) => (
+                      <SortableBlockItem
+                        key={b.key}
+                        block={b}
+                        index={i}
+                        exercises={exercises}
+                        onChange={(p) => updateBlock(b.key, p)}
+                        onRemove={() => removeBlock(b.key)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              )}
+            </div>
+            <ExerciseLibraryPanel
+              exercises={library}
+              open={libOpen}
+              onToggle={() => setLibOpen((o) => !o)}
+              onAdd={addExerciseAsBlock}
+            />
           </div>
-        ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={value.blocks.map((b) => b.key)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {value.blocks.map((b, i) => (
-                  <SortableBlockItem
-                    key={b.key}
-                    block={b}
-                    index={i}
-                    exercises={exercises}
-                    onChange={(p) => updateBlock(b.key, p)}
-                    onRemove={() => removeBlock(b.key)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
+        </DndContext>
       </div>
 
       {/* Note + template */}
