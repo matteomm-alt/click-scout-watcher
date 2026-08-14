@@ -1,5 +1,5 @@
 import { safeUUID } from '@/lib/utils';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -25,7 +25,7 @@ import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
   Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -111,6 +111,8 @@ export default function Allenamenti() {
   const [dlgOpen, setDlgOpen] = useState(false);
   const [form, setForm] = useState<TrainingFormValue>(emptyForm());
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const openedFromUrl = useRef(false);
 
   // ── Queries ─────────────────────────────────────────────────────────────
   const { data: trainings = [], isLoading: loading } = useQuery({
@@ -267,6 +269,18 @@ export default function Allenamenti() {
     const v = await loadTrainingIntoForm(id, false);
     if (v) { setForm(v); setDlgOpen(true); }
   };
+  // Apertura automatica da ?open=<training_id>
+  useEffect(() => {
+    if (openedFromUrl.current) return;
+    const openId = searchParams.get('open');
+    if (!openId || trainings.length === 0) return;
+    const t = trainings.find((tr) => tr.id === openId);
+    if (!t) return;
+    openedFromUrl.current = true;
+    openEdit(openId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, trainings]);
+
   const openDuplicate = async (id: string) => {
     const v = await loadTrainingIntoForm(id, true);
     if (v) { setForm(v); setDlgOpen(true); }
