@@ -85,6 +85,23 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const [selectedSkeletonId, setSelectedSkeletonId] = useState('');
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [skeletonApplied, setSkeletonApplied] = useState(false);
+  const { societyId } = useActiveSociety();
+  const [library, setLibrary] = useState<LibraryExercise[]>([]);
+  const [libOpen, setLibOpen] = useState(false);
+
+  useEffect(() => {
+    if (!societyId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('exercises')
+        .select('id, name, fundamental, duration_min, tags')
+        .eq('society_id', societyId)
+        .order('name');
+      if (!cancelled) setLibrary((data as LibraryExercise[]) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [societyId]);
 
   useEffect(() => {
     if (value.id) { setSkeletonApplied(true); return; }
