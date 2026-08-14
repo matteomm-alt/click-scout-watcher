@@ -20,6 +20,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SortableBlockItem, type BlockDraft } from './SortableBlockItem';
+import { ExerciseLibraryPanel, LIB_DRAG_PREFIX, type LibraryExercise } from './ExerciseLibraryPanel';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { VOLLEY_ROLES } from '@/lib/volleyConstants';
 
 interface ExerciseLite {
