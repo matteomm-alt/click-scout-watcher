@@ -437,7 +437,7 @@ export function VolleyballCourt({
   // linea (zone 2/3/4) rivolta verso il centro.
   // HOME ha la rete a x piccolo (POS_HOME 2/3/4 → x=22) ⇒ va renderizzata a DESTRA.
   // AWAY ha la rete a x grande (POS_AWAY 2/3/4 → x=78) ⇒ va renderizzata a SINISTRA.
-  const sideOrder: ('home' | 'away')[] = swapSides ? ['home', 'away'] : ['away', 'home'];
+  const sideOrder: ('home' | 'away')[] = swapSides ? ['away', 'home'] : ['home', 'away'];
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="flex gap-2 items-stretch aspect-[2/1] w-full max-h-full mx-auto" style={{ maxWidth: '100%' }}>
