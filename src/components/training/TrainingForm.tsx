@@ -172,9 +172,46 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const removeBlock = (key: string) => {
     set('blocks', value.blocks.filter((b) => b.key !== key));
   };
+  const isDefaultTitle = (b: BlockDraft) =>
+    !b.title.trim() || /^Blocco \d+$/.test(b.title.trim()) || (b.roles ?? []).includes(b.title.trim());
+
+  const addExerciseAsBlock = (ex: LibraryExercise) => {
+    const newBlock: BlockDraft = {
+      key: safeUUID(),
+      title: ex.name,
+      description: '',
+      exercise_id: ex.id,
+      duration_min: ex.duration_min ?? null,
+      reps: null,
+      intensity: null,
+      players_count: null,
+      roles: [],
+    };
+    set('blocks', [...value.blocks, newBlock]);
+    toast({ title: 'Esercizio aggiunto', description: ex.name });
+  };
+
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
+    const activeId = String(active.id);
+
+    // Drop di un esercizio dalla libreria su un blocco esistente
+    if (activeId.startsWith(LIB_DRAG_PREFIX)) {
+      const ex = library.find((x) => x.id === activeId.slice(LIB_DRAG_PREFIX.length));
+      if (!ex) return;
+      const target = value.blocks.find((b) => b.key === String(over.id));
+      if (!target) return;
+      updateBlock(target.key, {
+        exercise_id: ex.id,
+        title: isDefaultTitle(target) ? ex.name : target.title,
+        duration_min: target.duration_min ?? ex.duration_min ?? null,
+      });
+      toast({ title: 'Esercizio collegato', description: ex.name });
+      return;
+    }
+
+    if (active.id === over.id) return;
     const oldIndex = value.blocks.findIndex((b) => b.key === active.id);
     const newIndex = value.blocks.findIndex((b) => b.key === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
