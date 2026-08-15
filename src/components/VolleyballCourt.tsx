@@ -156,7 +156,7 @@ export function VolleyballCourt({
       : { number: num, name: `#${num}`, role: undefined as undefined, isLibero: false };
   };
 
-  const renderHalf = (team: 'home' | 'away') => {
+  const renderHalf = (team: 'home' | 'away', isLeft = false) => {
     const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
     const recFormations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
@@ -271,13 +271,14 @@ export function VolleyballCourt({
             Renderizzate "dietro" al campo (sotto z dei giocatori) lungo la linea di fondo.
             Click → registra la zona di inizio servizio per la prossima azione skill='S'. */}
         {matchState.servingTeam === team && !simplifiedView && (() => {
-          // HOME baseline a x=100, AWAY baseline a x=0. Strip larga 12%.
-          const isHome = team === 'home';
-          const stripStyle: React.CSSProperties = isHome
-            ? { left: '88%', top: 0, width: '12%', height: '100%' }
-            : { left: 0, top: 0, width: '12%', height: '100%' };
+          // Strip di battuta: sempre sul lato esterno (lontano dalla rete).
+          // isLeft=true  → lato sinistro  → strip a left:0
+          // isLeft=false → lato destro    → strip a left:88%
+          const stripStyle: React.CSSProperties = isLeft
+            ? { left: 0, top: 0, width: '12%', height: '100%' }
+            : { left: '88%', top: 0, width: '12%', height: '100%' };
           // Ordine top→bottom delle zone per ciascun lato (cfr. ZONE_CENTERS_*)
-          const orderTopToBottom = isHome ? [9, 8, 7] : [7, 8, 9];
+          const orderTopToBottom = team === 'home' ? [9, 8, 7] : [7, 8, 9];
           return (
             <div className="absolute z-[15] pointer-events-none" style={stripStyle}>
               <div className="relative h-full w-full flex flex-col">
@@ -447,7 +448,7 @@ export function VolleyballCourt({
               <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                 {side === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
               </span>
-              {renderHalf(side)}
+              {renderHalf(side, idx === 0)}
             </div>
             {idx === 0 && (
               <div className="w-1 self-stretch bg-white/70 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" aria-hidden />
