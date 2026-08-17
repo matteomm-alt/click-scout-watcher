@@ -52,10 +52,10 @@ export function InjuriesList({ injuries, onEdit, onDelete, showAthlete, emptyLab
                   {inj.injury_type && (
                     <span className="text-xs text-muted-foreground">— {inj.injury_type}</span>
                   )}
-                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${SEVERITY_BADGE[inj.severity]}`}>
+                  <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-md ${SEVERITY_BADGE[inj.severity]}`}>
                     {SEVERITY_LABEL[inj.severity]}
                   </span>
-                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${STATUS_BADGE[inj.status]}`}>
+                  <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-md ${STATUS_BADGE[inj.status]}`}>
                     {STATUS_LABEL[inj.status]}
                   </span>
                 </div>

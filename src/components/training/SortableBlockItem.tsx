@@ -161,7 +161,7 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
       {!expanded && (linkedExercise || block.intensity || block.players_count || block.roles.length > 0) && (
         <div className="px-3 py-2 flex flex-wrap gap-1.5 text-xs border-t border-border">
           {linkedExercise && (
-            <Badge variant="secondary" className="text-[10px] gap-0.5 pr-1">
+            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium gap-0.5 pr-1">
               {linkedExercise.name}
               {linkedExercise.fundamental && <span className="ml-1 opacity-70">· {linkedExercise.fundamental}</span>}
               <button
@@ -174,12 +174,12 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
               </button>
             </Badge>
           )}
-          {block.intensity && <Badge variant="outline" className="text-[10px]">Intensità: {block.intensity}</Badge>}
-          {block.players_count != null && <Badge variant="outline" className="text-[10px]">{block.players_count} giocatori</Badge>}
+          {block.intensity && <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">Intensità: {block.intensity}</Badge>}
+          {block.players_count != null && <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{block.players_count} giocatori</Badge>}
           {block.roles.map((r) => (
-            <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>
+            <Badge key={r} variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{r}</Badge>
           ))}
-          {block.reps != null && <Badge variant="outline" className="text-[10px]">{block.reps} reps</Badge>}
+          {block.reps != null && <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{block.reps} reps</Badge>}
         </div>
       )}
 
@@ -203,7 +203,7 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
               {linkedExercise && linkedExercise.tags.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {linkedExercise.tags.map((t) => (
-                    <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
+                    <Badge key={t} variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{t}</Badge>
                   ))}
                 </div>
               )}
