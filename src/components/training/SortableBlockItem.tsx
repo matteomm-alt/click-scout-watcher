@@ -12,6 +12,18 @@ import {
 import { useState } from 'react';
 import { VOLLEY_ROLES } from '@/lib/volleyConstants';
 
+const FUND_COLORS: Record<string, string> = {
+  'Ricezione':    '#93c5fd',
+  'Attacco':      '#f9a8d4',
+  'Battuta':      '#6ee7b7',
+  'Muro':         '#c4b5fd',
+  'Difesa':       '#fcd34d',
+  'Alzata':       '#fdba74',
+  'Bagher':       '#7dd3fc',
+  'Situazionale': '#86efac',
+  'Tattico':      '#c4b5fd',
+};
+
 export interface BlockDraft {
   key: string;          // chiave locale stabile (uuid client-side) per il DnD
   id?: string;          // id DB se esiste già
@@ -58,6 +70,13 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
 
   const linkedExercise = block.exercise_id ? exercises.find((e) => e.id === block.exercise_id) : null;
 
+  const dominantFund = block.roles[0]
+    ?? linkedExercise?.fundamental
+    ?? null;
+  const borderColor = dominantFund
+    ? (FUND_COLORS[dominantFund] ?? null)
+    : null;
+
   const onPickExercise = (id: string) => {
     if (id === NONE) {
       onChange({ exercise_id: null });
@@ -81,7 +100,12 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{
+        ...style,
+        borderLeft: borderColor
+          ? `4px solid ${borderColor}`
+          : '4px solid transparent',
+      }}
       className="rounded-lg border border-border bg-card overflow-hidden"
     >
       {/* Header riga compatta */}
