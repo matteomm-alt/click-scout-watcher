@@ -158,10 +158,10 @@ export default function Obiettivi() {
               <span className={`font-bold ${o.status === 'completato' ? 'line-through text-muted-foreground' : ''}`}>{o.title}</span>
               {(() => {
                 const oc = OBJ_COLORS[o.status] ?? OBJ_COLORS['aperto'];
-                return <Badge style={{ background: oc.bg, color: oc.text, border: 'none' }} className="text-[10px]">{STATUS_LABEL[o.status]}</Badge>;
+                return <Badge style={{ background: oc.bg, color: oc.text, border: 'none' }} className="text-[10px] px-2 py-0.5 rounded-md font-semibold uppercase">{STATUS_LABEL[o.status]}</Badge>;
               })()}
               {o.phase_id && (
-                <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
                   📍 {phases.find(p => p.id === o.phase_id)?.name ?? 'Fase'}
                 </Badge>
               )}

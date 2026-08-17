@@ -362,10 +362,10 @@ export function StrutturaSettimanaleView() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold">{s.name}</span>
-                        <Badge variant="outline">{tipoLabel(blocks.nSettimane)}</Badge>
-                        <Badge variant="secondary">{blocks.nSedute} sed/sett</Badge>
-                        {s.total_duration_min && <Badge variant="secondary">{s.total_duration_min} min/sed</Badge>}
-                        <Badge variant="outline" className="text-[10px]">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
+                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{tipoLabel(blocks.nSettimane)}</Badge>
+                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{blocks.nSedute} sed/sett</Badge>
+                        {s.total_duration_min && <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{s.total_duration_min} min/sed</Badge>}
+                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
                       </div>
                       {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
                     </div>
@@ -421,9 +421,9 @@ export function StrutturaSettimanaleView() {
                                     {(b.fondamentali || []).length > 0 && (
                                       <div className="flex gap-1 flex-wrap">
                                         {(b.fondamentali || []).map(f => (
-                                          <span key={f} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">{f}</span>
+                                          <span key={f} className="text-[10px] px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">{f}</span>
                                         ))}
-                                        {b.forma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{b.forma}</span>}
+                                        {b.forma && <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">{b.forma}</span>}
                                       </div>
                                     )}
                                   </div>

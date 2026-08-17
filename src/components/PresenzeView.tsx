@@ -281,7 +281,7 @@ export function PresenzeView() {
                             <span className="ml-2">{a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''}</span>
                             {a.role && <span className="ml-2 text-xs text-muted-foreground">{a.role}</span>}
                             {injured && (
-                              <Badge variant="destructive" className="ml-2 text-[10px] px-1.5 py-0 gap-1">
+                              <Badge variant="destructive" className="ml-2 text-[10px] px-2 py-0.5 rounded-md font-semibold gap-1">
                                 <HeartPulse className="w-2.5 h-2.5" /> Infortunato
                               </Badge>
                             )}
@@ -289,7 +289,7 @@ export function PresenzeView() {
                           <td className="p-4 text-center">
                             {status ? (() => {
                               const pc = PRESENCE_COLORS[status];
-                              return <Badge style={{ background: pc.bg, color: pc.text, border: 'none' }}>{status}</Badge>;
+                              return <Badge style={{ background: pc.bg, color: pc.text, border: 'none' }} className="text-[10px] px-2 py-0.5 rounded-md font-semibold uppercase">{status}</Badge>;
                             })() : injured ? <span className="text-xs text-muted-foreground italic">suggerito: assente</span> : <span className="text-muted-foreground">—</span>}
                           </td>
                           <td className="p-4">
