@@ -334,7 +334,51 @@ export default function Allenamenti() {
         _blocks: blocksJson,
       });
       if (error) throw error;
-      return resultId as string;
+      const trainingId = resultId as string;
+
+      // Sincronizza con il calendario solo se c'è una data
+      if (form.scheduled_date) {
+        const startAt = `${form.scheduled_date}T09:00:00`;
+        const durationMin = form.duration_min ?? 90;
+        const endAt = new Date(new Date(startAt).getTime() + durationMin * 60000).toISOString();
+
+        const { data: existingEvent } = await supabase
+          .from('events')
+          .select('id')
+          .eq('society_id', societyId)
+          .filter('description', 'eq', `training:${trainingId}`)
+          .maybeSingle();
+
+        if (existingEvent) {
+          await supabase.from('events').update({
+            title: form.title.trim(),
+            start_at: startAt,
+            end_at: endAt,
+            team_id: form.team_id || null,
+            updated_at: new Date().toISOString(),
+          }).eq('id', existingEvent.id);
+        } else {
+          const { data: newEvent } = await supabase
+            .from('events')
+            .insert({
+              society_id: societyId,
+              created_by: user.id,
+              title: form.title.trim(),
+              event_type: 'allenamento',
+              start_at: startAt,
+              end_at: endAt,
+              team_id: form.team_id || null,
+              description: `training:${trainingId}`,
+            })
+            .select('id')
+            .single();
+          if (newEvent) {
+            await supabase.from('trainings').update({ event_id: newEvent.id }).eq('id', trainingId);
+          }
+        }
+      }
+
+      return trainingId;
     },
     onSuccess: (existingId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
