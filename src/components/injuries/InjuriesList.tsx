@@ -16,12 +16,13 @@ interface Props {
   onDelete?: (i: AthleteInjury) => void;
   showAthlete?: (athleteId: string) => string;
   emptyLabel?: string;
+  statusColors?: Record<string, string>;
 }
 
 /**
  * Lista compatta degli infortuni — usata sia nella scheda atleta che nella vista globale.
  */
-export function InjuriesList({ injuries, onEdit, onDelete, showAthlete, emptyLabel }: Props) {
+export function InjuriesList({ injuries, onEdit, onDelete, showAthlete, emptyLabel, statusColors }: Props) {
   if (injuries.length === 0) {
     return (
       <Card className="p-8 text-center text-sm text-muted-foreground">
@@ -34,8 +35,13 @@ export function InjuriesList({ injuries, onEdit, onDelete, showAthlete, emptyLab
     <div className="space-y-2">
       {injuries.map((inj) => {
         const days = daysSince(inj.start_date, inj.actual_return_date);
+        const borderColor = statusColors?.[inj.status];
         return (
-          <Card key={inj.id} className="p-4">
+          <Card
+            key={inj.id}
+            className="p-4"
+            style={{ borderLeft: borderColor ? `4px solid ${borderColor}` : '4px solid transparent' }}
+          >
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
