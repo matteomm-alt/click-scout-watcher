@@ -47,6 +47,12 @@ const STATUS_ICON: Record<string, typeof Circle> = {
   in_corso: Clock,
   completato: CheckCircle2,
 };
+const OBJ_COLORS: Record<string, { bg: string; text: string }> = {
+  'aperto':     { bg: '#f3f4f6', text: '#6b7280' },
+  'in_corso':   { bg: '#dbeafe', text: '#1d4ed8' },
+  'completato': { bg: '#d1fae5', text: '#065f46' },
+  'bloccato':   { bg: '#fee2e2', text: '#991b1b' },
+};
 
 const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto', target_date: '', phase_id: '' };
 
@@ -150,7 +156,10 @@ export default function Obiettivi() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className={`font-bold ${o.status === 'completato' ? 'line-through text-muted-foreground' : ''}`}>{o.title}</span>
-              <Badge variant={STATUS_VARIANT[o.status]} className="text-[10px]">{STATUS_LABEL[o.status]}</Badge>
+              {(() => {
+                const oc = OBJ_COLORS[o.status] ?? OBJ_COLORS['aperto'];
+                return <Badge style={{ background: oc.bg, color: oc.text, border: 'none' }} className="text-[10px]">{STATUS_LABEL[o.status]}</Badge>;
+              })()}
               {o.phase_id && (
                 <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
                   📍 {phases.find(p => p.id === o.phase_id)?.name ?? 'Fase'}
