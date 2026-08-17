@@ -412,7 +412,11 @@ export function StrutturaSettimanaleView() {
                                   <div
                                     key={bi}
                                     className="space-y-0.5"
-                                    style={{ borderLeft: `4px solid ${FUND_COLORS[b.fondamentali?.[0]] ?? 'transparent'}` }}
+                                    style={{
+                                      borderLeft: `4px solid ${FUND_COLORS[b.fondamentali?.[0]] ?? 'transparent'}`,
+                                      paddingLeft: '8px',
+                                      marginBottom: '6px',
+                                    }}
                                   >
                                     <div className="flex items-center gap-1.5 text-xs">
                                       {b.nome && <span className="font-bold text-foreground">{b.nome}</span>}
