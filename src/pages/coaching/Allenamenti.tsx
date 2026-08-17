@@ -24,6 +24,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
   Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
+  ExternalLink,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -334,7 +335,51 @@ export default function Allenamenti() {
         _blocks: blocksJson,
       });
       if (error) throw error;
-      return resultId as string;
+      const trainingId = resultId as string;
+
+      // Sincronizza con il calendario solo se c'è una data
+      if (form.scheduled_date) {
+        const startAt = `${form.scheduled_date}T09:00:00`;
+        const durationMin = form.duration_min ?? 90;
+        const endAt = new Date(new Date(startAt).getTime() + durationMin * 60000).toISOString();
+
+        const { data: existingEvent } = await supabase
+          .from('events')
+          .select('id')
+          .eq('society_id', societyId)
+          .filter('description', 'eq', `training:${trainingId}`)
+          .maybeSingle();
+
+        if (existingEvent) {
+          await supabase.from('events').update({
+            title: form.title.trim(),
+            start_at: startAt,
+            end_at: endAt,
+            team_id: form.team_id || null,
+            updated_at: new Date().toISOString(),
+          }).eq('id', existingEvent.id);
+        } else {
+          const { data: newEvent } = await supabase
+            .from('events')
+            .insert({
+              society_id: societyId,
+              created_by: user.id,
+              title: form.title.trim(),
+              event_type: 'allenamento',
+              start_at: startAt,
+              end_at: endAt,
+              team_id: form.team_id || null,
+              description: `training:${trainingId}`,
+            })
+            .select('id')
+            .single();
+          if (newEvent) {
+            await supabase.from('trainings').update({ event_id: newEvent.id }).eq('id', trainingId);
+          }
+        }
+      }
+
+      return trainingId;
     },
     onSuccess: (existingId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });
@@ -347,6 +392,14 @@ export default function Allenamenti() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { data: linkedEvent } = await supabase
+        .from('events')
+        .select('id')
+        .filter('description', 'eq', `training:${id}`)
+        .maybeSingle();
+      if (linkedEvent) {
+        await supabase.from('events').delete().eq('id', linkedEvent.id);
+      }
       await supabase.from('training_blocks').delete().eq('training_id', id);
       const { error } = await supabase.from('trainings').delete().eq('id', id);
       if (error) throw error;
@@ -594,6 +647,11 @@ export default function Allenamenti() {
               <div className="flex items-center gap-1 mt-auto pt-2 border-t border-border">
                 <Button size="sm" variant="ghost" className="flex-1 gap-1.5 h-8" onClick={() => openEdit(t.id)}>
                   <Pencil className="w-3.5 h-3.5" /> Modifica
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild title="Apri a schermo intero">
+                  <Link to={`/allenamenti/${t.id}`}>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
                 </Button>
                 {!t.is_template && (
                   <Button
