@@ -648,6 +648,11 @@ export default function Allenamenti() {
                 <Button size="sm" variant="ghost" className="flex-1 gap-1.5 h-8" onClick={() => openEdit(t.id)}>
                   <Pencil className="w-3.5 h-3.5" /> Modifica
                 </Button>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild title="Apri a schermo intero">
+                  <Link to={`/allenamenti/${t.id}`}>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </Button>
                 {!t.is_template && (
                   <Button
                     size="sm" variant="ghost"
