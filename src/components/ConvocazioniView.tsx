@@ -27,6 +27,12 @@ const ROLE_TO_DB: Record<string, 'titolare' | 'riserva' | 'libero' | 'non_convoc
 const ROLE_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   Titolare: 'default', Riserva: 'secondary', Libero: 'outline', 'Fuori lista': 'destructive',
 };
+const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
+  'titolare':      { bg: '#d1fae5', text: '#065f46' },
+  'riserva':       { bg: '#fef3c7', text: '#92400e' },
+  'libero':        { bg: '#dbeafe', text: '#1d4ed8' },
+  'non_convocato': { bg: '#f3f4f6', text: '#6b7280' },
+};
 
 export function ConvocazioniView() {
   const { user } = useAuth();
@@ -278,7 +284,22 @@ export function ConvocazioniView() {
                     </div>
                     <span className="flex-1 text-sm truncate font-semibold">{athlete.last_name}{athlete.first_name ? ` ${athlete.first_name.charAt(0)}.` : ''}</span>
                     <Select value={player.role_in_match || 'Titolare'} onValueChange={v => updateRole(player.id, v)}>
-                      <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-7 w-28 text-xs">
+                        {(() => {
+                          const role = player.role_in_match || 'Titolare';
+                          const dbRole = ROLE_TO_DB[role] ?? 'non_convocato';
+                          const rc = ROLE_COLORS[dbRole] ?? ROLE_COLORS['non_convocato'];
+                          return (
+                            <span style={{
+                              background: rc.bg, color: rc.text,
+                              padding: '1px 7px', borderRadius: '10px',
+                              fontSize: '10px', fontWeight: 500,
+                            }}>
+                              {role}
+                            </span>
+                          );
+                        })()}
+                      </SelectTrigger>
                       <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                     </Select>
                     <Popover>

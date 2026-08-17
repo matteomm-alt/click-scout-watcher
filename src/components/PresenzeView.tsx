@@ -24,6 +24,11 @@ interface Attendance { athlete_id: string; status: 'presente' | 'assente' | 'giu
 const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
   presente: 'default', assente: 'destructive', giustificato: 'secondary',
 };
+const PRESENCE_COLORS: Record<string, { bg: string; text: string }> = {
+  'presente':    { bg: '#d1fae5', text: '#065f46' },
+  'assente':     { bg: '#fee2e2', text: '#991b1b' },
+  'giustificato':{ bg: '#fef3c7', text: '#92400e' },
+};
 
 const SOGLIA = 70;
 
@@ -282,7 +287,10 @@ export function PresenzeView() {
                             )}
                           </td>
                           <td className="p-4 text-center">
-                            {status ? <Badge variant={STATUS_VARIANT[status]}>{status}</Badge> : injured ? <span className="text-xs text-muted-foreground italic">suggerito: assente</span> : <span className="text-muted-foreground">—</span>}
+                            {status ? (() => {
+                              const pc = PRESENCE_COLORS[status];
+                              return <Badge style={{ background: pc.bg, color: pc.text, border: 'none' }}>{status}</Badge>;
+                            })() : injured ? <span className="text-xs text-muted-foreground italic">suggerito: assente</span> : <span className="text-muted-foreground">—</span>}
                           </td>
                           <td className="p-4">
                             <div className="flex items-center justify-center gap-2">

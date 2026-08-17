@@ -18,6 +18,12 @@ import { AthleteInjury, daysSince } from '@/lib/injuries';
 import { InjuriesList } from '@/components/injuries/InjuriesList';
 import { InjuryFormDialog } from '@/components/injuries/InjuryFormDialog';
 
+const STATUS_COLORS: Record<string, string> = {
+  'attivo': '#fca5a5',
+  'in_recupero': '#fcd34d',
+  'risolto': '#86efac',
+};
+
 interface AthleteRow {
   id: string;
   last_name: string;
@@ -239,6 +245,7 @@ export default function Infortuni() {
           onEdit={(i) => { setEditing(i); setDialogOpen(true); }}
           onDelete={(i) => setDeleteId(i.id)}
           emptyLabel="Nessun infortunio per questi filtri."
+          statusColors={STATUS_COLORS}
         />
       )}
 

@@ -36,6 +36,18 @@ const FORME = [
   'Circuito', 'Individuale', 'Per reparto',
 ];
 
+const FUND_COLORS: Record<string, string> = {
+  'Ricezione':    '#93c5fd',
+  'Attacco':      '#f9a8d4',
+  'Battuta':      '#6ee7b7',
+  'Muro':         '#c4b5fd',
+  'Difesa':       '#fcd34d',
+  'Alzata':       '#fdba74',
+  'Bagher':       '#7dd3fc',
+  'Situazionale': '#86efac',
+  'Tattico':      '#c4b5fd',
+};
+
 // ── Tipi ─────────────────────────────────────────────────────────────
 interface Blocco { nome: string; fondamentali: string[]; forma: string; minuti: number | ''; }
 interface Seduta { giorno: number | null; blocchi: Blocco[]; }
@@ -397,7 +409,11 @@ export function StrutturaSettimanaleView() {
                                 {sed.blocchi.length === 0 ? (
                                   <p className="text-xs text-muted-foreground italic">Nessun blocco</p>
                                 ) : sed.blocchi.map((b, bi) => (
-                                  <div key={bi} className="space-y-0.5">
+                                  <div
+                                    key={bi}
+                                    className="space-y-0.5"
+                                    style={{ borderLeft: `4px solid ${FUND_COLORS[b.fondamentali?.[0]] ?? 'transparent'}` }}
+                                  >
                                     <div className="flex items-center gap-1.5 text-xs">
                                       {b.nome && <span className="font-bold text-foreground">{b.nome}</span>}
                                       {b.minuti && <span className="ml-auto text-muted-foreground flex-shrink-0">{b.minuti}min</span>}
