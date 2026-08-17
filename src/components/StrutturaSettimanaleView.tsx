@@ -408,13 +408,11 @@ export function StrutturaSettimanaleView() {
                                 </div>
                                 {sed.blocchi.length === 0 ? (
                                   <p className="text-xs text-muted-foreground italic">Nessun blocco</p>
-                                ) : sed.blocchi.map((b, bi) => {
-                                  const fondamentale = b.fondamentali?.[0];
-                                  return (
+                                ) : sed.blocchi.map((b, bi) => (
                                   <div
                                     key={bi}
                                     className="space-y-0.5"
-                                    style={{ borderLeft: `4px solid ${FUND_COLORS[fondamentale] ?? 'transparent'}` }}
+                                    style={{ borderLeft: `4px solid ${FUND_COLORS[b.fondamentali?.[0]] ?? 'transparent'}` }}
                                   >
                                     <div className="flex items-center gap-1.5 text-xs">
                                       {b.nome && <span className="font-bold text-foreground">{b.nome}</span>}
