@@ -24,6 +24,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
   Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
+  ExternalLink,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -391,6 +392,14 @@ export default function Allenamenti() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { data: linkedEvent } = await supabase
+        .from('events')
+        .select('id')
+        .filter('description', 'eq', `training:${id}`)
+        .maybeSingle();
+      if (linkedEvent) {
+        await supabase.from('events').delete().eq('id', linkedEvent.id);
+      }
       await supabase.from('training_blocks').delete().eq('training_id', id);
       const { error } = await supabase.from('trainings').delete().eq('id', id);
       if (error) throw error;
