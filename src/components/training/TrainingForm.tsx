@@ -1,7 +1,7 @@
 import { safeUUID } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  DndContext, DragEndEvent, KeyboardSensor, PointerSensor, closestCenter,
+  DndContext, DragEndEvent, DragOverlay, KeyboardSensor, PointerSensor, closestCenter,
   useSensor, useSensors,
 } from '@dnd-kit/core';
 import {
@@ -73,12 +73,13 @@ interface Props {
   athletes: AthleteLite[];
   templates: TemplateLite[];
   onLoadTemplate: (templateId: string) => Promise<void>;
+  defaultLibraryOpen?: boolean;
 }
 
 const NO_TEMPLATE = '__NONE__';
 const NO_TEAM = '__NONE__';
 
-export function TrainingForm({ value, onChange, exercises, teams, athletes, templates, onLoadTemplate }: Props) {
+export function TrainingForm({ value, onChange, exercises, teams, athletes, templates, onLoadTemplate, defaultLibraryOpen = false }: Props) {
   const { toast } = useToast();
   const [loadingTpl, setLoadingTpl] = useState(false);
   const [skeletons, setSkeletons] = useState<{ id: string; name: string; total_duration_min: number | null; blocks: unknown }[]>([]);
@@ -87,7 +88,8 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
   const [skeletonApplied, setSkeletonApplied] = useState(false);
   const { societyId } = useActiveSociety();
   const [library, setLibrary] = useState<LibraryExercise[]>([]);
-  const [libOpen, setLibOpen] = useState(false);
+  const [libOpen, setLibOpen] = useState(defaultLibraryOpen);
+  const [draggingExercise, setDraggingExercise] = useState<LibraryExercise | null>(null);
 
   useEffect(() => {
     if (!societyId) return;
@@ -526,7 +528,19 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
           </div>
         )}
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={(e) => {
+            const id = String(e.active.id);
+            if (id.startsWith(LIB_DRAG_PREFIX)) {
+              const ex = library.find((x) => x.id === id.slice(LIB_DRAG_PREFIX.length));
+              setDraggingExercise(ex ?? null);
+            }
+          }}
+          onDragCancel={() => setDraggingExercise(null)}
+          onDragEnd={(e) => { handleDragEnd(e); setDraggingExercise(null); }}
+        >
           <div className="flex gap-3 items-start">
             <div className="flex-1 min-w-0">
               {value.blocks.length === 0 ? (
@@ -557,8 +571,16 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
               onAdd={addExerciseAsBlock}
             />
           </div>
+          <DragOverlay>
+            {draggingExercise && (
+              <div className="rounded-md border border-primary bg-card px-3 py-2 text-xs font-semibold shadow-lg">
+                {draggingExercise.name}
+              </div>
+            )}
+          </DragOverlay>
         </DndContext>
       </div>
+
 
       {/* Note + template */}
       <div className="space-y-3">
