@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,9 +137,17 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
       {!expanded && (linkedExercise || block.intensity || block.players_count || block.roles.length > 0) && (
         <div className="px-3 py-2 flex flex-wrap gap-1.5 text-xs border-t border-border">
           {linkedExercise && (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-[10px] gap-0.5 pr-1">
               {linkedExercise.name}
               {linkedExercise.fundamental && <span className="ml-1 opacity-70">· {linkedExercise.fundamental}</span>}
+              <button
+                type="button"
+                onClick={() => onChange({ exercise_id: null })}
+                className="ml-1 text-muted-foreground hover:text-destructive"
+                title="Scollega esercizio"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </Badge>
           )}
           {block.intensity && <Badge variant="outline" className="text-[10px]">Intensità: {block.intensity}</Badge>}

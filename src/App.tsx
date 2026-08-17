@@ -54,6 +54,7 @@ import SocietySettings from "./pages/SocietySettings.tsx";
 // Lazy-loaded heavy routes (bundle splitting)
 const MatchAnalysis = lazy(() => import("./pages/MatchAnalysis.tsx"));
 const Allenamenti = lazy(() => import("./pages/coaching/Allenamenti.tsx"));
+const AllenamentoDetail = lazy(() => import("./pages/coaching/AllenamentoDetail.tsx"));
 const Volume = lazy(() => import("./pages/coaching/Volume.tsx"));
 const GuidaTecnica = lazy(() => import("./pages/coaching/GuidaTecnica.tsx"));
 const Esercizi = lazy(() => import("./pages/coaching/Esercizi.tsx"));
@@ -131,6 +132,7 @@ const App = () => (
                   {/* Coaching */}
                   <Route path="/esercizi" element={<Esercizi />} />
                   <Route path="/allenamenti" element={<Allenamenti />} />
+                  <Route path="/allenamenti/:id" element={<AllenamentoDetail />} />
                   <Route path="/scheletri" element={<Scheletri />} />
                   <Route path="/schemi" element={<Schemi />} />
                   <Route path="/volume" element={<Volume />} />
