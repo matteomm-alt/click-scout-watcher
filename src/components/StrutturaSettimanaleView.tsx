@@ -51,7 +51,7 @@ const FUND_COLORS: Record<string, string> = {
 
 // ── Tipi ─────────────────────────────────────────────────────────────
 interface Blocco { nome: string; fondamentali: string[]; forma: string; minuti: number | ''; }
-interface Seduta { giorno: number | null; blocchi: Blocco[]; }
+interface Seduta { giorno: number | null; orario?: string; palestra?: string; blocchi: Blocco[]; }
 interface Settimana { sedute: Seduta[]; }
 interface StrutturaBlocks {
   nSettimane: number;
@@ -75,6 +75,8 @@ function creaSettimane(nSett: number, nSed: number, existing?: Settimana[]): Set
   return Array.from({ length: nSett }, (_, wi) => ({
     sedute: Array.from({ length: nSed }, (_, si) => ({
       giorno: existing?.[wi]?.sedute?.[si]?.giorno ?? null,
+      orario: existing?.[wi]?.sedute?.[si]?.orario ?? '',
+      palestra: existing?.[wi]?.sedute?.[si]?.palestra ?? '',
       blocchi: existing?.[wi]?.sedute?.[si]?.blocchi ?? [],
     })),
   }));
@@ -231,6 +233,12 @@ export function StrutturaSettimanaleView() {
     setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
       ...sett,
       sedute: sett.sedute.map((sed, s) => s !== si ? sed : { ...sed, giorno: g }),
+    }));
+  };
+  const updateSeduta = (wi: number, si: number, field: 'orario' | 'palestra', val: string) => {
+    setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
+      ...sett,
+      sedute: sett.sedute.map((sed, s) => s !== si ? sed : { ...sed, [field]: val }),
     }));
   };
   const addBlocco = (wi: number, si: number) => {
