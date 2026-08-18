@@ -156,7 +156,11 @@ export function VolleyballCourt({
       : { number: num, name: `#${num}`, role: undefined as undefined, isLibero: false };
   };
 
-  const renderHalf = (team: 'home' | 'away', isLeft = false) => {
+  const renderHalf = (team: 'home' | 'away', isLeft = false, mirrored = false) => {
+    // Quando i lati sono invertiti (swapSides) ogni metà campo viene
+    // specchiata sull'asse x, così la RETE resta sempre il divisore CENTRALE
+    // e la prima linea (zone 2/3/4) di ciascuna squadra guarda verso il centro.
+    const mx = (x: number) => (mirrored ? 100 - x : x);
     const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
     const recFormations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
@@ -183,7 +187,8 @@ export function VolleyballCourt({
         {/* Linee campo */}
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
           {[30, 60].map((p) => {
-            const is3m = (team === 'away' && p === 60) || (team === 'home' && p === 30);
+            const nearNet = (team === 'away' && p === 60) || (team === 'home' && p === 30);
+            const is3m = mirrored ? !nearNet : nearNet;
             return (
               <line key={`v-${team}-${p}`} x1={p} y1="0" x2={p} y2="90"
                 stroke={is3m ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)'}
@@ -192,6 +197,7 @@ export function VolleyballCourt({
                 vectorEffect="non-scaling-stroke" />
             );
           })}
+
           {[30, 60].map((p) => (
             <line key={`h-${team}-${p}`} x1="0" y1={p} x2="90" y2={p} stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           ))}
@@ -207,7 +213,7 @@ export function VolleyballCourt({
               key={`heat-${z.zone}`}
               className="pointer-events-none absolute z-[5] -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{
-                left: `${z.x}%`, top: `${z.y}%`,
+                left: `${mx(z.x)}%`, top: `${z.y}%`,
                 width: '28%', height: '28%',
                 background: `radial-gradient(circle, hsl(0 84% 55% / ${opacity}) 0%, transparent 70%)`,
               }}
@@ -239,7 +245,7 @@ export function VolleyballCourt({
               const rect = e.currentTarget.getBoundingClientRect();
               const xPct = ((e.clientX - rect.left) / rect.width) * 100;
               const yPct = ((e.clientY - rect.top) / rect.height) * 100;
-              const zone = nearestZone(team, { x: xPct, y: yPct });
+              const zone = nearestZone(team, { x: mx(xPct), y: yPct });
               onZoneClick?.(zone, team);
             }}
             aria-label="Tocca un punto del campo per selezionare la zona"
@@ -253,7 +259,7 @@ export function VolleyballCourt({
           return (
             <div
               className="pointer-events-none absolute z-[26] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full bg-primary/80 border-2 border-white shadow-lg"
-              style={{ left: `${z.x}%`, top: `${z.y}%`, width: '36px', height: '36px' }}
+              style={{ left: `${mx(z.x)}%`, top: `${z.y}%`, width: '36px', height: '36px' }}
             >
               <span className="text-white font-black text-sm drop-shadow">{z.zone}</span>
             </div>
@@ -368,7 +374,7 @@ export function VolleyballCourt({
             <div
               key={`${team}-p-${pos}`}
               className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-300 ease-out"
-              style={{ left: `${p.x}%`, top: `${p.y}%` }}
+              style={{ left: `${mx(p.x)}%`, top: `${p.y}%` }}
             >
               <button
                 type="button"
@@ -409,7 +415,7 @@ export function VolleyballCourt({
               const opacity = 0.2 + (i / Math.max(1, arrs.length - 1)) * 0.75;
               const color = arr.evaluation === '#' ? '#16a34a' : arr.evaluation === '=' ? '#dc2626' : '#ca8a04';
               return (
-                <line key={i} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                <line key={i} x1={mx(from.x)} y1={from.y} x2={mx(to.x)} y2={to.y}
                   stroke={color} strokeWidth="0.9" strokeLinecap="round"
                   strokeDasharray="2 1" opacity={opacity}
                   markerEnd={`url(#arrow-live-${team})`}
@@ -448,7 +454,7 @@ export function VolleyballCourt({
               <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                 {side === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
               </span>
-              {renderHalf(side, idx === 0)}
+              {renderHalf(side, idx === 0, swapSides)}
             </div>
             {idx === 0 && (
               <div className="w-1 self-stretch bg-white/70 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" aria-hidden />
