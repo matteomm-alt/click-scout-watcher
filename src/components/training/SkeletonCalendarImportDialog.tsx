@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
 export interface SkeletonBlocco { nome: string; fondamentali: string[]; forma: string; minuti: number | ''; }
-export interface SkeletonSeduta { giorno: number | null; blocchi: SkeletonBlocco[]; }
+export interface SkeletonSeduta { giorno: number | null; orario?: string; palestra?: string; blocchi: SkeletonBlocco[]; }
 export interface SkeletonSettimana { sedute: SkeletonSeduta[]; }
 export interface SkeletonBlocks { nSettimane: number; nSedute: number; settimane: SkeletonSettimana[]; }
 
@@ -93,7 +93,10 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
       (sett?.sedute ?? []).forEach((sed) => {
         if (sed.giorno === null || sed.giorno === undefined) return;
         const d = addDays(cursor, sed.giorno);
-        d.setHours(hh || 0, mm || 0, 0, 0);
+        const [sh, sm] = (sed.orario || '').split(':').map((n) => parseInt(n, 10));
+        const useH = Number.isFinite(sh) ? sh : (hh || 0);
+        const useM = Number.isFinite(sm) ? sm : (mm || 0);
+        d.setHours(useH, useM, 0, 0);
         if (d >= start && d <= finalEnd) out.push({ date: d, weekIndex: i, seduta: sed });
       });
       cursor = addWeeks(cursor, 1);
@@ -117,7 +120,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
         event_type: 'allenamento' as const,
         start_at: o.date.toISOString(),
         end_at: new Date(o.date.getTime() + (duration || 90) * 60000).toISOString(),
-        location: location.trim() || null,
+        location: o.seduta.palestra?.trim() || location.trim() || null,
         description: `Da scheletro: ${skeleton.name}`,
         team_id: skeleton.team_id,
         season: season ?? null,
@@ -228,7 +231,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider">Orario sedute</Label>
+              <Label className="text-xs uppercase tracking-wider">Orario predefinito</Label>
               <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
           </div>
@@ -271,7 +274,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
                 onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider">Luogo</Label>
+              <Label className="text-xs uppercase tracking-wider">Luogo predefinito</Label>
               <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Palestra…" />
             </div>
           </div>
@@ -284,6 +287,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
             {occurrences.slice(0, 5).map((o, i) => (
               <p key={i}>
                 {format(o.date, 'EEE d MMM yyyy HH:mm', { locale: it })}
+                {o.seduta.palestra && <span className="text-muted-foreground"> · {o.seduta.palestra}</span>}
                 <span className="text-muted-foreground"> · settimana tipo {(o.weekIndex % (skeleton?.blocks?.settimane.length || 1)) + 1} · {GIORNI[o.seduta.giorno ?? 0]}</span>
               </p>
             ))}
