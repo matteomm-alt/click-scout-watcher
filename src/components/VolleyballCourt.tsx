@@ -156,7 +156,11 @@ export function VolleyballCourt({
       : { number: num, name: `#${num}`, role: undefined as undefined, isLibero: false };
   };
 
-  const renderHalf = (team: 'home' | 'away', isLeft = false) => {
+  const renderHalf = (team: 'home' | 'away', isLeft = false, mirrored = false) => {
+    // Quando i lati sono invertiti (swapSides) ogni metà campo viene
+    // specchiata sull'asse x, così la RETE resta sempre il divisore CENTRALE
+    // e la prima linea (zone 2/3/4) di ciascuna squadra guarda verso il centro.
+    const mx = (x: number) => (mirrored ? 100 - x : x);
     const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
     const recFormations = team === 'home' ? homeReceptionFormations : awayReceptionFormations;
@@ -183,7 +187,8 @@ export function VolleyballCourt({
         {/* Linee campo */}
         <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 90 90" preserveAspectRatio="none">
           {[30, 60].map((p) => {
-            const is3m = (team === 'away' && p === 60) || (team === 'home' && p === 30);
+            const nearNet = (team === 'away' && p === 60) || (team === 'home' && p === 30);
+            const is3m = mirrored ? !nearNet : nearNet;
             return (
               <line key={`v-${team}-${p}`} x1={p} y1="0" x2={p} y2="90"
                 stroke={is3m ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)'}
@@ -192,6 +197,7 @@ export function VolleyballCourt({
                 vectorEffect="non-scaling-stroke" />
             );
           })}
+
           {[30, 60].map((p) => (
             <line key={`h-${team}-${p}`} x1="0" y1={p} x2="90" y2={p} stroke="rgba(255,255,255,0.45)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
           ))}
