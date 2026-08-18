@@ -384,6 +384,14 @@ export function StrutturaSettimanaleView() {
                     >
                       ➕ Crea allenamento
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setImportSkeleton(s)}
+                      className="min-h-9 px-3 text-xs font-bold bg-secondary text-foreground border border-border rounded-lg hover:border-primary/40 transition-colors"
+                    >
+                      📅 Importa in calendario
+                    </button>
+
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => duplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
