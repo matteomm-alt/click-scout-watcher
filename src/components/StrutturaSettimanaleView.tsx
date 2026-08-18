@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
+import { SkeletonCalendarImportDialog } from '@/components/training/SkeletonCalendarImportDialog';
 
 // ── Costanti ──────────────────────────────────────────────────────────
 const TIPI_STRUTTURA = [
@@ -611,6 +612,16 @@ export function StrutturaSettimanaleView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog importa scheletro nel calendario */}
+      <SkeletonCalendarImportDialog
+        skeleton={importSkeleton}
+        societyId={societyId}
+        userId={user?.id ?? null}
+        season={currentSeason}
+        onOpenChange={(o) => !o && setImportSkeleton(null)}
+        onDone={() => { setImportSkeleton(null); load(); }}
+      />
 
       {/* Alert delete */}
       <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
