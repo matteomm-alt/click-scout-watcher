@@ -63,9 +63,11 @@ interface Struttura {
   name: string;
   description: string | null;
   total_duration_min: number | null;
+  team_id: string | null;
   blocks: StrutturaBlocks;
   created_at: string;
 }
+
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function creaSettimane(nSett: number, nSed: number, existing?: Settimana[]): Settimana[] {
