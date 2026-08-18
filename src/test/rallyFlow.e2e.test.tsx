@@ -4,7 +4,7 @@ import { useMatchStore } from '@/store/matchStore';
 import { suggestNextTouch } from '@/lib/scoutSuggestions';
 import { getInitialPhases, getNextPhases, getPhaseLayout, replayPhases } from '@/lib/tacticalPhases';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
-import type { Player, Lineup } from '@/types/volleyball';
+import type { Player, Lineup, Evaluation } from '@/types/volleyball';
 
 const mkPlayer = (n: number, role: Player['role'], isLib = false): Player => ({
   id: `p${n}`, number: n, lastName: `L${n}`, firstName: 'F', role, isLibero: isLib, isCaptain: false,
@@ -37,7 +37,7 @@ function bootstrap() {
 }
 
 /** Un tocco della sequenza: quello che l'operatore registra nello scout live. */
-type Touch = { team: 'home' | 'away'; playerNumber: number; skill: 'S' | 'R' | 'E' | 'A' | 'B' | 'D' | 'F'; evaluation: string };
+type Touch = { team: 'home' | 'away'; playerNumber: number; skill: 'S' | 'R' | 'E' | 'A' | 'B' | 'D' | 'F'; evaluation: Evaluation };
 
 const RALLY: Touch[] = [
   { team: 'home', playerNumber: 1, skill: 'S', evaluation: '+' }, // battuta non conclusiva
