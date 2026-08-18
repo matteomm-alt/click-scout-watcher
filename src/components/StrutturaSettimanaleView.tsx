@@ -100,6 +100,9 @@ export function StrutturaSettimanaleView() {
 
   // Crea allenamento da scheletro
   const [createFromSkeleton, setCreateFromSkeleton] = useState<Struttura | null>(null);
+  // Importa scheletro nel calendario della squadra
+  const [importSkeleton, setImportSkeleton] = useState<Struttura | null>(null);
+
   const [cfsTeams, setCfsTeams] = useState<{ id: string; name: string }[]>([]);
   const [cfsDate, setCfsDate] = useState(new Date().toISOString().slice(0, 10));
   const [cfsTeamId, setCfsTeamId] = useState<string>('');
