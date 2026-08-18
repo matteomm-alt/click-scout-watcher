@@ -191,6 +191,21 @@ export function LiveScout() {
     return last.team !== team;
   };
 
+  /**
+   * true se il rally è già iniziato: esiste almeno un'azione registrata dopo
+   * l'ultimo cambio di punteggio. Serve a NON pre-selezionare Battuta a metà
+   * scambio quando si tocca un giocatore in zona 1 della squadra al servizio
+   * (difesa/attacco da posto 1), errore rilevato nel flusso precedente.
+   */
+  const rallyInProgress = (): boolean => {
+    const st = useMatchStore.getState().matchState;
+    const acts = st.actions;
+    if (acts.length === 0) return false;
+    const last = acts[acts.length - 1];
+    return `${last.homeScore}-${last.awayScore}` === `${st.homeScore}-${st.awayScore}`
+      && !['#', '=', '/'].includes(last.evaluation);
+  };
+
   const handlePlayerClick = (num: number, team: 'home' | 'away') => {
     if (zoneSelectMode) return;
     setSelectedPlayer({ number: num, team });
@@ -199,15 +214,17 @@ export function LiveScout() {
     // salta direttamente alla valutazione. Altrimenti applica il suggerimento
     // contestuale (R/A/S) quando proviene dalla stessa squadra.
     const zone = computeZoneForPlayer(num, team);
-    if (team === matchState.servingTeam && zone === 1) {
+    const rallyOpen = rallyInProgress();
+    if (lastServeNeedsReception(team)) {
+      // Priorità assoluta: dopo una battuta senza ace/errore, il tocco della
+      // squadra che riceve è sempre una Ricezione.
+      setPendingSkill('R');
+    } else if (team === matchState.servingTeam && zone === 1 && !rallyOpen) {
       setPendingSkill('S');
     } else if (suggestion?.team === team && suggestion.skill && suggestion.skill !== 'S') {
       setPendingSkill(suggestion.skill);
-    } else if (lastServeNeedsReception(team)) {
-      // Rete di sicurezza: l'ultima azione è una battuta senza ace/errore e il
-      // giocatore toccato è della squadra che riceve → Ricezione sempre proposta.
-      setPendingSkill('R');
-    } else if (zone === 1 && !suggestion && matchState.actions.length > 0) {
+    } else if (zone === 1 && !suggestion && !rallyOpen && matchState.actions.length > 0) {
+
       // Fallback: suggestion è null (resettato da autoPoint) ma il giocatore
       // è in zona 1. Controlliamo se questa squadra ha appena fatto punto
       // dall'ultima azione registrata e pre-selezioniamo S di conseguenza.
