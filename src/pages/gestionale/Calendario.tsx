@@ -365,6 +365,19 @@ export default function Calendario() {
     setRefreshKey((v) => v + 1);
   };
 
+  /** Sposta di N giorni le date del form (spostamento singolo evento). */
+  const shiftEventForm = (days: number) => {
+    const shift = (v: string) => {
+      if (!v) return v;
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return v;
+      d.setDate(d.getDate() + days);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    setEventForm((f) => ({ ...f, start_at: shift(f.start_at), end_at: shift(f.end_at) }));
+  };
+
   const isPartOfSeries = (evt: CalendarEvent) =>
     !!evt.recurrence_parent_id || !!evt.recurrence_rule;
 
@@ -675,6 +688,27 @@ export default function Calendario() {
                 className="w-full rounded-md border border-border bg-secondary/40 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
+
+            {editingEvent && (
+              <div className="space-y-2 border border-border rounded-lg p-3 bg-secondary/30">
+                <Label className="text-xs uppercase tracking-wider">Sposta solo questo evento</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {([['-7', '− 1 sett.'], ['-1', '− 1 g'], ['1', '+ 1 g'], ['7', '+ 1 sett.']] as [string, string][]).map(([days, label]) => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => shiftEventForm(Number(days))}
+                      className="px-3 py-1.5 rounded-lg border border-border bg-secondary text-xs font-bold hover:border-primary/40 transition-colors"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Le nuove date vengono applicate al salvataggio (scegli "Solo questo evento" se fa parte di una serie).
+                </p>
+              </div>
+            )}
 
             {(!editingEvent || !isPartOfSeries(editingEvent)) && (
               <div className="space-y-3 border border-border rounded-lg p-3 bg-secondary/30">

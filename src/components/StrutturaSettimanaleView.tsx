@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
+import { SkeletonCalendarImportDialog } from '@/components/training/SkeletonCalendarImportDialog';
 
 // ── Costanti ──────────────────────────────────────────────────────────
 const TIPI_STRUTTURA = [
@@ -63,9 +64,11 @@ interface Struttura {
   name: string;
   description: string | null;
   total_duration_min: number | null;
+  team_id: string | null;
   blocks: StrutturaBlocks;
   created_at: string;
 }
+
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function creaSettimane(nSett: number, nSed: number, existing?: Settimana[]): Settimana[] {
@@ -98,6 +101,9 @@ export function StrutturaSettimanaleView() {
 
   // Crea allenamento da scheletro
   const [createFromSkeleton, setCreateFromSkeleton] = useState<Struttura | null>(null);
+  // Importa scheletro nel calendario della squadra
+  const [importSkeleton, setImportSkeleton] = useState<Struttura | null>(null);
+
   const [cfsTeams, setCfsTeams] = useState<{ id: string; name: string }[]>([]);
   const [cfsDate, setCfsDate] = useState(new Date().toISOString().slice(0, 10));
   const [cfsTeamId, setCfsTeamId] = useState<string>('');
@@ -110,6 +116,8 @@ export function StrutturaSettimanaleView() {
   const [nSettimane, setNSettimane] = useState(1);
   const [nSedute, setNSedute] = useState(3);
   const [settimane, setSettimane] = useState<Settimana[]>(creaSettimane(1, 3));
+  const [teamId, setTeamId] = useState<string>('');
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
 
   const load = async () => {
     if (!societyId) return;
@@ -138,6 +146,12 @@ export function StrutturaSettimanaleView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
 
+  useEffect(() => {
+    if (!societyId) return;
+    supabase.from('teams').select('id,name').eq('society_id', societyId).order('name')
+      .then(({ data }) => setTeams(data ?? []));
+  }, [societyId]);
+
   // Quando cambio nSettimane o nSedute, ricalcolo preservando i dati esistenti
   const changeNSettimane = (n: number) => {
     setNSettimane(n);
@@ -153,6 +167,7 @@ export function StrutturaSettimanaleView() {
     setNome(''); setDesc('');
     setNSettimane(1); setNSedute(3);
     setSettimane(creaSettimane(1, 3));
+    setTeamId('');
     setDialogOpen(true);
   };
 
@@ -163,6 +178,7 @@ export function StrutturaSettimanaleView() {
     setNSettimane(s.blocks.nSettimane || 1);
     setNSedute(s.blocks.nSedute || 3);
     setSettimane(s.blocks.settimane || creaSettimane(s.blocks.nSettimane || 1, s.blocks.nSedute || 3));
+    setTeamId(s.team_id ?? '');
     setDialogOpen(true);
   };
 
@@ -174,6 +190,7 @@ export function StrutturaSettimanaleView() {
       society_id: societyId,
       created_by: user.id,
       blocks: s.blocks as unknown as Json,
+      team_id: s.team_id,
     });
     if (error) { toast.error('Errore duplicazione'); return; }
     toast.success('Struttura duplicata');
@@ -190,6 +207,7 @@ export function StrutturaSettimanaleView() {
       created_by: user.id,
       blocks: blocks as unknown as Json,
       total_duration_min: totalMinuti(blocks) || null,
+      team_id: teamId || null,
     };
     const { error } = editing
       ? await supabase.from('training_skeletons').update(payload).eq('id', editing.id)
@@ -366,6 +384,9 @@ export function StrutturaSettimanaleView() {
                         <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{blocks.nSedute} sed/sett</Badge>
                         {s.total_duration_min && <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{s.total_duration_min} min/sed</Badge>}
                         <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
+                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
+                          {teams.find((t) => t.id === s.team_id)?.name ?? 'Nessuna squadra'}
+                        </Badge>
                       </div>
                       {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
                     </div>
@@ -379,6 +400,14 @@ export function StrutturaSettimanaleView() {
                     >
                       ➕ Crea allenamento
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setImportSkeleton(s)}
+                      className="min-h-9 px-3 text-xs font-bold bg-secondary text-foreground border border-border rounded-lg hover:border-primary/40 transition-colors"
+                    >
+                      📅 Importa in calendario
+                    </button>
+
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => duplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
@@ -471,6 +500,21 @@ export function StrutturaSettimanaleView() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Squadra */}
+            <div>
+              <Label className="mb-2 block">Squadra</Label>
+              <Select value={teamId || '__NONE__'} onValueChange={(v) => setTeamId(v === '__NONE__' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Nessuna squadra" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__">— Nessuna squadra</SelectItem>
+                  {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                L'importazione nel calendario userà il calendario di questa squadra.
+              </p>
             </div>
 
             {/* Sedute per settimana */}
@@ -598,6 +642,16 @@ export function StrutturaSettimanaleView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog importa scheletro nel calendario */}
+      <SkeletonCalendarImportDialog
+        skeleton={importSkeleton}
+        societyId={societyId}
+        userId={user?.id ?? null}
+        season={currentSeason}
+        onOpenChange={(o) => !o && setImportSkeleton(null)}
+        onDone={() => { setImportSkeleton(null); load(); }}
+      />
 
       {/* Alert delete */}
       <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
