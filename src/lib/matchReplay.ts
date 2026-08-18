@@ -22,6 +22,19 @@ export function applyLiberoAutoSwap(
     out[liberoIdx] = benched;
     benched = null;
   }
+  // Regola FIVB: il libero non può MAI stare in prima linea (P2/P3/P4) né in
+  // posizione di battuta (P1). Se ci finisce senza avere un centrale in
+  // panchina da reintegrare (es. formazione iniziale errata), esce comunque e
+  // rientra un giocatore di ruolo dalla panchina (preferibilmente un centrale).
+  const stillIllegal = out.indexOf(liberoNum);
+  if (stillIllegal >= 0 && [0, 1, 2, 3].includes(stillIllegal)) {
+    const onCourt = new Set(out);
+    const bench = team.players.filter(
+      (p) => !onCourt.has(p.number) && !p.isLibero && p.role !== 'L',
+    );
+    const replacement = bench.find((p) => p.role === 'M') ?? bench[0];
+    if (replacement) out[stillIllegal] = replacement.number;
+  }
   if (benched == null) {
     for (const idx of [4, 5]) {
       const num = out[idx];
@@ -34,6 +47,7 @@ export function applyLiberoAutoSwap(
   }
   return { lineup: out, benchedMb: benched };
 }
+
 
 export interface ReplayContext {
   homeTeam: Team;

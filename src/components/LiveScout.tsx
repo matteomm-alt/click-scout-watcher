@@ -77,10 +77,30 @@ export function LiveScout() {
       const detail = (ev as CustomEvent<{ team: 'home' | 'away'; zone: number }>).detail;
       if (!detail) return;
       setPendingServeStartZone(detail);
+      // A inizio rally la squadra al servizio deve solo scegliere il punto di
+      // partenza: il battitore (P1) e il fondamentale Battuta sono automatici.
+      const st = useMatchStore.getState().matchState;
+      const acts = st.actions;
+      const last = acts[acts.length - 1];
+      const rallyOpen = !!last
+        && `${last.homeScore}-${last.awayScore}` === `${st.homeScore}-${st.awayScore}`
+        && !['#', '=', '/'].includes(last.evaluation);
+      if (detail.team === st.servingTeam && !rallyOpen) {
+        const lineup = detail.team === 'home' ? st.homeCurrentLineup : st.awayCurrentLineup;
+        const server = lineup?.[0] ?? null;
+        if (server != null) {
+          setSelectedPlayer({ number: server, team: detail.team });
+          setPendingSkill('S');
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setBottomSheetOpen(true);
+          }
+        }
+      }
     };
     window.addEventListener('scout-serve-start-zone', handler as EventListener);
     return () => window.removeEventListener('scout-serve-start-zone', handler as EventListener);
   }, []);
+
 
   // Primo suggerimento della partita: l'operatore ha già scelto chi serve
   // per primo in MatchConfig.tsx (matchState.servingTeam), ma quella scelta
