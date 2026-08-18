@@ -384,6 +384,9 @@ export function StrutturaSettimanaleView() {
                         <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{blocks.nSedute} sed/sett</Badge>
                         {s.total_duration_min && <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{s.total_duration_min} min/sed</Badge>}
                         <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
+                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
+                          {teams.find((t) => t.id === s.team_id)?.name ?? 'Nessuna squadra'}
+                        </Badge>
                       </div>
                       {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
                     </div>
