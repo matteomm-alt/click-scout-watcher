@@ -116,6 +116,8 @@ export function StrutturaSettimanaleView() {
   const [nSettimane, setNSettimane] = useState(1);
   const [nSedute, setNSedute] = useState(3);
   const [settimane, setSettimane] = useState<Settimana[]>(creaSettimane(1, 3));
+  const [teamId, setTeamId] = useState<string>('');
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
 
   const load = async () => {
     if (!societyId) return;
@@ -144,6 +146,12 @@ export function StrutturaSettimanaleView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [societyId]);
 
+  useEffect(() => {
+    if (!societyId) return;
+    supabase.from('teams').select('id,name').eq('society_id', societyId).order('name')
+      .then(({ data }) => setTeams(data ?? []));
+  }, [societyId]);
+
   // Quando cambio nSettimane o nSedute, ricalcolo preservando i dati esistenti
   const changeNSettimane = (n: number) => {
     setNSettimane(n);
@@ -159,6 +167,7 @@ export function StrutturaSettimanaleView() {
     setNome(''); setDesc('');
     setNSettimane(1); setNSedute(3);
     setSettimane(creaSettimane(1, 3));
+    setTeamId('');
     setDialogOpen(true);
   };
 
@@ -169,6 +178,7 @@ export function StrutturaSettimanaleView() {
     setNSettimane(s.blocks.nSettimane || 1);
     setNSedute(s.blocks.nSedute || 3);
     setSettimane(s.blocks.settimane || creaSettimane(s.blocks.nSettimane || 1, s.blocks.nSedute || 3));
+    setTeamId(s.team_id ?? '');
     setDialogOpen(true);
   };
 
@@ -180,6 +190,7 @@ export function StrutturaSettimanaleView() {
       society_id: societyId,
       created_by: user.id,
       blocks: s.blocks as unknown as Json,
+      team_id: s.team_id,
     });
     if (error) { toast.error('Errore duplicazione'); return; }
     toast.success('Struttura duplicata');
@@ -196,6 +207,7 @@ export function StrutturaSettimanaleView() {
       created_by: user.id,
       blocks: blocks as unknown as Json,
       total_duration_min: totalMinuti(blocks) || null,
+      team_id: teamId || null,
     };
     const { error } = editing
       ? await supabase.from('training_skeletons').update(payload).eq('id', editing.id)
@@ -485,6 +497,21 @@ export function StrutturaSettimanaleView() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Squadra */}
+            <div>
+              <Label className="mb-2 block">Squadra</Label>
+              <Select value={teamId || '__NONE__'} onValueChange={(v) => setTeamId(v === '__NONE__' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Nessuna squadra" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NONE__">— Nessuna squadra</SelectItem>
+                  {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                L'importazione nel calendario userà il calendario di questa squadra.
+              </p>
             </div>
 
             {/* Sedute per settimana */}
