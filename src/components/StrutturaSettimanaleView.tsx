@@ -443,6 +443,11 @@ export function StrutturaSettimanaleView() {
                                   </span>
                                   {totMin > 0 && <span className="text-[10px] text-muted-foreground">{totMin} min</span>}
                                 </div>
+                                {(sed.orario || sed.palestra) && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {[sed.orario, sed.palestra].filter(Boolean).join(' · ')}
+                                  </p>
+                                )}
                                 {sed.blocchi.length === 0 ? (
                                   <p className="text-xs text-muted-foreground italic">Nessun blocco</p>
                                 ) : sed.blocchi.map((b, bi) => (
@@ -560,6 +565,21 @@ export function StrutturaSettimanaleView() {
                             </button>
                           ))}
                         </div>
+                      </div>
+                      {/* Orario e palestra */}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="time"
+                          value={sed.orario ?? ''}
+                          onChange={e => updateSeduta(wi, si, 'orario', e.target.value)}
+                          className="w-28 h-8 text-xs"
+                        />
+                        <Input
+                          value={sed.palestra ?? ''}
+                          onChange={e => updateSeduta(wi, si, 'palestra', e.target.value)}
+                          placeholder="Palestra / luogo…"
+                          className="flex-1 h-8 text-xs"
+                        />
                       </div>
                       {/* Blocchi */}
                       <div className="space-y-1.5">
