@@ -51,7 +51,7 @@ const FUND_COLORS: Record<string, string> = {
 
 // ── Tipi ─────────────────────────────────────────────────────────────
 interface Blocco { nome: string; fondamentali: string[]; forma: string; minuti: number | ''; }
-interface Seduta { giorno: number | null; blocchi: Blocco[]; }
+interface Seduta { giorno: number | null; orario?: string; palestra?: string; blocchi: Blocco[]; }
 interface Settimana { sedute: Seduta[]; }
 interface StrutturaBlocks {
   nSettimane: number;
@@ -75,6 +75,8 @@ function creaSettimane(nSett: number, nSed: number, existing?: Settimana[]): Set
   return Array.from({ length: nSett }, (_, wi) => ({
     sedute: Array.from({ length: nSed }, (_, si) => ({
       giorno: existing?.[wi]?.sedute?.[si]?.giorno ?? null,
+      orario: existing?.[wi]?.sedute?.[si]?.orario ?? '',
+      palestra: existing?.[wi]?.sedute?.[si]?.palestra ?? '',
       blocchi: existing?.[wi]?.sedute?.[si]?.blocchi ?? [],
     })),
   }));
@@ -231,6 +233,12 @@ export function StrutturaSettimanaleView() {
     setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
       ...sett,
       sedute: sett.sedute.map((sed, s) => s !== si ? sed : { ...sed, giorno: g }),
+    }));
+  };
+  const updateSeduta = (wi: number, si: number, field: 'orario' | 'palestra', val: string) => {
+    setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
+      ...sett,
+      sedute: sett.sedute.map((sed, s) => s !== si ? sed : { ...sed, [field]: val }),
     }));
   };
   const addBlocco = (wi: number, si: number) => {
@@ -435,6 +443,11 @@ export function StrutturaSettimanaleView() {
                                   </span>
                                   {totMin > 0 && <span className="text-[10px] text-muted-foreground">{totMin} min</span>}
                                 </div>
+                                {(sed.orario || sed.palestra) && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {[sed.orario, sed.palestra].filter(Boolean).join(' · ')}
+                                  </p>
+                                )}
                                 {sed.blocchi.length === 0 ? (
                                   <p className="text-xs text-muted-foreground italic">Nessun blocco</p>
                                 ) : sed.blocchi.map((b, bi) => (
@@ -552,6 +565,21 @@ export function StrutturaSettimanaleView() {
                             </button>
                           ))}
                         </div>
+                      </div>
+                      {/* Orario e palestra */}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="time"
+                          value={sed.orario ?? ''}
+                          onChange={e => updateSeduta(wi, si, 'orario', e.target.value)}
+                          className="w-28 h-8 text-xs"
+                        />
+                        <Input
+                          value={sed.palestra ?? ''}
+                          onChange={e => updateSeduta(wi, si, 'palestra', e.target.value)}
+                          placeholder="Palestra / luogo…"
+                          className="flex-1 h-8 text-xs"
+                        />
                       </div>
                       {/* Blocchi */}
                       <div className="space-y-1.5">
