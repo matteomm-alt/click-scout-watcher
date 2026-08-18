@@ -18,16 +18,16 @@ describe('suggestNextTouch', () => {
       expect(result).toEqual({ skill: 'S', team: 'home' });
     });
 
-    it('returns null skill and opponent team during an ongoing rally', () => {
+    it('returns A for the opponent team during an ongoing rally', () => {
       const result = suggestNextTouch('A', 'home', '+', false, 'home');
-      expect(result).toEqual({ skill: null, team: 'away' });
+      expect(result).toEqual({ skill: 'A', team: 'away' });
     });
 
-    it('returns null skill and opponent team for any non-terminal evaluation', () => {
+    it('returns A for the opponent team for any non-terminal evaluation', () => {
       const evaluations = ['-', '!', '?', ''];
       evaluations.forEach((evaluation) => {
         const result = suggestNextTouch('A', 'away', evaluation, false, 'home');
-        expect(result).toEqual({ skill: null, team: 'home' });
+        expect(result).toEqual({ skill: 'A', team: 'home' });
       });
     });
   });

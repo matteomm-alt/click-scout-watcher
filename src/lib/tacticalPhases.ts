@@ -83,7 +83,12 @@ export function getNextPhases(
     } else {
       next[team] = 'break_point_defense';
     }
-    next[opp] = 'side_out_defense';
+    // Attacco non conclusivo: l'avversario riceve la palla e riparte in
+    // FASE DI ATTACCO (schieramento offensivo). Con punto/errore il rally
+    // si chiude e le fasi vengono resettate altrove.
+    next[opp] = evaluation === '#' || evaluation === '=' || evaluation === '/'
+      ? 'side_out_defense'
+      : 'side_out_setter_release';
     return next;
   }
 
