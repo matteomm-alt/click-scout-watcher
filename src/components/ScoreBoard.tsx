@@ -38,7 +38,7 @@ function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePo
   );
 }
 
-export function ScoreBoard() {
+export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
   const {
     homeTeam, awayTeam, matchState,
     callTimeout, addSanction, resetMatch, adjustScore, setServingTeam, rotateTeam,
@@ -118,7 +118,7 @@ export function ScoreBoard() {
   const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
 
   return (
-    <div className="glass rounded-lg px-2 py-1 flex items-center gap-2 text-xs">
+    <div className={`glass rounded-lg px-2 py-1 flex items-center gap-2 text-xs ${awayFirst ? 'flex-row-reverse' : ''}`}>
       {/* HOME compact */}
       <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
         <TeamSanctions team="home" />
@@ -144,7 +144,7 @@ export function ScoreBoard() {
       </div>
 
       {/* SETS + SCORE — riga unica compatta */}
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className={`flex items-center gap-1.5 shrink-0 ${awayFirst ? 'flex-row-reverse' : ''}`}>
         <span className="text-base font-bold text-primary tabular-nums">{matchState.homeSetsWon}</span>
         <span className="text-[9px] font-bold text-muted-foreground uppercase">Set</span>
         <span className="text-muted-foreground/40">·</span>

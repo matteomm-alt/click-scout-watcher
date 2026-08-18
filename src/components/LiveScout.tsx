@@ -486,7 +486,7 @@ export function LiveScout() {
 
       {/* HEADER: ScoreBoard */}
       <div className="shrink-0 px-2 pt-2">
-        <ScoreBoard />
+        <ScoreBoard awayFirst={!settings.swapCourtSides} />
       </div>
 
       {/* FOOTER FISSA skill+evaluation (SOLO MOBILE: su desktop il wizard è nel pannello laterale destro,
