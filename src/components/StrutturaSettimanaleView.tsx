@@ -567,19 +567,31 @@ export function StrutturaSettimanaleView() {
                         </div>
                       </div>
                       {/* Orario e palestra */}
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="time"
-                          value={sed.orario ?? ''}
-                          onChange={e => updateSeduta(wi, si, 'orario', e.target.value)}
-                          className="w-28 h-8 text-xs"
-                        />
-                        <Input
-                          value={sed.palestra ?? ''}
-                          onChange={e => updateSeduta(wi, si, 'palestra', e.target.value)}
-                          placeholder="Palestra / luogo…"
-                          className="flex-1 h-8 text-xs"
-                        />
+                      <div className="grid grid-cols-[7rem_1fr] gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] uppercase text-muted-foreground">Orario</Label>
+                          <Input
+                            type="time"
+                            value={sed.orario ?? ''}
+                            onChange={e => updateSeduta(wi, si, 'orario', e.target.value)}
+                            className="h-8 text-xs"
+                          />
+                          {!sed.orario && (
+                            <p className="text-[10px] text-muted-foreground">Es. 18:30</p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] uppercase text-muted-foreground">Palestra / luogo</Label>
+                          <Input
+                            value={sed.palestra ?? ''}
+                            onChange={e => updateSeduta(wi, si, 'palestra', e.target.value)}
+                            placeholder="Es. Palazzetto dello Sport"
+                            className="h-8 text-xs"
+                          />
+                          {!sed.palestra && (
+                            <p className="text-[10px] text-muted-foreground">Dove si svolge la seduta</p>
+                          )}
+                        </div>
                       </div>
                       {/* Blocchi */}
                       <div className="space-y-1.5">
