@@ -340,7 +340,8 @@ export function StrutturaSettimanaleView() {
         if (blkErr) { toast.error(blkErr.message); return; }
       }
 
-      toast.success('Allenamento creato');
+      await queryClient.invalidateQueries({ queryKey: ['trainings'] });
+      toast.success('Allenamento creato e aggiunto in Allenamenti');
       setCreateFromSkeleton(null);
       navigate(`/allenamenti?open=${training.id}`);
     } finally {
