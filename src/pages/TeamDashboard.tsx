@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, ArrowRight } from 'lucide-react';
+import { TeamRosterEditor } from '@/components/teams/TeamRosterEditor';
 
 const STORAGE_KEY = 'team_dashboard_sections_v1';
 
@@ -55,6 +56,7 @@ interface Team {
   category: string | null;
   age_group: string | null;
   season: string | null;
+  society_id?: string | null;
 }
 
 interface Athlete {
@@ -63,6 +65,7 @@ interface Athlete {
   last_name: string | null;
   role: string | null;
   number: number | null;
+  birth_date: string | null;
 }
 
 interface Injury {
@@ -110,6 +113,7 @@ export default function TeamDashboard() {
   const [teamLoading, setTeamLoading] = useState(true);
 
   const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [rosterRefresh, setRosterRefresh] = useState(0);
   const [attendances, setAttendances] = useState<{ status: string | null }[]>([]);
   const [injuries, setInjuries] = useState<Injury[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -132,7 +136,7 @@ export default function TeamDashboard() {
     setTeamLoading(true);
     supabase
       .from('teams')
-      .select('id, name, category, age_group, season')
+      .select('id, name, category, age_group, season, society_id')
       .eq('id', id)
       .maybeSingle()
       .then(({ data }) => {
@@ -154,7 +158,7 @@ export default function TeamDashboard() {
       .eq('team_id', id)
       .order('last_name')
       .then(({ data }) => setAthletes((data as Athlete[]) ?? []));
-  }, [id, flags.roster]);
+  }, [id, flags.roster, rosterRefresh]);
 
   const athleteIds = useMemo(() => athletes.map((a) => a.id), [athletes]);
   const athleteById = useMemo(() => {
@@ -314,31 +318,13 @@ export default function TeamDashboard() {
       )}
 
       {/* Sections */}
-      {flags.roster && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-bold uppercase italic">Rosa atleti</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {athletes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nessun atleta assegnato.</p>
-            ) : (
-              <ul className="divide-y divide-border/60">
-                {athletes.map((a) => (
-                  <li key={a.id} className="flex items-center gap-3 py-2 text-sm">
-                    <span className="w-8 text-center font-black text-primary">
-                      {a.number ?? '—'}
-                    </span>
-                    <span className="flex-1 font-semibold truncate">
-                      {a.last_name} {a.first_name}
-                    </span>
-                    {a.role && <Badge variant="outline">{a.role}</Badge>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+      {flags.roster && id && (
+        <TeamRosterEditor
+          teamId={id}
+          societyId={team?.society_id ?? null}
+          athletes={athletes}
+          onChanged={() => setRosterRefresh((n) => n + 1)}
+        />
       )}
 
       {flags.attendance && (
