@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { format, addDays, addWeeks, addMonths, startOfWeek } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { CalendarPlus } from 'lucide-react';
@@ -52,6 +53,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
   const [duration, setDuration] = useState(90);
   const [location, setLocation] = useState('');
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!skeleton) return;
@@ -194,7 +196,9 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
         if (blkErr) { toast.error(blkErr.message); return; }
       }
 
-      toast.success(`Importati ${occurrences.length} allenamenti nel calendario`);
+      await queryClient.invalidateQueries({ queryKey: ['trainings'] });
+      await queryClient.invalidateQueries({ queryKey: ['events'] });
+      toast.success(`Importati ${occurrences.length} allenamenti nel calendario e nella sezione Allenamenti`);
       onOpenChange(false);
       onDone?.();
     } finally {

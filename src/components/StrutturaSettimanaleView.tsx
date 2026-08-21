@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { LayoutTemplate, Plus, Pencil, Trash2, Copy, ChevronDown, ChevronUp, X, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,7 @@ export function StrutturaSettimanaleView() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [strutture, setStrutture] = useState<Struttura[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -338,7 +340,8 @@ export function StrutturaSettimanaleView() {
         if (blkErr) { toast.error(blkErr.message); return; }
       }
 
-      toast.success('Allenamento creato');
+      await queryClient.invalidateQueries({ queryKey: ['trainings'] });
+      toast.success('Allenamento creato e aggiunto in Allenamenti');
       setCreateFromSkeleton(null);
       navigate(`/allenamenti?open=${training.id}`);
     } finally {

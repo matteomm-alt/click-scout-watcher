@@ -150,6 +150,7 @@ export default function Allenamenti() {
       return trList;
     },
     enabled: !!societyId,
+    refetchOnMount: 'always',
   });
 
   const { data: exercises = [] } = useQuery({
