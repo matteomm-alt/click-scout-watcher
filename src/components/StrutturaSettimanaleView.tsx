@@ -93,6 +93,7 @@ export function StrutturaSettimanaleView() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [strutture, setStrutture] = useState<Struttura[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
