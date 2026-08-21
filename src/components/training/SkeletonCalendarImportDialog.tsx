@@ -53,6 +53,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
   const [duration, setDuration] = useState(90);
   const [location, setLocation] = useState('');
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!skeleton) return;
