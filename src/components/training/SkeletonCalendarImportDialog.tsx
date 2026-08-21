@@ -196,7 +196,9 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
         if (blkErr) { toast.error(blkErr.message); return; }
       }
 
-      toast.success(`Importati ${occurrences.length} allenamenti nel calendario`);
+      await queryClient.invalidateQueries({ queryKey: ['trainings'] });
+      await queryClient.invalidateQueries({ queryKey: ['events'] });
+      toast.success(`Importati ${occurrences.length} allenamenti nel calendario e nella sezione Allenamenti`);
       onOpenChange(false);
       onDone?.();
     } finally {
