@@ -22,6 +22,17 @@ const SORT_LABELS: Record<RosterSort, string> = {
 };
 
 const SORT_KEY = 'team_roster_sort_v1';
+const ROLES_KEY = 'team_roster_roles_v1';
+
+function loadTeamRoles(teamId: string): string[] {
+  try {
+    const raw = localStorage.getItem(`${ROLES_KEY}:${teamId}`);
+    if (!raw) return [...ROSTER_ROLES];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.every((r) => typeof r === 'string') && parsed.length) return parsed;
+  } catch { /* ignore */ }
+  return [...ROSTER_ROLES];
+}
 
 export interface RosterAthlete {
   id: string;
