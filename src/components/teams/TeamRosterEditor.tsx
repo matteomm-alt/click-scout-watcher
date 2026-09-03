@@ -211,6 +211,9 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
               ))}
             </SelectContent>
           </Select>
+          <Button size="sm" variant="outline" onClick={() => setRolesOpen(true)} className="gap-1">
+            <Settings2 className="w-4 h-4" /> Ruoli
+          </Button>
           <Button size="sm" onClick={openNew}>
             <Plus className="w-4 h-4 mr-1" /> Atleta
           </Button>
