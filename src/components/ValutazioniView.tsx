@@ -47,6 +47,7 @@ interface Evaluation {
 export function ValutazioniView() {
   const { user } = useAuth();
   const { societyId, societyName } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const { template, loading: templateLoading, saving: templateSaving, save: saveTemplate, reset: resetTemplate } = useEvalTemplate();
   const [editingTemplate, setEditingTemplate] = useState(false);
   const fondamentaliAttivi = useMemo(() => {

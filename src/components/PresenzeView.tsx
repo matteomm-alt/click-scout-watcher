@@ -36,6 +36,7 @@ const SOGLIA = 70;
 export function PresenzeView() {
   const { user } = useAuth();
   const { societyId, features } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const injuriesEnabled = isFeatureEnabled(features, 'injuries');
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');

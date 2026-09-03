@@ -60,6 +60,7 @@ const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto',
 export default function Obiettivi() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');

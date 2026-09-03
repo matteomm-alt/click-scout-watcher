@@ -73,6 +73,7 @@ const ALL = '__ALL__';
 
 export default function Volume() {
   const { societyId, societyName, seasonStart, seasonEnd, loading: socLoading } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const { toast } = useToast();
 
   const [exercises, setExercises] = useState<Exercise[]>([]);

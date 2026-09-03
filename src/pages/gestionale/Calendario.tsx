@@ -59,6 +59,7 @@ export default function Calendario() {
   const { user } = useAuth();
   const { societyId, societyName, isAdmin, seasonStart, seasonEnd, loading: societyLoading } =
     useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const [view, setView] = useState<ViewMode>('week');
   const [anchor, setAnchor] = useState<Date>(new Date());
   const [selectedEventTypes, setSelectedEventTypes] = useState<EventType[]>([]);

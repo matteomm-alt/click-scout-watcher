@@ -100,6 +100,7 @@ const emptyForm = (): TrainingFormValue => ({
 export default function Allenamenti() {
   const { user } = useAuth();
   const { societyId, societyName, loading: socLoading } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
