@@ -121,14 +121,14 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
         return list.sort((a, b) => year(a) - year(b) || name(a).localeCompare(name(b)));
       case 'ruolo':
         return list.sort((a, b) => {
-          const ia = a.role ? ROSTER_ROLES.indexOf(a.role) : 99;
-          const ib = b.role ? ROSTER_ROLES.indexOf(b.role) : 99;
+          const ia = a.role ? roles.indexOf(a.role) : 99;
+          const ib = b.role ? roles.indexOf(b.role) : 99;
           return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || name(a).localeCompare(name(b));
         });
       default:
         return list.sort((a, b) => name(a).localeCompare(name(b)));
     }
-  }, [athletes, sort]);
+  }, [athletes, sort, roles]);
 
   const openNew = () => { setForm(EMPTY); setOpen(true); };
   const openEdit = (a: RosterAthlete) => {
