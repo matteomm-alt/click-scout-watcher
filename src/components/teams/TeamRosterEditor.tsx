@@ -290,7 +290,7 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
                 <SelectTrigger><SelectValue placeholder="Seleziona ruolo" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nessuno</SelectItem>
-                  {ROSTER_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  {roles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -298,6 +298,47 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Annulla</Button>
             <Button onClick={save} disabled={saving}>{saving ? 'Salvataggio…' : 'Salva'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rolesOpen} onOpenChange={setRolesOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="uppercase italic">Ruoli disponibili</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {roles.map((r) => (
+                <Badge key={r} variant="outline" className="gap-1 pr-1">
+                  {r}
+                  <button
+                    type="button"
+                    onClick={() => removeRole(r)}
+                    className="rounded-sm p-0.5 hover:bg-destructive/20 hover:text-destructive"
+                    title="Rimuovi ruolo"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={newRole}
+                placeholder="Es. Palleggiatrice di riserva"
+                onChange={(e) => setNewRole(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addRole(); } }}
+              />
+              <Button onClick={addRole} className="gap-1"><Plus className="w-4 h-4" /> Aggiungi</Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              I ruoli sono specifici di questa squadra e vengono usati nell'editor rosa e nell'ordinamento per ruolo.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => persistRoles([...ROSTER_ROLES])}>Ripristina default</Button>
+            <Button onClick={() => setRolesOpen(false)}>Chiudi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
