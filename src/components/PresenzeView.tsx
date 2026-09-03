@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason, seasonRange } from '@/hooks/useCurrentSeason';
 import { isFeatureEnabled } from '@/lib/societyFeatures';
 import { toast } from 'sonner';
 

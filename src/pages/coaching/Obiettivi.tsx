@@ -3,6 +3,7 @@ import { Target, Plus, Pencil, Trash2, CheckCircle2, Circle, Clock } from 'lucid
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

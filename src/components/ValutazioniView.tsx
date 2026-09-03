@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason, seasonRange } from '@/hooks/useCurrentSeason';
 import { toast } from 'sonner';
 import { FONDAMENTALI_DEFAULT, getSubAspectLabel } from '@/lib/evalFondamentali';
 import { useEvalTemplate } from '@/hooks/useEvalTemplate';
