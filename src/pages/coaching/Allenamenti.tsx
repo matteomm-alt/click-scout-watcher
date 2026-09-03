@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
@@ -93,12 +94,14 @@ const emptyForm = (): TrainingFormValue => ({
   players_count: 12,
   roles: [],
   participating_athlete_ids: [],
+  season: '',
   blocks: [],
 });
 
 export default function Allenamenti() {
   const { user } = useAuth();
   const { societyId, societyName, loading: socLoading } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

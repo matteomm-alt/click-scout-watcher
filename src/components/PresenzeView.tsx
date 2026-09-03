@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason, seasonRange } from '@/hooks/useCurrentSeason';
 import { isFeatureEnabled } from '@/lib/societyFeatures';
 import { toast } from 'sonner';
 
@@ -35,6 +36,7 @@ const SOGLIA = 70;
 export function PresenzeView() {
   const { user } = useAuth();
   const { societyId, features } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const injuriesEnabled = isFeatureEnabled(features, 'injuries');
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');

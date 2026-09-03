@@ -3,6 +3,7 @@ import { Target, Plus, Pencil, Trash2, CheckCircle2, Circle, Clock } from 'lucid
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +60,7 @@ const emptyForm = { scope: 'team', title: '', description: '', status: 'aperto',
 export default function Obiettivi() {
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');

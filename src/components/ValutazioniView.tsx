@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason, seasonRange } from '@/hooks/useCurrentSeason';
 import { toast } from 'sonner';
 import { FONDAMENTALI_DEFAULT, getSubAspectLabel } from '@/lib/evalFondamentali';
 import { useEvalTemplate } from '@/hooks/useEvalTemplate';
@@ -46,6 +47,7 @@ interface Evaluation {
 export function ValutazioniView() {
   const { user } = useAuth();
   const { societyId, societyName } = useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const { template, loading: templateLoading, saving: templateSaving, save: saveTemplate, reset: resetTemplate } = useEvalTemplate();
   const [editingTemplate, setEditingTemplate] = useState(false);
   const fondamentaliAttivi = useMemo(() => {

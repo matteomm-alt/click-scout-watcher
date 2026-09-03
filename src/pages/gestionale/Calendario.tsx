@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { EVENT_TYPES, type EventType } from '@/lib/eventTypes';
 import { WeekView } from '@/components/calendario/WeekView';
 import { MonthView } from '@/components/calendario/MonthView';
@@ -58,6 +59,7 @@ export default function Calendario() {
   const { user } = useAuth();
   const { societyId, societyName, isAdmin, seasonStart, seasonEnd, loading: societyLoading } =
     useActiveSociety();
+  const { currentSeason } = useCurrentSeason();
   const [view, setView] = useState<ViewMode>('week');
   const [anchor, setAnchor] = useState<Date>(new Date());
   const [selectedEventTypes, setSelectedEventTypes] = useState<EventType[]>([]);
