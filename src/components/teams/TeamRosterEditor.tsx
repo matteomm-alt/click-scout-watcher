@@ -233,7 +233,18 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
                 <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
                   {a.birth_date ? new Date(a.birth_date).getFullYear() : '—'}
                 </span>
-                {a.role && <Badge variant="outline">{a.role}</Badge>}
+                <Select value={a.role || 'none'} onValueChange={(v) => assignRole(a, v)}>
+                  <SelectTrigger className="h-8 w-[150px] text-xs">
+                    <SelectValue placeholder="Ruolo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nessun ruolo</SelectItem>
+                    {roles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    {a.role && !roles.includes(a.role) && (
+                      <SelectItem value={a.role}>{a.role}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
                 <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)} title="Modifica">
                     <Pencil className="w-3.5 h-3.5" />
