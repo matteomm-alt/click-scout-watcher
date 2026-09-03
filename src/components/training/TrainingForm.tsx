@@ -62,6 +62,7 @@ export interface TrainingFormValue {
   players_count: number | null;
   roles: string[];
   participating_athlete_ids: string[];
+  season?: string | null;
   blocks: BlockDraft[];
 }
 

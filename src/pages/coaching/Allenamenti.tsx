@@ -94,6 +94,7 @@ const emptyForm = (): TrainingFormValue => ({
   players_count: 12,
   roles: [],
   participating_athlete_ids: [],
+  season: '',
   blocks: [],
 });
 
