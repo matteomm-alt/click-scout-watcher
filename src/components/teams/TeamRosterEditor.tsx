@@ -69,11 +69,46 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [roles, setRoles] = useState<string[]>(() => loadTeamRoles(teamId));
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const [newRole, setNewRole] = useState('');
+
+  const persistRoles = (next: string[]) => {
+    setRoles(next);
+    try { localStorage.setItem(`${ROLES_KEY}:${teamId}`, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+
+  const addRole = () => {
+    const r = newRole.trim();
+    if (!r) return;
+    if (roles.some((x) => x.toLowerCase() === r.toLowerCase())) {
+      toast.error('Ruolo già presente');
+      return;
+    }
+    persistRoles([...roles, r]);
+    setNewRole('');
+  };
+
+  const removeRole = (r: string) => {
+    if (roles.length <= 1) { toast.error('Deve restare almeno un ruolo'); return; }
+    persistRoles(roles.filter((x) => x !== r));
+  };
+
+  const assignRole = async (a: RosterAthlete, value: string) => {
+    const role = value === 'none' ? null : value;
+    const { error } = await supabase
+      .from('athletes')
+      .update({ role, is_libero: role === 'Libero' })
+      .eq('id', a.id);
+    if (error) toast.error('Errore', { description: error.message });
+    else { toast.success('Ruolo aggiornato'); onChanged(); }
+  };
 
   const changeSort = (v: RosterSort) => {
     setSort(v);
     try { localStorage.setItem(SORT_KEY, v); } catch { /* ignore */ }
   };
+
 
   const sorted = useMemo(() => {
     const list = [...athletes];
