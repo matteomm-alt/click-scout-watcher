@@ -225,7 +225,7 @@ export default function Allenamenti() {
   }, [trainings, tab, fTeam, fStatus, search]);
 
   // ── Apertura dialog (nuovo / modifica / duplica) ─────────────────────────
-  const openNew = () => { setForm(emptyForm()); setDlgOpen(true); };
+  const openNew = () => { setForm({ ...emptyForm(), season: currentSeason }); setDlgOpen(true); };
 
   const loadTrainingIntoForm = async (id: string, asNew: boolean): Promise<TrainingFormValue | null> => {
     const tr = trainings.find((t) => t.id === id);
@@ -267,6 +267,7 @@ export default function Allenamenti() {
       players_count: tr.players_count,
       roles: tr.roles || [],
       participating_athlete_ids: tr.participating_athlete_ids || [],
+      season: tr.season || currentSeason,
       blocks,
     };
   };
