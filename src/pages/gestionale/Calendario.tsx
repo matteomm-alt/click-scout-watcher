@@ -306,6 +306,7 @@ export default function Calendario() {
               location: payload.location,
               description: payload.description,
               team_id: payload.team_id,
+              season: currentSeason,
               recurrence_parent_id: editingEvent.id,
             })),
           );
@@ -352,6 +353,7 @@ export default function Calendario() {
             location: payload.location,
             description: payload.description,
             team_id: payload.team_id,
+            season: currentSeason,
             recurrence_parent_id: parentEvent.id,
           })),
         );
