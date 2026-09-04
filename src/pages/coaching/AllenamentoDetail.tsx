@@ -13,6 +13,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
 import type { BlockDraft } from '@/components/training/SortableBlockItem';
+import {
+  TrainingDetailCard,
+  type TrainingDetailValue,
+  type ObjectiveLite,
+  type PhaseLite,
+  type SchemeLite,
+  type SkeletonLite,
+} from '@/components/training/TrainingDetailCard';
 
 interface ExerciseLite {
   id: string; name: string; fundamental: string | null; tags: string[]; duration_min: number | null;
@@ -36,18 +44,26 @@ export default function AllenamentoDetail() {
   const [teams, setTeams] = useState<TeamLite[]>([]);
   const [athletes, setAthletes] = useState<AthleteLite[]>([]);
   const [season, setSeason] = useState<string | null>(null);
+  const [detail, setDetail] = useState<TrainingDetailValue>({ objective_id: null, phase_id: null, scheme_ids: [] });
+  const [objectives, setObjectives] = useState<ObjectiveLite[]>([]);
+  const [phases, setPhases] = useState<PhaseLite[]>([]);
+  const [schemes, setSchemes] = useState<SchemeLite[]>([]);
+  const [skeleton, setSkeleton] = useState<SkeletonLite | null>(null);
 
   useEffect(() => {
     if (!id || !societyId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [trRes, blRes, exRes, teamRes, athRes] = await Promise.all([
+      const [trRes, blRes, exRes, teamRes, athRes, objRes, planRes, schRes] = await Promise.all([
         supabase.from('trainings').select('*').eq('id', id).single(),
         supabase.from('training_blocks').select('*').eq('training_id', id).order('order_index'),
         supabase.from('exercises').select('id,name,fundamental,tags,duration_min').eq('society_id', societyId).order('name'),
         supabase.from('teams').select('id,name').eq('society_id', societyId).order('name'),
         supabase.from('athletes').select('id,first_name,last_name,number,team_id').eq('society_id', societyId).order('last_name'),
+        supabase.from('objectives').select('id,title,status,phase_id').eq('society_id', societyId).order('created_at', { ascending: false }),
+        supabase.from('season_plans').select('id,name,season_phases(id,name,start_date,end_date,order_index)').eq('society_id', societyId),
+        supabase.from('training_schemes').select('id,name,fundamental').eq('society_id', societyId).order('name'),
       ]);
       if (cancelled) return;
       if (trRes.error || !trRes.data) { setNotFound(true); setLoading(false); return; }
@@ -84,6 +100,27 @@ export default function AllenamentoDetail() {
       setExercises((exRes.data ?? []) as ExerciseLite[]);
       setTeams((teamRes.data ?? []) as TeamLite[]);
       setAthletes((athRes.data ?? []) as AthleteLite[]);
+
+      setDetail({
+        objective_id: tr.objective_id ?? null,
+        phase_id: tr.phase_id ?? null,
+        scheme_ids: tr.scheme_ids ?? [],
+      });
+      setObjectives((objRes.data ?? []) as ObjectiveLite[]);
+      setSchemes((schRes.data ?? []) as SchemeLite[]);
+      const flatPhases: PhaseLite[] = (planRes.data ?? []).flatMap((p) =>
+        ((p.season_phases ?? []) as { id: string; name: string; start_date: string | null; end_date: string | null; order_index: number }[])
+          .sort((a, b) => a.order_index - b.order_index)
+          .map((ph) => ({
+            id: ph.id, name: ph.name, start_date: ph.start_date, end_date: ph.end_date, plan_name: p.name,
+          }))
+      );
+      setPhases(flatPhases);
+
+      if (tr.skeleton_id) {
+        const { data: sk } = await supabase.from('training_skeletons').select('id,name').eq('id', tr.skeleton_id).maybeSingle();
+        if (!cancelled && sk) setSkeleton(sk as SkeletonLite);
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
