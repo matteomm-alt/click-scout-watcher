@@ -76,17 +76,18 @@ export default function Obiettivi() {
     if (!societyId) return;
     setLoading(true);
     const [objRes, phRes] = await Promise.all([
-      supabase.from('objectives').select('*').eq('society_id', societyId).order('created_at', { ascending: false }),
-      supabase.from('season_phases').select('id, name, season_plans!inner(name, society_id)').eq('season_plans.society_id', societyId).order('name'),
+      supabase.from('objectives').select('*, season_phases!left(season_plans!inner(season))').eq('society_id', societyId).order('created_at', { ascending: false }),
+      supabase.from('season_phases').select('id, name, season_plans!inner(name, society_id, season)').eq('season_plans.society_id', societyId).eq('season_plans.season', currentSeason).order('name'),
     ]);
-    setObjectives((objRes.data as Objective[]) ?? []);
+    const currentPhaseIds = new Set(((phRes.data ?? []) as Array<{ id: string }>).map((p) => p.id));
+    setObjectives(((objRes.data as Objective[]) ?? []).filter((o) => !o.phase_id || currentPhaseIds.has(o.phase_id)));
     setPhases(((phRes.data ?? []) as Array<{ id: string; name: string; season_plans?: { name?: string } | null }>).map((p) => ({
       id: p.id, name: p.name, plan_name: p.season_plans?.name ?? '',
     })));
     setLoading(false);
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); }, [societyId]);
+  useEffect(() => { load(); }, [societyId, currentSeason]);
 
   const openCreate = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (o: Objective) => {

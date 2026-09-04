@@ -60,8 +60,11 @@ export function PresenzeView() {
   useEffect(() => {
     if (!societyId) return;
     (async () => {
+      const { from, to } = seasonRange(currentSeason);
       const { data } = await supabase.from('events').select('id, title, start_at, event_type')
-        .eq('society_id', societyId).order('start_at', { ascending: false }).limit(50);
+        .eq('society_id', societyId)
+        .gte('start_at', from).lte('start_at', to)
+        .order('start_at', { ascending: false }).limit(50);
       const list = ((data ?? []) as unknown as Event[]);
       setEvents(list);
       if (trainingParam) {
@@ -79,7 +82,7 @@ export function PresenzeView() {
         setSelectedEventId(list[0].id);
       }
     })();
-  }, [societyId, trainingParam]);
+  }, [societyId, trainingParam, currentSeason]);
 
   useEffect(() => {
     if (!societyId) return;
