@@ -48,6 +48,7 @@ interface TrainingRow {
   players_count: number | null;
   roles: string[];
   participating_athlete_ids: string[];
+  season: string | null;
   created_by: string;
   // Aggregati derivati
   blockCount?: number;
@@ -120,11 +121,12 @@ export default function Allenamenti() {
 
   // ── Queries ─────────────────────────────────────────────────────────────
   const { data: trainings = [], isLoading: loading } = useQuery({
-    queryKey: queryKeys.trainings.all(societyId ?? ''),
+    queryKey: [...queryKeys.trainings.all(societyId ?? ''), currentSeason],
     queryFn: async () => {
       const trRes = await supabase
         .from('trainings').select('*')
         .eq('society_id', societyId!)
+        .eq('season', currentSeason)
         .order('scheduled_date', { ascending: false, nullsFirst: false })
         .limit(500);
       if (trRes.error) { handleSupabaseError(trRes.error, 'caricamento allenamenti'); return []; }
@@ -224,7 +226,7 @@ export default function Allenamenti() {
   }, [trainings, tab, fTeam, fStatus, search]);
 
   // ── Apertura dialog (nuovo / modifica / duplica) ─────────────────────────
-  const openNew = () => { setForm(emptyForm()); setDlgOpen(true); };
+  const openNew = () => { setForm({ ...emptyForm(), season: currentSeason }); setDlgOpen(true); };
 
   const loadTrainingIntoForm = async (id: string, asNew: boolean): Promise<TrainingFormValue | null> => {
     const tr = trainings.find((t) => t.id === id);
@@ -266,6 +268,7 @@ export default function Allenamenti() {
       players_count: tr.players_count,
       roles: tr.roles || [],
       participating_athlete_ids: tr.participating_athlete_ids || [],
+      season: tr.season || currentSeason,
       blocks,
     };
   };
@@ -340,6 +343,9 @@ export default function Allenamenti() {
       });
       if (error) throw error;
       const trainingId = resultId as string;
+
+      // Aggiorna sempre la stagione (la RPC non la gestisce)
+      await supabase.from('trainings').update({ season: form.season || currentSeason }).eq('id', trainingId);
 
       // Sincronizza con il calendario solo se c'è una data
       if (form.scheduled_date) {

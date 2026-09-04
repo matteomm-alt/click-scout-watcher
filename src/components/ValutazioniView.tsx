@@ -89,13 +89,15 @@ export function ValutazioniView() {
     if (!selectedAthleteId) return;
     setLoading(true);
     (async () => {
+      const { from, to } = seasonRange(currentSeason);
       const { data } = await supabase.from('athlete_evaluations')
         .select('*').eq('athlete_id', selectedAthleteId)
+        .gte('evaluated_at', from).lte('evaluated_at', to)
         .order('evaluated_at', { ascending: false });
       setEvaluations(((data ?? []) as unknown as typeof evaluations));
       setLoading(false);
     })();
-  }, [selectedAthleteId]);
+  }, [selectedAthleteId, currentSeason]);
 
   // Ultima per (fundamental, phase)
   const lastByFundPhase = useMemo(() => {
