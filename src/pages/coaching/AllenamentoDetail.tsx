@@ -13,6 +13,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
 import type { BlockDraft } from '@/components/training/SortableBlockItem';
+import {
+  TrainingDetailCard,
+  type TrainingDetailValue,
+  type ObjectiveLite,
+  type PhaseLite,
+  type SchemeLite,
+  type SkeletonLite,
+} from '@/components/training/TrainingDetailCard';
 
 interface ExerciseLite {
   id: string; name: string; fundamental: string | null; tags: string[]; duration_min: number | null;
