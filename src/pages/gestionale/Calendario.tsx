@@ -147,6 +147,7 @@ export default function Calendario() {
         .from('events')
         .select('*')
         .eq('society_id', societyId)
+        .eq('season', currentSeason)
         .gte('start_at', range.start.toISOString())
         .lte('start_at', range.end.toISOString())
         .order('start_at', { ascending: true });
@@ -191,7 +192,7 @@ export default function Calendario() {
     return () => {
       cancelled = true;
     };
-  }, [societyId, user, range.start, range.end, isAdmin, selectedEventTypes, teamFilter, refreshKey, newEventOpen]);
+  }, [societyId, user, range.start, range.end, isAdmin, selectedEventTypes, teamFilter, refreshKey, newEventOpen, currentSeason]);
 
   const importExcelRows = async (rows: ExcelEventPreview[]) => {
     if (!societyId || !user) return;
@@ -203,6 +204,7 @@ export default function Calendario() {
         event_type: row.event_type,
         title: row.title,
         location: row.location,
+        season: currentSeason,
       })),
     );
     if (error) {
@@ -264,6 +266,7 @@ export default function Calendario() {
       location: eventForm.location.trim() || null,
       description: eventForm.description.trim() || null,
       team_id: eventForm.team_id || null,
+      season: currentSeason,
     };
 
     if (editingEvent) {
