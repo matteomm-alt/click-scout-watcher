@@ -120,11 +120,12 @@ export default function Allenamenti() {
 
   // ── Queries ─────────────────────────────────────────────────────────────
   const { data: trainings = [], isLoading: loading } = useQuery({
-    queryKey: queryKeys.trainings.all(societyId ?? ''),
+    queryKey: [...queryKeys.trainings.all(societyId ?? ''), currentSeason],
     queryFn: async () => {
       const trRes = await supabase
         .from('trainings').select('*')
         .eq('society_id', societyId!)
+        .eq('season', currentSeason)
         .order('scheduled_date', { ascending: false, nullsFirst: false })
         .limit(500);
       if (trRes.error) { handleSupabaseError(trRes.error, 'caricamento allenamenti'); return []; }
@@ -340,6 +341,9 @@ export default function Allenamenti() {
       });
       if (error) throw error;
       const trainingId = resultId as string;
+
+      // Aggiorna sempre la stagione (la RPC non la gestisce)
+      await supabase.from('trainings').update({ season: form.season || currentSeason }).eq('id', trainingId);
 
       // Sincronizza con il calendario solo se c'è una data
       if (form.scheduled_date) {
