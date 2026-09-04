@@ -1984,10 +1984,13 @@ export type Database = {
           id: string
           is_template: boolean
           notes: string | null
+          objective_id: string | null
           participating_athlete_ids: string[]
+          phase_id: string | null
           players_count: number | null
           roles: string[]
           scheduled_date: string | null
+          scheme_ids: string[]
           season: string | null
           skeleton_id: string | null
           society_id: string
@@ -2006,10 +2009,13 @@ export type Database = {
           id?: string
           is_template?: boolean
           notes?: string | null
+          objective_id?: string | null
           participating_athlete_ids?: string[]
+          phase_id?: string | null
           players_count?: number | null
           roles?: string[]
           scheduled_date?: string | null
+          scheme_ids?: string[]
           season?: string | null
           skeleton_id?: string | null
           society_id: string
@@ -2028,10 +2034,13 @@ export type Database = {
           id?: string
           is_template?: boolean
           notes?: string | null
+          objective_id?: string | null
           participating_athlete_ids?: string[]
+          phase_id?: string | null
           players_count?: number | null
           roles?: string[]
           scheduled_date?: string | null
+          scheme_ids?: string[]
           season?: string | null
           skeleton_id?: string | null
           society_id?: string
@@ -2047,6 +2056,20 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainings_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "objectives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainings_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "season_phases"
             referencedColumns: ["id"]
           },
           {
