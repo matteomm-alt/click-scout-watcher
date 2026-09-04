@@ -100,6 +100,7 @@ export default function Volume() {
         .from('trainings')
         .select('id, scheduled_date, duration_min, title, status, is_template')
         .eq('society_id', societyId)
+        .eq('season', currentSeason)
         .eq('is_template', false)
         .eq('status', 'completato')
         .order('scheduled_date', { ascending: false })
@@ -127,7 +128,7 @@ export default function Volume() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); }, [societyId]);
+  useEffect(() => { load(); }, [societyId, currentSeason]);
 
   const exerciseMap = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
 
