@@ -100,6 +100,27 @@ export default function AllenamentoDetail() {
       setExercises((exRes.data ?? []) as ExerciseLite[]);
       setTeams((teamRes.data ?? []) as TeamLite[]);
       setAthletes((athRes.data ?? []) as AthleteLite[]);
+
+      setDetail({
+        objective_id: tr.objective_id ?? null,
+        phase_id: tr.phase_id ?? null,
+        scheme_ids: tr.scheme_ids ?? [],
+      });
+      setObjectives((objRes.data ?? []) as ObjectiveLite[]);
+      setSchemes((schRes.data ?? []) as SchemeLite[]);
+      const flatPhases: PhaseLite[] = (planRes.data ?? []).flatMap((p) =>
+        ((p.season_phases ?? []) as { id: string; name: string; start_date: string | null; end_date: string | null; order_index: number }[])
+          .sort((a, b) => a.order_index - b.order_index)
+          .map((ph) => ({
+            id: ph.id, name: ph.name, start_date: ph.start_date, end_date: ph.end_date, plan_name: p.name,
+          }))
+      );
+      setPhases(flatPhases);
+
+      if (tr.skeleton_id) {
+        const { data: sk } = await supabase.from('training_skeletons').select('id,name').eq('id', tr.skeleton_id).maybeSingle();
+        if (!cancelled && sk) setSkeleton(sk as SkeletonLite);
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
