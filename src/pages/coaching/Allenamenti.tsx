@@ -48,6 +48,7 @@ interface TrainingRow {
   players_count: number | null;
   roles: string[];
   participating_athlete_ids: string[];
+  season: string | null;
   created_by: string;
   // Aggregati derivati
   blockCount?: number;
