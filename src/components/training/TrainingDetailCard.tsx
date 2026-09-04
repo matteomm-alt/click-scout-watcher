@@ -104,7 +104,7 @@ export function TrainingDetailCard({ value, onChange, objectives, phases, scheme
             </SelectContent>
           </Select>
           <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
-            <Link to="/programmazione-stagionale">Programmazione stagionale</Link>
+            <Link to="/programmazione">Programmazione stagionale</Link>
           </Button>
         </div>
       </div>
