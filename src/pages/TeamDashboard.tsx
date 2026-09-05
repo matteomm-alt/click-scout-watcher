@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, ArrowRight } from 'lucide-react';
 import { TeamRosterEditor } from '@/components/teams/TeamRosterEditor';
+import { TeamDetailCard } from '@/components/teams/TeamDetailCard';
+
 
 const STORAGE_KEY = 'team_dashboard_sections_v1';
 
@@ -145,20 +147,17 @@ export default function TeamDashboard() {
       });
   }, [id]);
 
-  // Roster (needed for other sections too)
+  // Roster (needed for the detail card and other sections)
   useEffect(() => {
-    if (!id || !flags.roster) {
-      // ensure athletes stays empty if roster off (dependent sections still need it — but user asked flag off means no fetch)
-      if (!flags.roster) setAthletes([]);
-      return;
-    }
+    if (!id) return;
     supabase
       .from('athletes')
       .select('*')
       .eq('team_id', id)
       .order('last_name')
       .then(({ data }) => setAthletes((data as Athlete[]) ?? []));
-  }, [id, flags.roster, rosterRefresh]);
+  }, [id, rosterRefresh]);
+
 
   const athleteIds = useMemo(() => athletes.map((a) => a.id), [athletes]);
   const athleteById = useMemo(() => {
@@ -190,7 +189,7 @@ export default function TeamDashboard() {
 
   // Trainings
   useEffect(() => {
-    if (!id || !flags.trainings) return;
+    if (!id) return;
     supabase
       .from('trainings')
       .select('id, title, scheduled_date, status')
@@ -198,7 +197,8 @@ export default function TeamDashboard() {
       .order('scheduled_date', { ascending: false })
       .limit(10)
       .then(({ data }) => setTrainings((data as Training[]) ?? []));
-  }, [id, flags.trainings]);
+  }, [id]);
+
 
   // Evaluations
   useEffect(() => {
@@ -308,6 +308,16 @@ export default function TeamDashboard() {
           </PopoverContent>
         </Popover>
       </div>
+
+      {team && (
+        <TeamDetailCard
+          team={team}
+          athletes={athletes}
+          trainings={trainings}
+          onSaved={(t) => setTeam((prev) => (prev ? { ...prev, ...t } : prev))}
+        />
+      )}
+
 
       {allOff && (
         <Card>
