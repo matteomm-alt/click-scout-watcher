@@ -167,6 +167,14 @@ export default function AllenamentoDetail() {
       });
       if (error) throw error;
 
+      const { error: detErr } = await supabase.from('trainings').update({
+        objective_id: detail.objective_id,
+        phase_id: detail.phase_id,
+        scheme_ids: detail.scheme_ids,
+      }).eq('id', id);
+      if (detErr) throw detErr;
+
+
       // Sincronizzazione con il calendario
       if (form.scheduled_date) {
         const startAt = `${form.scheduled_date}T09:00:00`;
@@ -265,6 +273,15 @@ export default function AllenamentoDetail() {
           Salva modifiche
         </Button>
       </div>
+
+      <TrainingDetailCard
+        value={detail}
+        onChange={setDetail}
+        objectives={objectives}
+        phases={phases}
+        schemes={schemes}
+        skeleton={skeleton}
+      />
 
       <TrainingForm
         value={form}
