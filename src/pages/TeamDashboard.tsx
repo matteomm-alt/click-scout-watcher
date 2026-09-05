@@ -145,20 +145,17 @@ export default function TeamDashboard() {
       });
   }, [id]);
 
-  // Roster (needed for other sections too)
+  // Roster (needed for the detail card and other sections)
   useEffect(() => {
-    if (!id || !flags.roster) {
-      // ensure athletes stays empty if roster off (dependent sections still need it — but user asked flag off means no fetch)
-      if (!flags.roster) setAthletes([]);
-      return;
-    }
+    if (!id) return;
     supabase
       .from('athletes')
       .select('*')
       .eq('team_id', id)
       .order('last_name')
       .then(({ data }) => setAthletes((data as Athlete[]) ?? []));
-  }, [id, flags.roster, rosterRefresh]);
+  }, [id, rosterRefresh]);
+
 
   const athleteIds = useMemo(() => athletes.map((a) => a.id), [athletes]);
   const athleteById = useMemo(() => {
