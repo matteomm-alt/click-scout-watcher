@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, ArrowRight } from 'lucide-react';
 import { TeamRosterEditor } from '@/components/teams/TeamRosterEditor';
+import { TeamDetailCard } from '@/components/teams/TeamDetailCard';
+
 
 const STORAGE_KEY = 'team_dashboard_sections_v1';
 
