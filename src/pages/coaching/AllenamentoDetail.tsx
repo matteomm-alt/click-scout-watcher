@@ -274,6 +274,15 @@ export default function AllenamentoDetail() {
         </Button>
       </div>
 
+      <TrainingDetailCard
+        value={detail}
+        onChange={setDetail}
+        objectives={objectives}
+        phases={phases}
+        schemes={schemes}
+        skeleton={skeleton}
+      />
+
       <TrainingForm
         value={form}
         onChange={setForm}
