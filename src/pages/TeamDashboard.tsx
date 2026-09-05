@@ -187,7 +187,7 @@ export default function TeamDashboard() {
 
   // Trainings
   useEffect(() => {
-    if (!id || !flags.trainings) return;
+    if (!id) return;
     supabase
       .from('trainings')
       .select('id, title, scheduled_date, status')
@@ -195,7 +195,8 @@ export default function TeamDashboard() {
       .order('scheduled_date', { ascending: false })
       .limit(10)
       .then(({ data }) => setTrainings((data as Training[]) ?? []));
-  }, [id, flags.trainings]);
+  }, [id]);
+
 
   // Evaluations
   useEffect(() => {
