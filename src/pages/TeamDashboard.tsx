@@ -307,6 +307,16 @@ export default function TeamDashboard() {
         </Popover>
       </div>
 
+      {team && (
+        <TeamDetailCard
+          team={team}
+          athletes={athletes}
+          trainings={trainings}
+          onSaved={(t) => setTeam((prev) => (prev ? { ...prev, ...t } : prev))}
+        />
+      )}
+
+
       {allOff && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
