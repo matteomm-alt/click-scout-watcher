@@ -730,9 +730,24 @@ export default function ProgrammazioneStagionale() {
               {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.name} · {p.season}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button size="sm" variant="outline" onClick={() => setShowCreatePlan(true)}>
+          <Button
+            size="icon" variant="ghost" className="h-9 w-9"
+            aria-label="Modifica piano" disabled={!planId} onClick={openEditPlan}
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon" variant="ghost"
+            className="h-9 w-9 text-muted-foreground hover:text-destructive"
+            aria-label="Elimina piano" disabled={!planId}
+            onClick={() => setDeletingPlanId(planId)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={openCreatePlan}>
             <Plus className="w-3 h-3 mr-1" /> Nuovo piano
           </Button>
+
           <Button variant="outline" onClick={() => setPrintOpen(true)}>
             <Printer className="w-4 h-4 mr-2" /> Stampa / PDF
           </Button>
