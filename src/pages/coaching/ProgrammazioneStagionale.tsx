@@ -991,11 +991,12 @@ export default function ProgrammazioneStagionale() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showCreatePlan} onOpenChange={setShowCreatePlan}>
+      <Dialog open={showCreatePlan} onOpenChange={(o) => { setShowCreatePlan(o); if (!o) setEditingPlanId(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuovo piano stagionale</DialogTitle>
+            <DialogTitle>{editingPlanId ? 'Modifica piano stagionale' : 'Nuovo piano stagionale'}</DialogTitle>
           </DialogHeader>
+
           <div className="flex flex-col gap-4 py-2">
             <div>
               <Label>Nome piano *</Label>
