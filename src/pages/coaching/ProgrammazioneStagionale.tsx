@@ -390,6 +390,24 @@ export default function ProgrammazioneStagionale() {
 
   useEffect(() => { loadPlans(); }, [loadPlans]);
 
+  const openCreatePlan = () => {
+    setEditingPlanId(null);
+    setNewPlanName(''); setNewPlanSeason('');
+    setNewPlanStart(''); setNewPlanEnd('');
+    setShowCreatePlan(true);
+  };
+
+  const openEditPlan = () => {
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    setEditingPlanId(plan.id);
+    setNewPlanName(plan.name ?? '');
+    setNewPlanSeason(plan.season ?? '');
+    setNewPlanStart(plan.start_date ?? '');
+    setNewPlanEnd(plan.end_date ?? '');
+    setShowCreatePlan(true);
+  };
+
   const handleCreatePlan = async () => {
     if (!newPlanName.trim() || !newPlanSeason.trim()) {
       toast.error('Nome e stagione obbligatori');
@@ -400,6 +418,26 @@ export default function ProgrammazioneStagionale() {
       return;
     }
     setCreatingPlan(true);
+
+    if (editingPlanId) {
+      const { error } = await supabase
+        .from('season_plans')
+        .update({
+          name: newPlanName.trim(),
+          season: newPlanSeason.trim(),
+          start_date: newPlanStart || null,
+          end_date: newPlanEnd || null,
+        })
+        .eq('id', editingPlanId);
+      setCreatingPlan(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success('Piano aggiornato');
+      setShowCreatePlan(false);
+      setEditingPlanId(null);
+      await loadPlans();
+      return;
+    }
+
     const { data, error } = await supabase
       .from('season_plans')
       .insert({
@@ -421,6 +459,19 @@ export default function ProgrammazioneStagionale() {
     await loadPlans();
     setPlanId(data.id);
   };
+
+  const handleDeletePlan = async () => {
+    if (!deletingPlanId) return;
+    await supabase.from('season_phases').delete().eq('plan_id', deletingPlanId);
+    const { error } = await supabase.from('season_plans').delete().eq('id', deletingPlanId);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Piano eliminato');
+    setDeletingPlanId(null);
+    setPlanId(null);
+    setSelectedPhaseId(null);
+    await loadPlans();
+  };
+
 
   /* Load phases */
   const loadPhases = useCallback(async (pid: string) => {
