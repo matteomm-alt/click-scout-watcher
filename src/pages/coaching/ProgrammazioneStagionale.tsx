@@ -760,7 +760,7 @@ export default function ProgrammazioneStagionale() {
             <p className="text-muted-foreground text-sm">
               Nessun piano stagionale ancora.
             </p>
-            <Button onClick={() => setShowCreatePlan(true)}>
+            <Button onClick={openCreatePlan}>
               <Plus className="w-4 h-4 mr-2" /> Crea piano stagionale
             </Button>
           </div>
