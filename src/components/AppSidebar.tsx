@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink } from '@/components/NavLink';
 import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from '@/hooks/useTheme';
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +28,7 @@ import {
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, LayoutGrid, BookOpen,
   PieChart, UserCircle, Star, HeartPulse,
   LogOut, Shield, Boxes, Settings, HelpCircle, Bell, Zap,
+  Sun, Moon,
 } from 'lucide-react';
 
 const SCOUT_MODE_KEY = 'sidebar_scout_mode';
@@ -96,6 +98,7 @@ export function AppSidebar() {
   const { societyId, societyName, features, isAdmin } = useActiveSociety();
   const counts = useNotifications(societyId, user?.id ?? null);
   const [bellOpen, setBellOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   useEffect(() => {
     if (!user?.id) return;
@@ -352,6 +355,15 @@ export function AppSidebar() {
             </div>
           )}
         </div>
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+        >
+          {theme === 'dark'
+            ? <Sun className="w-4 h-4" />
+            : <Moon className="w-4 h-4" />}
+          {!collapsed && (theme === 'dark' ? 'Tema chiaro' : 'Tema scuro')}
+        </button>
         <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start">
           <LogOut className="w-4 h-4" />
           {!collapsed && <span className="ml-2">Esci</span>}
