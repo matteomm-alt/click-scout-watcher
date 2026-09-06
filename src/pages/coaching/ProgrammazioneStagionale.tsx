@@ -1028,15 +1028,38 @@ export default function ProgrammazioneStagionale() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreatePlan(false)}>
+            <Button variant="outline" onClick={() => { setShowCreatePlan(false); setEditingPlanId(null); }}>
               Annulla
             </Button>
             <Button onClick={handleCreatePlan} disabled={creatingPlan}>
-              {creatingPlan ? 'Creazione...' : 'Crea piano'}
+              {creatingPlan
+                ? 'Salvataggio...'
+                : editingPlanId ? 'Salva modifiche' : 'Crea piano'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!deletingPlanId} onOpenChange={(o) => !o && setDeletingPlanId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminare il piano stagionale?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Verranno eliminati anche tutti i macrocicli collegati. L'azione è irreversibile.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingPlanId(null)}>Annulla</Button>
+            <Button
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeletePlan}
+            >
+              Elimina
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
 
   );
