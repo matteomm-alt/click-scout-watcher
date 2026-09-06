@@ -243,6 +243,18 @@ export function StrutturaSettimanaleView() {
       sedute: sett.sedute.map((sed, s) => s !== si ? sed : { ...sed, [field]: val }),
     }));
   };
+  const addSeduta = (wi: number) => {
+    setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
+      ...sett,
+      sedute: [...sett.sedute, { giorno: null, orario: '', palestra: '', blocchi: [] }],
+    }));
+  };
+  const removeSeduta = (wi: number, si: number) => {
+    setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
+      ...sett,
+      sedute: sett.sedute.filter((_, s) => s !== si),
+    }));
+  };
   const addBlocco = (wi: number, si: number) => {
     setSettimane(prev => prev.map((sett, w) => w !== wi ? sett : {
       ...sett,
@@ -560,6 +572,14 @@ export function StrutturaSettimanaleView() {
                       {/* Giorno */}
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold uppercase text-muted-foreground w-16">Seduta {si + 1}</span>
+                        <Button
+                          size="icon" variant="ghost"
+                          className="h-7 w-7 order-last ml-auto text-muted-foreground hover:text-destructive"
+                          aria-label={`Rimuovi seduta ${si + 1}`}
+                          onClick={() => removeSeduta(wi, si)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                         <div className="flex gap-1 flex-wrap">
                           {GIORNI.map((g, gi) => (
                             <button key={gi} onClick={() => updateGiorno(wi, si, gi)}
@@ -637,6 +657,13 @@ export function StrutturaSettimanaleView() {
                       </div>
                     </div>
                   ))}
+                  <Button
+                    variant="ghost" size="sm"
+                    className="w-full h-8 text-xs border border-dashed border-border"
+                    onClick={() => addSeduta(wi)}
+                  >
+                    + Aggiungi seduta
+                  </Button>
                 </div>
               </div>
             ))}

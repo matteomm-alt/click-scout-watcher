@@ -346,11 +346,14 @@ export default function ProgrammazioneStagionale() {
 
   // Creazione piano stagionale
   const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [newPlanName, setNewPlanName] = useState('');
   const [newPlanSeason, setNewPlanSeason] = useState('');
   const [newPlanStart, setNewPlanStart] = useState('');
   const [newPlanEnd, setNewPlanEnd] = useState('');
   const [creatingPlan, setCreatingPlan] = useState(false);
+
 
   // Custom + colors
   const [custom, setCustom] = useState<CustomFond[]>(() => safeGet<CustomFond[]>(LS_CUSTOM, []));
@@ -387,6 +390,24 @@ export default function ProgrammazioneStagionale() {
 
   useEffect(() => { loadPlans(); }, [loadPlans]);
 
+  const openCreatePlan = () => {
+    setEditingPlanId(null);
+    setNewPlanName(''); setNewPlanSeason('');
+    setNewPlanStart(''); setNewPlanEnd('');
+    setShowCreatePlan(true);
+  };
+
+  const openEditPlan = () => {
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    setEditingPlanId(plan.id);
+    setNewPlanName(plan.name ?? '');
+    setNewPlanSeason(plan.season ?? '');
+    setNewPlanStart(plan.start_date ?? '');
+    setNewPlanEnd(plan.end_date ?? '');
+    setShowCreatePlan(true);
+  };
+
   const handleCreatePlan = async () => {
     if (!newPlanName.trim() || !newPlanSeason.trim()) {
       toast.error('Nome e stagione obbligatori');
@@ -397,6 +418,26 @@ export default function ProgrammazioneStagionale() {
       return;
     }
     setCreatingPlan(true);
+
+    if (editingPlanId) {
+      const { error } = await supabase
+        .from('season_plans')
+        .update({
+          name: newPlanName.trim(),
+          season: newPlanSeason.trim(),
+          start_date: newPlanStart || null,
+          end_date: newPlanEnd || null,
+        })
+        .eq('id', editingPlanId);
+      setCreatingPlan(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success('Piano aggiornato');
+      setShowCreatePlan(false);
+      setEditingPlanId(null);
+      await loadPlans();
+      return;
+    }
+
     const { data, error } = await supabase
       .from('season_plans')
       .insert({
@@ -418,6 +459,19 @@ export default function ProgrammazioneStagionale() {
     await loadPlans();
     setPlanId(data.id);
   };
+
+  const handleDeletePlan = async () => {
+    if (!deletingPlanId) return;
+    await supabase.from('season_phases').delete().eq('plan_id', deletingPlanId);
+    const { error } = await supabase.from('season_plans').delete().eq('id', deletingPlanId);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Piano eliminato');
+    setDeletingPlanId(null);
+    setPlanId(null);
+    setSelectedPhaseId(null);
+    await loadPlans();
+  };
+
 
   /* Load phases */
   const loadPhases = useCallback(async (pid: string) => {
@@ -676,9 +730,24 @@ export default function ProgrammazioneStagionale() {
               {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.name} · {p.season}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button size="sm" variant="outline" onClick={() => setShowCreatePlan(true)}>
+          <Button
+            size="icon" variant="ghost" className="h-9 w-9"
+            aria-label="Modifica piano" disabled={!planId} onClick={openEditPlan}
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon" variant="ghost"
+            className="h-9 w-9 text-muted-foreground hover:text-destructive"
+            aria-label="Elimina piano" disabled={!planId}
+            onClick={() => setDeletingPlanId(planId)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={openCreatePlan}>
             <Plus className="w-3 h-3 mr-1" /> Nuovo piano
           </Button>
+
           <Button variant="outline" onClick={() => setPrintOpen(true)}>
             <Printer className="w-4 h-4 mr-2" /> Stampa / PDF
           </Button>
@@ -691,7 +760,7 @@ export default function ProgrammazioneStagionale() {
             <p className="text-muted-foreground text-sm">
               Nessun piano stagionale ancora.
             </p>
-            <Button onClick={() => setShowCreatePlan(true)}>
+            <Button onClick={openCreatePlan}>
               <Plus className="w-4 h-4 mr-2" /> Crea piano stagionale
             </Button>
           </div>
@@ -922,11 +991,12 @@ export default function ProgrammazioneStagionale() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showCreatePlan} onOpenChange={setShowCreatePlan}>
+      <Dialog open={showCreatePlan} onOpenChange={(o) => { setShowCreatePlan(o); if (!o) setEditingPlanId(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuovo piano stagionale</DialogTitle>
+            <DialogTitle>{editingPlanId ? 'Modifica piano stagionale' : 'Nuovo piano stagionale'}</DialogTitle>
           </DialogHeader>
+
           <div className="flex flex-col gap-4 py-2">
             <div>
               <Label>Nome piano *</Label>
@@ -958,15 +1028,38 @@ export default function ProgrammazioneStagionale() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreatePlan(false)}>
+            <Button variant="outline" onClick={() => { setShowCreatePlan(false); setEditingPlanId(null); }}>
               Annulla
             </Button>
             <Button onClick={handleCreatePlan} disabled={creatingPlan}>
-              {creatingPlan ? 'Creazione...' : 'Crea piano'}
+              {creatingPlan
+                ? 'Salvataggio...'
+                : editingPlanId ? 'Salva modifiche' : 'Crea piano'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!deletingPlanId} onOpenChange={(o) => !o && setDeletingPlanId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Eliminare il piano stagionale?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Verranno eliminati anche tutti i macrocicli collegati. L'azione è irreversibile.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingPlanId(null)}>Annulla</Button>
+            <Button
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeletePlan}
+            >
+              Elimina
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
 
   );
