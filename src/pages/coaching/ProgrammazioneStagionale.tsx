@@ -346,11 +346,14 @@ export default function ProgrammazioneStagionale() {
 
   // Creazione piano stagionale
   const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [newPlanName, setNewPlanName] = useState('');
   const [newPlanSeason, setNewPlanSeason] = useState('');
   const [newPlanStart, setNewPlanStart] = useState('');
   const [newPlanEnd, setNewPlanEnd] = useState('');
   const [creatingPlan, setCreatingPlan] = useState(false);
+
 
   // Custom + colors
   const [custom, setCustom] = useState<CustomFond[]>(() => safeGet<CustomFond[]>(LS_CUSTOM, []));
