@@ -6,7 +6,61 @@
 
 @layer base {
   :root {
-    --background: 228 30% 7%;
+    /* ——— TEMA CHIARO ——— */
+    --background: 40 30% 97%;
+    --foreground: 228 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 228 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 228 25% 12%;
+    --primary: 24 95% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 228 15% 92%;
+    --secondary-foreground: 228 25% 20%;
+    --muted: 228 15% 94%;
+    --muted-foreground: 228 10% 42%;
+    --accent: 160 70% 33%;
+    --accent-foreground: 0 0% 100%;
+    --opponent: 217 85% 48%;
+    --destructive: 0 72% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 65% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 44%;
+    --warning-foreground: 0 0% 100%;
+    /* il campo resta scuro anche in tema chiaro: le linee sono bianche */
+    --court: 228 30% 14%;
+    --court-line: 210 20% 70%;
+    --court-highlight: 24 95% 48%;
+    --set-left: 217 85% 48%;
+    --set-middle: 160 70% 33%;
+    --set-right: 24 95% 48%;
+    --set-back: 270 60% 50%;
+    --border: 228 15% 86%;
+    --input: 228 15% 86%;
+    --ring: 24 95% 48%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 228 25% 15%;
+    --sidebar-primary: 24 95% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 15% 93%;
+    --sidebar-accent-foreground: 228 25% 20%;
+    --sidebar-border: 228 15% 88%;
+    --sidebar-ring: 24 95% 48%;
+
+    --cs-team-a: 320 65% 45%;
+    --cs-team-b: 217 85% 48%;
+    --cs-rail: 220 30% 32%;
+    --cs-rail-fg: 0 0% 100%;
+    --cs-court: 24 88% 52%;
+    --cs-cta: 24 95% 48%;
+    --cs-cta-yellow: 24 95% 48%;
+    --cs-end-match: 142 65% 36%;
+  }
+
+  .dark {
+
     --foreground: 210 20% 92%;
     --card: 228 25% 11%;
     --card-foreground: 210 20% 92%;
