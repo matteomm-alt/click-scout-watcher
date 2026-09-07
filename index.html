@@ -31,6 +31,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="VolleyScout">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <script>
+      try {
+        if ((localStorage.getItem('app_theme') || 'dark') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) { document.documentElement.classList.add('dark'); }
+    </script>
   </head>
 
   <body>
