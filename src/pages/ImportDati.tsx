@@ -284,7 +284,7 @@ export default function ImportDati() {
       <div>
         <h1 className="text-4xl font-bold italic uppercase tracking-tight">Import Excel</h1>
         <p className="text-muted-foreground mt-1">
-          Carica squadre, atleti, obiettivi e scheletri da un file .xlsx direttamente nel database.
+          Carica squadre, atleti, obiettivi, scheletri ed eventi da un file .xlsx direttamente nel database.
         </p>
       </div>
 
