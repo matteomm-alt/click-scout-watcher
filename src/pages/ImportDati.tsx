@@ -10,7 +10,7 @@ import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { cn } from '@/lib/utils';
 
-type Kind = 'squadre' | 'atleti' | 'obiettivi' | 'scheletri';
+type Kind = 'squadre' | 'atleti' | 'obiettivi' | 'scheletri' | 'eventi';
 
 interface KindConfig {
   label: string;
@@ -53,7 +53,28 @@ const CONFIG: Record<Kind, KindConfig> = {
     }],
     hint: 'Solo "Nome" è obbligatorio. Le sedute si aggiungono poi dalla pagina Scheletri.',
   },
+  eventi: {
+    label: 'Eventi',
+    columns: ['Titolo', 'Tipo', 'Data', 'OraInizio', 'OraFine', 'Luogo', 'Squadra', 'Descrizione'],
+    sample: [{
+      Titolo: 'Allenamento settimanale', Tipo: 'allenamento', Data: '2025-10-14',
+      OraInizio: '18:30', OraFine: '20:30', Luogo: 'Palestra Comunale',
+      Squadra: 'Under 16 F', Descrizione: '',
+    }],
+    hint: 'Obbligatori "Titolo" e "Data" (formato AAAA-MM-GG). Tipo: allenamento / partita / riunione / torneo / altro. Se manca l\'orario si usa 18:00.',
+  },
 };
+
+const VALID_EVENT_TYPES = ['allenamento', 'partita', 'riunione', 'torneo', 'altro'] as const;
+type EventTypeValue = (typeof VALID_EVENT_TYPES)[number];
+
+const timeOf = (v: unknown, fallback: string) => {
+  const s = cell(v);
+  const m = s.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return fallback;
+  return `${m[1].padStart(2, '0')}:${m[2]}`;
+};
+const toIso = (date: string, time: string) => new Date(`${date}T${time}:00`).toISOString();
 
 const VALID_ROLES = ['Palleggiatrice', 'Palleggiatore', 'Opposto', 'Schiacciatrice', 'Schiacciatore', 'Centrale', 'Libero', 'Universale'];
 
@@ -76,6 +97,12 @@ function validate(kind: Kind, raw: Row[]): PreviewRow[] {
     if (kind === 'atleti' && !cell(item.Cognome)) errors.push('Cognome mancante');
     if (kind === 'obiettivi' && !cell(item.Titolo)) errors.push('Titolo mancante');
     if (kind === 'scheletri' && !cell(item.Nome)) errors.push('Nome mancante');
+    if (kind === 'eventi') {
+      if (!cell(item.Titolo)) errors.push('Titolo mancante');
+      if (!isoDate(item.Data)) errors.push('Data mancante o non valida (AAAA-MM-GG)');
+      const tipo = cell(item.Tipo).toLowerCase();
+      if (tipo && !VALID_EVENT_TYPES.includes(tipo as EventTypeValue)) errors.push('Tipo non riconosciuto');
+    }
     if (kind === 'atleti' && cell(item.Ruolo) && !VALID_ROLES.includes(cell(item.Ruolo))) {
       errors.push('Ruolo non riconosciuto');
     }
@@ -218,6 +245,30 @@ export default function ImportDati() {
         if (error) throw error;
       }
 
+      if (kind === 'eventi') {
+        const teams = await resolveTeams();
+        const payload = validRows.map((r) => {
+          const date = isoDate(r.data.Data) as string;
+          const start = timeOf(r.data.OraInizio, '18:00');
+          const endRaw = cell(r.data.OraFine);
+          const tipo = cell(r.data.Tipo).toLowerCase();
+          return {
+            society_id: societyId,
+            created_by: user.id,
+            title: cell(r.data.Titolo),
+            description: cell(r.data.Descrizione) || null,
+            event_type: (VALID_EVENT_TYPES.includes(tipo as EventTypeValue) ? tipo : 'altro') as EventTypeValue,
+            start_at: toIso(date, start),
+            end_at: endRaw ? toIso(date, timeOf(endRaw, start)) : null,
+            location: cell(r.data.Luogo) || null,
+            team_id: teams.get(cell(r.data.Squadra).toLowerCase()) ?? null,
+            season: currentSeason,
+          };
+        });
+        const { error } = await supabase.from('events').insert(payload);
+        if (error) throw error;
+      }
+
       toast.success(`${validRows.length} righe importate in ${config.label}`);
       reset();
     } catch (e) {
@@ -233,7 +284,7 @@ export default function ImportDati() {
       <div>
         <h1 className="text-4xl font-bold italic uppercase tracking-tight">Import Excel</h1>
         <p className="text-muted-foreground mt-1">
-          Carica squadre, atleti, obiettivi e scheletri da un file .xlsx direttamente nel database.
+          Carica squadre, atleti, obiettivi, scheletri ed eventi da un file .xlsx direttamente nel database.
         </p>
       </div>
 
