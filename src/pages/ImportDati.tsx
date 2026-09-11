@@ -245,6 +245,30 @@ export default function ImportDati() {
         if (error) throw error;
       }
 
+      if (kind === 'eventi') {
+        const teams = await resolveTeams();
+        const payload = validRows.map((r) => {
+          const date = isoDate(r.data.Data) as string;
+          const start = timeOf(r.data.OraInizio, '18:00');
+          const endRaw = cell(r.data.OraFine);
+          const tipo = cell(r.data.Tipo).toLowerCase();
+          return {
+            society_id: societyId,
+            created_by: user.id,
+            title: cell(r.data.Titolo),
+            description: cell(r.data.Descrizione) || null,
+            event_type: (VALID_EVENT_TYPES.includes(tipo as EventTypeValue) ? tipo : 'altro') as EventTypeValue,
+            start_at: toIso(date, start),
+            end_at: endRaw ? toIso(date, timeOf(endRaw, start)) : null,
+            location: cell(r.data.Luogo) || null,
+            team_id: teams.get(cell(r.data.Squadra).toLowerCase()) ?? null,
+            season: currentSeason,
+          };
+        });
+        const { error } = await supabase.from('events').insert(payload);
+        if (error) throw error;
+      }
+
       toast.success(`${validRows.length} righe importate in ${config.label}`);
       reset();
     } catch (e) {
