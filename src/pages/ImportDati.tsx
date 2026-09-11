@@ -10,7 +10,7 @@ import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { cn } from '@/lib/utils';
 
-type Kind = 'squadre' | 'atleti' | 'obiettivi' | 'scheletri';
+type Kind = 'squadre' | 'atleti' | 'obiettivi' | 'scheletri' | 'eventi';
 
 interface KindConfig {
   label: string;
