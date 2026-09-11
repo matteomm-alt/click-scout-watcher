@@ -63,6 +63,7 @@ const AdminSocieties = lazy(() => import("./pages/admin/Societies.tsx"));
 const AtletaDetail = lazy(() => import("./pages/atleta/AtletaDetail.tsx"));
 const TeamsHub = lazy(() => import("./pages/TeamsHub.tsx"));
 const TeamDashboard = lazy(() => import("./pages/TeamDashboard.tsx"));
+const ImportDati = lazy(() => import("./pages/ImportDati.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,6 +117,7 @@ const App = () => (
                 <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                   <Route path="/" element={<Home />} />
                   <Route path="/import" element={<ImportDvw />} />
+                  <Route path="/importa-dati" element={<ImportDati />} />
                   <Route path="/match/:id" element={<MatchAnalysis />} />
                   <Route path="/match-multi" element={<MatchAnalysisMulti />} />
                   <Route path="/archive" element={<Archive />} />

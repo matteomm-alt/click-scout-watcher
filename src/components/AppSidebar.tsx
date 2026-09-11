@@ -29,6 +29,7 @@ import {
   PieChart, UserCircle, Star, HeartPulse,
   LogOut, Shield, Boxes, Settings, HelpCircle, Bell, Zap,
   Sun, Moon,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 const SCOUT_MODE_KEY = 'sidebar_scout_mode';
@@ -57,6 +58,7 @@ const GESTIONALE: NavItem[] = [
   { title: 'Convocazioni', url: '/convocazioni', icon: ListChecks, badgeKey: 'convocazioni' },
   { title: 'Comunicazioni', url: '/comunicazioni', icon: Megaphone, feature: 'communications', badgeKey: 'comunicazioni' },
   { title: 'Magazzino', url: '/magazzino', icon: Package, feature: 'athletes' },
+  { title: 'Import Excel', url: '/importa-dati', icon: FileSpreadsheet },
 ];
 
 const COACHING: NavItem[] = [
