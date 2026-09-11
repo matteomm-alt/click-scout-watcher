@@ -53,7 +53,28 @@ const CONFIG: Record<Kind, KindConfig> = {
     }],
     hint: 'Solo "Nome" è obbligatorio. Le sedute si aggiungono poi dalla pagina Scheletri.',
   },
+  eventi: {
+    label: 'Eventi',
+    columns: ['Titolo', 'Tipo', 'Data', 'OraInizio', 'OraFine', 'Luogo', 'Squadra', 'Descrizione'],
+    sample: [{
+      Titolo: 'Allenamento settimanale', Tipo: 'allenamento', Data: '2025-10-14',
+      OraInizio: '18:30', OraFine: '20:30', Luogo: 'Palestra Comunale',
+      Squadra: 'Under 16 F', Descrizione: '',
+    }],
+    hint: 'Obbligatori "Titolo" e "Data" (formato AAAA-MM-GG). Tipo: allenamento / partita / riunione / torneo / altro. Se manca l\'orario si usa 18:00.',
+  },
 };
+
+const VALID_EVENT_TYPES = ['allenamento', 'partita', 'riunione', 'torneo', 'altro'] as const;
+type EventTypeValue = (typeof VALID_EVENT_TYPES)[number];
+
+const timeOf = (v: unknown, fallback: string) => {
+  const s = cell(v);
+  const m = s.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return fallback;
+  return `${m[1].padStart(2, '0')}:${m[2]}`;
+};
+const toIso = (date: string, time: string) => new Date(`${date}T${time}:00`).toISOString();
 
 const VALID_ROLES = ['Palleggiatrice', 'Palleggiatore', 'Opposto', 'Schiacciatrice', 'Schiacciatore', 'Centrale', 'Libero', 'Universale'];
 
