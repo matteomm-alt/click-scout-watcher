@@ -97,6 +97,12 @@ function validate(kind: Kind, raw: Row[]): PreviewRow[] {
     if (kind === 'atleti' && !cell(item.Cognome)) errors.push('Cognome mancante');
     if (kind === 'obiettivi' && !cell(item.Titolo)) errors.push('Titolo mancante');
     if (kind === 'scheletri' && !cell(item.Nome)) errors.push('Nome mancante');
+    if (kind === 'eventi') {
+      if (!cell(item.Titolo)) errors.push('Titolo mancante');
+      if (!isoDate(item.Data)) errors.push('Data mancante o non valida (AAAA-MM-GG)');
+      const tipo = cell(item.Tipo).toLowerCase();
+      if (tipo && !VALID_EVENT_TYPES.includes(tipo as EventTypeValue)) errors.push('Tipo non riconosciuto');
+    }
     if (kind === 'atleti' && cell(item.Ruolo) && !VALID_ROLES.includes(cell(item.Ruolo))) {
       errors.push('Ruolo non riconosciuto');
     }
