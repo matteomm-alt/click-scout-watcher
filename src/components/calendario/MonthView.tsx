@@ -55,10 +55,11 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
           const inMonth = isSameMonth(day, anchor);
 
           return (
-            <div
+            <DayDropZone
               key={day.toISOString()}
+              dayKey={format(day, 'yyyy-MM-dd')}
               className={cn(
-                'min-h-[110px] border-r border-b border-border p-1.5 flex flex-col gap-1',
+                'min-h-[110px] border-r border-b border-border p-1.5 flex flex-col gap-1 transition-colors',
                 (idx + 1) % 7 === 0 && 'border-r-0',
                 idx >= days.length - 7 && 'border-b-0',
                 !inMonth && 'bg-muted/20 opacity-50',
