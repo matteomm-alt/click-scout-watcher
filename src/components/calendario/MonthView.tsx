@@ -8,16 +8,17 @@ import { Repeat } from 'lucide-react';
 import { getEventMeta } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
+import { DayDropZone, DraggableEvent } from './dnd';
 
 interface Props {
   anchor: Date;
   events: CalendarEvent[];
   onEventClick?: (evt: CalendarEvent) => void;
+  /** Se true, gli eventi si possono trascinare su un altro giorno */
+  draggable?: boolean;
 }
 
-
-
-export function MonthView({ anchor, events, onEventClick }: Props) {
+export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
   const navigate = useNavigate();
   const monthStart = startOfMonth(anchor);
   const monthEnd = endOfMonth(anchor);
@@ -54,10 +55,11 @@ export function MonthView({ anchor, events, onEventClick }: Props) {
           const inMonth = isSameMonth(day, anchor);
 
           return (
-            <div
+            <DayDropZone
               key={day.toISOString()}
+              dayKey={format(day, 'yyyy-MM-dd')}
               className={cn(
-                'min-h-[110px] border-r border-b border-border p-1.5 flex flex-col gap-1',
+                'min-h-[110px] border-r border-b border-border p-1.5 flex flex-col gap-1 transition-colors',
                 (idx + 1) % 7 === 0 && 'border-r-0',
                 idx >= days.length - 7 && 'border-b-0',
                 !inMonth && 'bg-muted/20 opacity-50',
@@ -77,8 +79,8 @@ export function MonthView({ anchor, events, onEventClick }: Props) {
                   const timeLabel = evt.end_at
                     ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
                     : format(new Date(evt.start_at), 'HH:mm');
-                  return (
-                    <div key={evt.id} className="flex items-center gap-1">
+                  const row = (
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                         className={cn(
@@ -108,6 +110,9 @@ export function MonthView({ anchor, events, onEventClick }: Props) {
                       )}
                     </div>
                   );
+                  return draggable
+                    ? <DraggableEvent key={evt.id} id={evt.id}>{row}</DraggableEvent>
+                    : <div key={evt.id}>{row}</div>;
                 })}
                 {dayEvents.length > 3 && (
                   <span className="text-[10px] text-muted-foreground italic">
@@ -115,7 +120,7 @@ export function MonthView({ anchor, events, onEventClick }: Props) {
                   </span>
                 )}
               </div>
-            </div>
+            </DayDropZone>
           );
         })}
       </div>

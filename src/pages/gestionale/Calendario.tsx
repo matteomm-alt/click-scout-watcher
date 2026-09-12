@@ -25,6 +25,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { EVENT_TYPES, type EventType } from '@/lib/eventTypes';
+import {
+  DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
 import { WeekView } from '@/components/calendario/WeekView';
 import { MonthView } from '@/components/calendario/MonthView';
 import { SeasonView } from '@/components/calendario/SeasonView';
@@ -411,6 +414,72 @@ export default function Calendario() {
     setRefreshKey((v) => v + 1);
   };
 
+  // ── Drag & drop: spostamento evento su un altro giorno ──────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  const persistDates = async (
+    evt: CalendarEvent,
+    startISO: string,
+    endISO: string | null,
+    successMsg: string,
+  ) => {
+    setEvents((prev) => prev.map((e) =>
+      e.id === evt.id ? { ...e, start_at: startISO, end_at: endISO } : e));
+    const { error } = await supabase
+      .from('events')
+      .update({ start_at: startISO, end_at: endISO })
+      .eq('id', evt.id);
+    if (error) {
+      toast.error('Errore aggiornamento evento');
+      setRefreshKey((v) => v + 1);
+    } else {
+      toast.success(successMsg);
+    }
+  };
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const overId = e.over?.id;
+    if (!overId || typeof overId !== 'string' || !overId.startsWith('day-')) return;
+    const evt = events.find((x) => x.id === e.active.id);
+    if (!evt) return;
+    const [y, m, d] = overId.slice(4).split('-').map(Number);
+    const start = new Date(evt.start_at);
+    const newStart = new Date(y, m - 1, d, start.getHours(), start.getMinutes(), 0, 0);
+    if (newStart.getTime() === start.getTime()) return;
+    const durationMs = evt.end_at ? new Date(evt.end_at).getTime() - start.getTime() : 0;
+    const newEnd = evt.end_at
+      ? new Date(newStart.getTime() + durationMs).toISOString()
+      : null;
+    persistDates(
+      evt,
+      newStart.toISOString(),
+      newEnd,
+      `"${evt.title}" spostato al ${format(newStart, 'd MMM', { locale: it })}`,
+    );
+  };
+
+  /** Modifica la durata trascinando la maniglia inferiore (min 15 minuti). */
+  const handleResize = (eventId: string, deltaMinutes: number) => {
+    const evt = events.find((x) => x.id === eventId);
+    if (!evt) return;
+    const start = new Date(evt.start_at);
+    const baseEnd = evt.end_at
+      ? new Date(evt.end_at)
+      : new Date(start.getTime() + 90 * 60000);
+    const candidate = new Date(baseEnd.getTime() + deltaMinutes * 60000);
+    const minEnd = new Date(start.getTime() + 15 * 60000);
+    const newEnd = candidate < minEnd ? minEnd : candidate;
+    const mins = Math.round((newEnd.getTime() - start.getTime()) / 60000);
+    persistDates(
+      evt,
+      evt.start_at,
+      newEnd.toISOString(),
+      `Durata di "${evt.title}": ${Math.floor(mins / 60)}h ${mins % 60}m`,
+    );
+  };
+
   const goPrev = () => {
     if (view === 'week') setAnchor(addDays(anchor, -7));
     else if (view === 'month') setAnchor(subMonths(anchor, 1));
@@ -562,14 +631,32 @@ export default function Calendario() {
         onTeamChange={setTeamFilter}
       />
 
+      {view !== 'season' && !loading && (
+        <p className="text-xs text-muted-foreground italic">
+          Trascina un evento su un altro giorno per spostarlo · trascina la barretta in basso
+          nella card per cambiarne la durata
+        </p>
+      )}
+
       {loading ? (
         <Card className="p-10 text-center text-muted-foreground">Caricamento eventi…</Card>
-      ) : view === 'week' ? (
-        <WeekView anchor={anchor} events={events} showCreator={isAdmin} onEventClick={openEdit} />
-      ) : view === 'month' ? (
-        <MonthView anchor={anchor} events={events} onEventClick={openEdit} />
-      ) : (
+      ) : view === 'season' ? (
         <SeasonView start={range.start} end={range.end} events={events} />
+      ) : (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {view === 'week' ? (
+            <WeekView
+              anchor={anchor}
+              events={events}
+              showCreator={isAdmin}
+              onEventClick={openEdit}
+              onResize={handleResize}
+              draggable
+            />
+          ) : (
+            <MonthView anchor={anchor} events={events} onEventClick={openEdit} draggable />
+          )}
+        </DndContext>
       )}
 
       <Card className="p-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">

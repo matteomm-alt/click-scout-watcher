@@ -5,15 +5,19 @@ import { MapPin, Repeat } from 'lucide-react';
 import { getEventMeta } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
+import { DayDropZone, DraggableEvent, ResizeHandle } from './dnd';
 
 interface Props {
   anchor: Date; // qualsiasi data della settimana
   events: CalendarEvent[];
   showCreator: boolean;
   onEventClick?: (evt: CalendarEvent) => void;
+  /** Se presente, gli eventi diventano trascinabili e ridimensionabili */
+  onResize?: (eventId: string, deltaMinutes: number) => void;
+  draggable?: boolean;
 }
 
-export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
+export function WeekView({ anchor, events, showCreator, onEventClick, onResize, draggable }: Props) {
   const navigate = useNavigate();
   const weekStart = startOfWeek(anchor, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -27,10 +31,11 @@ export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
         const isToday = isSameDay(day, new Date());
 
         return (
-          <div
+          <DayDropZone
             key={day.toISOString()}
+            dayKey={format(day, 'yyyy-MM-dd')}
             className={cn(
-              'border border-border rounded-lg bg-card p-2 min-h-[180px] flex flex-col',
+              'border border-border rounded-lg bg-card p-2 min-h-[180px] flex flex-col transition-colors',
               isToday && 'border-primary',
             )}
           >
@@ -58,15 +63,17 @@ export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
                 const timeLabel = evt.end_at
                   ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
                   : format(new Date(evt.start_at), 'HH:mm');
-                return (
-                  <button
-                    key={evt.id}
-                    onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
+                const card = (
+                  <div
                     className={cn(
                       'text-left text-xs p-2 rounded-md border-l-2 hover:bg-muted/50 transition-colors',
+                      draggable && 'cursor-grab active:cursor-grabbing',
                       meta.bgClass,
                       meta.borderClass,
                     )}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                   >
                     <div className="flex items-center gap-1.5">
                       <Icon className={cn('w-3 h-3 shrink-0', meta.textClass)} />
@@ -108,11 +115,18 @@ export function WeekView({ anchor, events, showCreator, onEventClick }: Props) {
                         📋 Convocazione
                       </span>
                     )}
-                  </button>
+                    {onResize && (
+                      <ResizeHandle onResize={(delta) => onResize(evt.id, delta)} />
+                    )}
+                  </div>
                 );
+
+                return draggable
+                  ? <DraggableEvent key={evt.id} id={evt.id}>{card}</DraggableEvent>
+                  : <div key={evt.id}>{card}</div>;
               })}
             </div>
-          </div>
+          </DayDropZone>
         );
       })}
     </div>
