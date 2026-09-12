@@ -631,14 +631,32 @@ export default function Calendario() {
         onTeamChange={setTeamFilter}
       />
 
+      {view !== 'season' && !loading && (
+        <p className="text-xs text-muted-foreground italic">
+          Trascina un evento su un altro giorno per spostarlo · trascina la barretta in basso
+          nella card per cambiarne la durata
+        </p>
+      )}
+
       {loading ? (
         <Card className="p-10 text-center text-muted-foreground">Caricamento eventi…</Card>
-      ) : view === 'week' ? (
-        <WeekView anchor={anchor} events={events} showCreator={isAdmin} onEventClick={openEdit} />
-      ) : view === 'month' ? (
-        <MonthView anchor={anchor} events={events} onEventClick={openEdit} />
-      ) : (
+      ) : view === 'season' ? (
         <SeasonView start={range.start} end={range.end} events={events} />
+      ) : (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {view === 'week' ? (
+            <WeekView
+              anchor={anchor}
+              events={events}
+              showCreator={isAdmin}
+              onEventClick={openEdit}
+              onResize={handleResize}
+              draggable
+            />
+          ) : (
+            <MonthView anchor={anchor} events={events} onEventClick={openEdit} draggable />
+          )}
+        </DndContext>
       )}
 
       <Card className="p-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
