@@ -25,6 +25,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { EVENT_TYPES, type EventType } from '@/lib/eventTypes';
+import {
+  DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
 import { WeekView } from '@/components/calendario/WeekView';
 import { MonthView } from '@/components/calendario/MonthView';
 import { SeasonView } from '@/components/calendario/SeasonView';
