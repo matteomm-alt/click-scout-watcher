@@ -79,8 +79,8 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                   const timeLabel = evt.end_at
                     ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
                     : format(new Date(evt.start_at), 'HH:mm');
-                  return (
-                    <div key={evt.id} className="flex items-center gap-1">
+                  const row = (
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                         className={cn(
