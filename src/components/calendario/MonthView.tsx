@@ -110,6 +110,9 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                       )}
                     </div>
                   );
+                  return draggable
+                    ? <DraggableEvent key={evt.id} id={evt.id}>{row}</DraggableEvent>
+                    : <div key={evt.id}>{row}</div>;
                 })}
                 {dayEvents.length > 3 && (
                   <span className="text-[10px] text-muted-foreground italic">
@@ -117,7 +120,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                   </span>
                 )}
               </div>
-            </div>
+            </DayDropZone>
           );
         })}
       </div>
