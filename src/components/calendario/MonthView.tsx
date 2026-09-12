@@ -8,16 +8,17 @@ import { Repeat } from 'lucide-react';
 import { getEventMeta } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
+import { DayDropZone, DraggableEvent } from './dnd';
 
 interface Props {
   anchor: Date;
   events: CalendarEvent[];
   onEventClick?: (evt: CalendarEvent) => void;
+  /** Se true, gli eventi si possono trascinare su un altro giorno */
+  draggable?: boolean;
 }
 
-
-
-export function MonthView({ anchor, events, onEventClick }: Props) {
+export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
   const navigate = useNavigate();
   const monthStart = startOfMonth(anchor);
   const monthEnd = endOfMonth(anchor);
