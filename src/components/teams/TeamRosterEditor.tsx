@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Pencil, Plus, Settings2, Trash2, UserMinus, X } from 'lucide-react';
+import { ExternalLink, Pencil, Plus, Settings2, Trash2, UserMinus, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 export const ROSTER_ROLES = ['Palleggiatrice', 'Opposto', 'Schiacciatrice', 'Centrale', 'Libero', 'Universale'];
 
@@ -246,6 +247,9 @@ export function TeamRosterEditor({ teamId, societyId, athletes, onChanged }: Pro
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <Button asChild size="icon" variant="ghost" className="h-8 w-8" title="Apri scheda atleta">
+                    <Link to={`/atleti/${a.id}`}><ExternalLink className="w-3.5 h-3.5" /></Link>
+                  </Button>
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(a)} title="Modifica">
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
