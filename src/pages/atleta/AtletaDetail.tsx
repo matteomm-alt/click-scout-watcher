@@ -244,6 +244,11 @@ export default function AtletaDetail() {
           </TabsTrigger>
         </TabsList>
 
+        {/* OBIETTIVI */}
+        <TabsContent value="objectives" className="mt-4">
+          <AtletaObiettiviTab athleteId={id!} />
+        </TabsContent>
+
         {/* ALLENAMENTI */}
         <TabsContent value="trainings" className="mt-4">
           <AtletaAllenamentiTab athleteId={id!} active={tab === 'trainings'} />
