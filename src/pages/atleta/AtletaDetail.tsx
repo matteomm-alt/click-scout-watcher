@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, UserCircle, HeartPulse, Star, ClipboardCheck,
-  Phone, Mail, AlertTriangle, FileText, Dumbbell, BarChart2,
+  Phone, Mail, AlertTriangle, FileText, Dumbbell, BarChart2, Target,
 } from 'lucide-react';
 import { AtletaAllenamentiTab } from '@/components/atleta/AtletaAllenamentiTab';
 import { AtletaScoutTab } from '@/components/atleta/AtletaScoutTab';
+import { AtletaObiettiviTab } from '@/components/atleta/AtletaObiettiviTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -226,8 +227,9 @@ export default function AtletaDetail() {
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full md:w-auto">
+        <TabsList className="grid grid-cols-3 md:grid-cols-7 w-full md:w-auto">
           <TabsTrigger value="info" className="gap-2"><UserCircle className="w-4 h-4" />Info</TabsTrigger>
+          <TabsTrigger value="objectives" className="gap-2"><Target className="w-4 h-4" />Obiettivi</TabsTrigger>
           <TabsTrigger value="evals" className="gap-2"><Star className="w-4 h-4" />Valutazioni</TabsTrigger>
           <TabsTrigger value="attendance" className="gap-2"><ClipboardCheck className="w-4 h-4" />Presenze</TabsTrigger>
           <TabsTrigger value="trainings" className="gap-2"><Dumbbell className="w-4 h-4" />Allenamenti</TabsTrigger>
@@ -241,6 +243,11 @@ export default function AtletaDetail() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* OBIETTIVI */}
+        <TabsContent value="objectives" className="mt-4">
+          <AtletaObiettiviTab athleteId={id!} />
+        </TabsContent>
 
         {/* ALLENAMENTI */}
         <TabsContent value="trainings" className="mt-4">
