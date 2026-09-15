@@ -379,6 +379,7 @@ export function LiveScout() {
         // indipendente da questa (che resta quella scelta qui per la battuta).
         updateAction(pendingActionId, { endZone: zone });
         toast.success(`Zona di atterraggio ${zone} registrata — ora tocca il giocatore che ha ricevuto`, { duration: 2200 });
+        setSuggestion({ skill: 'R', team: pendingTeam!, playerNumber: null });
         setZoneSelectMode(false);
         setPendingActionId(null);
         setPendingSkill(null);
