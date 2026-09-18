@@ -121,6 +121,29 @@ function TeamLineup({
           </button>
         </div>
       </div>
+      {teamFormations.length > 0 && (
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground font-medium">Formazione squadra</label>
+          <Select
+            value=""
+            onValueChange={(v) => {
+              const f = teamFormations.find((x) => x.id === v);
+              if (f) applyTeamFormation(side, f);
+            }}
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Applica una rotazione predefinita" />
+            </SelectTrigger>
+            <SelectContent>
+              {teamFormations.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.teamName} · {f.name}{f.isDefault ? ' (predefinita)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       {/* Court visual */}
       <div className="court-gradient rounded-xl p-4 border border-court-line/30">
         <div className="text-center text-xs text-court-line mb-2 font-medium tracking-wider">RETE</div>
