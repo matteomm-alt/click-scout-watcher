@@ -133,10 +133,19 @@ export function LiveScout() {
     if (matchState.setOverPending) setEndSetDialog(true);
   }, [matchState.setOverPending]);
 
-  // Reset suggerimento e skill pendente a fine rally (punto registrato)
+  // Reset suggerimento e skill pendente a fine rally (punto registrato);
+  // la suggestion si reimposta su Battuta con il giocatore in P1 evidenziato
   useEffect(() => {
-    setSuggestion(null);
     setPendingSkill(null);
+    const lineup = matchState.servingTeam === 'home'
+      ? matchState.homeCurrentLineup
+      : matchState.awayCurrentLineup;
+    const serverNumber = lineup?.[0] ?? null;
+    setSuggestion({
+      skill: 'S',
+      team: matchState.servingTeam,
+      playerNumber: serverNumber,
+    });
   }, [matchState.homeScore, matchState.awayScore]);
 
   // Salvataggio automatico su Supabase ogni 5 azioni (best-effort).
