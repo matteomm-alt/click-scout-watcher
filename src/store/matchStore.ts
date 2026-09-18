@@ -684,7 +684,7 @@ export const useMatchStore = create<MatchStore>()(
         };
         const demoHomeLineup: Lineup = {
           p1: 'rossi-1', p2: 'galli-11', p3: 'neri-9',
-          p4: 'bianchi-4', p5: 'costa-14', p6: 'verdi-7',
+          p4: 'bianchi-4', p5: 'verdi-7', p6: 'costa-14',
           libero1: 'marini-2', libero2: null, setter: 'rossi-1',
         };
         const demoAwayLineup: Lineup = {
