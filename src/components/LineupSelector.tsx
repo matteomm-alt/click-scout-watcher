@@ -260,7 +260,53 @@ export function LineupSelector() {
     homeLineup, awayLineup,
     setHomeLineup, setAwayLineup,
     setStep, startMatch,
+    loadReceptionFormations, loadAttackFormations,
   } = useMatchStore();
+  const { formations: teamFormations } = useTeamFormations();
+  const autoAppliedRef = useRef(false);
+
+  const applyTeamFormation = (side: 'home' | 'away', f: TeamFormationOption) => {
+    const team = side === 'home' ? homeTeam : awayTeam;
+    const setLineup = side === 'home' ? setHomeLineup : setAwayLineup;
+    const byNumber = (n: number | null) =>
+      n == null ? null : (team.players.find((p) => p.number === n)?.id ?? null);
+
+    const patch: Partial<Lineup> = {};
+    let missing = 0;
+    POS_KEYS.forEach((k) => {
+      const id = byNumber(f.base[k]);
+      if (!id) missing += 1;
+      patch[k as keyof Lineup] = id as never;
+    });
+    patch.setter = byNumber(f.base.setter) as never;
+    patch.libero1 = byNumber(f.base.libero) as never;
+    setLineup(patch);
+
+    if (f.receptionFormations) loadReceptionFormations(side, f.receptionFormations);
+    if (f.attackFormations) loadAttackFormations(side, f.attackFormations);
+
+    if (missing > 0) {
+      toast.warning(`Formazione "${f.name}" applicata parzialmente`, {
+        description: `${missing} numeri di maglia non presenti in questa rosa.`,
+      });
+    } else {
+      toast.success(`Formazione "${f.name}" applicata`, {
+        description: 'Rotazioni e posizioni di ricezione attive sul campo.',
+      });
+    }
+  };
+
+  // Applica automaticamente la formazione predefinita al primo accesso
+  useEffect(() => {
+    if (autoAppliedRef.current || teamFormations.length === 0) return;
+    const def = teamFormations.find((f) => f.isDefault);
+    if (!def) return;
+    const homeEmpty = POSITION_KEYS.every((k) => !homeLineup[k]);
+    if (!homeEmpty || homeTeam.players.length === 0) return;
+    autoAppliedRef.current = true;
+    applyTeamFormation('home', def);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamFormations, homeTeam.players.length]);
 
   const isHomeComplete = POSITION_KEYS.every(k => homeLineup[k]) && homeLineup.setter;
   const isAwayComplete = POSITION_KEYS.every(k => awayLineup[k]) && awayLineup.setter;
