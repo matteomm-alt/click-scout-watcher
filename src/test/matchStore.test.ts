@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useMatchStore } from '@/store/matchStore';
+import { applyLiberoAutoSwap } from '@/lib/matchReplay';
 import type { Player, Lineup } from '@/types/volleyball';
 
 const mkPlayer = (n: number, role: Player['role'], isLib = false): Player => ({
@@ -72,6 +73,22 @@ describe('matchStore — rotazioni FIVB', () => {
     useMatchStore.getState().addPoint('away');
     const afterAway = useMatchStore.getState().matchState.awayCurrentLineup;
     expect(afterAway[5]).toBe(awayBefore[0]);
+  });
+});
+
+describe('matchStore — libero riconosciuto dalla rosa', () => {
+  it('sposta da P1 anche un libero non assegnato nel campo libero1', () => {
+    const team = {
+      id: 'role-only', code: 'ROL', name: 'Ruolo libero', coach: '', assistantCoach: '', color: '#fff',
+      players: [
+        mkPlayer(11, 'L', true), mkPlayer(2, 'O'), mkPlayer(3, 'M'),
+        mkPlayer(4, 'OP'), mkPlayer(5, 'O'), mkPlayer(6, 'M'),
+      ],
+    };
+    const result = applyLiberoAutoSwap([11, 2, 3, 4, 5, 6], team, null, null);
+
+    expect(result.lineup[0]).not.toBe(11);
+    expect(result.lineup[5]).toBe(11);
   });
 });
 
