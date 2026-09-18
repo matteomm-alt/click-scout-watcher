@@ -114,7 +114,7 @@ export function getMiddleComboPosition(
   isHome: boolean,
 ): CourtCoord {
   const METERS_TO_PCT = 100 / 9;
-  const direction = isHome ? 1 : -1;
+  const direction = isHome ? -1 : 1;
   const deltaY = -setterOffsetM * METERS_TO_PCT * direction;
   const y = Math.max(0, Math.min(100, setterPos.y + deltaY));
   return { x: setterPos.x, y };
