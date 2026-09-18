@@ -98,7 +98,7 @@ export function resolvePlayerPosition(args: ResolvePlayerPositionArgs): CourtCoo
   const formationPos = rawFormationPos
     ? {
         x: isHome ? rawFormationPos.y : 100 - rawFormationPos.y,
-        y: rawFormationPos.x,
+        y: isHome ? rawFormationPos.x : 100 - rawFormationPos.x,
       }
     : null;
 
