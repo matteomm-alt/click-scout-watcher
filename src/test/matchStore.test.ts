@@ -90,6 +90,16 @@ describe('matchStore — libero riconosciuto dalla rosa', () => {
     expect(result.lineup[0]).not.toBe(11);
     expect(result.lineup[5]).toBe(11);
   });
+
+  it('non lascia il libero in P1 dopo una sostituzione', () => {
+    bootstrap();
+    const before = useMatchStore.getState().matchState.homeCurrentLineup;
+    useMatchStore.getState().substitutePlayer('home', before[0], 7);
+    const after = useMatchStore.getState().matchState.homeCurrentLineup;
+
+    expect(after[0]).not.toBe(7);
+    expect(after.slice(4)).toContain(7);
+  });
 });
 
 describe('matchStore — partita demo', () => {
