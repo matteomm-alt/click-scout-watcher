@@ -338,8 +338,14 @@ export function LineupSelector() {
         </div>
 
         <div className="grid grid-cols-2 gap-8">
-          <TeamLineup side="home" team={homeTeam} lineup={homeLineup} setLineup={setHomeLineup} />
-          <TeamLineup side="away" team={awayTeam} lineup={awayLineup} setLineup={setAwayLineup} />
+          <TeamLineup
+            side="home" team={homeTeam} lineup={homeLineup} setLineup={setHomeLineup}
+            teamFormations={teamFormations} applyTeamFormation={applyTeamFormation}
+          />
+          <TeamLineup
+            side="away" team={awayTeam} lineup={awayLineup} setLineup={setAwayLineup}
+            teamFormations={teamFormations} applyTeamFormation={applyTeamFormation}
+          />
         </div>
 
         {!canStart && (
