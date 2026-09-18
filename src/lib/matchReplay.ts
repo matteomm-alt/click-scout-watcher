@@ -17,25 +17,41 @@ export function applyLiberoAutoSwap(
   const roleOf = (n: number) => team.players.find((p) => p.number === n)?.role;
   const out = [...lineup];
   let benched: number | null = benchedMb ?? null;
+  // Posizioni vietate al libero: P1 (battuta) e prima linea P2/P3/P4.
+  const ILLEGAL = [0, 1, 2, 3];
   const liberoIdx = out.indexOf(liberoNum);
-  if (benched != null && liberoIdx >= 0 && [0, 1, 2, 3].includes(liberoIdx)) {
+  if (benched != null && liberoIdx >= 0 && ILLEGAL.includes(liberoIdx)) {
     out[liberoIdx] = benched;
     benched = null;
   }
   // Regola FIVB: il libero non può MAI stare in prima linea (P2/P3/P4) né in
-  // posizione di battuta (P1). Se ci finisce senza avere un centrale in
-  // panchina da reintegrare (es. formazione iniziale errata), esce comunque e
-  // rientra un giocatore di ruolo dalla panchina (preferibilmente un centrale).
-  const stillIllegal = out.indexOf(liberoNum);
-  if (stillIllegal >= 0 && [0, 1, 2, 3].includes(stillIllegal)) {
+  // posizione di battuta (P1). Se ci finisce (es. formazione iniziale errata o
+  // rotazione), viene scambiato con un giocatore di seconda linea (P5/P6),
+  // preferibilmente un centrale.
+  let illegalIdx = out.indexOf(liberoNum);
+  if (illegalIdx >= 0 && ILLEGAL.includes(illegalIdx)) {
+    const backIdx =
+      [4, 5].find((i) => out[i] && out[i] !== liberoNum && roleOf(out[i]) === 'M') ??
+      [4, 5].find((i) => out[i] && out[i] !== liberoNum);
+    if (backIdx !== undefined) {
+      const swapped = out[backIdx];
+      out[backIdx] = liberoNum;
+      out[illegalIdx] = swapped;
+      benched = null;
+    }
+  }
+  // Ultima risorsa: nessuna seconda linea disponibile → il libero esce e
+  // rientra un giocatore dalla panchina (preferibilmente un centrale).
+  illegalIdx = out.indexOf(liberoNum);
+  if (illegalIdx >= 0 && ILLEGAL.includes(illegalIdx)) {
     const onCourt = new Set(out);
     const bench = team.players.filter(
       (p) => !onCourt.has(p.number) && !p.isLibero && p.role !== 'L',
     );
     const replacement = bench.find((p) => p.role === 'M') ?? bench[0];
-    if (replacement) out[stillIllegal] = replacement.number;
+    if (replacement) out[illegalIdx] = replacement.number;
   }
-  if (benched == null) {
+  if (benched == null && !out.includes(liberoNum)) {
     for (const idx of [4, 5]) {
       const num = out[idx];
       if (num && num !== liberoNum && roleOf(num) === 'M') {
