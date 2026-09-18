@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useMatchStore } from '@/store/matchStore';
+import { applyLiberoAutoSwap } from '@/lib/matchReplay';
 import type { Player, Lineup } from '@/types/volleyball';
 
 const mkPlayer = (n: number, role: Player['role'], isLib = false): Player => ({
