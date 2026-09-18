@@ -5,33 +5,33 @@ import { getPhaseLayout } from './tacticalPhases';
 
 export interface CourtCoord { x: number; y: number; }
 
-// Setter release a rete zona 2
-// HOME: rete a sinistra, x piccolo → zona 1 in basso (lato destro visto da dietro)
-export const SETTER_RELEASE_HOME: CourtCoord = { x: 22, y: 78 };
-// AWAY: rete a destra, x grande → zona 1 in alto (metà ruotata di 180°)
-export const SETTER_RELEASE_AWAY: CourtCoord = { x: 78, y: 22 };
+// Setter release a rete zona 2.
+// Nel campo completo standard AWAY è a sinistra (P1 basso), HOME a destra
+// (P1 alto): le due metà sono viste con orientamento opposto rispetto alla rete.
+export const SETTER_RELEASE_HOME: CourtCoord = { x: 22, y: 22 };
+export const SETTER_RELEASE_AWAY: CourtCoord = { x: 78, y: 78 };
 
 // Posizioni base di rotazione P1..P6 (in %), condivise tra VolleyballCourt (rendering)
 // e la risoluzione zona del tocco live (LiveScout).
 export const POS_AWAY: Record<number, CourtCoord> = {
-  2: { x: 78, y: 22 }, 3: { x: 78, y: 50 }, 4: { x: 78, y: 78 },
-  1: { x: 28, y: 22 }, 6: { x: 28, y: 50 }, 5: { x: 28, y: 78 },
+  2: { x: 78, y: 78 }, 3: { x: 78, y: 50 }, 4: { x: 78, y: 22 },
+  1: { x: 28, y: 78 }, 6: { x: 28, y: 50 }, 5: { x: 28, y: 22 },
 };
 export const POS_HOME: Record<number, CourtCoord> = {
-  2: { x: 22, y: 78 }, 3: { x: 22, y: 50 }, 4: { x: 22, y: 22 },
-  1: { x: 72, y: 78 }, 6: { x: 72, y: 50 }, 5: { x: 72, y: 22 },
+  2: { x: 22, y: 22 }, 3: { x: 22, y: 50 }, 4: { x: 22, y: 78 },
+  1: { x: 72, y: 22 }, 6: { x: 72, y: 50 }, 5: { x: 72, y: 78 },
 };
 
 // Centri delle 9 zone DVW (per heatmap, overlay, e risoluzione zona del tocco live)
 export const ZONE_CENTERS_AWAY: { zone: number; x: number; y: number }[] = [
-  { zone: 4, x: 78, y: 78 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 22 },
-  { zone: 5, x: 28, y: 78 }, { zone: 6, x: 28, y: 50 }, { zone: 1, x: 28, y: 22 },
-  { zone: 7, x: 6,  y: 78 }, { zone: 8, x: 6,  y: 50 }, { zone: 9, x: 6,  y: 22 },
+  { zone: 4, x: 78, y: 22 }, { zone: 3, x: 78, y: 50 }, { zone: 2, x: 78, y: 78 },
+  { zone: 5, x: 28, y: 22 }, { zone: 6, x: 28, y: 50 }, { zone: 1, x: 28, y: 78 },
+  { zone: 7, x: 6,  y: 22 }, { zone: 8, x: 6,  y: 50 }, { zone: 9, x: 6,  y: 78 },
 ];
 export const ZONE_CENTERS_HOME: { zone: number; x: number; y: number }[] = [
-  { zone: 4, x: 22, y: 22 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 78 },
-  { zone: 5, x: 72, y: 22 }, { zone: 6, x: 72, y: 50 }, { zone: 1, x: 72, y: 78 },
-  { zone: 7, x: 94, y: 22 }, { zone: 8, x: 94, y: 50 }, { zone: 9, x: 94, y: 78 },
+  { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
+  { zone: 5, x: 72, y: 78 }, { zone: 6, x: 72, y: 50 }, { zone: 1, x: 72, y: 22 },
+  { zone: 7, x: 94, y: 78 }, { zone: 8, x: 94, y: 50 }, { zone: 9, x: 94, y: 22 },
 ];
 
 export function isSetterReleasePhase(phase: TeamTacticalPhase): boolean {
@@ -98,7 +98,7 @@ export function resolvePlayerPosition(args: ResolvePlayerPositionArgs): CourtCoo
   const formationPos = rawFormationPos
     ? {
         x: isHome ? rawFormationPos.y : 100 - rawFormationPos.y,
-        y: isHome ? rawFormationPos.x : 100 - rawFormationPos.x,
+        y: isHome ? 100 - rawFormationPos.x : rawFormationPos.x,
       }
     : null;
 
