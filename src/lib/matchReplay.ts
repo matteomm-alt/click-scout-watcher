@@ -13,13 +13,24 @@ export function applyLiberoAutoSwap(
   liberoNum: number | null | undefined,
   benchedMb: number | null | undefined,
 ): { lineup: number[]; benchedMb: number | null } {
-  if (!liberoNum) return { lineup: [...lineup], benchedMb: benchedMb ?? null };
   const roleOf = (n: number) => team.players.find((p) => p.number === n)?.role;
   const out = [...lineup];
   let benched: number | null = benchedMb ?? null;
   // Posizioni vietate al libero: P1 (battuta) e prima linea P2/P3/P4.
   const ILLEGAL = [0, 1, 2, 3];
-  const liberoIdx = out.indexOf(liberoNum);
+  // Non dipendere soltanto dal libero selezionato nella formazione: le rose
+  // importate possono indicarlo tramite ruolo/isLibero senza valorizzare
+  // libero1. In quel caso va protetto comunque, soprattutto in P1.
+  const rosterLiberoNumbers = team.players
+    .filter((player) => player.isLibero || player.role === 'L')
+    .map((player) => player.number);
+  const illegalLiberoNum = out.find((number, index) =>
+    ILLEGAL.includes(index) && rosterLiberoNumbers.includes(number),
+  );
+  const activeLiberoNum = illegalLiberoNum ?? liberoNum ?? null;
+  if (!activeLiberoNum) return { lineup: out, benchedMb: benched };
+
+  const liberoIdx = out.indexOf(activeLiberoNum);
   if (benched != null && liberoIdx >= 0 && ILLEGAL.includes(liberoIdx)) {
     out[liberoIdx] = benched;
     benched = null;
@@ -28,21 +39,21 @@ export function applyLiberoAutoSwap(
   // posizione di battuta (P1). Se ci finisce (es. formazione iniziale errata o
   // rotazione), viene scambiato con un giocatore di seconda linea (P5/P6),
   // preferibilmente un centrale.
-  let illegalIdx = out.indexOf(liberoNum);
+  let illegalIdx = out.indexOf(activeLiberoNum);
   if (illegalIdx >= 0 && ILLEGAL.includes(illegalIdx)) {
     const backIdx =
-      [4, 5].find((i) => out[i] && out[i] !== liberoNum && roleOf(out[i]) === 'M') ??
-      [4, 5].find((i) => out[i] && out[i] !== liberoNum);
+      [4, 5].find((i) => out[i] && out[i] !== activeLiberoNum && roleOf(out[i]) === 'M') ??
+      [4, 5].find((i) => out[i] && out[i] !== activeLiberoNum && !rosterLiberoNumbers.includes(out[i]));
     if (backIdx !== undefined) {
       const swapped = out[backIdx];
-      out[backIdx] = liberoNum;
+      out[backIdx] = activeLiberoNum;
       out[illegalIdx] = swapped;
       benched = null;
     }
   }
   // Ultima risorsa: nessuna seconda linea disponibile → il libero esce e
   // rientra un giocatore dalla panchina (preferibilmente un centrale).
-  illegalIdx = out.indexOf(liberoNum);
+  illegalIdx = out.indexOf(activeLiberoNum);
   if (illegalIdx >= 0 && ILLEGAL.includes(illegalIdx)) {
     const onCourt = new Set(out);
     const bench = team.players.filter(
@@ -51,7 +62,7 @@ export function applyLiberoAutoSwap(
     const replacement = bench.find((p) => p.role === 'M') ?? bench[0];
     if (replacement) out[illegalIdx] = replacement.number;
   }
-  if (benched == null && !out.includes(liberoNum)) {
+  if (benched == null && liberoNum != null && !out.includes(liberoNum)) {
     for (const idx of [4, 5]) {
       const num = out[idx];
       if (num && num !== liberoNum && roleOf(num) === 'M') {

@@ -75,6 +75,22 @@ describe('matchStore — rotazioni FIVB', () => {
   });
 });
 
+describe('matchStore — libero riconosciuto dalla rosa', () => {
+  it('sposta da P1 anche un libero non assegnato nel campo libero1', () => {
+    const team = {
+      id: 'role-only', code: 'ROL', name: 'Ruolo libero', coach: '', assistantCoach: '', color: '#fff',
+      players: [
+        mkPlayer(11, 'L', true), mkPlayer(2, 'O'), mkPlayer(3, 'M'),
+        mkPlayer(4, 'OP'), mkPlayer(5, 'O'), mkPlayer(6, 'M'),
+      ],
+    };
+    const result = applyLiberoAutoSwap([11, 2, 3, 4, 5, 6], team, null, null);
+
+    expect(result.lineup[0]).not.toBe(11);
+    expect(result.lineup[5]).toBe(11);
+  });
+});
+
 describe('matchStore — partita demo', () => {
   it('schiera il libero in P6 e mai in P1 nella squadra al servizio', () => {
     const store = useMatchStore.getState();
