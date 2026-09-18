@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Wand2 } from 'lucide-react';
 import { autoLineup51 } from '@/lib/lineup51';
 import { toast } from 'sonner';
+import { useEffect, useRef } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTeamFormations, type TeamFormationOption } from '@/hooks/useTeamFormations';
+import { POS_KEYS } from '@/lib/teamRotations';
 
 const POSITION_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
 const POSITION_KEYS: (keyof Lineup)[] = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
@@ -27,11 +31,15 @@ function TeamLineup({
   team,
   lineup,
   setLineup,
+  teamFormations,
+  applyTeamFormation,
 }: {
   side: 'home' | 'away';
   team: Team;
   lineup: Lineup;
   setLineup: (l: Partial<Lineup>) => void;
+  teamFormations: TeamFormationOption[];
+  applyTeamFormation: (side: 'home' | 'away', f: TeamFormationOption) => void;
 }) {
   const assignedIds = POSITION_KEYS.map(k => lineup[k]).filter(Boolean) as string[];
   const availablePlayers = team.players.filter(
