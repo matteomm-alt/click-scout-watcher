@@ -11,12 +11,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, ArrowRight } from 'lucide-react';
 import { TeamRosterEditor } from '@/components/teams/TeamRosterEditor';
 import { TeamDetailCard } from '@/components/teams/TeamDetailCard';
+import { TeamFormationsTab } from '@/components/teams/TeamFormationsTab';
 
 
 const STORAGE_KEY = 'team_dashboard_sections_v1';
 
 interface SectionFlags {
   roster: boolean;
+  formations: boolean;
   attendance: boolean;
   injuries: boolean;
   trainings: boolean;
