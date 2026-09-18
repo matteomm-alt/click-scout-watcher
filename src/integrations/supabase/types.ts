@@ -800,9 +800,12 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          is_default: boolean
           name: string
           reception_formations: Json | null
+          rotations: Json
           society_id: string
+          team_id: string | null
           template_type: string
           updated_at: string
         }
@@ -812,9 +815,12 @@ export type Database = {
           created_by: string
           description?: string | null
           id?: string
+          is_default?: boolean
           name: string
           reception_formations?: Json | null
+          rotations?: Json
           society_id: string
+          team_id?: string | null
           template_type?: string
           updated_at?: string
         }
@@ -824,9 +830,12 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          is_default?: boolean
           name?: string
           reception_formations?: Json | null
+          rotations?: Json
           society_id?: string
+          team_id?: string | null
           template_type?: string
           updated_at?: string
         }
@@ -836,6 +845,13 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formation_templates_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
