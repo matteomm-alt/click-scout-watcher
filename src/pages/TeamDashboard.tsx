@@ -28,6 +28,7 @@ interface SectionFlags {
 
 const DEFAULT_FLAGS: SectionFlags = {
   roster: true,
+  formations: true,
   attendance: true,
   injuries: true,
   trainings: true,
@@ -103,6 +104,7 @@ interface Convocation {
 
 const SECTION_LABELS: Record<keyof SectionFlags, string> = {
   roster: 'Rosa atleti',
+  formations: 'Formazioni',
   attendance: 'Presenze',
   injuries: 'Infortuni',
   trainings: 'Allenamenti',
@@ -336,6 +338,14 @@ export default function TeamDashboard() {
           societyId={team?.society_id ?? null}
           athletes={athletes}
           onChanged={() => setRosterRefresh((n) => n + 1)}
+        />
+      )}
+
+      {flags.formations && id && (
+        <TeamFormationsTab
+          teamId={id}
+          societyId={team?.society_id ?? null}
+          athletes={athletes}
         />
       )}
 
