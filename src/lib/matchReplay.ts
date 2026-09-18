@@ -110,18 +110,36 @@ export function applyEvent(
 ): MatchState {
   switch (event.type) {
     case 'match_started':
+      {
+        const homeLibero = ctx.homeTeam.players
+          .find((player) => player.id === ctx.homeLineup.libero1)?.number ?? null;
+        const awayLibero = ctx.awayTeam.players
+          .find((player) => player.id === ctx.awayLineup.libero1)?.number ?? null;
+        const home = applyLiberoAutoSwap(
+          event.homeLineup,
+          ctx.homeTeam,
+          homeLibero,
+          event.homeBenchedMb,
+        );
+        const away = applyLiberoAutoSwap(
+          event.awayLineup,
+          ctx.awayTeam,
+          awayLibero,
+          event.awayBenchedMb,
+        );
       return {
         ...state,
         isMatchStarted: true,
-        homeCurrentLineup: event.homeLineup,
-        awayCurrentLineup: event.awayLineup,
+        homeCurrentLineup: home.lineup,
+        awayCurrentLineup: away.lineup,
         homeSetterPosition: event.homeSetterPosition,
         awaySetterPosition: event.awaySetterPosition,
-        homeBenchedMb: event.homeBenchedMb,
-        awayBenchedMb: event.awayBenchedMb,
+        homeBenchedMb: home.benchedMb,
+        awayBenchedMb: away.benchedMb,
         servingTeam: event.servingTeam,
         teamTacticalPhases: getInitialPhases(event.servingTeam),
       };
+      }
 
     case 'touch': {
       const action: ScoutAction = {

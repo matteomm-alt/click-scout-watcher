@@ -75,6 +75,23 @@ describe('matchStore — rotazioni FIVB', () => {
   });
 });
 
+describe('matchStore — partita demo', () => {
+  it('non schiera il libero in P1 nella squadra al servizio', () => {
+    const store = useMatchStore.getState();
+    store.resetMatch();
+    store.loadDemoMatch();
+
+    const { homeTeam, matchState } = useMatchStore.getState();
+    const server = homeTeam.players.find(
+      (player) => player.number === matchState.homeCurrentLineup[0],
+    );
+
+    expect(matchState.servingTeam).toBe('home');
+    expect(server?.isLibero).toBe(false);
+    expect(server?.role).not.toBe('L');
+  });
+});
+
 describe('matchStore — snapshot azione (Phase 11)', () => {
   beforeEach(() => bootstrap());
 
