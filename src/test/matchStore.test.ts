@@ -76,7 +76,7 @@ describe('matchStore — rotazioni FIVB', () => {
 });
 
 describe('matchStore — partita demo', () => {
-  it('non schiera il libero in P1 nella squadra al servizio', () => {
+  it('schiera il libero in P6 e mai in P1 nella squadra al servizio', () => {
     const store = useMatchStore.getState();
     store.resetMatch();
     store.loadDemoMatch();
@@ -89,6 +89,7 @@ describe('matchStore — partita demo', () => {
     expect(matchState.servingTeam).toBe('home');
     expect(server?.isLibero).toBe(false);
     expect(server?.role).not.toBe('L');
+    expect(matchState.homeCurrentLineup[5]).toBe(2);
   });
 });
 
