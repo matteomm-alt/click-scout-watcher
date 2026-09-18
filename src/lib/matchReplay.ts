@@ -373,12 +373,20 @@ export function applyEvent(
         ? 'homeCurrentLineup' : 'awayCurrentLineup';
       const usedKey = event.team === 'home'
         ? 'homeSubstitutionsUsed' : 'awaySubstitutionsUsed';
+      const benchedKey = event.team === 'home'
+        ? 'homeBenchedMb' : 'awayBenchedMb';
       const lineup = [...state[lineupKey]];
       const idx = lineup.indexOf(event.playerOut);
       if (idx >= 0) lineup[idx] = event.playerIn;
+      const teamData = event.team === 'home' ? ctx.homeTeam : ctx.awayTeam;
+      const configuredLineup = event.team === 'home' ? ctx.homeLineup : ctx.awayLineup;
+      const liberoNum = teamData.players
+        .find((player) => player.id === configuredLineup.libero1)?.number ?? null;
+      const legal = applyLiberoAutoSwap(lineup, teamData, liberoNum, state[benchedKey]);
       return {
         ...state,
-        [lineupKey]: lineup,
+        [lineupKey]: legal.lineup,
+        [benchedKey]: legal.benchedMb,
         [usedKey]: state[usedKey] + (event.countTowardsLimit ? 1 : 0),
       };
     }
