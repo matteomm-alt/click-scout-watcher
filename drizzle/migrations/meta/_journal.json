@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789715280063,
+      "tag": "0000_formation_templates_team_rotations",
+      "breakpoints": true
+    }
+  ]
+}

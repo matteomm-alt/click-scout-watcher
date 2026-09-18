@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Wand2 } from 'lucide-react';
 import { autoLineup51 } from '@/lib/lineup51';
 import { toast } from 'sonner';
+import { useEffect, useRef } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTeamFormations, type TeamFormationOption } from '@/hooks/useTeamFormations';
+import { POS_KEYS } from '@/lib/teamRotations';
 
 const POSITION_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
 const POSITION_KEYS: (keyof Lineup)[] = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
@@ -27,11 +31,15 @@ function TeamLineup({
   team,
   lineup,
   setLineup,
+  teamFormations,
+  applyTeamFormation,
 }: {
   side: 'home' | 'away';
   team: Team;
   lineup: Lineup;
   setLineup: (l: Partial<Lineup>) => void;
+  teamFormations: TeamFormationOption[];
+  applyTeamFormation: (side: 'home' | 'away', f: TeamFormationOption) => void;
 }) {
   const assignedIds = POSITION_KEYS.map(k => lineup[k]).filter(Boolean) as string[];
   const availablePlayers = team.players.filter(
@@ -113,6 +121,29 @@ function TeamLineup({
           </button>
         </div>
       </div>
+      {teamFormations.length > 0 && (
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground font-medium">Formazione squadra</label>
+          <Select
+            value=""
+            onValueChange={(v) => {
+              const f = teamFormations.find((x) => x.id === v);
+              if (f) applyTeamFormation(side, f);
+            }}
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Applica una rotazione predefinita" />
+            </SelectTrigger>
+            <SelectContent>
+              {teamFormations.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.teamName} · {f.name}{f.isDefault ? ' (predefinita)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       {/* Court visual */}
       <div className="court-gradient rounded-xl p-4 border border-court-line/30">
         <div className="text-center text-xs text-court-line mb-2 font-medium tracking-wider">RETE</div>
@@ -229,7 +260,53 @@ export function LineupSelector() {
     homeLineup, awayLineup,
     setHomeLineup, setAwayLineup,
     setStep, startMatch,
+    loadReceptionFormations, loadAttackFormations,
   } = useMatchStore();
+  const { formations: teamFormations } = useTeamFormations();
+  const autoAppliedRef = useRef(false);
+
+  const applyTeamFormation = (side: 'home' | 'away', f: TeamFormationOption) => {
+    const team = side === 'home' ? homeTeam : awayTeam;
+    const setLineup = side === 'home' ? setHomeLineup : setAwayLineup;
+    const byNumber = (n: number | null) =>
+      n == null ? null : (team.players.find((p) => p.number === n)?.id ?? null);
+
+    const patch: Partial<Lineup> = {};
+    let missing = 0;
+    POS_KEYS.forEach((k) => {
+      const id = byNumber(f.base[k]);
+      if (!id) missing += 1;
+      patch[k as keyof Lineup] = id as never;
+    });
+    patch.setter = byNumber(f.base.setter) as never;
+    patch.libero1 = byNumber(f.base.libero) as never;
+    setLineup(patch);
+
+    if (f.receptionFormations) loadReceptionFormations(side, f.receptionFormations);
+    if (f.attackFormations) loadAttackFormations(side, f.attackFormations);
+
+    if (missing > 0) {
+      toast.warning(`Formazione "${f.name}" applicata parzialmente`, {
+        description: `${missing} numeri di maglia non presenti in questa rosa.`,
+      });
+    } else {
+      toast.success(`Formazione "${f.name}" applicata`, {
+        description: 'Rotazioni e posizioni di ricezione attive sul campo.',
+      });
+    }
+  };
+
+  // Applica automaticamente la formazione predefinita al primo accesso
+  useEffect(() => {
+    if (autoAppliedRef.current || teamFormations.length === 0) return;
+    const def = teamFormations.find((f) => f.isDefault);
+    if (!def) return;
+    const homeEmpty = POSITION_KEYS.every((k) => !homeLineup[k]);
+    if (!homeEmpty || homeTeam.players.length === 0) return;
+    autoAppliedRef.current = true;
+    applyTeamFormation('home', def);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamFormations, homeTeam.players.length]);
 
   const isHomeComplete = POSITION_KEYS.every(k => homeLineup[k]) && homeLineup.setter;
   const isAwayComplete = POSITION_KEYS.every(k => awayLineup[k]) && awayLineup.setter;
@@ -261,8 +338,14 @@ export function LineupSelector() {
         </div>
 
         <div className="grid grid-cols-2 gap-8">
-          <TeamLineup side="home" team={homeTeam} lineup={homeLineup} setLineup={setHomeLineup} />
-          <TeamLineup side="away" team={awayTeam} lineup={awayLineup} setLineup={setAwayLineup} />
+          <TeamLineup
+            side="home" team={homeTeam} lineup={homeLineup} setLineup={setHomeLineup}
+            teamFormations={teamFormations} applyTeamFormation={applyTeamFormation}
+          />
+          <TeamLineup
+            side="away" team={awayTeam} lineup={awayLineup} setLineup={setAwayLineup}
+            teamFormations={teamFormations} applyTeamFormation={applyTeamFormation}
+          />
         </div>
 
         {!canStart && (

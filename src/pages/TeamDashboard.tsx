@@ -11,12 +11,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, ArrowRight } from 'lucide-react';
 import { TeamRosterEditor } from '@/components/teams/TeamRosterEditor';
 import { TeamDetailCard } from '@/components/teams/TeamDetailCard';
+import { TeamFormationsTab } from '@/components/teams/TeamFormationsTab';
 
 
 const STORAGE_KEY = 'team_dashboard_sections_v1';
 
 interface SectionFlags {
   roster: boolean;
+  formations: boolean;
   attendance: boolean;
   injuries: boolean;
   trainings: boolean;
@@ -26,6 +28,7 @@ interface SectionFlags {
 
 const DEFAULT_FLAGS: SectionFlags = {
   roster: true,
+  formations: true,
   attendance: true,
   injuries: true,
   trainings: true,
@@ -101,6 +104,7 @@ interface Convocation {
 
 const SECTION_LABELS: Record<keyof SectionFlags, string> = {
   roster: 'Rosa atleti',
+  formations: 'Formazioni',
   attendance: 'Presenze',
   injuries: 'Infortuni',
   trainings: 'Allenamenti',
@@ -334,6 +338,14 @@ export default function TeamDashboard() {
           societyId={team?.society_id ?? null}
           athletes={athletes}
           onChanged={() => setRosterRefresh((n) => n + 1)}
+        />
+      )}
+
+      {flags.formations && id && (
+        <TeamFormationsTab
+          teamId={id}
+          societyId={team?.society_id ?? null}
+          athletes={athletes}
         />
       )}
 
