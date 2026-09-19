@@ -28,6 +28,7 @@ export interface MatchStartedEvent extends BaseEvent {
   homeBenchedMb: number | null;
   awayBenchedMb: number | null;
   servingTeam: 'home' | 'away';
+  homeCourtSide?: 'left' | 'right';
 }
 
 export interface TouchEvent extends BaseEvent {

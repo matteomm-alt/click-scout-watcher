@@ -31,7 +31,8 @@ function getMode(s: ScoutSettings): 'simple' | 'advanced' | 'custom' {
 
 export function MatchConfig() {
   const {
-    homeTeam, awayTeam, matchState,
+    homeTeam, awayTeam, matchInfo, matchState,
+    setMatchInfo,
     setStep, startMatch, setServingTeam,
   } = useMatchStore();
   const { settings, setSetting, setSettings } = useScoutSettings();
@@ -95,10 +96,44 @@ export function MatchConfig() {
         </div>
       </section>
 
-      {/* ② Modalità scouting */}
+      {/* ② Lato campo */}
       <section className="space-y-2">
         <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-          ② Modalità scouting
+          ② Lato campo
+        </h2>
+        <div className="grid grid-cols-2 gap-2">
+          {(['left', 'right'] as const).map((side) => {
+            const active = matchInfo.homeCourtSide === side;
+            const leftName = side === 'left' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite');
+            const rightName = side === 'left' ? (awayTeam.name || 'Ospite') : (homeTeam.name || 'Casa');
+            return (
+              <button
+                key={side}
+                type="button"
+                onClick={() => setMatchInfo({ homeCourtSide: side })}
+                className={cn(
+                  'rounded-xl border-2 px-3 py-3 text-left transition-all active:scale-95',
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                    : 'bg-secondary/30 border-border text-muted-foreground hover:border-primary/40',
+                )}
+              >
+                <span className="block text-sm font-black uppercase">
+                  Casa a {side === 'left' ? 'sinistra' : 'destra'}
+                </span>
+                <span className="mt-1 block truncate text-[11px] font-bold opacity-75">
+                  {leftName} ← rete → {rightName}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ③ Modalità scouting */}
+      <section className="space-y-2">
+        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+          ③ Modalità scouting
         </h2>
         <div className="grid grid-cols-2 gap-2">
           {[
@@ -165,10 +200,10 @@ export function MatchConfig() {
         )}
       </section>
 
-      {/* ③ Schemi di gioco */}
+      {/* ④ Schemi di gioco */}
       <section className="space-y-2">
         <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-          ③ Schemi di gioco
+          ④ Schemi di gioco
         </h2>
         <button
           onClick={() => setReceptionEditorOpen(true)}

@@ -104,6 +104,7 @@ const defaultMatchInfo: MatchInfo = {
   season: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
   league: '', phase: '', venue: '', city: '',
   referee1: '', referee2: '', scorer: '', totalSets: 5,
+  homeCourtSide: 'right',
 };
 const defaultTeam: Team = {
   id: '', code: '', name: '', coach: '', assistantCoach: '',
@@ -118,6 +119,7 @@ const emptyMatchState: MatchState = {
   homeSetsWon: 0, awaySetsWon: 0, setResults: [],
   servingTeam: 'home', homeSetterPosition: 1, awaySetterPosition: 1,
   homeCurrentLineup: [], awayCurrentLineup: [],
+  homeCourtSide: 'right',
   isMatchStarted: false, isMatchEnded: false, singleTeamMode: false,
   actions: [], homeTimeoutsUsed: 0, awayTimeoutsUsed: 0,
   homeSubstitutionsUsed: 0, awaySubstitutionsUsed: 0,
@@ -216,7 +218,7 @@ export const useMatchStore = create<MatchStore>()(
       matchState: { ...emptyMatchState },
 
       startMatch: () => {
-        const { homeLineup, awayLineup, homeTeam, awayTeam, matchState } = get();
+        const { homeLineup, awayLineup, homeTeam, awayTeam, matchState, matchInfo } = get();
         const findSetterPos = (lineup: Lineup): number => {
           const positions = [
             lineup.p1, lineup.p2, lineup.p3,
@@ -244,6 +246,7 @@ export const useMatchStore = create<MatchStore>()(
           homeBenchedMb: home.benchedMb,
           awayBenchedMb: away.benchedMb,
           servingTeam: matchState.servingTeam,
+          homeCourtSide: matchInfo.homeCourtSide ?? 'right',
         };
         set((s) => addEventAndApply(s, event));
         try {
@@ -709,6 +712,7 @@ export const useMatchStore = create<MatchStore>()(
           homeBenchedMb: home.benchedMb,
           awayBenchedMb: away.benchedMb,
           servingTeam: 'home',
+          homeCourtSide: 'left',
         };
         const ctx: ReplayContext = {
           homeTeam: demoHomeTeam, awayTeam: demoAwayTeam,
@@ -722,7 +726,7 @@ export const useMatchStore = create<MatchStore>()(
             ...defaultMatchInfo,
             league: 'Serie A', venue: 'PalaDemo', city: 'Roma',
             referee1: 'Arbitro 1', referee2: 'Arbitro 2',
-            scorer: 'Demo Scout', totalSets: 5,
+            scorer: 'Demo Scout', totalSets: 5, homeCourtSide: 'left',
           },
           homeTeam: demoHomeTeam,
           awayTeam: demoAwayTeam,

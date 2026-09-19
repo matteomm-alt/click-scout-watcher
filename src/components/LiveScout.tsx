@@ -53,6 +53,7 @@ export function LiveScout() {
   const { settings, setSetting, setSettings } = useScoutSettings();
   const scoutingMode: ScoutingMode =
     (!settings.showAlzata && !settings.showDifesa) ? 'simple' : 'advanced';
+  const homeOnLeft = matchState.homeCourtSide === 'left';
 
   // Stato interno
   const [selectedPlayer, setSelectedPlayer] = useState<{ number: number; team: 'home' | 'away' } | null>(null);
@@ -533,7 +534,7 @@ export function LiveScout() {
 
       {/* HEADER: ScoreBoard */}
       <div className="shrink-0 px-2 pt-2">
-        <ScoreBoard awayFirst={!settings.swapCourtSides} />
+        <ScoreBoard awayFirst={!homeOnLeft} />
       </div>
 
       {/* FOOTER FISSA skill+evaluation (SOLO MOBILE: su desktop il wizard è nel pannello laterale destro,
@@ -626,7 +627,7 @@ export function LiveScout() {
           <div className="flex-1 min-h-0 px-1 pt-4">
             <VolleyballCourt
               layout="split"
-              swapSides={settings.swapCourtSides}
+              swapSides={homeOnLeft}
               heatmapData={homeHeatmap}
               liveArrows={liveArrows}
               highlightTeam={suggestion?.team ?? null}
@@ -769,7 +770,7 @@ export function LiveScout() {
         <div className="flex-1 min-h-0">
           <VolleyballCourt
             layout="split"
-            swapSides={settings.swapCourtSides}
+            swapSides={homeOnLeft}
             highlightTeam={suggestion?.team ?? null}
             highlightPlayerNumber={suggestion?.playerNumber ?? null}
             simplifiedView={simplified}
