@@ -143,6 +143,7 @@ export function applyEvent(
         isMatchStarted: true,
         homeCurrentLineup: home.lineup,
         awayCurrentLineup: away.lineup,
+        homeCourtSide: event.homeCourtSide ?? state.homeCourtSide ?? 'right',
         homeSetterPosition: event.homeSetterPosition,
         awaySetterPosition: event.awaySetterPosition,
         homeBenchedMb: home.benchedMb,

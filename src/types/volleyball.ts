@@ -32,6 +32,7 @@ export interface MatchInfo {
   referee2: string;
   scorer: string;
   totalSets: number; // 3 or 5
+  homeCourtSide: 'left' | 'right';
 }
 
 export interface Lineup {
@@ -227,6 +228,7 @@ export interface MatchState {
   awaySetterPosition: number; // 1-6
   homeCurrentLineup: number[]; // 6 player numbers P1-P6
   awayCurrentLineup: number[]; // 6 player numbers P1-P6
+  homeCourtSide: 'left' | 'right';
   isMatchStarted: boolean;
   isMatchEnded: boolean;
   singleTeamMode?: boolean;
