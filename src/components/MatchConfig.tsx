@@ -31,7 +31,8 @@ function getMode(s: ScoutSettings): 'simple' | 'advanced' | 'custom' {
 
 export function MatchConfig() {
   const {
-    homeTeam, awayTeam, matchState,
+    homeTeam, awayTeam, matchInfo, matchState,
+    setMatchInfo,
     setStep, startMatch, setServingTeam,
   } = useMatchStore();
   const { settings, setSetting, setSettings } = useScoutSettings();

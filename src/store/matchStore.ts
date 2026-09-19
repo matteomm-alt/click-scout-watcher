@@ -246,7 +246,7 @@ export const useMatchStore = create<MatchStore>()(
           homeBenchedMb: home.benchedMb,
           awayBenchedMb: away.benchedMb,
           servingTeam: matchState.servingTeam,
-          homeCourtSide: matchInfo.homeCourtSide,
+          homeCourtSide: matchInfo.homeCourtSide ?? 'right',
         };
         set((s) => addEventAndApply(s, event));
         try {

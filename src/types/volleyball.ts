@@ -32,7 +32,7 @@ export interface MatchInfo {
   referee2: string;
   scorer: string;
   totalSets: number; // 3 or 5
-  homeCourtSide: 'left' | 'right';
+  homeCourtSide?: 'left' | 'right';
 }
 
 export interface Lineup {

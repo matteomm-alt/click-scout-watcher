@@ -97,6 +97,7 @@ function emptyState(): MatchState {
     awaySetterPosition: 1,
     homeCurrentLineup: [],
     awayCurrentLineup: [],
+    homeCourtSide: 'right',
     isMatchStarted: false,
     isMatchEnded: false,
     singleTeamMode: false,
