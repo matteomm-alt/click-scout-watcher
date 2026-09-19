@@ -118,6 +118,24 @@ describe('matchStore — partita demo', () => {
     expect(server?.role).not.toBe('L');
     expect(matchState.homeCurrentLineup[5]).toBe(2);
   });
+
+  it('salva la scelta pre-partita Casa a sinistra/destra nello stato partita', () => {
+    const store = useMatchStore.getState();
+    store.resetMatch();
+    store.setHomeTeam({ players: roster });
+    store.setAwayTeam({ players: roster.map(p => ({ ...p, id: `a${p.number}` })) });
+    store.setHomeLineup(lineup);
+    store.setAwayLineup({
+      ...lineup,
+      p1: 'a1', p2: 'a5', p3: 'a2', p4: 'a6', p5: 'a4', p6: 'a3',
+      libero1: 'a7', setter: 'a1',
+    });
+    store.setMatchInfo({ homeCourtSide: 'left' });
+    store.startMatch();
+
+    expect(useMatchStore.getState().matchState.homeCourtSide).toBe('left');
+    expect(useMatchStore.getState().events[0]).toMatchObject({ homeCourtSide: 'left' });
+  });
 });
 
 describe('matchStore — snapshot azione (Phase 11)', () => {
