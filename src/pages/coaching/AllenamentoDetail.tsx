@@ -316,6 +316,20 @@ export default function AllenamentoDetail() {
           Salva modifiche
         </Button>
       </div>
+
+      <TrainingAttendanceDialog
+        open={attOpen}
+        onOpenChange={setAttOpen}
+        training={id ? {
+          id,
+          title: form.title,
+          scheduled_date: form.scheduled_date || null,
+          team_id: form.team_id,
+          participating_athlete_ids: form.participating_athlete_ids,
+          duration_min: form.duration_min,
+          season,
+        } : null}
+      />
     </div>
   );
 }
