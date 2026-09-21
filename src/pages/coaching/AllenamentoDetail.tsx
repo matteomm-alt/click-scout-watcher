@@ -43,6 +43,7 @@ export default function AllenamentoDetail() {
   const [saving, setSaving] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [form, setForm] = useState<TrainingFormValue | null>(null);
+  const [attOpen, setAttOpen] = useState(false);
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [teams, setTeams] = useState<TeamLite[]>([]);
   const [athletes, setAthletes] = useState<AthleteLite[]>([]);
