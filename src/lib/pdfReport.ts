@@ -650,9 +650,9 @@ export function generateAthleteCard(data: AthleteCardData, mode: PdfColorMode = 
   return doc;
 }
 
-export function downloadAthleteCard(data: AthleteCardData) {
-  const doc = generateAthleteCard(data);
-  doc.save(`scheda_${safeName(data.lastName)}${data.number ?? ''}.pdf`);
+export function downloadAthleteCard(data: AthleteCardData, mode: PdfColorMode = 'color') {
+  const doc = generateAthleteCard(data, mode);
+  doc.save(`scheda_${safeName(data.lastName)}${data.number ?? ''}${mode === 'bw' ? '_bn' : ''}.pdf`);
 }
 
 // ============================================================
