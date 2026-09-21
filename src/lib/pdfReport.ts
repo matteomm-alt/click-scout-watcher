@@ -174,7 +174,7 @@ function drawKpiTable(
   doc.setFontSize(8);
   stats.forEach((s, idx) => {
     if (idx % 2 === 0) {
-      doc.setFillColor(248, 248, 250);
+      doc.setFillColor(...ROW_ALT);
       doc.rect(MARGIN, y, tableW, 5.5, 'F');
     }
     doc.setTextColor(...DARK);
@@ -192,8 +192,8 @@ function drawKpiTable(
       if (i === 5) {
         // colorize efficiency
         const eff = s.efficiency;
-        if (eff >= 30) doc.setTextColor(20, 140, 60);
-        else if (eff < 0) doc.setTextColor(200, 50, 40);
+        if (eff >= 30) doc.setTextColor(...POSITIVE);
+        else if (eff < 0) doc.setTextColor(...NEGATIVE);
         else doc.setTextColor(...DARK);
       } else {
         doc.setTextColor(...DARK);
@@ -285,7 +285,7 @@ function drawTopScorers(
       doc.setFont('helvetica', 'bold');
     } else {
       if (idx % 2 === 1) {
-        doc.setFillColor(248, 248, 250);
+        doc.setFillColor(...ROW_ALT);
         doc.rect(MARGIN, y, tableW, 5.5, 'F');
       }
       doc.setTextColor(...DARK);
