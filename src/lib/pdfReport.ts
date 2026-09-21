@@ -491,7 +491,8 @@ export interface AthleteCardData {
   societyName?: string | null;
 }
 
-export function generateAthleteCard(data: AthleteCardData): jsPDF {
+export function generateAthleteCard(data: AthleteCardData, mode: PdfColorMode = 'color'): jsPDF {
+  applyPdfMode(mode);
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   // Header
   doc.setFillColor(...DARK);
