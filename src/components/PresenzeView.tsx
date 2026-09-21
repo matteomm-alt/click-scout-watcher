@@ -1,212 +1,125 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ClipboardCheck, Check, X, AlertCircle, HeartPulse, ClipboardList, BarChart3, Download } from 'lucide-react';
+import { ClipboardCheck, BarChart3, Download, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   BarChart, Bar, XAxis, YAxis, ReferenceLine, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
-import { useCurrentSeason, seasonRange } from '@/hooks/useCurrentSeason';
-import { isFeatureEnabled } from '@/lib/societyFeatures';
-import { toast } from 'sonner';
 
-interface Event { id: string; title: string; start_at: string; event_type: string; }
-interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; team_id: string | null; }
+interface Athlete {
+  id: string; last_name: string; first_name: string | null; number: number | null; team_id: string | null;
+}
 interface TeamLite { id: string; name: string; }
-interface Attendance { athlete_id: string; status: 'presente' | 'assente' | 'giustificato'; note: string | null; }
-
-const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
-  presente: 'default', assente: 'destructive', giustificato: 'secondary',
-};
-const PRESENCE_COLORS: Record<string, { bg: string; text: string }> = {
-  'presente':    { bg: '#d1fae5', text: '#065f46' },
-  'assente':     { bg: '#fee2e2', text: '#991b1b' },
-  'giustificato':{ bg: '#fef3c7', text: '#92400e' },
-};
+interface AttRow { athlete_id: string; status: string; }
 
 const SOGLIA = 70;
 
 export function PresenzeView() {
-  const { user } = useAuth();
-  const { societyId, features } = useActiveSociety();
-  const { currentSeason } = useCurrentSeason();
-  const injuriesEnabled = isFeatureEnabled(features, 'injuries');
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const { societyId } = useActiveSociety();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [attendances, setAttendances] = useState<Record<string, Attendance>>({});
-  const [injuredIds, setInjuredIds] = useState<Set<string>>(new Set());
   const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [rows, setRows] = useState<AttRow[]>([]);
   const [teamFilter, setTeamFilter] = useState<string>('all');
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState<string | null>(null);
-  const [noteDialog, setNoteDialog] = useState<{ athleteId: string; status: 'assente' | 'giustificato' } | null>(null);
-  const [noteText, setNoteText] = useState('');
-
-  // Stato tab "Stagione"
-  const [seasonStats, setSeasonStats] = useState<{ athleteId: string; pct: number; presenti: number; totali: number }[]>([]);
-  const [seasonLoading, setSeasonLoading] = useState(false);
-
-  const [searchParams] = useSearchParams();
-  const trainingParam = searchParams.get('training');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!societyId) return;
+    let cancelled = false;
     (async () => {
-      const { from, to } = seasonRange(currentSeason);
-      const { data } = await supabase.from('events').select('id, title, start_at, event_type')
-        .eq('society_id', societyId)
-        .gte('start_at', from).lte('start_at', to)
-        .order('start_at', { ascending: false }).limit(50);
-      const list = ((data ?? []) as unknown as Event[]);
-      setEvents(list);
-      if (trainingParam) {
-        const fromTraining = list.find(
-          (e: Event) => (e as unknown as { source_training_id?: string }).source_training_id === trainingParam
-            || e.id === trainingParam,
-        );
-        if (fromTraining) {
-          setSelectedEventId(fromTraining.id);
-        } else if (list.length > 0) {
-          setSelectedEventId(list[0].id);
-          toast.info("Evento non trovato — mostrato l'allenamento più recente");
-        }
-      } else if (list.length > 0) {
-        setSelectedEventId(list[0].id);
-      }
-    })();
-  }, [societyId, trainingParam, currentSeason]);
-
-  useEffect(() => {
-    if (!societyId) return;
-    (async () => {
-      const { data } = await supabase.from('athletes').select('id, last_name, first_name, number, role, team_id')
-        .eq('society_id', societyId).order('last_name');
-      setAthletes(((data ?? []) as unknown as Athlete[]));
-      const { data: tData } = await supabase.from('teams').select('id, name').eq('society_id', societyId).order('name');
-      setTeams(((tData ?? []) as TeamLite[]));
-      if (injuriesEnabled) {
-        const { data: inj } = await supabase
-          .from('athlete_injuries')
-          .select('athlete_id')
-          .eq('society_id', societyId)
-          .eq('status', 'attivo');
-        const injRows = ((inj ?? []) as Array<{ athlete_id: string }>);
-        setInjuredIds(new Set(injRows.map((r) => r.athlete_id)));
-      }
-    })();
-  }, [societyId, injuriesEnabled]);
-
-  useEffect(() => {
-    if (!selectedEventId) return;
-    setLoading(true);
-    (async () => {
-      const { data } = await supabase.from('attendances').select('athlete_id, status, note').eq('event_id', selectedEventId);
-      const map: Record<string, Attendance> = {};
-      for (const a of ((data ?? []) as unknown as Attendance[])) map[a.athlete_id] = a;
-      setAttendances(map);
+      setLoading(true);
+      const [athRes, teamRes, attRes] = await Promise.all([
+        supabase.from('athletes').select('id, last_name, first_name, number, team_id')
+          .eq('society_id', societyId).order('last_name'),
+        supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
+        supabase.from('attendances').select('athlete_id, status').eq('society_id', societyId),
+      ]);
+      if (cancelled) return;
+      setAthletes((athRes.data ?? []) as Athlete[]);
+      setTeams((teamRes.data ?? []) as TeamLite[]);
+      setRows((attRes.data ?? []) as AttRow[]);
       setLoading(false);
     })();
-  }, [selectedEventId]);
+    return () => { cancelled = true; };
+  }, [societyId]);
 
-  const setStatus = async (athleteId: string, status: 'presente' | 'assente' | 'giustificato', note?: string | null) => {
-    if (!selectedEventId || !user || !societyId) return;
-    setSaving(athleteId);
-    const existing = attendances[athleteId];
-    const noteVal = note !== undefined ? note : existing?.note ?? null;
-    const { error } = existing
-      ? await supabase.from('attendances').update({ status, note: noteVal }).eq('event_id', selectedEventId).eq('athlete_id', athleteId)
-      : await supabase.from('attendances').insert({ event_id: selectedEventId, athlete_id: athleteId, society_id: societyId, status, note: noteVal, recorded_by: user.id });
-    if (error) { toast.error('Errore salvataggio'); }
-    else { setAttendances(prev => ({ ...prev, [athleteId]: { athlete_id: athleteId, status, note: noteVal } })); }
-    setSaving(null);
-  };
-
-  const handleStatusClick = (athleteId: string, status: 'presente' | 'assente' | 'giustificato') => {
-    if (status === 'assente' || status === 'giustificato') {
-      setNoteText(attendances[athleteId]?.note || '');
-      setNoteDialog({ athleteId, status });
-    } else {
-      setStatus(athleteId, status, null);
+  const perAthlete = useMemo(() => {
+    const byAth: Record<string, { p: number; a: number; g: number; t: number }> = {};
+    for (const a of athletes) byAth[a.id] = { p: 0, a: 0, g: 0, t: 0 };
+    for (const r of rows) {
+      if (!byAth[r.athlete_id]) continue;
+      byAth[r.athlete_id].t += 1;
+      if (r.status === 'presente') byAth[r.athlete_id].p += 1;
+      else if (r.status === 'assente') byAth[r.athlete_id].a += 1;
+      else if (r.status === 'giustificato') byAth[r.athlete_id].g += 1;
     }
-  };
+    return athletes
+      .filter((a) => teamFilter === 'all' || a.team_id === teamFilter)
+      .map((a) => {
+        const s = byAth[a.id];
+        return {
+          athlete: a,
+          ...s,
+          pct: s.t > 0 ? Math.round((s.p / s.t) * 100) : 0,
+        };
+      })
+      .sort((x, y) => x.pct - y.pct);
+  }, [athletes, rows, teamFilter]);
+
+  const conDati = perAthlete.filter((s) => s.t > 0);
+  const media = conDati.length > 0 ? Math.round(conDati.reduce((sum, s) => sum + s.pct, 0) / conDati.length) : 0;
+  const sopra = conDati.filter((s) => s.pct >= SOGLIA);
+  const sotto = conDati.filter((s) => s.pct < SOGLIA);
+
+  const perTeam = useMemo(() => {
+    const groups: { id: string; name: string; pct: number; atleti: number; rilevazioni: number }[] = [];
+    const byAthPct = new Map(perAthlete.map((s) => [s.athlete.id, s]));
+    const buckets: Record<string, { name: string; sum: number; n: number; rec: number }> = {};
+    for (const a of athletes) {
+      if (teamFilter !== 'all' && a.team_id !== teamFilter) continue;
+      const key = a.team_id ?? '__none__';
+      const name = a.team_id ? (teams.find((t) => t.id === a.team_id)?.name ?? 'Squadra') : 'Senza squadra';
+      const s = byAthPct.get(a.id);
+      if (!s || s.t === 0) continue;
+      buckets[key] = buckets[key] ?? { name, sum: 0, n: 0, rec: 0 };
+      buckets[key].sum += s.pct;
+      buckets[key].n += 1;
+      buckets[key].rec += s.t;
+    }
+    for (const [id, b] of Object.entries(buckets)) {
+      groups.push({ id, name: b.name, pct: Math.round(b.sum / b.n), atleti: b.n, rilevazioni: b.rec });
+    }
+    return groups.sort((a, b) => b.pct - a.pct);
+  }, [athletes, teams, perAthlete, teamFilter]);
+
+  const chartData = useMemo(() => perAthlete.filter((s) => s.t > 0).map((s) => ({
+    name: `#${s.athlete.number ?? '—'} ${s.athlete.last_name}`,
+    pct: s.pct,
+    totali: s.t,
+  })), [perAthlete]);
 
   const exportCsv = () => {
-    if (!selectedEvent) return;
-    const rows = [
-      ['Atleta', 'Numero', 'Evento', 'Data', 'Status', 'Motivo'],
-      ...athletes.map(a => {
-        const att = attendances[a.id];
-        return [
-          `${a.last_name} ${a.first_name ?? ''}`.trim(),
-          String(a.number ?? ''),
-          selectedEvent.title ?? '',
-          selectedEvent.start_at?.slice(0, 10) ?? '',
-          att?.status ?? 'non registrato',
-          att?.note ?? '',
-        ];
-      }),
+    const data = [
+      ['Atleta', 'Numero', 'Squadra', 'Presenze', 'Assenze', 'Giustificate', 'Rilevazioni', '%'],
+      ...perAthlete.map((s) => [
+        `${s.athlete.last_name} ${s.athlete.first_name ?? ''}`.trim(),
+        String(s.athlete.number ?? ''),
+        s.athlete.team_id ? (teams.find((t) => t.id === s.athlete.team_id)?.name ?? '') : '',
+        String(s.p), String(s.a), String(s.g), String(s.t), `${s.pct}%`,
+      ]),
     ];
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = data.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `presenze_${(selectedEvent.title ?? 'evento').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `riepilogo_presenze_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  // ── Tab Stagione: calcolo percentuali ────────────────────────────
-  const loadSeason = async () => {
-    if (!societyId || athletes.length === 0) return;
-    setSeasonLoading(true);
-    const { data } = await supabase
-      .from('attendances')
-      .select('athlete_id, status')
-      .eq('society_id', societyId);
-    const rows = ((data ?? []) as Array<{ athlete_id: string; status: string }>);
-    const byAth: Record<string, { p: number; t: number }> = {};
-    for (const a of athletes) byAth[a.id] = { p: 0, t: 0 };
-    rows.forEach((r: { athlete_id: string; status: string }) => {
-      if (!byAth[r.athlete_id]) byAth[r.athlete_id] = { p: 0, t: 0 };
-      // Considera tutti gli stati registrati come "evento partecipabile"
-      byAth[r.athlete_id].t += 1;
-      if (r.status === 'presente') byAth[r.athlete_id].p += 1;
-    });
-    const stats = athletes.map(a => {
-      const s = byAth[a.id] || { p: 0, t: 0 };
-      const pct = s.t > 0 ? Math.round((s.p / s.t) * 100) : 0;
-      return { athleteId: a.id, pct, presenti: s.p, totali: s.t };
-    }).sort((a, b) => a.pct - b.pct);
-    setSeasonStats(stats);
-    setSeasonLoading(false);
-  };
-
-  const seasonChartData = useMemo(() => seasonStats.map(s => {
-    const ath = athletes.find(a => a.id === s.athleteId);
-    const label = ath ? `#${ath.number ?? '—'} ${ath.last_name}` : 'N/D';
-    return { name: label, pct: s.pct, totali: s.totali };
-  }), [seasonStats, athletes]);
-
-  const conValutazione = seasonStats.filter(s => s.totali > 0);
-  const mediaSquadra = conValutazione.length > 0
-    ? Math.round(conValutazione.reduce((sum, s) => sum + s.pct, 0) / conValutazione.length)
-    : 0;
-  const sopra = conValutazione.filter(s => s.pct >= SOGLIA).length;
-  const sotto = conValutazione.filter(s => s.pct < SOGLIA);
-
-  const presenti = Object.values(attendances).filter(a => a.status === 'presente').length;
-  const assenti = Object.values(attendances).filter(a => a.status === 'assente').length;
-  const giustificati = Object.values(attendances).filter(a => a.status === 'giustificato').length;
-  const selectedEvent = events.find(e => e.id === selectedEventId);
 
   return (
     <div className="container py-8 space-y-6">
@@ -216,208 +129,151 @@ export function PresenzeView() {
           <ClipboardCheck className="w-8 h-8 text-primary" />
           <h1 className="text-4xl font-black italic uppercase leading-none">Presenze</h1>
         </div>
-        <p className="text-muted-foreground">Registra presenze e monitora la partecipazione stagionale.</p>
+        <p className="text-muted-foreground">
+          Riepilogo della partecipazione per giocatore e squadra. Le presenze si registrano dall’allenamento,
+          nel giorno in cui si svolge.
+        </p>
       </div>
 
-      <Tabs defaultValue="registro" onValueChange={(v) => { if (v === 'stagione') loadSeason(); }}>
-        <TabsList>
-          <TabsTrigger value="registro" className="gap-2"><ClipboardList className="w-4 h-4" /> Registro</TabsTrigger>
-          <TabsTrigger value="stagione" className="gap-2"><BarChart3 className="w-4 h-4" /> Stagione</TabsTrigger>
-        </TabsList>
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="min-w-[220px]">
+          <Select value={teamFilter} onValueChange={setTeamFilter}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutte le squadre</SelectItem>
+              {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button variant="outline" onClick={exportCsv} className="gap-2">
+          <Download className="w-4 h-4" /> Export CSV
+        </Button>
+      </div>
 
-        <TabsContent value="registro" className="space-y-6 mt-6">
-          <div className="flex gap-2 items-center max-w-3xl">
-            <div className="flex-1">
-              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                <SelectTrigger><SelectValue placeholder="Seleziona evento..." /></SelectTrigger>
-                <SelectContent>
-                  {events.map(e => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {new Date(e.start_at).toLocaleDateString('it-IT')} — {e.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="min-w-[180px]">
-              <Select value={teamFilter} onValueChange={setTeamFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutte le squadre</SelectItem>
-                  {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedEvent && (
-              <Button variant="outline" onClick={exportCsv} className="gap-2">
-                <Download className="w-4 h-4" /> Export CSV
-              </Button>
-            )}
+      {loading ? (
+        <p className="text-muted-foreground">Caricamento riepilogo…</p>
+      ) : conDati.length === 0 ? (
+        <Card className="p-10 text-center">
+          <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">
+            Nessuna presenza registrata. Apri un allenamento del giorno e registra le presenze da lì.
+          </p>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Media</p>
+              <p className={`text-3xl font-black ${media >= SOGLIA ? 'text-green-400' : 'text-destructive'}`}>{media}%</p>
+            </Card>
+            <Card className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Sopra soglia</p>
+              <p className="text-3xl font-black text-green-400">{sopra.length}</p>
+            </Card>
+            <Card className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Sotto soglia</p>
+              <p className="text-3xl font-black text-destructive">{sotto.length}</p>
+            </Card>
+            <Card className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Atleti monitorati</p>
+              <p className="text-3xl font-black">{conDati.length}</p>
+            </Card>
           </div>
 
-          {selectedEvent && (
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="p-4 text-center"><p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Presenti</p><p className="text-3xl font-black text-green-400">{presenti}</p></Card>
-              <Card className="p-4 text-center"><p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Assenti</p><p className="text-3xl font-black text-destructive">{assenti}</p></Card>
-              <Card className="p-4 text-center"><p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Giustificati</p><p className="text-3xl font-black text-muted-foreground">{giustificati}</p></Card>
-            </div>
-          )}
-
-          {selectedEvent && (
-            <Card className="overflow-hidden">
-              {loading ? <div className="p-8 text-center text-muted-foreground">Caricamento...</div> :
-               athletes.length === 0 ? <div className="p-8 text-center text-muted-foreground">Nessun atleta trovato.</div> : (
-                <table className="w-full text-sm">
-                  <thead className="border-b border-border bg-muted/30">
-                    <tr className="text-xs uppercase text-muted-foreground">
-                      <th className="text-left p-4">Atleta</th>
-                      <th className="text-center p-4">Stato</th>
-                      <th className="text-center p-4">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {athletes.filter(a => teamFilter === 'all' || a.team_id === teamFilter).map(a => {
-                      const status = attendances[a.id]?.status;
-                      const injured = injuredIds.has(a.id);
-                      return (
-                        <tr key={a.id} className="border-b border-border/40">
-                          <td className="p-4">
-                            <span className="font-bold">#{a.number || '—'}</span>
-                            <span className="ml-2">{a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''}</span>
-                            {a.role && <span className="ml-2 text-xs text-muted-foreground">{a.role}</span>}
-                            {injured && (
-                              <Badge variant="destructive" className="ml-2 text-[10px] px-2 py-0.5 rounded-md font-semibold gap-1">
-                                <HeartPulse className="w-2.5 h-2.5" /> Infortunato
-                              </Badge>
-                            )}
-                          </td>
-                          <td className="p-4 text-center">
-                            {status ? (() => {
-                              const pc = PRESENCE_COLORS[status];
-                              return <Badge style={{ background: pc.bg, color: pc.text, border: 'none' }} className="text-[10px] px-2 py-0.5 rounded-md font-semibold uppercase">{status}</Badge>;
-                            })() : injured ? <span className="text-xs text-muted-foreground italic">suggerito: assente</span> : <span className="text-muted-foreground">—</span>}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <Button size="icon" variant={status === 'presente' ? 'default' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'presente')}>
-                                <Check className="w-4 h-4" />
-                              </Button>
-                              <Button size="icon" variant={status === 'assente' ? 'destructive' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'assente')}>
-                                <X className="w-4 h-4" />
-                              </Button>
-                              <Button size="icon" variant={status === 'giustificato' ? 'secondary' : 'outline'} className="h-8 w-8" disabled={saving === a.id} onClick={() => handleStatusClick(a.id, 'giustificato')}>
-                                <AlertCircle className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="stagione" className="space-y-6 mt-6">
-          {seasonLoading ? (
-            <p className="text-muted-foreground">Caricamento dati stagionali...</p>
-          ) : conValutazione.length === 0 ? (
-            <Card className="p-10 text-center">
-              <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">Nessuna presenza registrata in stagione.</p>
-            </Card>
-          ) : (
-            <>
-              <div className="grid grid-cols-3 gap-3">
-                <Card className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Media squadra</p>
-                  <p className={`text-3xl font-black ${mediaSquadra >= SOGLIA ? 'text-green-400' : 'text-destructive'}`}>{mediaSquadra}%</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Sopra soglia</p>
-                  <p className="text-3xl font-black text-green-400">{sopra}</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Sotto soglia</p>
-                  <p className="text-3xl font-black text-destructive">{sotto.length}</p>
-                </Card>
-              </div>
-
-              <Card className="p-4">
-                <h3 className="text-sm font-bold uppercase italic mb-3">% Presenze stagionali</h3>
-                <ResponsiveContainer width="100%" height={Math.max(280, seasonChartData.length * 28)}>
-                  <BarChart data={seasonChartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} />
-                    <Tooltip
-                      contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                      formatter={(val: number, _n, p: { payload?: { totali?: number } }) => [`${val}% (${p?.payload?.totali ?? 0} eventi)`, 'Presenze']}
-                    />
-                    <ReferenceLine x={SOGLIA} stroke="#DC2626" strokeDasharray="4 4"
-                      label={{ value: `Soglia ${SOGLIA}%`, fill: '#DC2626', position: 'top', fontSize: 10 }} />
-                    <Bar dataKey="pct" barSize={20} radius={[0, 4, 4, 0]}>
-                      {seasonChartData.map((d, i) => (
-                        <Cell key={i} fill={d.pct >= SOGLIA ? '#16A34A' : '#DC2626'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-
-              {sotto.length > 0 && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-bold uppercase italic mb-3 text-destructive">Atleti sotto soglia ({SOGLIA}%)</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {sotto.map(s => {
-                      const ath = athletes.find(a => a.id === s.athleteId);
-                      if (!ath) return null;
-                      return (
-                        <Badge key={s.athleteId} variant="outline"
-                          className="bg-destructive/10 text-destructive border-destructive/30 px-2 py-1 text-xs gap-1">
-                          #{ath.number ?? '—'} {ath.last_name} — {s.pct}%
-                        </Badge>
-                      );
-                    })}
+          {/* Riepilogo per squadra */}
+          <Card className="p-4">
+            <h3 className="text-sm font-bold uppercase italic mb-3 flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary" /> Per squadra
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {perTeam.map((t) => (
+                <div key={t.id} className="rounded-lg border border-border p-3">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <p className="font-bold truncate">{t.name}</p>
+                    <p className={`text-2xl font-black ${t.pct >= SOGLIA ? 'text-green-400' : 'text-destructive'}`}>{t.pct}%</p>
                   </div>
-                </Card>
-              )}
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full ${t.pct >= SOGLIA ? 'bg-green-500' : 'bg-destructive'}`}
+                      style={{ width: `${t.pct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {t.atleti} atleti · {t.rilevazioni} rilevazioni
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
 
-      <Dialog open={!!noteDialog} onOpenChange={(o) => !o && setNoteDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Motivo {noteDialog?.status === 'giustificato' ? 'giustificazione' : 'assenza'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Select value={noteText} onValueChange={setNoteText}>
-              <SelectTrigger><SelectValue placeholder="Seleziona motivo..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Nessun motivo specificato</SelectItem>
-                <SelectItem value="Malattia">Malattia</SelectItem>
-                <SelectItem value="Studio/Lavoro">Studio/Lavoro</SelectItem>
-                <SelectItem value="Infortunio">Infortunio</SelectItem>
-                <SelectItem value="Motivi familiari">Motivi familiari</SelectItem>
-                <SelectItem value="Altro">Altro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNoteDialog(null)}>Annulla</Button>
-            <Button onClick={async () => {
-              if (!noteDialog) return;
-              await setStatus(noteDialog.athleteId, noteDialog.status, noteText || null);
-              setNoteDialog(null);
-              setNoteText('');
-            }}>Conferma</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Riepilogo per giocatore */}
+          <Card className="p-4">
+            <h3 className="text-sm font-bold uppercase italic mb-3">% Presenze per giocatore</h3>
+            <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 28)}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} />
+                <Tooltip
+                  contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
+                  formatter={(val: number, _n, p: { payload?: { totali?: number } }) => [`${val}% (${p?.payload?.totali ?? 0} rilevazioni)`, 'Presenze']}
+                />
+                <ReferenceLine x={SOGLIA} stroke="#DC2626" strokeDasharray="4 4"
+                  label={{ value: `Soglia ${SOGLIA}%`, fill: '#DC2626', position: 'top', fontSize: 10 }} />
+                <Bar dataKey="pct" barSize={20} radius={[0, 4, 4, 0]}>
+                  {chartData.map((d, i) => (
+                    <Cell key={i} fill={d.pct >= SOGLIA ? '#16A34A' : '#DC2626'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          {/* Dettaglio compatto */}
+          <Card className="overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border bg-muted/30">
+                <tr className="text-xs uppercase text-muted-foreground">
+                  <th className="text-left p-3">Atleta</th>
+                  <th className="text-center p-3">Presenze</th>
+                  <th className="text-center p-3">Assenze</th>
+                  <th className="text-center p-3">Giustificate</th>
+                  <th className="text-center p-3">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {perAthlete.map((s) => (
+                  <tr key={s.athlete.id} className="border-b border-border/40">
+                    <td className="p-3">
+                      <span className="font-bold">#{s.athlete.number ?? '—'}</span>
+                      <span className="ml-2">
+                        {s.athlete.last_name}{s.athlete.first_name ? ` ${s.athlete.first_name.charAt(0)}.` : ''}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center text-green-400 font-semibold">{s.p}</td>
+                    <td className="p-3 text-center text-destructive font-semibold">{s.a}</td>
+                    <td className="p-3 text-center text-muted-foreground font-semibold">{s.g}</td>
+                    <td className="p-3 text-center">
+                      {s.t === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={s.pct >= SOGLIA
+                            ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                            : 'bg-destructive/10 text-destructive border-destructive/30'}
+                        >
+                          {s.pct}%
+                        </Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
