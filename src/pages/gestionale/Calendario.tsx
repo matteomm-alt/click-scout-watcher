@@ -503,6 +503,28 @@ export default function Calendario() {
     return `Stagione ${format(range.start, 'MMM yyyy', { locale: it })} → ${format(range.end, 'MMM yyyy', { locale: it })}`;
   }, [view, anchor, range.start, range.end]);
 
+  /** Stampa PDF del periodo visualizzato, a colori o in bianco e nero. */
+  const exportPdf = async (mode: 'color' | 'bw') => {
+    const { downloadCalendarPdf } = await import('@/lib/pdfCalendar');
+    const teamNames = new Map(teams.map((t) => [t.id, t.name]));
+    downloadCalendarPdf({
+      societyName: societyName ?? '',
+      periodLabel: headerLabel,
+      viewLabel: view === 'week' ? 'Settimana' : view === 'month' ? 'Mese' : 'Stagione',
+      mode,
+      events: events.map((e) => ({
+        id: e.id,
+        title: e.title,
+        event_type: e.event_type,
+        start_at: e.start_at,
+        end_at: e.end_at,
+        location: e.location,
+        team_name: e.team_id ? teamNames.get(e.team_id) ?? null : null,
+      })),
+    });
+    toast.success(mode === 'bw' ? 'PDF bianco e nero generato' : 'PDF a colori generato');
+  };
+
   if (societyLoading) {
     return (
       <div className="container py-10">
