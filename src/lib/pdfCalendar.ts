@@ -44,6 +44,13 @@ const COLS = [
   { key: 'place', label: 'Luogo', w: 51 },
 ] as const;
 
+/** Prima riga del testo, con puntini di sospensione se troncato. */
+function clip(doc: jsPDF, text: string, width: number): string {
+  const lines = doc.splitTextToSize(text, width) as string[];
+  if (lines.length === 0) return '';
+  return lines.length > 1 ? `${lines[0].trimEnd()}…` : lines[0];
+}
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', {
     weekday: 'short', day: '2-digit', month: 'short',
@@ -157,18 +164,18 @@ export function generateCalendarPdf(opts: CalendarPdfOptions): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(...p.dark);
-    doc.text(doc.splitTextToSize(e.title, COLS[3].w - 4)[0] ?? '', x + 2, y + 5.4);
+    doc.text(clip(doc, e.title, COLS[3].w - 4), x + 2, y + 5.4);
     x += COLS[3].w;
 
     // Squadra
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...p.muted);
-    doc.text(doc.splitTextToSize(e.team_name ?? '—', COLS[4].w - 4)[0] ?? '—', x + 2, y + 5.4);
+    doc.text(clip(doc, e.team_name ?? '—', COLS[4].w - 4), x + 2, y + 5.4);
     x += COLS[4].w;
 
     // Luogo
-    doc.text(doc.splitTextToSize(e.location ?? '—', COLS[5].w - 4)[0] ?? '—', x + 2, y + 5.4);
+    doc.text(clip(doc, e.location ?? '—', COLS[5].w - 4), x + 2, y + 5.4);
 
     y += rowH;
   });
