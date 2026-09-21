@@ -4,7 +4,7 @@ import {
   startOfWeek, endOfWeek,
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -503,6 +503,28 @@ export default function Calendario() {
     return `Stagione ${format(range.start, 'MMM yyyy', { locale: it })} → ${format(range.end, 'MMM yyyy', { locale: it })}`;
   }, [view, anchor, range.start, range.end]);
 
+  /** Stampa PDF del periodo visualizzato, a colori o in bianco e nero. */
+  const exportPdf = async (mode: 'color' | 'bw') => {
+    const { downloadCalendarPdf } = await import('@/lib/pdfCalendar');
+    const teamNames = new Map(teams.map((t) => [t.id, t.name]));
+    downloadCalendarPdf({
+      societyName: societyName ?? '',
+      periodLabel: headerLabel,
+      viewLabel: view === 'week' ? 'Settimana' : view === 'month' ? 'Mese' : 'Stagione',
+      mode,
+      events: events.map((e) => ({
+        id: e.id,
+        title: e.title,
+        event_type: e.event_type,
+        start_at: e.start_at,
+        end_at: e.end_at,
+        location: e.location,
+        team_name: e.team_id ? teamNames.get(e.team_id) ?? null : null,
+      })),
+    });
+    toast.success(mode === 'bw' ? 'PDF bianco e nero generato' : 'PDF a colori generato');
+  };
+
   if (societyLoading) {
     return (
       <div className="container py-10">
@@ -581,6 +603,26 @@ export default function Calendario() {
         >
           <Download className="w-4 h-4" /> iCal
         </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            className="gap-2"
+            disabled={events.length === 0}
+            onClick={() => exportPdf('color')}
+          >
+            <Printer className="w-4 h-4" /> PDF colori
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="gap-2"
+            disabled={events.length === 0}
+            onClick={() => exportPdf('bw')}
+          >
+            <Printer className="w-4 h-4" /> PDF B/N
+          </Button>
+        </div>
       </div>
 
       <Card className="p-3 flex flex-wrap items-center gap-3">

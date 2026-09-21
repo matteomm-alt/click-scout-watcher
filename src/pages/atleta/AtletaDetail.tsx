@@ -17,6 +17,7 @@ import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { downloadAthleteCard } from '@/lib/pdfReport';
+import type { PdfColorMode } from '@/lib/pdfTheme';
 import { handleSupabaseError } from '@/lib/supabaseQuery';
 import { FONDAMENTALI_DEFAULT, getSubAspectLabel } from '@/lib/evalFondamentali';
 import { useEvalTemplate } from '@/hooks/useEvalTemplate';
@@ -152,7 +153,7 @@ export default function AtletaDetail() {
     return <Badge variant="outline" className="border-green-600 text-green-500">✅ Cert. ok</Badge>;
   };
 
-  const handlePdf = async () => {
+  const handlePdf = async (mode: PdfColorMode = 'color') => {
     try {
       downloadAthleteCard({
         firstName: athlete.first_name,
@@ -186,7 +187,7 @@ export default function AtletaDetail() {
           bodyPart: i.body_part, severity: i.severity, status: i.status, startDate: i.start_date,
         })),
         societyName: null,
-      });
+      }, mode);
     } catch (e) {
       handleSupabaseError(e, 'export PDF');
     }
@@ -220,9 +221,14 @@ export default function AtletaDetail() {
             )}
           </div>
         </div>
-        <Button variant="outline" className="gap-2" onClick={handlePdf}>
-          <FileText className="w-4 h-4" /> PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => handlePdf('color')}>
+            <FileText className="w-4 h-4" /> PDF colori
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => handlePdf('bw')}>
+            <FileText className="w-4 h-4" /> PDF B/N
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}

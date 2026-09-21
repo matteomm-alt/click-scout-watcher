@@ -17,6 +17,7 @@ import { ChartsTab } from '@/components/ChartsTab';
 import { MatchSelector } from '@/components/MatchSelector';
 
 import { downloadMatchReport } from '@/lib/pdfReport';
+import type { PdfColorMode } from '@/lib/pdfTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 
@@ -429,7 +430,7 @@ export default function MatchAnalysis() {
     doc.save(`${safe(match.home_team.name)}_${safe(match.away_team.name)}_${date}.pdf`);
   };
 
-  const exportReportPdf = () => {
+  const exportReportPdf = (mode: PdfColorMode = 'color') => {
     if (!match) return;
     const reportMeta = {
         homeName: match.home_team.name,
@@ -443,7 +444,7 @@ export default function MatchAnalysis() {
       homeTeamId: match.home_team.id,
       awayTeamId: match.away_team.id,
     };
-    downloadMatchReport(reportMeta, filteredAllActions, players);
+    downloadMatchReport(reportMeta, filteredAllActions, players, mode);
     // Log report generato (best-effort)
     if (user && societyId && match?.id) {
       import('@/lib/pdfReport').then(({ logReportGenerated }) => {
@@ -528,9 +529,13 @@ export default function MatchAnalysis() {
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Tabellino</span>
             </Button>
-            <Button onClick={exportReportPdf} size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button onClick={() => exportReportPdf('color')} size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Report PDF</span>
+            </Button>
+            <Button onClick={() => exportReportPdf('bw')} variant="outline" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Report B/N</span>
             </Button>
             <Button onClick={handleShare} variant="secondary" size="sm" className="min-h-10 px-3 text-xs font-bold rounded-lg shrink-0">
               <Share2 className="w-4 h-4" />

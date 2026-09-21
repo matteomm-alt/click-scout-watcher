@@ -31,10 +31,28 @@ interface PlayerInfo {
   role: string | null;
 }
 
-const ORANGE: [number, number, number] = [249, 115, 22]; // #F97316 brand
-const DARK: [number, number, number] = [17, 17, 19];
-const MUTED: [number, number, number] = [120, 120, 125];
-const BORDER: [number, number, number] = [220, 220, 222];
+import { getPdfPalette, type PdfColorMode } from './pdfTheme';
+
+// Palette attiva: cambia con applyPdfMode('bw') per le stampe in bianco e nero.
+let ORANGE: [number, number, number] = getPdfPalette('color').accent;
+let DARK: [number, number, number] = getPdfPalette('color').dark;
+let MUTED: [number, number, number] = getPdfPalette('color').muted;
+let BORDER: [number, number, number] = getPdfPalette('color').border;
+let ROW_ALT: [number, number, number] = getPdfPalette('color').rowAlt;
+let POSITIVE: [number, number, number] = getPdfPalette('color').positive;
+let NEGATIVE: [number, number, number] = getPdfPalette('color').negative;
+
+/** Imposta la modalità colore usata da tutte le funzioni di disegno. */
+export function applyPdfMode(mode: PdfColorMode = 'color') {
+  const p = getPdfPalette(mode);
+  ORANGE = p.accent;
+  DARK = p.dark;
+  MUTED = p.muted;
+  BORDER = p.border;
+  ROW_ALT = p.rowAlt;
+  POSITIVE = p.positive;
+  NEGATIVE = p.negative;
+}
 
 const PAGE_W = 210;
 const MARGIN = 14;
@@ -156,7 +174,7 @@ function drawKpiTable(
   doc.setFontSize(8);
   stats.forEach((s, idx) => {
     if (idx % 2 === 0) {
-      doc.setFillColor(248, 248, 250);
+      doc.setFillColor(...ROW_ALT);
       doc.rect(MARGIN, y, tableW, 5.5, 'F');
     }
     doc.setTextColor(...DARK);
@@ -174,8 +192,8 @@ function drawKpiTable(
       if (i === 5) {
         // colorize efficiency
         const eff = s.efficiency;
-        if (eff >= 30) doc.setTextColor(20, 140, 60);
-        else if (eff < 0) doc.setTextColor(200, 50, 40);
+        if (eff >= 30) doc.setTextColor(...POSITIVE);
+        else if (eff < 0) doc.setTextColor(...NEGATIVE);
         else doc.setTextColor(...DARK);
       } else {
         doc.setTextColor(...DARK);
@@ -267,7 +285,7 @@ function drawTopScorers(
       doc.setFont('helvetica', 'bold');
     } else {
       if (idx % 2 === 1) {
-        doc.setFillColor(248, 248, 250);
+        doc.setFillColor(...ROW_ALT);
         doc.rect(MARGIN, y, tableW, 5.5, 'F');
       }
       doc.setTextColor(...DARK);
@@ -368,7 +386,9 @@ export function generateMatchReport(
   meta: MatchMeta,
   actions: DbAction[],
   players: PlayerInfo[],
+  mode: PdfColorMode = 'color',
 ): jsPDF {
+  applyPdfMode(mode);
   const doc = new jsPDF('p', 'mm', 'a4');
 
   // === Page 1: header + parziali + KPI ===
@@ -440,10 +460,11 @@ export function downloadMatchReport(
   meta: MatchMeta,
   actions: DbAction[],
   players: PlayerInfo[],
+  mode: PdfColorMode = 'color',
 ) {
-  const doc = generateMatchReport(meta, actions, players);
+  const doc = generateMatchReport(meta, actions, players, mode);
   const date = meta.date || new Date().toISOString().slice(0, 10);
-  doc.save(`report_${safeName(meta.homeName)}_${safeName(meta.awayName)}_${date}.pdf`);
+  doc.save(`report_${safeName(meta.homeName)}_${safeName(meta.awayName)}_${date}${mode === 'bw' ? '_bn' : ''}.pdf`);
 }
 
 // ============================================================
@@ -470,7 +491,8 @@ export interface AthleteCardData {
   societyName?: string | null;
 }
 
-export function generateAthleteCard(data: AthleteCardData): jsPDF {
+export function generateAthleteCard(data: AthleteCardData, mode: PdfColorMode = 'color'): jsPDF {
+  applyPdfMode(mode);
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   // Header
   doc.setFillColor(...DARK);
@@ -543,7 +565,7 @@ export function generateAthleteCard(data: AthleteCardData): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('PRESENZE', MARGIN + 6, y + 5);
-    y += 10;
+    y += 18;
     doc.setFontSize(28);
     doc.setTextColor(...ORANGE);
     doc.text(`${Math.round(data.attendancePct)}%`, MARGIN, y);
@@ -628,9 +650,9 @@ export function generateAthleteCard(data: AthleteCardData): jsPDF {
   return doc;
 }
 
-export function downloadAthleteCard(data: AthleteCardData) {
-  const doc = generateAthleteCard(data);
-  doc.save(`scheda_${safeName(data.lastName)}${data.number ?? ''}.pdf`);
+export function downloadAthleteCard(data: AthleteCardData, mode: PdfColorMode = 'color') {
+  const doc = generateAthleteCard(data, mode);
+  doc.save(`scheda_${safeName(data.lastName)}${data.number ?? ''}${mode === 'bw' ? '_bn' : ''}.pdf`);
 }
 
 // ============================================================
