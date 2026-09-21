@@ -565,7 +565,7 @@ export function generateAthleteCard(data: AthleteCardData, mode: PdfColorMode = 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('PRESENZE', MARGIN + 6, y + 5);
-    y += 10;
+    y += 18;
     doc.setFontSize(28);
     doc.setTextColor(...ORANGE);
     doc.text(`${Math.round(data.attendancePct)}%`, MARGIN, y);
