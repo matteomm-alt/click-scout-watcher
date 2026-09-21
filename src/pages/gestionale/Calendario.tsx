@@ -581,6 +581,26 @@ export default function Calendario() {
         >
           <Download className="w-4 h-4" /> iCal
         </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            className="gap-2"
+            disabled={events.length === 0}
+            onClick={() => exportPdf('color')}
+          >
+            <Printer className="w-4 h-4" /> PDF colori
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="gap-2"
+            disabled={events.length === 0}
+            onClick={() => exportPdf('bw')}
+          >
+            <Printer className="w-4 h-4" /> PDF B/N
+          </Button>
+        </div>
       </div>
 
       <Card className="p-3 flex flex-wrap items-center gap-3">
