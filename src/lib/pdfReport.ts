@@ -460,10 +460,11 @@ export function downloadMatchReport(
   meta: MatchMeta,
   actions: DbAction[],
   players: PlayerInfo[],
+  mode: PdfColorMode = 'color',
 ) {
-  const doc = generateMatchReport(meta, actions, players);
+  const doc = generateMatchReport(meta, actions, players, mode);
   const date = meta.date || new Date().toISOString().slice(0, 10);
-  doc.save(`report_${safeName(meta.homeName)}_${safeName(meta.awayName)}_${date}.pdf`);
+  doc.save(`report_${safeName(meta.homeName)}_${safeName(meta.awayName)}_${date}${mode === 'bw' ? '_bn' : ''}.pdf`);
 }
 
 // ============================================================
