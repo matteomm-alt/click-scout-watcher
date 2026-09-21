@@ -111,7 +111,7 @@ export default function SocietySettings() {
 
   // Member management
   const [members, setMembers] = useState<MemberRow[]>([]);
-  const [invitations, setInvitations] = useState<{ id: string; email: string; role: AppRole; expires_at: string; token: string }[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; email: string; role: AppRole; expires_at: string; token: string; accepted_at: string | null }[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<AppRole>('coach');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -217,7 +217,7 @@ export default function SocietySettings() {
     })));
     const { data: inv } = await supabase
       .from('society_invitations')
-      .select('id, email, role, expires_at, token')
+      .select('id, email, role, expires_at, token, accepted_at')
       .eq('society_id', societyId)
       .is('accepted_at', null)
       .gt('expires_at', new Date().toISOString());
@@ -618,6 +618,10 @@ export default function SocietySettings() {
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Inviti pendenti</p>
               {invitations.map((inv) => {
                 const link = `${window.location.origin}/accept-invitation?token=${inv.token}`;
+                const now = new Date();
+                const isAccepted = !!inv.accepted_at;
+                const isExpired = !isAccepted && new Date(inv.expires_at) < now;
+                const isPending = !isAccepted && !isExpired;
                 return (
                   <div key={inv.id} className="flex items-center justify-between border border-dashed border-border rounded-md px-3 py-2 gap-2">
                     <div className="min-w-0 flex-1">
