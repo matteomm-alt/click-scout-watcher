@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck, Loader2, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -21,6 +21,9 @@ import {
   type SchemeLite,
   type SkeletonLite,
 } from '@/components/training/TrainingDetailCard';
+import {
+  TrainingAttendanceDialog, isAttendanceOpen,
+} from '@/components/training/TrainingAttendanceDialog';
 
 interface ExerciseLite {
   id: string; name: string; fundamental: string | null; tags: string[]; duration_min: number | null;
@@ -40,6 +43,7 @@ export default function AllenamentoDetail() {
   const [saving, setSaving] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [form, setForm] = useState<TrainingFormValue | null>(null);
+  const [attOpen, setAttOpen] = useState(false);
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [teams, setTeams] = useState<TeamLite[]>([]);
   const [athletes, setAthletes] = useState<AthleteLite[]>([]);
@@ -268,10 +272,22 @@ export default function AllenamentoDetail() {
             {teamName && <Badge variant="outline">{teamName}</Badge>}
           </div>
         </div>
-        <Button onClick={save} disabled={saving} className="gap-2">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Salva modifiche
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isAttendanceOpen(form.scheduled_date) ? 'default' : 'outline'}
+            onClick={() => setAttOpen(true)}
+            className="gap-2"
+            title={isAttendanceOpen(form.scheduled_date)
+              ? 'Registra presenze (oggi)'
+              : 'Le presenze si registrano nel giorno dell’allenamento'}
+          >
+            <ClipboardCheck className="w-4 h-4" /> Presenze
+          </Button>
+          <Button onClick={save} disabled={saving} className="gap-2">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Salva modifiche
+          </Button>
+        </div>
       </div>
 
       <TrainingDetailCard
@@ -300,6 +316,20 @@ export default function AllenamentoDetail() {
           Salva modifiche
         </Button>
       </div>
+
+      <TrainingAttendanceDialog
+        open={attOpen}
+        onOpenChange={setAttOpen}
+        training={id ? {
+          id,
+          title: form.title,
+          scheduled_date: form.scheduled_date || null,
+          team_id: form.team_id,
+          participating_athlete_ids: form.participating_athlete_ids,
+          duration_min: form.duration_min,
+          season,
+        } : null}
+      />
     </div>
   );
 }

@@ -33,6 +33,9 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
 import type { BlockDraft } from '@/components/training/SortableBlockItem';
+import {
+  TrainingAttendanceDialog, isAttendanceOpen, type TrainingAttendanceTarget,
+} from '@/components/training/TrainingAttendanceDialog';
 
 interface TrainingRow {
   id: string;
@@ -116,6 +119,7 @@ export default function Allenamenti() {
   const [dlgOpen, setDlgOpen] = useState(false);
   const [form, setForm] = useState<TrainingFormValue>(emptyForm());
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [attTraining, setAttTraining] = useState<TrainingAttendanceTarget | null>(null);
   const [searchParams] = useSearchParams();
   const openedFromUrl = useRef(false);
 
@@ -617,8 +621,11 @@ export default function Allenamenti() {
                     {t.is_template ? (t.template_name || t.title) : t.title}
                   </h3>
                   {t.scheduled_date && !t.is_template && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
                       {format(parseISO(t.scheduled_date), 'EEE dd MMM yyyy', { locale: it })}
+                      {isAttendanceOpen(t.scheduled_date) && (
+                        <Badge className="text-[9px] px-1.5 py-0">OGGI</Badge>
+                      )}
                     </p>
                   )}
                 </div>
@@ -665,14 +672,15 @@ export default function Allenamenti() {
                 </Button>
                 {!t.is_template && (
                   <Button
-                    size="sm" variant="ghost"
-                    className="h-8 w-8 p-0 text-primary hover:text-primary"
-                    asChild
-                    title="Registra presenze"
+                    size="sm"
+                    variant={isAttendanceOpen(t.scheduled_date) ? 'default' : 'ghost'}
+                    className="h-8 w-8 p-0"
+                    onClick={() => setAttTraining(t)}
+                    title={isAttendanceOpen(t.scheduled_date)
+                      ? 'Registra presenze (oggi)'
+                      : 'Presenze — registrabili solo nel giorno dell’allenamento'}
                   >
-                    <Link to={`/gestionale/presenze?training=${t.id}&date=${t.scheduled_date ?? ''}`}>
-                      <ClipboardCheck className="w-3.5 h-3.5" />
-                    </Link>
+                    <ClipboardCheck className="w-3.5 h-3.5" />
                   </Button>
                 )}
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openDuplicate(t.id)} title="Duplica">
@@ -740,6 +748,13 @@ export default function Allenamenti() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Presenze della seduta */}
+      <TrainingAttendanceDialog
+        training={attTraining}
+        open={!!attTraining}
+        onOpenChange={(o) => !o && setAttTraining(null)}
+      />
     </div>
   );
 }
