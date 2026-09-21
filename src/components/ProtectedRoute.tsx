@@ -51,10 +51,31 @@ export function ProtectedRoute({ children, requireSuperAdmin }: ProtectedRoutePr
   }
 
   // Redirect a onboarding se l'utente non l'ha completato (eccetto se è già lì, claim super admin, o ha già una società via invito)
+  const hasPendingInvite = (() => {
+    try {
+      const token = localStorage.getItem('pending_invite_token');
+      const savedAt = Number(localStorage.getItem('pending_invite_saved_at') ?? '0');
+      return !!token && (Date.now() - savedAt) < 86_400_000;
+    } catch { return false; }
+  })();
+
+  if (hasPendingInvite && !hasSociety &&
+      location.pathname !== '/accept-invitation') {
+    const token = (() => {
+      try { return localStorage.getItem('pending_invite_token'); }
+      catch { return null; }
+    })();
+    return <Navigate
+      to={`/accept-invitation${token ? `?token=${encodeURIComponent(token)}` : ''}`}
+      replace
+    />;
+  }
+
   if (
     onboarded === false &&
     !isSuperAdmin &&
     !hasSociety &&
+    !hasPendingInvite &&
     location.pathname !== '/onboarding' &&
     location.pathname !== '/claim-super-admin'
   ) {
