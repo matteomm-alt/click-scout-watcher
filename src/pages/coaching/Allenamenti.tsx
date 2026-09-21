@@ -748,6 +748,13 @@ export default function Allenamenti() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Presenze della seduta */}
+      <TrainingAttendanceDialog
+        training={attTraining}
+        open={!!attTraining}
+        onOpenChange={(o) => !o && setAttTraining(null)}
+      />
     </div>
   );
 }
