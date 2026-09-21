@@ -156,7 +156,7 @@ export function PresenzeView() {
         <Card className="p-10 text-center">
           <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground text-sm">
-            Nessuna presenza registrata. Aprì un allenamento del giorno e registra le presenze da lì.
+            Nessuna presenza registrata. Apri un allenamento del giorno e registra le presenze da lì.
           </p>
         </Card>
       ) : (
