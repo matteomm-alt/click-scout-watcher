@@ -119,6 +119,7 @@ export default function Allenamenti() {
   const [dlgOpen, setDlgOpen] = useState(false);
   const [form, setForm] = useState<TrainingFormValue>(emptyForm());
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [attTraining, setAttTraining] = useState<TrainingAttendanceTarget | null>(null);
   const [searchParams] = useSearchParams();
   const openedFromUrl = useRef(false);
 
