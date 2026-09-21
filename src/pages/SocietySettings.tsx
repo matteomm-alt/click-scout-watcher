@@ -219,8 +219,7 @@ export default function SocietySettings() {
       .from('society_invitations')
       .select('id, email, role, expires_at, token, accepted_at')
       .eq('society_id', societyId)
-      .is('accepted_at', null)
-      .gt('expires_at', new Date().toISOString());
+      .order('created_at', { ascending: false });
     setInvitations((inv ?? []) as typeof invitations);
   };
 
