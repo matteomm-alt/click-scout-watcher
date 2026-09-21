@@ -114,6 +114,7 @@ export default function Allenamenti() {
   const [search, setSearch] = useState('');
   const [fTeam, setFTeam] = useState<string>(ALL);
   const [fStatus, setFStatus] = useState<string>(ALL);
+  const [fWhen, setFWhen] = useState<string>(ALL);
 
   // Dialog form
   const [dlgOpen, setDlgOpen] = useState(false);
@@ -211,23 +212,36 @@ export default function Allenamenti() {
   );
 
   // Filtro lista visualizzata
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const isDone = (t: TrainingRow) =>
+    t.status === 'completato' || t.status === 'saltato' ||
+    (!!t.scheduled_date && t.scheduled_date < todayISO);
+
   const filteredList = useMemo(() => {
-    return trainings.filter((t) => {
-      if (tab === 'templates' && !t.is_template) return false;
-      if (tab === 'sessions' && t.is_template) return false;
-      if (fTeam !== ALL) {
-        if (fTeam === '__NONE__' && t.team_id) return false;
-        if (fTeam !== '__NONE__' && t.team_id !== fTeam) return false;
-      }
-      if (fStatus !== ALL && t.status !== fStatus) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        const hay = `${t.title} ${t.template_name || ''} ${t.goal || ''}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [trainings, tab, fTeam, fStatus, search]);
+    return trainings
+      .filter((t) => {
+        if (tab === 'templates' && !t.is_template) return false;
+        if (tab === 'sessions' && t.is_template) return false;
+        if (fTeam !== ALL) {
+          if (fTeam === '__NONE__' && t.team_id) return false;
+          if (fTeam !== '__NONE__' && t.team_id !== fTeam) return false;
+        }
+        if (fStatus !== ALL && t.status !== fStatus) return false;
+        if (tab === 'sessions' && fWhen !== ALL) {
+          if (fWhen === 'todo' && isDone(t)) return false;
+          if (fWhen === 'done' && !isDone(t)) return false;
+        }
+        if (search) {
+          const q = search.toLowerCase();
+          const hay = `${t.title} ${t.template_name || ''} ${t.goal || ''}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      })
+      // Ordine cronologico invertito: più recenti in alto, senza data in fondo
+      .sort((a, b) => (b.scheduled_date ?? '').localeCompare(a.scheduled_date ?? ''));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trainings, tab, fTeam, fStatus, fWhen, search, todayISO]);
 
   // ── Apertura dialog (nuovo / modifica / duplica) ─────────────────────────
   const openNew = () => { setForm({ ...emptyForm(), season: currentSeason }); setDlgOpen(true); };
@@ -549,7 +563,7 @@ export default function Allenamenti() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -559,6 +573,16 @@ export default function Allenamenti() {
               className="pl-8"
             />
           </div>
+          {tab === 'sessions' && (
+            <Select value={fWhen} onValueChange={setFWhen}>
+              <SelectTrigger><SelectValue placeholder="Periodo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Tutti</SelectItem>
+                <SelectItem value="todo">Da fare</SelectItem>
+                <SelectItem value="done">Effettuati</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <Select value={fTeam} onValueChange={setFTeam}>
             <SelectTrigger><SelectValue placeholder="Squadra" /></SelectTrigger>
             <SelectContent>
