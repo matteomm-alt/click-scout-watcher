@@ -115,7 +115,47 @@ function emptyState(): MatchState {
   };
 }
 
+// Garanzia finale: qualunque sia l'evento e qualunque sia il lato campo
+// scelto per la squadra di casa, il libero non può restare in P1 (battuta)
+// né in prima linea. Le posizioni P1–P6 sono sempre relative alla squadra,
+// quindi il controllo vale identico con casa a sinistra o a destra.
+function enforceLiberoLegality(state: MatchState, ctx: ReplayContext): MatchState {
+  if (!state.isMatchStarted) return state;
+  let next = state;
+  if (state.homeCurrentLineup.length === 6) {
+    const liberoNum = ctx.homeTeam.players
+      .find((p) => p.id === ctx.homeLineup.libero1)?.number ?? null;
+    const legal = applyLiberoAutoSwap(
+      state.homeCurrentLineup, ctx.homeTeam, liberoNum, state.homeBenchedMb,
+    );
+    if (legal.lineup.some((n, i) => n !== state.homeCurrentLineup[i])
+      || legal.benchedMb !== state.homeBenchedMb) {
+      next = { ...next, homeCurrentLineup: legal.lineup, homeBenchedMb: legal.benchedMb };
+    }
+  }
+  if (state.awayCurrentLineup.length === 6) {
+    const liberoNum = ctx.awayTeam.players
+      .find((p) => p.id === ctx.awayLineup.libero1)?.number ?? null;
+    const legal = applyLiberoAutoSwap(
+      next.awayCurrentLineup, ctx.awayTeam, liberoNum, next.awayBenchedMb,
+    );
+    if (legal.lineup.some((n, i) => n !== next.awayCurrentLineup[i])
+      || legal.benchedMb !== next.awayBenchedMb) {
+      next = { ...next, awayCurrentLineup: legal.lineup, awayBenchedMb: legal.benchedMb };
+    }
+  }
+  return next;
+}
+
 export function applyEvent(
+  state: MatchState,
+  event: MatchEvent,
+  ctx: ReplayContext,
+): MatchState {
+  return enforceLiberoLegality(applyEventInternal(state, event, ctx), ctx);
+}
+
+function applyEventInternal(
   state: MatchState,
   event: MatchEvent,
   ctx: ReplayContext,
