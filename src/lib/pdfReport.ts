@@ -386,7 +386,9 @@ export function generateMatchReport(
   meta: MatchMeta,
   actions: DbAction[],
   players: PlayerInfo[],
+  mode: PdfColorMode = 'color',
 ): jsPDF {
+  applyPdfMode(mode);
   const doc = new jsPDF('p', 'mm', 'a4');
 
   // === Page 1: header + parziali + KPI ===
