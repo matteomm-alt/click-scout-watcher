@@ -31,10 +31,28 @@ interface PlayerInfo {
   role: string | null;
 }
 
-const ORANGE: [number, number, number] = [249, 115, 22]; // #F97316 brand
-const DARK: [number, number, number] = [17, 17, 19];
-const MUTED: [number, number, number] = [120, 120, 125];
-const BORDER: [number, number, number] = [220, 220, 222];
+import { getPdfPalette, type PdfColorMode } from './pdfTheme';
+
+// Palette attiva: cambia con applyPdfMode('bw') per le stampe in bianco e nero.
+let ORANGE: [number, number, number] = getPdfPalette('color').accent;
+let DARK: [number, number, number] = getPdfPalette('color').dark;
+let MUTED: [number, number, number] = getPdfPalette('color').muted;
+let BORDER: [number, number, number] = getPdfPalette('color').border;
+let ROW_ALT: [number, number, number] = getPdfPalette('color').rowAlt;
+let POSITIVE: [number, number, number] = getPdfPalette('color').positive;
+let NEGATIVE: [number, number, number] = getPdfPalette('color').negative;
+
+/** Imposta la modalità colore usata da tutte le funzioni di disegno. */
+export function applyPdfMode(mode: PdfColorMode = 'color') {
+  const p = getPdfPalette(mode);
+  ORANGE = p.accent;
+  DARK = p.dark;
+  MUTED = p.muted;
+  BORDER = p.border;
+  ROW_ALT = p.rowAlt;
+  POSITIVE = p.positive;
+  NEGATIVE = p.negative;
+}
 
 const PAGE_W = 210;
 const MARGIN = 14;
