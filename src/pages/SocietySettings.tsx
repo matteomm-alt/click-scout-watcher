@@ -641,7 +641,7 @@ export default function SocietySettings() {
                           color: isAccepted ? '#065f46' : isExpired ? '#991b1b' : '#92400e',
                           marginLeft: '8px',
                         }}>
-                          {isAccepted ? 'Accettato' : isExpired ? 'Scaduto' : isPending ? 'In attesa' : 'In attesa'}
+                          {isAccepted ? 'Accettato' : isExpired ? 'Scaduto' : 'In attesa'}
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground">
