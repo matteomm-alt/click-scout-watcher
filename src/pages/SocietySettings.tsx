@@ -631,6 +631,18 @@ export default function SocietySettings() {
                         <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/30 rounded px-1.5 py-0.5">
                           {ROLE_LABELS[inv.role]}
                         </span>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '1px 8px',
+                          borderRadius: '10px',
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          background: isAccepted ? '#d1fae5' : isExpired ? '#fee2e2' : '#fef3c7',
+                          color: isAccepted ? '#065f46' : isExpired ? '#991b1b' : '#92400e',
+                          marginLeft: '8px',
+                        }}>
+                          {isAccepted ? 'Accettato' : isExpired ? 'Scaduto' : isPending ? 'In attesa' : 'In attesa'}
+                        </span>
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Scade il {new Date(inv.expires_at).toLocaleDateString('it-IT')}
