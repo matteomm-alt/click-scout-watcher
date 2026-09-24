@@ -24,7 +24,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
-  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
+  Clock, Users, Bookmark, Search, FileDown, ClipboardCheck,
   ExternalLink, ArrowDown, ArrowUp,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -554,11 +554,6 @@ export default function Allenamenti() {
     );
   }
 
-  const statusIcon = (s: string) => {
-    if (s === 'completato') return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
-    if (s === 'saltato') return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-    return <Circle className="w-3.5 h-3.5 text-muted-foreground" />;
-  };
 
   return (
     <div className="container py-8 space-y-6">
@@ -631,6 +626,19 @@ export default function Allenamenti() {
               </SelectContent>
             </Select>
           )}
+        </div>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9"
+            onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+          >
+            {sortDir === 'desc'
+              ? <><ArrowDown className="w-3.5 h-3.5" /> Più recenti</>
+              : <><ArrowUp className="w-3.5 h-3.5" /> Meno recenti</>
+            }
+          </Button>
         </div>
       </div>
 
