@@ -636,6 +636,19 @@ export function LiveScout() {
             >
               {simplified ? <><EyeOff className="w-3 h-3" /> Dettagli</> : <><Eye className="w-3 h-3" /> Pulito</>}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowLiveHeatmap((v) => !v)}
+              className={cn(
+                'min-h-[44px] px-3 rounded-md border-2 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 active:scale-95',
+                showLiveHeatmap
+                  ? 'bg-primary/20 border-primary text-primary'
+                  : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+              )}
+              title="Mostra/nascondi heatmap sul campo"
+            >
+              🔥 HEAT
+            </button>
             {zoneSelectMode && (
               <button
                 type="button"
@@ -652,7 +665,8 @@ export function LiveScout() {
             <VolleyballCourt
               layout="split"
               swapSides={homeOnLeft}
-              heatmapData={homeHeatmap}
+              heatmapData={liveHeatmapData}
+              heatmapColor={heatmapColor}
               liveArrows={liveArrows}
               highlightTeam={suggestion?.team ?? null}
               highlightPlayerNumber={suggestion?.playerNumber ?? null}
