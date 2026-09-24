@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
 import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
-import { safeUUID } from '@/lib/utils';
+import { safeUUID, cn } from '@/lib/utils';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt, logicalRoleForSlot } from '@/components/VolleyballCourt';
@@ -124,6 +124,13 @@ export function LiveScout() {
   const [simplified, setSimplified] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
 
+  // Heatmap live: toggle + filtri (fondamentale, squadra, valutazione, giocatore)
+  const [showLiveHeatmap, setShowLiveHeatmap] = useState(false);
+  const [heatmapTeamFilter, setHeatmapTeamFilter] = useState<'home' | 'away' | 'all'>('all');
+  const [heatmapSkillFilter, setHeatmapSkillFilter] = useState<'A' | 'S' | 'R'>('A');
+  const [heatmapEvalFilter, setHeatmapEvalFilter] = useState<'all' | '#' | '+' | '='>('all');
+  const [heatmapPlayerFilter, setHeatmapPlayerFilter] = useState<number | null>(null);
+
   const { user } = useAuth();
   const { societyId } = useActiveSociety();
   const sessionIdRef = useRef<string>(safeUUID());
@@ -161,13 +168,30 @@ export function LiveScout() {
   }, [matchState.actions.length]);
 
   // Heatmap & live arrows (basati su attacchi home)
-  const homeHeatmap = useMemo(() => {
+  const liveHeatmapData = useMemo(() => {
+    if (!showLiveHeatmap) return undefined;
     const data: Record<number, number> = {};
     matchState.actions
-      .filter((a) => a.skill === 'A' && a.team === 'home' && a.endZone)
-      .forEach((a) => { data[a.endZone!] = (data[a.endZone!] || 0) + 1; });
+      .filter((a) => {
+        if (a.skill !== heatmapSkillFilter) return false;
+        if (heatmapTeamFilter !== 'all' && a.team !== heatmapTeamFilter) return false;
+        if (heatmapEvalFilter !== 'all' && a.evaluation !== heatmapEvalFilter) return false;
+        if (heatmapPlayerFilter !== null && a.playerNumber !== heatmapPlayerFilter) return false;
+        return true;
+      })
+      .forEach((a) => {
+        const zone = heatmapSkillFilter === 'A' ? a.endZone : a.startZone;
+        if (zone) data[zone] = (data[zone] || 0) + 1;
+      });
     return Object.keys(data).length > 0 ? data : undefined;
-  }, [matchState.actions]);
+  }, [matchState.actions, showLiveHeatmap, heatmapTeamFilter, heatmapSkillFilter, heatmapEvalFilter, heatmapPlayerFilter]);
+
+  // Colore della heatmap in base al fondamentale selezionato
+  const heatmapColor = heatmapSkillFilter === 'A'
+    ? 'hsl(0 84% 55%)'      // rosso = attacco
+    : heatmapSkillFilter === 'S'
+      ? 'hsl(142 71% 45%)'  // verde = battuta
+      : 'hsl(217 91% 60%)'; // blu = ricezione
 
   const liveArrows = useMemo(() =>
     matchState.actions
