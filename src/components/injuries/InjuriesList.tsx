@@ -19,6 +19,12 @@ interface Props {
   statusColors?: Record<string, string>;
 }
 
+const SEVERITY_BORDER: Record<string, string> = {
+  lieve: '#fcd34d',
+  media: '#fb923c',
+  grave: '#fca5a5',
+};
+
 /**
  * Lista compatta degli infortuni — usata sia nella scheda atleta che nella vista globale.
  */
@@ -35,7 +41,7 @@ export function InjuriesList({ injuries, onEdit, onDelete, showAthlete, emptyLab
     <div className="space-y-2">
       {injuries.map((inj) => {
         const days = daysSince(inj.start_date, inj.actual_return_date);
-        const borderColor = statusColors?.[inj.status];
+        const borderColor = SEVERITY_BORDER[inj.severity] ?? statusColors?.[inj.status];
         return (
           <Card
             key={inj.id}

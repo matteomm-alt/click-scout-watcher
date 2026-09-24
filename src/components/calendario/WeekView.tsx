@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { MapPin, Repeat } from 'lucide-react';
-import { getEventMeta } from '@/lib/eventTypes';
+import { getEventMeta, getEventColors } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
 import { DayDropZone, DraggableEvent, ResizeHandle } from './dnd';
@@ -60,28 +60,28 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
               {dayEvents.map((evt) => {
                 const meta = getEventMeta(evt.event_type);
                 const Icon = meta.icon;
+                const ec = getEventColors(evt.event_type);
                 const timeLabel = evt.end_at
                   ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
                   : format(new Date(evt.start_at), 'HH:mm');
                 const card = (
                   <div
                     className={cn(
-                      'text-left text-xs p-2 rounded-md border-l-2 hover:bg-muted/50 transition-colors',
+                      'text-left text-xs p-2 rounded-md border-l-2 hover:opacity-80 transition-colors',
                       draggable && 'cursor-grab active:cursor-grabbing',
-                      meta.bgClass,
-                      meta.borderClass,
                     )}
+                    style={{ background: ec.bg, color: ec.text, borderLeftColor: ec.border }}
                     role="button"
                     tabIndex={0}
                     onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                   >
                     <div className="flex items-center gap-1.5">
-                      <Icon className={cn('w-3 h-3 shrink-0', meta.textClass)} />
-                      <span className={cn('font-bold truncate', meta.textClass)}>
+                      <Icon className={'w-3 h-3 shrink-0'} />
+                      <span className={'font-bold truncate'}>
                         {timeLabel}
                       </span>
                       {(evt.recurrence_parent_id || evt.recurrence_rule) && (
-                        <Repeat className={cn('w-2.5 h-2.5 shrink-0', meta.textClass)} />
+                        <Repeat className={'w-2.5 h-2.5 shrink-0'} />
                       )}
                     </div>
                     <p className="font-semibold truncate text-foreground mt-0.5">{evt.title}</p>

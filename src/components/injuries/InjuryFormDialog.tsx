@@ -180,7 +180,7 @@ export function InjuryFormDialog({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(Object.keys(SEVERITY_LABEL) as InjurySeverity[]).map((s) =>
-                    <SelectItem key={s} value={s}>{SEVERITY_LABEL[s]}</SelectItem>
+                    <SelectItem key={s} value={s}>{s === 'lieve' ? '🟡' : s === 'media' ? '🟠' : '🔴'} {SEVERITY_LABEL[s]}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -214,8 +214,8 @@ export function InjuryFormDialog({
           </div>
 
           <div>
-            <Label>Note medico</Label>
-            <Textarea rows={2} value={form.doctor_notes} onChange={(e) => setForm((f) => ({ ...f, doctor_notes: e.target.value }))} placeholder="Diagnosi, indicazioni terapeutiche..." />
+            <Label>Note medico / fisioterapista</Label>
+            <Textarea rows={2} value={form.doctor_notes} onChange={(e) => setForm((f) => ({ ...f, doctor_notes: e.target.value }))} placeholder="Diagnosi, indicazioni, limitazioni..." />
           </div>
 
           <div>
