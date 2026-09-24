@@ -61,6 +61,8 @@ type LiveArrow = { startZone: number; endZone: number; evaluation: string; team:
 
 interface VolleyballCourtProps {
   heatmapData?: Record<number, number>;
+  /** Colore base della heatmap (default: rosso attacco 'hsl(0 84% 55%)') */
+  heatmapColor?: string;
   liveArrows?: LiveArrow[];
   receptionMode?: { home?: boolean; away?: boolean };
   highlightTeam?: 'home' | 'away' | null;

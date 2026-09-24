@@ -660,6 +660,115 @@ export function LiveScout() {
             )}
           </div>
 
+          {/* Pannello filtri heatmap (visibile solo con HEAT attivo) */}
+          {showLiveHeatmap && (
+            <div className="flex flex-wrap gap-2 px-3 py-2 bg-black/30 border-b border-border/50 text-xs">
+
+              {/* Fondamentale */}
+              {(['A', 'S', 'R'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setHeatmapSkillFilter(s)}
+                  className={cn('px-2 py-0.5 rounded',
+                    heatmapSkillFilter === s
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground')}
+                >
+                  {s === 'A' ? 'Attacco' : s === 'S' ? 'Battuta' : 'Ricezione'}
+                </button>
+              ))}
+
+              <div className="w-px bg-border" />
+
+              {/* Squadra */}
+              {(['all', 'home', 'away'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setHeatmapTeamFilter(t)}
+                  className={cn('px-2 py-0.5 rounded',
+                    heatmapTeamFilter === t
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground')}
+                >
+                  {t === 'all' ? 'Tutte' : t === 'home'
+                    ? (homeTeam.name || 'Casa').slice(0, 8)
+                    : (awayTeam.name || 'Ospite').slice(0, 8)}
+                </button>
+              ))}
+
+              <div className="w-px bg-border" />
+
+              {/* Valutazione */}
+              {(['all', '#', '+', '='] as const).map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => setHeatmapEvalFilter(e)}
+                  className={cn('px-2 py-0.5 rounded',
+                    heatmapEvalFilter === e
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground')}
+                >
+                  {e === 'all' ? 'Tutti' : e === '#' ? 'Punto'
+                    : e === '+' ? 'Positivo' : 'Errore'}
+                </button>
+              ))}
+
+              <div className="w-px bg-border" />
+
+              {/* Giocatore — Select con tutti i giocatori della squadra filtrata */}
+              <select
+                value={heatmapPlayerFilter ?? ''}
+                onChange={(e) => setHeatmapPlayerFilter(
+                  e.target.value ? Number(e.target.value) : null
+                )}
+                className="bg-muted text-muted-foreground rounded px-2 py-0.5 text-xs border border-border"
+              >
+                <option value="">Tutti i giocatori</option>
+                {(heatmapTeamFilter === 'away' ? awayTeam : homeTeam)
+                  .players?.map((p) => (
+                  <option key={p.number} value={p.number}>
+                    #{p.number} {p.lastName}
+                  </option>
+                ))}
+                {heatmapTeamFilter === 'all' && (
+                  <>
+                    <optgroup label={homeTeam.name || 'Casa'}>
+                      {homeTeam.players?.map((p) => (
+                        <option key={`h${p.number}`} value={p.number}>
+                          #{p.number} {p.lastName}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label={awayTeam.name || 'Ospite'}>
+                      {awayTeam.players?.map((p) => (
+                        <option key={`a${p.number}`} value={p.number}>
+                          #{p.number} {p.lastName}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </>
+                )}
+              </select>
+
+              {/* Reset filtri */}
+              <button
+                type="button"
+                onClick={() => {
+                  setHeatmapTeamFilter('all');
+                  setHeatmapSkillFilter('A');
+                  setHeatmapEvalFilter('all');
+                  setHeatmapPlayerFilter(null);
+                }}
+                className="px-2 py-0.5 rounded bg-muted text-muted-foreground hover:text-foreground"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+
           {/* Campi affiancati */}
           <div className="flex-1 min-h-0 px-1 pt-4">
             <VolleyballCourt
@@ -809,6 +918,8 @@ export function LiveScout() {
           <VolleyballCourt
             layout="split"
             swapSides={homeOnLeft}
+            heatmapData={liveHeatmapData}
+            heatmapColor={heatmapColor}
             highlightTeam={suggestion?.team ?? null}
             highlightPlayerNumber={suggestion?.playerNumber ?? null}
             simplifiedView={simplified}
