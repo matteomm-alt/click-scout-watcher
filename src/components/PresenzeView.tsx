@@ -52,7 +52,7 @@ export function PresenzeView() {
     for (const r of rows) {
       if (!byAth[r.athlete_id]) continue;
       byAth[r.athlete_id].t += 1;
-      if (r.status === 'presente') byAth[r.athlete_id].p += 1;
+      if (r.status === 'presente' || r.status === 'ritardo') byAth[r.athlete_id].p += 1;
       else if (r.status === 'assente') byAth[r.athlete_id].a += 1;
       else if (r.status === 'giustificato') byAth[r.athlete_id].g += 1;
     }
