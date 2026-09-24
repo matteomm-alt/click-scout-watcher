@@ -25,11 +25,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
   Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
-  ExternalLink,
+  ExternalLink, ArrowDown, ArrowUp,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
 import type { BlockDraft } from '@/components/training/SortableBlockItem';
