@@ -220,7 +220,8 @@ export function VolleyballCourt({
               style={{
                 left: `${mx(z.x)}%`, top: `${my(z.y)}%`,
                 width: '28%', height: '28%',
-                background: `radial-gradient(circle, ${heatmapColor} / ${opacity}) 0%, transparent 70%)`,
+                opacity,
+                background: `radial-gradient(circle, ${heatmapColor} 0%, transparent 70%)`,
               }}
             />
           );
