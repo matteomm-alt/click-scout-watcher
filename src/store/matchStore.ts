@@ -16,6 +16,7 @@ import {
 import { getInitialPhases } from '@/lib/tacticalPhases';
 import {
   applyLiberoAutoSwap,
+  liberoTargets,
   applyEvent,
   replayMatch,
   type ReplayContext,
@@ -233,8 +234,8 @@ export const useMatchStore = create<MatchStore>()(
           .find(p => p.id === homeLineup.libero1)?.number ?? null;
         const awayLib = awayTeam.players
           .find(p => p.id === awayLineup.libero1)?.number ?? null;
-        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null);
-        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null);
+        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null, liberoTargets(homeTeam, homeLineup));
+        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null, liberoTargets(awayTeam, awayLineup));
         const event: MatchEvent = {
           type: 'match_started',
           id: safeUUID(),
@@ -417,8 +418,8 @@ export const useMatchStore = create<MatchStore>()(
           .find(p => p.id === homeLineup.libero1)?.number ?? null;
         const awayLib = awayTeam.players
           .find(p => p.id === awayLineup.libero1)?.number ?? null;
-        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null);
-        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null);
+        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null, liberoTargets(homeTeam, homeLineup));
+        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null, liberoTargets(awayTeam, awayLineup));
         const event: MatchEvent = {
           type: 'set_ended',
           id: safeUUID(),

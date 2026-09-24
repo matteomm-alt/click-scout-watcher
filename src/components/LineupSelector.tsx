@@ -75,7 +75,7 @@ function TeamLineup({
     POSITION_KEYS.forEach(k => {
       if (lineup[k] === playerId) updates[k] = null;
     });
-    updates[posKey] = playerId;
+    Object.assign(updates, { [posKey]: playerId });
     setLineup(updates);
   };
 
@@ -248,6 +248,46 @@ function TeamLineup({
               </button>
             ))}
           </div>
+          {lineup.libero1 && (() => {
+            const selected = lineup.liberoReplaces ?? [];
+            const candidates = POSITION_KEYS
+              .map(k => getPlayer(lineup[k] as string | null))
+              .filter((p): p is Player => !!p && p.id !== lineup.setter);
+            const toggle = (id: string) => {
+              const next = selected.includes(id)
+                ? selected.filter(x => x !== id)
+                : [...selected, id].slice(-2);
+              setLineup({ liberoReplaces: next });
+            };
+            return (
+              <div className="space-y-2 pt-2">
+                <label className="text-sm text-muted-foreground font-medium">
+                  Il libero sostituisce (max 2)
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {candidates.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => toggle(p.id)}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        selected.includes(p.id)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {p.number} {p.lastName}{p.role === 'M' ? ' · M' : ''}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {selected.length === 0
+                    ? 'Nessuna scelta: il libero entra al posto delle centrali (ruolo M).'
+                    : 'Il libero entra al posto di queste giocatrici quando sono in seconda linea ed esce quando vanno in prima linea.'}
+                </p>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
