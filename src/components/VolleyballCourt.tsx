@@ -108,6 +108,7 @@ const courtBg = 'hsl(28 70% 55%)';
 
 export function VolleyballCourt({
   heatmapData,
+  heatmapColor = 'hsl(0 84% 55%)',
   liveArrows,
   receptionMode,
   highlightTeam,
@@ -217,7 +218,7 @@ export function VolleyballCourt({
               style={{
                 left: `${mx(z.x)}%`, top: `${my(z.y)}%`,
                 width: '28%', height: '28%',
-                background: `radial-gradient(circle, hsl(0 84% 55% / ${opacity}) 0%, transparent 70%)`,
+                background: `radial-gradient(circle, ${heatmapColor} / ${opacity}) 0%, transparent 70%)`,
               }}
             />
           );
