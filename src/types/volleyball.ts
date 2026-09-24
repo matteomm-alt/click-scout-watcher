@@ -45,6 +45,8 @@ export interface Lineup {
   p6: string | null;
   libero1: string | null;
   libero2: string | null;
+  /** Giocatrici (max 2) che il libero sostituisce in seconda linea. Vuoto = centrali. */
+  liberoReplaces?: string[];
   setter: string | null; // who is the setter (player ID)
 }
 

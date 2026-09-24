@@ -12,8 +12,12 @@ export function applyLiberoAutoSwap(
   team: Team,
   liberoNum: number | null | undefined,
   benchedMb: number | null | undefined,
+  replaceNumbers?: number[],
 ): { lineup: number[]; benchedMb: number | null } {
   const roleOf = (n: number) => team.players.find((p) => p.number === n)?.role;
+  // Giocatrici che il libero può sostituire: scelta in Formazione, altrimenti i centrali.
+  const isTarget = (n: number) =>
+    replaceNumbers && replaceNumbers.length > 0 ? replaceNumbers.includes(n) : roleOf(n) === 'M';
   const out = [...lineup];
   let benched: number | null = benchedMb ?? null;
   // Posizioni vietate al libero: P1 (battuta) e prima linea P2/P3/P4.
@@ -42,7 +46,7 @@ export function applyLiberoAutoSwap(
   let illegalIdx = out.indexOf(activeLiberoNum);
   if (illegalIdx >= 0 && ILLEGAL.includes(illegalIdx)) {
     const backIdx =
-      [4, 5].find((i) => out[i] && out[i] !== activeLiberoNum && roleOf(out[i]) === 'M') ??
+      [4, 5].find((i) => out[i] && out[i] !== activeLiberoNum && isTarget(out[i])) ??
       [4, 5].find((i) => out[i] && out[i] !== activeLiberoNum && !rosterLiberoNumbers.includes(out[i]));
     if (backIdx !== undefined) {
       const swapped = out[backIdx];
@@ -65,7 +69,7 @@ export function applyLiberoAutoSwap(
   if (benched == null && liberoNum != null && !out.includes(liberoNum)) {
     for (const idx of [4, 5]) {
       const num = out[idx];
-      if (num && num !== liberoNum && roleOf(num) === 'M') {
+      if (num && num !== liberoNum && isTarget(num)) {
         benched = num;
         out[idx] = liberoNum;
         break;
@@ -75,6 +79,12 @@ export function applyLiberoAutoSwap(
   return { lineup: out, benchedMb: benched };
 }
 
+
+export function liberoTargets(team: Team, lineup: Lineup): number[] {
+  return (lineup.liberoReplaces ?? [])
+    .map((id) => team.players.find((p) => p.id === id)?.number)
+    .filter((n): n is number => typeof n === 'number');
+}
 
 export interface ReplayContext {
   homeTeam: Team;
@@ -127,6 +137,7 @@ function enforceLiberoLegality(state: MatchState, ctx: ReplayContext): MatchStat
       .find((p) => p.id === ctx.homeLineup.libero1)?.number ?? null;
     const legal = applyLiberoAutoSwap(
       state.homeCurrentLineup, ctx.homeTeam, liberoNum, state.homeBenchedMb,
+      liberoTargets(ctx.homeTeam, ctx.homeLineup),
     );
     if (legal.lineup.some((n, i) => n !== state.homeCurrentLineup[i])
       || legal.benchedMb !== state.homeBenchedMb) {
@@ -138,6 +149,7 @@ function enforceLiberoLegality(state: MatchState, ctx: ReplayContext): MatchStat
       .find((p) => p.id === ctx.awayLineup.libero1)?.number ?? null;
     const legal = applyLiberoAutoSwap(
       next.awayCurrentLineup, ctx.awayTeam, liberoNum, next.awayBenchedMb,
+      liberoTargets(ctx.awayTeam, ctx.awayLineup),
     );
     if (legal.lineup.some((n, i) => n !== next.awayCurrentLineup[i])
       || legal.benchedMb !== next.awayBenchedMb) {
@@ -172,12 +184,14 @@ function applyEventInternal(
           ctx.homeTeam,
           homeLibero,
           event.homeBenchedMb,
+          liberoTargets(ctx.homeTeam, ctx.homeLineup),
         );
         const away = applyLiberoAutoSwap(
           event.awayLineup,
           ctx.awayTeam,
           awayLibero,
           event.awayBenchedMb,
+          liberoTargets(ctx.awayTeam, ctx.awayLineup),
         );
       return {
         ...state,
@@ -350,7 +364,7 @@ function applyEventInternal(
         const newSetterPos = setterPos === 1 ? 6 : setterPos - 1;
         const liberoNum = teamData.players
           .find(p => p.id === teamLineup.libero1)?.number ?? null;
-        const swapped = applyLiberoAutoSwap(lineup, teamData, liberoNum, benchedMb);
+        const swapped = applyLiberoAutoSwap(lineup, teamData, liberoNum, benchedMb, liberoTargets(teamData, teamLineup));
         if (event.team === 'home') {
           newHomeLineup = swapped.lineup;
           newHomeSetterPos = newSetterPos;
@@ -424,7 +438,7 @@ function applyEventInternal(
       const configuredLineup = event.team === 'home' ? ctx.homeLineup : ctx.awayLineup;
       const liberoNum = teamData.players
         .find((player) => player.id === configuredLineup.libero1)?.number ?? null;
-      const legal = applyLiberoAutoSwap(lineup, teamData, liberoNum, state[benchedKey]);
+      const legal = applyLiberoAutoSwap(lineup, teamData, liberoNum, state[benchedKey], liberoTargets(teamData, configuredLineup));
       return {
         ...state,
         [lineupKey]: legal.lineup,
@@ -492,6 +506,7 @@ function applyEventInternal(
         .find(p => p.id === teamLineup.libero1)?.number ?? null;
       const swapped = applyLiberoAutoSwap(
         lineup, teamData, liberoNum, event.benchedMbBefore,
+        liberoTargets(teamData, teamLineup),
       );
       if (event.team === 'home') {
         return {
