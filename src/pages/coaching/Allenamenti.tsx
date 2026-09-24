@@ -262,10 +262,15 @@ export default function Allenamenti() {
         }
         return true;
       })
-      // Ordine cronologico invertito: più recenti in alto, senza data in fondo
-      .sort((a, b) => (b.scheduled_date ?? '').localeCompare(a.scheduled_date ?? ''));
+      .sort((a, b) => {
+        const da = a.scheduled_date ?? '';
+        const db = b.scheduled_date ?? '';
+        return sortDir === 'desc'
+          ? db.localeCompare(da)
+          : da.localeCompare(db);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainings, tab, fTeam, fStatus, fWhen, search, todayISO]);
+  }, [trainings, tab, fTeam, fStatus, fWhen, search, todayISO, sortDir]);
 
   // ── Apertura dialog (nuovo / modifica / duplica) ─────────────────────────
   const openNew = () => { setForm({ ...emptyForm(), season: currentSeason }); setDlgOpen(true); };
