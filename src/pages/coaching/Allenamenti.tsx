@@ -670,6 +670,9 @@ export default function Allenamenti() {
             <div
               key={t.id}
               className="rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors flex flex-col"
+              style={{
+                borderLeft: `4px solid ${STATUS_STYLE[t.status]?.border ?? '#6b7280'}`,
+              }}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
@@ -684,16 +687,32 @@ export default function Allenamenti() {
                   {t.scheduled_date && !t.is_template && (
                     <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
                       {format(parseISO(t.scheduled_date), 'EEE dd MMM yyyy', { locale: it })}
-                      {isAttendanceOpen(t.scheduled_date) && (
-                        <Badge className="text-[9px] px-1.5 py-0">OGGI</Badge>
-                      )}
+                      {(() => {
+                        if (!t.scheduled_date) return null;
+                        const diff = differenceInDays(parseISO(t.scheduled_date), new Date());
+                        if (diff === 0) return (
+                          <Badge className="text-[9px] px-1.5 py-0 bg-primary">OGGI</Badge>
+                        );
+                        if (diff > 0 && diff <= 3) return (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0">tra {diff}g</Badge>
+                        );
+                        return null;
+                      })()}
                     </p>
                   )}
                 </div>
-                {!t.is_template && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground" title={t.status}>
-                    {statusIcon(t.status)}
-                  </div>
+                {!t.is_template && t.status && STATUS_STYLE[t.status] && (
+                  <span style={{
+                    background: STATUS_STYLE[t.status].badge,
+                    color: STATUS_STYLE[t.status].badgeText,
+                    padding: '1px 8px',
+                    borderRadius: '10px',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {statusLabel[t.status] ?? t.status}
+                  </span>
                 )}
               </div>
 
