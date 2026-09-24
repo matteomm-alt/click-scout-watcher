@@ -75,7 +75,7 @@ function TeamLineup({
     POSITION_KEYS.forEach(k => {
       if (lineup[k] === playerId) updates[k] = null;
     });
-    (updates as Record<string, string | null>)[posKey] = playerId;
+    Object.assign(updates, { [posKey]: playerId });
     setLineup(updates);
   };
 
