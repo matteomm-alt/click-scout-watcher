@@ -167,10 +167,13 @@ export function LiveScout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchState.actions.length]);
 
-  // Heatmap & live arrows (basati su attacchi home)
+  // Heatmap & live arrows — conteggi separati per squadra: ogni azione viene
+  // disegnata sulla metà di campo della propria squadra (le zone sono già in
+  // numerazione team-relative, calcolate con nearestZone(team, …)).
   const liveHeatmapData = useMemo(() => {
     if (!showLiveHeatmap) return undefined;
-    const data: Record<number, number> = {};
+    const home: Record<number, number> = {};
+    const away: Record<number, number> = {};
     matchState.actions
       .filter((a) => {
         if (a.skill !== heatmapSkillFilter) return false;
@@ -181,9 +184,13 @@ export function LiveScout() {
       })
       .forEach((a) => {
         const zone = heatmapSkillFilter === 'A' ? a.endZone : a.startZone;
-        if (zone) data[zone] = (data[zone] || 0) + 1;
+        if (!zone) return;
+        const target = a.team === 'home' ? home : away;
+        target[zone] = (target[zone] || 0) + 1;
       });
-    return Object.keys(data).length > 0 ? data : undefined;
+    return (Object.keys(home).length > 0 || Object.keys(away).length > 0)
+      ? { home, away }
+      : undefined;
   }, [matchState.actions, showLiveHeatmap, heatmapTeamFilter, heatmapSkillFilter, heatmapEvalFilter, heatmapPlayerFilter]);
 
   // Colore della heatmap in base al fondamentale selezionato

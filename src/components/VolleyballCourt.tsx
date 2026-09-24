@@ -60,7 +60,8 @@ export function ZoneCourt({ onZoneClick, startZone, endZone, mode = 'display', l
 type LiveArrow = { startZone: number; endZone: number; evaluation: string; team: 'home' | 'away' };
 
 interface VolleyballCourtProps {
-  heatmapData?: Record<number, number>;
+  /** Heatmap live: conteggi zona→n separati per squadra; ogni metà campo disegna solo i propri */
+  heatmapData?: { home?: Record<number, number>; away?: Record<number, number> };
   /** Colore base della heatmap (default: rosso attacco 'hsl(0 84% 55%)') */
   heatmapColor?: string;
   liveArrows?: LiveArrow[];
@@ -179,8 +180,9 @@ export function VolleyballCourt({
     const showZoneOverlay = !!onZoneClick && (!zoneSelectTeam || zoneSelectTeam === team);
     const zoneClickEnabled = showZoneOverlay;
 
-    const showHeatmap = heatmapData && team === 'away';
-    const maxHeat = heatmapData ? Math.max(...Object.values(heatmapData), 1) : 1;
+    const halfHeat = heatmapData ? (team === 'home' ? heatmapData.home : heatmapData.away) : undefined;
+    const showHeatmap = !!halfHeat;
+    const maxHeat = halfHeat ? Math.max(...Object.values(halfHeat), 1) : 1;
 
     return (
       <div
@@ -208,7 +210,7 @@ export function VolleyballCourt({
 
         {/* Heatmap */}
         {showHeatmap && zoneCenters.map((z) => {
-          const count = heatmapData![z.zone] ?? 0;
+          const count = halfHeat![z.zone] ?? 0;
           if (!count) return null;
           const opacity = Math.min(0.55, (count / maxHeat) * 0.55);
           return (
@@ -218,7 +220,8 @@ export function VolleyballCourt({
               style={{
                 left: `${mx(z.x)}%`, top: `${my(z.y)}%`,
                 width: '28%', height: '28%',
-                background: `radial-gradient(circle, ${heatmapColor} / ${opacity}) 0%, transparent 70%)`,
+                opacity,
+                background: `radial-gradient(circle, ${heatmapColor} 0%, transparent 70%)`,
               }}
             />
           );
