@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Check, X, AlertCircle, Loader2, ClipboardCheck } from 'lucide-react';
+import { Check, X, AlertCircle, Loader2, ClipboardCheck, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -25,12 +26,13 @@ export interface TrainingAttendanceTarget {
 interface AthleteLite {
   id: string; last_name: string; first_name: string | null; number: number | null; team_id: string | null;
 }
-type Status = 'presente' | 'assente' | 'giustificato';
+type Status = 'presente' | 'assente' | 'giustificato' | 'ritardo';
 
 const STATUS_STYLE: Record<Status, { bg: string; text: string }> = {
   presente: { bg: '#d1fae5', text: '#065f46' },
   assente: { bg: '#fee2e2', text: '#991b1b' },
   giustificato: { bg: '#fef3c7', text: '#92400e' },
+  ritardo: { bg: '#ffedd5', text: '#c2410c' },
 };
 
 export function todayISO() {
@@ -56,6 +58,8 @@ export function TrainingAttendanceDialog({
   const [saving, setSaving] = useState<string | null>(null);
   const [athletes, setAthletes] = useState<AthleteLite[]>([]);
   const [statuses, setStatuses] = useState<Record<string, Status>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const noteTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [eventId, setEventId] = useState<string | null>(null);
 
   const editable = isAttendanceOpen(training?.scheduled_date);
@@ -112,15 +116,20 @@ export function TrainingAttendanceDialog({
         }
 
         const map: Record<string, Status> = {};
+        const noteMap: Record<string, string> = {};
         if (evId) {
           const { data: att } = await supabase
-            .from('attendances').select('athlete_id, status').eq('event_id', evId);
-          for (const a of ((att ?? []) as Array<{ athlete_id: string; status: Status }>)) map[a.athlete_id] = a.status;
+            .from('attendances').select('athlete_id, status, note').eq('event_id', evId);
+          for (const a of ((att ?? []) as Array<{ athlete_id: string; status: Status; note: string | null }>)) {
+            map[a.athlete_id] = a.status;
+            noteMap[a.athlete_id] = a.note ?? '';
+          }
         }
         if (cancelled) return;
         setAthletes(list);
         setEventId(evId);
         setStatuses(map);
+        setNotes(noteMap);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -148,6 +157,20 @@ export function TrainingAttendanceDialog({
     if (error) toast.error('Errore salvataggio presenza');
     else setStatuses((prev) => ({ ...prev, [athleteId]: status }));
     setSaving(null);
+  };
+
+  const updateNote = (athleteId: string, note: string) => {
+    setNotes((prev) => ({ ...prev, [athleteId]: note }));
+    if (noteTimers.current[athleteId]) clearTimeout(noteTimers.current[athleteId]);
+    noteTimers.current[athleteId] = setTimeout(async () => {
+      if (!eventId) return;
+      const { error } = await supabase.from('attendances')
+        .update({ note: note || null })
+        .eq('athlete_id', athleteId)
+        .eq('event_id', eventId);
+      if (error) toast.error('Errore salvataggio nota');
+      else toast.success('Nota salvata');
+    }, 1000);
   };
 
   const markAllPresent = async () => {
@@ -194,7 +217,7 @@ export function TrainingAttendanceDialog({
             {athletes.map((a) => {
               const st = statuses[a.id];
               return (
-                <div key={a.id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2">
+                <div key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border px-3 py-2">
                   <div className="flex-1 min-w-0 text-sm">
                     <span className="font-bold">#{a.number ?? '—'}</span>
                     <span className="ml-2">{a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''}</span>
@@ -229,7 +252,24 @@ export function TrainingAttendanceDialog({
                     >
                       <AlertCircle className="w-4 h-4" />
                     </Button>
+                    <Button
+                      size="icon" className="h-8 w-8" disabled={!editable || saving === a.id}
+                      variant="outline"
+                      style={st === 'ritardo' ? { background: STATUS_STYLE.ritardo.bg, color: STATUS_STYLE.ritardo.text } : undefined}
+                      onClick={() => setStatus(a.id, 'ritardo')} title="Ritardo"
+                    >
+                      <Clock className="w-4 h-4" />
+                    </Button>
                   </div>
+                  {st && (
+                    <Input
+                      className="h-7 text-xs basis-full"
+                      placeholder="Nota..."
+                      value={notes[a.id] ?? ''}
+                      disabled={!editable}
+                      onChange={(e) => updateNote(a.id, e.target.value)}
+                    />
+                  )}
                 </div>
               );
             })}
