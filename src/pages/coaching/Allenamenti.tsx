@@ -136,6 +136,17 @@ export default function Allenamenti() {
         .limit(500);
       if (trRes.error) { handleSupabaseError(trRes.error, 'caricamento allenamenti'); return []; }
       const trList = (trRes.data ?? []) as TrainingRow[];
+      // Aggiorna automaticamente lo status degli allenamenti passati
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const toUpdate = trList.filter(
+        (t) => t.status === 'programmato' && !t.is_template && !!t.scheduled_date && t.scheduled_date < todayStr,
+      );
+      if (toUpdate.length > 0) {
+        const upd = await supabase.from('trainings')
+          .update({ status: 'completato' })
+          .in('id', toUpdate.map((t) => t.id));
+        if (!upd.error) toUpdate.forEach((t) => { t.status = 'completato'; });
+      }
       if (trList.length > 0) {
         const ids = trList.map(t => t.id);
         const blRes = await supabase

@@ -99,12 +99,12 @@ export default function Schemi() {
     if (editing) {
       const { error } = await supabase.from('training_schemes').update(payload).eq('id', editing.id);
       if (error) { toast.error('Errore aggiornamento'); return; }
-      toast.success('Schema aggiornato');
+      toast.success('Schema salvato', { description: 'Il tuo schema è al sicuro su Supabase' });
     } else {
       const { error } = await supabase.from('training_schemes')
         .insert({ ...payload, society_id: societyId, created_by: user.id });
       if (error) { toast.error('Errore creazione'); return; }
-      toast.success('Schema creato');
+      toast.success('Schema salvato', { description: 'Il tuo schema è al sicuro su Supabase' });
     }
     setDialogOpen(false);
     load();

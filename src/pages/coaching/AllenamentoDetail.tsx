@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ArrowLeft, ClipboardCheck, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -44,6 +45,8 @@ export default function AllenamentoDetail() {
   const [notFound, setNotFound] = useState(false);
   const [form, setForm] = useState<TrainingFormValue | null>(null);
   const [attOpen, setAttOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const queryClient = useQueryClient();
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [teams, setTeams] = useState<TeamLite[]>([]);
   const [athletes, setAthletes] = useState<AthleteLite[]>([]);
@@ -230,6 +233,65 @@ export default function AllenamentoDetail() {
     }
   };
 
+  const handleMarkCompleted = async () => {
+    if (!id || !form || !societyId || !user) return;
+    setCompleting(true);
+    try {
+      const { error: upErr } = await supabase.from('trainings')
+        .update({ status: 'completato' }).eq('id', id);
+      if (upErr) throw upErr;
+      setForm((f) => (f ? { ...f, status: 'completato' } : f));
+
+      const participants = form.participating_athlete_ids ?? [];
+      if (participants.length > 0) {
+        // Le presenze richiedono un evento: uso quello collegato o lo creo.
+        const { data: tr } = await supabase.from('trainings').select('event_id').eq('id', id).maybeSingle();
+        let eventId: string | null = tr?.event_id ?? null;
+        if (!eventId) {
+          const date = form.scheduled_date ?? new Date().toISOString().slice(0, 10);
+          const startAt = `${date}T09:00:00`;
+          const endAt = new Date(new Date(startAt).getTime() + (form.duration_min ?? 90) * 60000).toISOString();
+          const { data: ev, error: evErr } = await supabase.from('events').insert({
+            society_id: societyId, created_by: user.id, title: form.title.trim() || 'Allenamento',
+            event_type: 'allenamento', start_at: startAt, end_at: endAt,
+            team_id: form.team_id || null, season, description: `training:${id}`,
+          }).select('id').single();
+          if (evErr) throw evErr;
+          eventId = ev.id;
+          await supabase.from('trainings').update({ event_id: eventId }).eq('id', id);
+        }
+
+        const { data: existing, error: exErr } = await supabase
+          .from('attendances').select('athlete_id').eq('training_id', id);
+        if (exErr) throw exErr;
+        const existingIds = new Set((existing ?? []).map((a) => a.athlete_id));
+        const toInsert = participants
+          .filter((aid) => !existingIds.has(aid))
+          .map((aid) => ({
+            society_id: societyId,
+            athlete_id: aid,
+            training_id: id,
+            event_id: eventId as string,
+            status: 'presente' as const,
+            recorded_by: user.id,
+            season,
+          }));
+        if (toInsert.length > 0) {
+          const { error: insErr } = await supabase.from('attendances').insert(toInsert);
+          if (insErr) throw insErr;
+          toast.success(`${toInsert.length} presenze registrate automaticamente`);
+        }
+      }
+      toast.success('Allenamento completato');
+      queryClient.invalidateQueries({ queryKey: ['trainings'] });
+    } catch (e) {
+      handleSupabaseError(e, 'completamento allenamento');
+      toast.error('Errore nel completare l’allenamento');
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   if (socLoading || loading) {
     return (
       <div className="container py-10 flex items-center gap-2 text-muted-foreground">
@@ -273,6 +335,12 @@ export default function AllenamentoDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {form.status !== 'completato' && (
+            <Button variant="outline" onClick={handleMarkCompleted} disabled={completing} className="gap-2">
+              {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              Segna come completato
+            </Button>
+          )}
           <Button
             variant={isAttendanceOpen(form.scheduled_date) ? 'default' : 'outline'}
             onClick={() => setAttOpen(true)}

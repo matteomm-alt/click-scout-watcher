@@ -5,7 +5,7 @@ import {
 } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Repeat } from 'lucide-react';
-import { getEventMeta } from '@/lib/eventTypes';
+import { getEventColors } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
 import { DayDropZone, DraggableEvent } from './dnd';
@@ -75,7 +75,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
               </span>
               <div className="flex flex-col gap-1 overflow-hidden">
                 {dayEvents.slice(0, 3).map((evt) => {
-                  const meta = getEventMeta(evt.event_type);
+                  const ec = getEventColors(evt.event_type);
                   const timeLabel = evt.end_at
                     ? `${format(new Date(evt.start_at), 'HH:mm')}–${format(new Date(evt.end_at), 'HH:mm')}`
                     : format(new Date(evt.start_at), 'HH:mm');
@@ -84,18 +84,16 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                       <button
                         onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                         className={cn(
-                          'flex-1 text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:bg-muted/50 transition-colors',
-                          meta.bgClass,
-                          meta.borderClass,
-                          meta.textClass,
+                          'flex-1 text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:opacity-80 transition-colors',
                         )}
+                        style={{ background: ec.bg, color: ec.text, borderLeftColor: ec.border }}
                         title={`${timeLabel} ${evt.title}${evt.location ? ' @ ' + evt.location : ''}`}
                       >
                         <span className="font-bold mr-1">{timeLabel}</span>
                         {(evt.recurrence_parent_id || evt.recurrence_rule) && (
-                          <Repeat className="w-2 h-2 inline-block mr-0.5 text-muted-foreground" />
+                          <Repeat className="w-2 h-2 inline-block mr-0.5" />
                         )}
-                        <span className="text-foreground">{evt.title}</span>
+                        <span>{evt.title}</span>
                       </button>
                       {evt.event_type === 'partita' && (
                         <button

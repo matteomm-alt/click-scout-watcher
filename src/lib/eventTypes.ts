@@ -65,3 +65,16 @@ export const EVENT_TYPES: EventTypeMeta[] = [
 export function getEventMeta(type: EventType): EventTypeMeta {
   return EVENT_TYPES.find((t) => t.value === type) ?? EVENT_TYPES[4];
 }
+
+/** Colori espliciti per tipo evento (card calendario, form). */
+export const EVENT_TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  allenamento: { bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd' },
+  partita: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
+  riunione: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
+  torneo: { bg: '#ede9fe', text: '#5b21b6', border: '#c4b5fd' },
+  altro: { bg: '#f3f4f6', text: '#6b7280', border: '#d1d5db' },
+};
+
+export function getEventColors(type: string) {
+  return EVENT_TYPE_COLORS[type] ?? EVENT_TYPE_COLORS.altro;
+}

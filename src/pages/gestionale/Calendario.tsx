@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
-import { EVENT_TYPES, type EventType } from '@/lib/eventTypes';
+import { EVENT_TYPES, type EventType, getEventColors } from '@/lib/eventTypes';
 import {
   DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
@@ -745,7 +745,13 @@ export default function Calendario() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider">Tipo</Label>
+              <Label className="text-xs uppercase tracking-wider flex items-center gap-2">
+                Tipo
+                <span
+                  className="inline-block w-3 h-3 rounded-full border"
+                  style={{ background: getEventColors(eventForm.event_type).bg, borderColor: getEventColors(eventForm.event_type).border }}
+                />
+              </Label>
               <div className="flex flex-wrap gap-1.5">
                 {EVENT_TYPES.map((t) => {
                   const Icon = t.icon;
