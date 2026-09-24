@@ -85,6 +85,18 @@ interface AthleteLite {
 
 const ALL = '__ALL__';
 
+const STATUS_STYLE: Record<string, { border: string; badge: string; badgeText: string }> = {
+  'programmato': { border: '#93c5fd', badge: '#dbeafe', badgeText: '#1d4ed8' },
+  'completato': { border: '#6ee7b7', badge: '#d1fae5', badgeText: '#065f46' },
+  'saltato': { border: '#fca5a5', badge: '#fee2e2', badgeText: '#991b1b' },
+};
+
+const statusLabel: Record<string, string> = {
+  programmato: 'Programmato',
+  completato: 'Completato',
+  saltato: 'Saltato',
+};
+
 const emptyForm = (): TrainingFormValue => ({
   team_id: null,
   title: '',
@@ -115,6 +127,7 @@ export default function Allenamenti() {
   const [fTeam, setFTeam] = useState<string>(ALL);
   const [fStatus, setFStatus] = useState<string>(ALL);
   const [fWhen, setFWhen] = useState<string>(ALL);
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
 
   // Dialog form
   const [dlgOpen, setDlgOpen] = useState(false);
