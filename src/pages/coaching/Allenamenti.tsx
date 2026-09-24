@@ -24,12 +24,12 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ClipboardList, Plus, Loader2, Pencil, Trash2, Copy, Calendar as CalendarIcon,
-  Clock, Users, Bookmark, CheckCircle2, XCircle, Circle, Search, FileDown, ClipboardCheck,
-  ExternalLink,
+  Clock, Users, Bookmark, Search, FileDown, ClipboardCheck,
+  ExternalLink, ArrowDown, ArrowUp,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { TrainingForm, type TrainingFormValue } from '@/components/training/TrainingForm';
 import type { BlockDraft } from '@/components/training/SortableBlockItem';
@@ -85,6 +85,18 @@ interface AthleteLite {
 
 const ALL = '__ALL__';
 
+const STATUS_STYLE: Record<string, { border: string; badge: string; badgeText: string }> = {
+  'programmato': { border: '#93c5fd', badge: '#dbeafe', badgeText: '#1d4ed8' },
+  'completato': { border: '#6ee7b7', badge: '#d1fae5', badgeText: '#065f46' },
+  'saltato': { border: '#fca5a5', badge: '#fee2e2', badgeText: '#991b1b' },
+};
+
+const statusLabel: Record<string, string> = {
+  programmato: 'Programmato',
+  completato: 'Completato',
+  saltato: 'Saltato',
+};
+
 const emptyForm = (): TrainingFormValue => ({
   team_id: null,
   title: '',
@@ -115,6 +127,7 @@ export default function Allenamenti() {
   const [fTeam, setFTeam] = useState<string>(ALL);
   const [fStatus, setFStatus] = useState<string>(ALL);
   const [fWhen, setFWhen] = useState<string>(ALL);
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
 
   // Dialog form
   const [dlgOpen, setDlgOpen] = useState(false);
@@ -249,10 +262,15 @@ export default function Allenamenti() {
         }
         return true;
       })
-      // Ordine cronologico invertito: più recenti in alto, senza data in fondo
-      .sort((a, b) => (b.scheduled_date ?? '').localeCompare(a.scheduled_date ?? ''));
+      .sort((a, b) => {
+        const da = a.scheduled_date ?? '';
+        const db = b.scheduled_date ?? '';
+        return sortDir === 'desc'
+          ? db.localeCompare(da)
+          : da.localeCompare(db);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainings, tab, fTeam, fStatus, fWhen, search, todayISO]);
+  }, [trainings, tab, fTeam, fStatus, fWhen, search, todayISO, sortDir]);
 
   // ── Apertura dialog (nuovo / modifica / duplica) ─────────────────────────
   const openNew = () => { setForm({ ...emptyForm(), season: currentSeason }); setDlgOpen(true); };
@@ -536,11 +554,6 @@ export default function Allenamenti() {
     );
   }
 
-  const statusIcon = (s: string) => {
-    if (s === 'completato') return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
-    if (s === 'saltato') return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-    return <Circle className="w-3.5 h-3.5 text-muted-foreground" />;
-  };
 
   return (
     <div className="container py-8 space-y-6">
@@ -614,6 +627,19 @@ export default function Allenamenti() {
             </Select>
           )}
         </div>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9"
+            onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+          >
+            {sortDir === 'desc'
+              ? <><ArrowDown className="w-3.5 h-3.5" /> Più recenti</>
+              : <><ArrowUp className="w-3.5 h-3.5" /> Meno recenti</>
+            }
+          </Button>
+        </div>
       </div>
 
       {/* Lista */}
@@ -644,6 +670,9 @@ export default function Allenamenti() {
             <div
               key={t.id}
               className="rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors flex flex-col"
+              style={{
+                borderLeft: `4px solid ${STATUS_STYLE[t.status]?.border ?? '#6b7280'}`,
+              }}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
@@ -658,16 +687,32 @@ export default function Allenamenti() {
                   {t.scheduled_date && !t.is_template && (
                     <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
                       {format(parseISO(t.scheduled_date), 'EEE dd MMM yyyy', { locale: it })}
-                      {isAttendanceOpen(t.scheduled_date) && (
-                        <Badge className="text-[9px] px-1.5 py-0">OGGI</Badge>
-                      )}
+                      {(() => {
+                        if (!t.scheduled_date) return null;
+                        const diff = differenceInDays(parseISO(t.scheduled_date), new Date());
+                        if (diff === 0) return (
+                          <Badge className="text-[9px] px-1.5 py-0 bg-primary">OGGI</Badge>
+                        );
+                        if (diff > 0 && diff <= 3) return (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0">tra {diff}g</Badge>
+                        );
+                        return null;
+                      })()}
                     </p>
                   )}
                 </div>
-                {!t.is_template && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground" title={t.status}>
-                    {statusIcon(t.status)}
-                  </div>
+                {!t.is_template && t.status && STATUS_STYLE[t.status] && (
+                  <span style={{
+                    background: STATUS_STYLE[t.status].badge,
+                    color: STATUS_STYLE[t.status].badgeText,
+                    padding: '1px 8px',
+                    borderRadius: '10px',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {statusLabel[t.status] ?? t.status}
+                  </span>
                 )}
               </div>
 
