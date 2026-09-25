@@ -219,7 +219,7 @@ export function VolleyballCourt({
               className="pointer-events-none absolute z-[5] -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{
                 left: `${mx(z.x)}%`, top: `${my(z.y)}%`,
-                width: '28%', height: '28%',
+                width: '34%', height: '34%',
                 opacity,
                 background: `radial-gradient(circle, ${heatmapColor} 0%, transparent 70%)`,
               }}
