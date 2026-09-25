@@ -71,12 +71,12 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
     'var(--destructive)'; // default: arrival heat = red
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
           Heatmap Attacchi — {zoneType === 'end' ? 'Arrivo' : 'Partenza'}
         </h4>
-        <span className="text-[10px] font-mono text-muted-foreground">{total} att.</span>
+        <span className="text-[11px] font-mono text-muted-foreground">{total} att.</span>
       </div>
 
       {/* Team filter */}
@@ -88,7 +88,7 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
               key={f.key}
               type="button"
               onClick={() => setTeam(f.key)}
-              className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${
+              className={`text-[11px] font-bold uppercase tracking-wider py-1.5 rounded transition-colors truncate ${
                 active ? f.activeClass : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
               }`}
             >
@@ -106,7 +106,7 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
               key={zt}
               type="button"
               onClick={() => setZoneType(zt)}
-              className={`text-[9px] font-bold uppercase tracking-wider py-1 rounded transition-colors ${
+              className={`text-[10px] font-bold uppercase tracking-wider py-1.5 rounded transition-colors ${
                 zoneType === zt ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -117,7 +117,7 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
         <select
           value={evalFilter}
           onChange={(e) => setEvalFilter(e.target.value as EvalFilter)}
-          className="text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded-md bg-secondary/40 border border-border/50 text-foreground"
+          className="text-[11px] font-bold uppercase tracking-wider py-1.5 px-2 rounded-md bg-secondary/40 border border-border/50 text-foreground"
         >
           {evalOptions.map((o) => (
             <option key={o.key} value={o.key}>{o.label}</option>
@@ -126,7 +126,7 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
       </div>
 
       <div
-        className="relative grid grid-rows-2 border border-foreground/20 rounded-md overflow-hidden aspect-[3/2]"
+        className="relative grid grid-rows-2 border border-foreground/20 rounded-md overflow-hidden aspect-[4/3]"
         style={{
           background: 'linear-gradient(180deg, hsl(215 70% 28%) 0%, hsl(215 70% 18%) 100%)',
         }}
@@ -149,12 +149,12 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
                   }}
                 >
                   <span
-                    className="absolute text-3xl font-black italic text-white/15 leading-none select-none"
+                    className="absolute text-4xl font-black italic text-white/15 leading-none select-none"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     {z.zone}
                   </span>
-                  <span className="relative z-10 text-sm font-bold text-white drop-shadow">
+                  <span className="relative z-10 text-lg font-bold text-white drop-shadow">
                     {c > 0 ? c : ''}
                   </span>
                 </div>
@@ -164,10 +164,10 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
         ))}
       </div>
 
-      <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
         <span className="uppercase tracking-wider">Bassa</span>
         <div
-          className="flex-1 h-1.5 rounded-full"
+          className="flex-1 h-2 rounded-full"
           style={{ background: `linear-gradient(90deg, hsl(${baseColor} / 0.15), hsl(${baseColor} / 0.8))` }}
         />
         <span className="uppercase tracking-wider">Alta</span>
