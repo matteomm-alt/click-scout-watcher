@@ -8,8 +8,8 @@ export interface CourtCoord { x: number; y: number; }
 // Setter release a rete zona 2.
 // Nel campo completo standard AWAY è a sinistra (P1 basso), HOME a destra
 // (P1 alto): le due metà sono viste con orientamento opposto rispetto alla rete.
-export const SETTER_RELEASE_HOME: CourtCoord = { x: 22, y: 22 };
-export const SETTER_RELEASE_AWAY: CourtCoord = { x: 78, y: 78 };
+export const SETTER_RELEASE_HOME: CourtCoord = { x: 12, y: 35 };
+export const SETTER_RELEASE_AWAY: CourtCoord = { x: 88, y: 65 };
 
 // Posizioni base di rotazione P1..P6 (in %), condivise tra VolleyballCourt (rendering)
 // e la risoluzione zona del tocco live (LiveScout).
