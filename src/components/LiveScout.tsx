@@ -805,8 +805,11 @@ export function LiveScout() {
           <CSRallyHistory />
         </div>
 
-        {/* Pannello laterale destro */}
-        <div className="w-[280px] shrink-0 flex flex-col gap-1.5 min-h-0">
+        {/* Pannello laterale destro (più largo quando è aperta la heatmap) */}
+        <div className={cn(
+          'shrink-0 flex flex-col gap-1.5 min-h-0 transition-[width] duration-200',
+          rightTab === 'heat' ? 'w-[380px]' : 'w-[280px]'
+        )}>
           {selectedPlayer ? (
             <div className="flex-1 min-h-0">
               <TouchFlowPanel

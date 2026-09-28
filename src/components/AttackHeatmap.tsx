@@ -71,12 +71,12 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
     'var(--destructive)'; // default: arrival heat = red
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+        <h4 className="text-sm font-black text-muted-foreground uppercase tracking-wider">
           Heatmap Attacchi — {zoneType === 'end' ? 'Arrivo' : 'Partenza'}
         </h4>
-        <span className="text-[11px] font-mono text-muted-foreground">{total} att.</span>
+        <span className="text-sm font-mono font-bold text-muted-foreground">{total} att.</span>
       </div>
 
       {/* Team filter */}
