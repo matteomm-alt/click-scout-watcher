@@ -28,6 +28,7 @@ const ALL_SKILLS: SkillDef[] = [
   { key: 'B', label: 'B' },
   { key: 'D', label: 'D' },
   { key: 'E', label: 'E' },
+  { key: 'F', label: 'F' },
 ];
 
 const ATTACK_TYPES: { key: SkillType; label: string }[] = [

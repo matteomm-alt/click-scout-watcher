@@ -9,6 +9,7 @@ import { getEventColors } from '@/lib/eventTypes';
 import type { CalendarEvent } from './types';
 import { cn } from '@/lib/utils';
 import { DayDropZone, DraggableEvent } from './dnd';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Props {
   anchor: Date;
@@ -113,9 +114,34 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                     : <div key={evt.id}>{row}</div>;
                 })}
                 {dayEvents.length > 3 && (
-                  <span className="text-[10px] text-muted-foreground italic">
-                    +{dayEvents.length - 3} altro
-                  </span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="text-[9px] text-primary hover:underline text-left w-full px-1">
+                        +{dayEvents.length - 3} altri
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-56 p-2 z-50" align="start">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                        {format(day, 'd MMMM', { locale: it })}
+                      </p>
+                      <div className="flex flex-col gap-1">
+                        {dayEvents.map((evt) => {
+                          const ec = getEventColors(evt.event_type);
+                          return (
+                            <button
+                              key={evt.id}
+                              onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
+                              className="text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:opacity-80 transition-colors"
+                              style={{ background: ec.bg, color: ec.text, borderLeftColor: ec.border }}
+                            >
+                              <span className="font-bold mr-1">{format(new Date(evt.start_at), 'HH:mm')}</span>
+                              {evt.title}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
             </DayDropZone>
