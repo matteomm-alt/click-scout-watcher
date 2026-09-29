@@ -5,6 +5,38 @@ import { getPhaseLayout } from './tacticalPhases';
 
 export interface CourtCoord { x: number; y: number; }
 
+/**
+ * Converte le coordinate persistite dall'editor (rete in alto) nelle
+ * coordinate della metà campo orizzontale usata dallo Scout.
+ * `swapSides` ruota l'intera metà di 180° quando Casa gioca a sinistra.
+ */
+export function formationCoordToCourt(
+  coord: CourtCoord,
+  team: 'home' | 'away',
+  swapSides = false,
+): CourtCoord {
+  const canonical = team === 'home'
+    ? { x: coord.y, y: 100 - coord.x }
+    : { x: 100 - coord.y, y: coord.x };
+  return swapSides
+    ? { x: 100 - canonical.x, y: 100 - canonical.y }
+    : canonical;
+}
+
+/** Inversa di formationCoordToCourt, usata durante il trascinamento. */
+export function courtCoordToFormation(
+  coord: CourtCoord,
+  team: 'home' | 'away',
+  swapSides = false,
+): CourtCoord {
+  const canonical = swapSides
+    ? { x: 100 - coord.x, y: 100 - coord.y }
+    : coord;
+  return team === 'home'
+    ? { x: 100 - canonical.y, y: canonical.x }
+    : { x: canonical.y, y: 100 - canonical.x };
+}
+
 // Setter release a rete zona 2.
 // Nel campo completo standard AWAY è a sinistra (P1 basso), HOME a destra
 // (P1 alto): le due metà sono viste con orientamento opposto rispetto alla rete.
@@ -96,10 +128,7 @@ export function resolvePlayerPosition(args: ResolvePlayerPositionArgs): CourtCoo
 
   const rawFormationPos = overridePositions?.[slotPos as 1 | 2 | 3 | 4 | 5 | 6] ?? null;
   const formationPos = rawFormationPos
-    ? {
-        x: isHome ? rawFormationPos.y : 100 - rawFormationPos.y,
-        y: isHome ? 100 - rawFormationPos.x : rawFormationPos.x,
-      }
+    ? formationCoordToCourt(rawFormationPos, team)
     : null;
 
   const phaseOverride = getPhasePositionOverride(phase, slotPos, setterPosition, isHome);

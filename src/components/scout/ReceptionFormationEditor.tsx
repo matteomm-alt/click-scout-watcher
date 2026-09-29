@@ -15,6 +15,7 @@ interface Props {
 type EditorMode = 'reception' | 'attack' | 'defense';
 
 import { isDefenseConfigured } from '@/lib/receptionFormations';
+import { courtCoordToFormation, formationCoordToCourt } from '@/lib/courtPositionResolver';
 
 const SETTER_ROTATIONS: Array<{ value: 1|2|3|4|5|6; label: string; desc: string }> = [
   { value: 1, label: 'S1', desc: 'Palleggiatore in P1 (back-right)' },
@@ -63,6 +64,9 @@ function FormationCanvas({
   const lineup = useMatchStore((s) =>
     team === 'home' ? s.matchState.homeCurrentLineup : s.matchState.awayCurrentLineup
   );
+  const homeCourtSide = useMatchStore((s) => s.matchState.homeCourtSide);
+  const swapSides = homeCourtSide === 'left';
+  const teamOnLeft = team === (swapSides ? 'home' : 'away');
 
   const slots = formations[setterPos];
   const ref = useRef<HTMLDivElement>(null);
@@ -77,9 +81,11 @@ function FormationCanvas({
   const onPointerMove = (slot: number) => (e: React.PointerEvent) => {
     if (dragging !== slot || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setPosition(team, setterPos, slot, { x, y });
+    const courtCoord = {
+      x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)),
+      y: Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)),
+    };
+    setPosition(team, setterPos, slot, courtCoordToFormation(courtCoord, team, swapSides));
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
@@ -93,9 +99,9 @@ function FormationCanvas({
       className="relative w-full aspect-[4/3] rounded-lg border border-white/20 overflow-hidden touch-none select-none"
       style={{ background: 'hsl(28 70% 55%)', boxShadow: 'inset 0 0 60px rgba(0,0,0,0.25)' }}
     >
-      {/* Rete in alto */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
-      <span className="absolute top-1.5 left-2 text-[9px] font-black uppercase tracking-widest text-white/70">RETE</span>
+      {/* Stesso orientamento dello Scout: rete verticale verso il centro del campo. */}
+      <div className={`absolute inset-y-0 z-10 w-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)] ${teamOnLeft ? 'right-0' : 'left-0'}`} />
+      <span className={`absolute top-2 z-10 text-[9px] font-black uppercase tracking-widest text-white/70 [writing-mode:vertical-rl] ${teamOnLeft ? 'right-1.5' : 'left-1.5'}`}>RETE</span>
       <span className={`absolute top-1.5 right-2 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
         mode === 'reception' ? 'bg-blue-700 text-white'
           : mode === 'attack' ? 'bg-primary text-primary-foreground'
@@ -111,13 +117,14 @@ function FormationCanvas({
         </div>
       )}
       {/* Linea 3m */}
-      <div className="absolute inset-x-0 top-1/3 h-px bg-white/45" />
+      <div className={`absolute inset-y-0 w-px bg-white/55 ${teamOnLeft ? 'right-1/3' : 'left-1/3'}`} />
       {/* Linee zone */}
-      <div className="absolute inset-y-0 left-1/3 w-px bg-white/30 border-dashed" />
-      <div className="absolute inset-y-0 left-2/3 w-px bg-white/30" />
+      <div className="absolute inset-x-0 top-1/3 h-px bg-white/30 border-dashed" />
+      <div className="absolute inset-x-0 top-2/3 h-px bg-white/30" />
 
       {[1, 2, 3, 4, 5, 6].map((slot) => {
-        const coord = slots[slot as 1|2|3|4|5|6];
+        const storedCoord = slots[slot as 1|2|3|4|5|6];
+        const coord = formationCoordToCourt(storedCoord, team, swapSides);
         const playerNum = lineup[slot - 1];
         const player = playerNum ? teamData.players.find((p) => p.number === playerNum) : null;
         const isSetter = slot === setterPos;
