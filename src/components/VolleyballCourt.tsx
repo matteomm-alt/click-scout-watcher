@@ -127,6 +127,12 @@ export function VolleyballCourt({
 }: VolleyballCourtProps = {}) {
   const { matchState, homeTeam, awayTeam, homeReceptionFormations, awayReceptionFormations, homeAttackFormations, awayAttackFormations, homeDefenseFormations, awayDefenseFormations } = useMatchStore();
   const teamTacticalPhases = matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam);
+  const serveRecordedInCurrentRally = matchState.actions.some((action) =>
+    action.skill === 'S'
+    && action.team === matchState.servingTeam
+    && action.homeScore === matchState.homeScore
+    && action.awayScore === matchState.awayScore
+  );
 
   // Pulsante server per 3s al cambio di servizio
   const [serverPulseActive, setServerPulseActive] = useState(true);
@@ -282,7 +288,7 @@ export function VolleyballCourt({
         {/* Zone di partenza del servizio (7/8/9) — visibili solo per la squadra che serve.
             Renderizzate "dietro" al campo (sotto z dei giocatori) lungo la linea di fondo.
             Click → registra la zona di inizio servizio per la prossima azione skill='S'. */}
-        {matchState.servingTeam === team && !simplifiedView && (() => {
+        {matchState.servingTeam === team && !serveRecordedInCurrentRally && !simplifiedView && (() => {
           // Strip di battuta: sempre sul lato esterno (lontano dalla rete).
           // isLeft=true  → lato sinistro  → strip a left:0
           // isLeft=false → lato destro    → strip a left:88%
