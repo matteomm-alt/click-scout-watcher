@@ -31,7 +31,7 @@ export const ZONE_CENTERS_AWAY: { zone: number; x: number; y: number }[] = [
 export const ZONE_CENTERS_HOME: { zone: number; x: number; y: number }[] = [
   { zone: 4, x: 22, y: 78 }, { zone: 3, x: 22, y: 50 }, { zone: 2, x: 22, y: 22 },
   { zone: 5, x: 72, y: 78 }, { zone: 6, x: 72, y: 50 }, { zone: 1, x: 72, y: 22 },
-  { zone: 7, x: 94, y: 78 }, { zone: 8, x: 94, y: 50 }, { zone: 9, x: 94, y: 22 },
+  { zone: 7, x: 94, y: 22 }, { zone: 8, x: 94, y: 50 }, { zone: 9, x: 94, y: 78 },
 ];
 
 export function isSetterReleasePhase(phase: TeamTacticalPhase): boolean {
