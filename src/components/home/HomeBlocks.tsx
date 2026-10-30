@@ -71,7 +71,7 @@ function HomeCard({
           <Link
             to={to}
             onClick={(e) => e.stopPropagation()}
-            className="text-xs text-primary font-bold hover:underline shrink-0"
+            className="text-xs text-orange-700 dark:text-primary font-bold hover:underline shrink-0"
           >
             {linkLabel}
           </Link>
@@ -313,7 +313,7 @@ function KpiCard({ block }: { block: BlockDef }) {
       {isLoading || !dvw ? <Skeleton className="h-12" /> : (
         <div className="grid grid-cols-3 gap-2 text-center">
           <div><p className="text-2xl font-black">{dvw.total}</p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Partite</p></div>
-          <div><p className="text-2xl font-black text-primary">{dvw.wins}</p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Vittorie</p></div>
+          <div><p className="text-2xl font-black text-orange-700 dark:text-primary">{dvw.wins}</p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Vittorie</p></div>
           <div><p className="text-2xl font-black">{dvw.winRate}<span className="text-sm">%</span></p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Win rate</p></div>
         </div>
       )}
@@ -515,7 +515,7 @@ function BlockSection({ block, cardIds, max, societyId }: {
       {cardIds.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nessuna card selezionata per questo blocco.{' '}
-          <Link to="/personalizza" className="text-primary font-bold hover:underline">Personalizza</Link>
+          <Link to="/personalizza" className="text-orange-700 dark:text-primary font-bold hover:underline">Personalizza</Link>
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -565,7 +565,7 @@ export function HomeBlocks() {
       {blocks.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
           Tutti i blocchi sono nascosti.{' '}
-          <Link to="/personalizza" className="text-primary font-bold hover:underline">Riattivali da Personalizza</Link>
+          <Link to="/personalizza" className="text-orange-700 dark:text-primary font-bold hover:underline">Riattivali da Personalizza</Link>
         </Card>
       ) : (
         blocks.map((b) => (

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowUp, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { usePreferences } from '@/hooks/usePreferences';
 import { isFeatureEnabled } from '@/lib/societyFeatures';
@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { SortableList, SortableRow } from '@/components/personalizza/Sortable';
 import { PasswordForm } from '@/components/auth/PasswordForm';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
@@ -49,15 +50,7 @@ export default function Personalizza() {
   const toggleItem = (url: string, on: boolean) =>
     apply((p) => ({ ...p, hiddenItems: on ? p.hiddenItems.filter((u) => u !== url) : [...p.hiddenItems, url] }));
 
-  const moveBlock = (id: BlockId, dir: -1 | 1) =>
-    apply((p) => {
-      const order = [...p.blockOrder];
-      const i = order.indexOf(id);
-      const j = i + dir;
-      if (j < 0 || j >= order.length) return p;
-      [order[i], order[j]] = [order[j], order[i]];
-      return { ...p, blockOrder: order };
-    });
+  const reorderBlocks = (ids: BlockId[]) => apply((p) => ({ ...p, blockOrder: ids }));
 
   const toggleCard = (block: BlockId, id: HomeCardId, on: boolean) =>
     apply((p) => {
@@ -65,15 +58,8 @@ export default function Personalizza() {
       return { ...p, home: { ...p.home, [block]: { ...p.home[block], cards } } };
     });
 
-  const moveCard = (block: BlockId, id: HomeCardId, dir: -1 | 1) =>
-    apply((p) => {
-      const cards = [...p.home[block].cards];
-      const i = cards.indexOf(id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= cards.length) return p;
-      [cards[i], cards[j]] = [cards[j], cards[i]];
-      return { ...p, home: { ...p.home, [block]: { ...p.home[block], cards } } };
-    });
+  const reorderCards = (block: BlockId, cards: HomeCardId[]) =>
+    apply((p) => ({ ...p, home: { ...p.home, [block]: { ...p.home[block], cards } } }));
 
   const setMax = (block: BlockId, max: number) =>
     apply((p) => ({ ...p, home: { ...p.home, [block]: { ...p.home[block], max } } }));
@@ -117,26 +103,22 @@ export default function Personalizza() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          {prefs.blockOrder.map((id, idx) => {
-            const b = BLOCKS[id];
-            const on = !prefs.hiddenBlocks.includes(id);
-            return (
-              <div key={id} className={`flex items-center gap-3 rounded-lg border ${b.border} ${b.bg} p-3`}>
-                <span className={`h-3 w-3 rounded-full shrink-0 ${b.dot}`} />
-                <div className="flex-1 min-w-0">
-                  <p className={`font-black uppercase italic ${b.text}`}>{b.label}</p>
-                  <p className="text-xs text-muted-foreground">{b.description}</p>
-                </div>
-                <Button variant="ghost" size="icon" disabled={busy || idx === 0} onClick={() => moveBlock(id, -1)} aria-label={`Sposta ${b.label} in alto`}>
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" disabled={busy || idx === prefs.blockOrder.length - 1} onClick={() => moveBlock(id, 1)} aria-label={`Sposta ${b.label} in basso`}>
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-                <Switch checked={on} disabled={busy} onCheckedChange={(v) => toggleBlock(id, v)} aria-label={`Mostra ${b.label}`} />
-              </div>
-            );
-          })}
+          <SortableList ids={prefs.blockOrder} disabled={busy} onReorder={reorderBlocks}>
+            {prefs.blockOrder.map((id) => {
+              const b = BLOCKS[id];
+              const on = !prefs.hiddenBlocks.includes(id);
+              return (
+                <SortableRow key={id} id={id} label={b.label} disabled={busy} className={`rounded-lg border ${b.border} ${b.bg} p-3 mb-2`}>
+                  <span className={`h-3 w-3 rounded-full shrink-0 ${b.dot}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-black uppercase italic ${b.text}`}>{b.label}</p>
+                    <p className="text-xs text-muted-foreground">{b.description}</p>
+                  </div>
+                  <Switch checked={on} disabled={busy} onCheckedChange={(v) => toggleBlock(id, v)} aria-label={`Mostra ${b.label}`} />
+                </SortableRow>
+              );
+            })}
+          </SortableList>
         </CardContent>
       </Card>
 
@@ -208,21 +190,17 @@ export default function Personalizza() {
                 {selected.length === 0 && (
                   <p className="text-sm text-muted-foreground">Nessuna card selezionata: il blocco resterà vuoto.</p>
                 )}
-                {selected.map((cid, idx) => (
-                  <div key={cid} className="flex items-center gap-2 rounded-md border border-border/60 px-3 py-2">
-                    <Switch checked disabled={busy || !blockOn} onCheckedChange={() => toggleCard(id, cid, false)} aria-label={`Nascondi ${CARD_BY_ID[cid].label}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{CARD_BY_ID[cid].label}</p>
-                      <p className="text-xs text-muted-foreground truncate">{CARD_BY_ID[cid].description}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" disabled={busy || !blockOn || idx === 0} onClick={() => moveCard(id, cid, -1)} aria-label="Sposta su">
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" disabled={busy || !blockOn || idx === selected.length - 1} onClick={() => moveCard(id, cid, 1)} aria-label="Sposta giù">
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                <SortableList ids={selected} disabled={busy || !blockOn} onReorder={(next) => reorderCards(id, next)}>
+                  {selected.map((cid) => (
+                    <SortableRow key={cid} id={cid} label={CARD_BY_ID[cid].label} disabled={busy || !blockOn} className="rounded-md border border-border/60 px-2 py-2 mb-2">
+                      <Switch checked disabled={busy || !blockOn} onCheckedChange={() => toggleCard(id, cid, false)} aria-label={`Nascondi ${CARD_BY_ID[cid].label}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{CARD_BY_ID[cid].label}</p>
+                        <p className="text-xs text-muted-foreground truncate">{CARD_BY_ID[cid].description}</p>
+                      </div>
+                    </SortableRow>
+                  ))}
+                </SortableList>
                 {unselected.map((c) => (
                   <div key={c.id} className="flex items-center gap-2 rounded-md border border-dashed border-border/60 px-3 py-2 opacity-70">
                     <Switch checked={false} disabled={busy || !blockOn} onCheckedChange={() => toggleCard(id, c.id, true)} aria-label={`Mostra ${c.label}`} />

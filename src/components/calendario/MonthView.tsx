@@ -116,7 +116,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                 {dayEvents.length > 3 && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="text-[9px] text-primary hover:underline text-left w-full px-1">
+                      <button className="text-[11px] font-semibold text-orange-700 dark:text-primary hover:underline text-left w-full px-1 py-0.5 rounded hover:bg-muted/50">
                         +{dayEvents.length - 3} altri
                       </button>
                     </PopoverTrigger>
@@ -131,7 +131,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                             <button
                               key={evt.id}
                               onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
-                              className="text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:opacity-80 transition-colors"
+                              className="text-left text-[11px] px-1.5 py-1 rounded border-l-2 truncate hover:opacity-80 transition-colors"
                               style={{ background: ec.bg, color: ec.text, borderLeftColor: ec.border }}
                             >
                               <span className="font-bold mr-1">{format(new Date(evt.start_at), 'HH:mm')}</span>

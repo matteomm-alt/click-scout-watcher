@@ -97,7 +97,7 @@ export function AppSidebar() {
             to={item.url}
             end={item.url === '/'}
             className="hover:bg-muted/50"
-            activeClassName="bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+            activeClassName="bg-primary/10 text-orange-700 dark:text-primary font-semibold border-l-2 border-primary"
           >
             <item.icon className="h-4 w-4" />
             {!collapsed && <span>{item.title}</span>}
@@ -125,7 +125,7 @@ export function AppSidebar() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold uppercase italic tracking-tight truncate">VolleyScout</p>
               {societyName ? (
-                <p className="text-[11px] font-semibold text-primary truncate" title={societyName}>
+                <p className="text-[11px] font-semibold text-orange-700 dark:text-primary truncate" title={societyName}>
                   {societyName}
                 </p>
               ) : (
@@ -200,7 +200,7 @@ export function AppSidebar() {
             onClick={toggleScoutMode}
             className={`mx-2 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors ${
               scoutMode
-                ? 'bg-primary/15 text-primary border border-primary/30'
+                ? 'bg-primary/15 text-orange-700 dark:text-primary border border-primary/30'
                 : 'bg-secondary text-muted-foreground hover:text-foreground border border-transparent'
             }`}
             title={scoutMode ? 'Modalità Scout attiva: solo voci essenziali' : 'Mostra tutte le sezioni'}
@@ -253,7 +253,7 @@ export function AppSidebar() {
                     <NavLink
                       to="/squadre"
                       className="hover:bg-muted/50"
-                      activeClassName="bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                      activeClassName="bg-primary/10 text-orange-700 dark:text-primary font-semibold border-l-2 border-primary"
                     >
                       <Shield className="h-4 w-4" />
                       {!collapsed && <span>Squadre</span>}
@@ -265,7 +265,7 @@ export function AppSidebar() {
                     <NavLink
                       to="/impostazioni"
                       className="hover:bg-muted/50"
-                      activeClassName="bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                      activeClassName="bg-primary/10 text-orange-700 dark:text-primary font-semibold border-l-2 border-primary"
                     >
                       <Settings className="h-4 w-4" />
                       {!collapsed && <span>Impostazioni</span>}
@@ -316,7 +316,7 @@ export function AppSidebar() {
             aria-label="Personalizza"
             title="Personalizza"
             className="flex h-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            activeClassName="bg-primary/10 text-primary"
+            activeClassName="bg-primary/10 text-orange-700 dark:text-primary"
           >
             <SlidersHorizontal className="w-4 h-4" />
           </NavLink>
@@ -325,7 +325,7 @@ export function AppSidebar() {
             aria-label="Supporto"
             title="Supporto"
             className="flex h-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            activeClassName="bg-primary/10 text-primary"
+            activeClassName="bg-primary/10 text-orange-700 dark:text-primary"
           >
             <HelpCircle className="w-4 h-4" />
           </NavLink>
