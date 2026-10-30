@@ -553,11 +553,8 @@ export function HomeBlocks() {
 
   return (
     <section className="container pb-16 space-y-5">
-      <div className="flex items-end justify-between pt-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-1">Dashboard</p>
-          <h3 className="text-3xl md:text-4xl font-black italic uppercase leading-none">Panoramica</h3>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <h3 className="text-xl sm:text-2xl font-black italic uppercase leading-none">Panoramica</h3>
         <Link to="/personalizza">
           <Button variant="outline" size="sm" className="font-bold">
             <SlidersHorizontal className="w-3.5 h-3.5 mr-2" /> Personalizza

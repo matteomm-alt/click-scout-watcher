@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { FileUp, Activity, BarChart3, Library, LogOut } from 'lucide-react';
+import { FileUp, Activity, Library } from 'lucide-react';
 import { HomeBlocks } from '@/components/home/HomeBlocks';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { GettingStarted } from '@/components/home/GettingStarted';
@@ -12,49 +10,17 @@ import { InstallPrompt } from '@/components/home/InstallPrompt';
  * più scorciatoie per archivio squadre/partite e admin.
  */
 export default function Home() {
-  const { user, isSuperAdmin, signOut } = useAuth();
   const { societyId, loading: societyLoading } = useActiveSociety();
   const noSociety = !societyLoading && !societyId;
 
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
-      {/* HEADER */}
-      <header className="border-b border-border/60">
-        <div className="container py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold uppercase tracking-tight italic">VolleyScout Pro</h1>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isSuperAdmin && (
-              <Link to="/admin">
-                <Button variant="outline" size="sm">Admin</Button>
-              </Link>
-            )}
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-2" /> Esci
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* HERO */}
-      <section className="container py-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">
-          Pannello Coach
-        </p>
-        <h2 className="text-4xl md:text-5xl font-black italic uppercase leading-[0.9] tracking-tight mb-3">
-          Cosa vuoi fare<br />
-          <span className="text-primary">oggi?</span>
+      {/* SALUTO COMPATTO: i blocchi devono stare sopra la piega */}
+      <section className="container pt-6 pb-2">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-primary font-semibold mb-1">Pannello Coach</p>
+        <h2 className="text-2xl md:text-3xl font-black italic uppercase leading-tight tracking-tight">
+          Cosa vuoi fare <span className="text-primary">oggi?</span>
         </h2>
-        <p className="text-muted-foreground max-w-xl">
-          Tecnica, scouting e gestionale: scegli da dove partire.
-        </p>
       </section>
 
       {/* DUE ENTRY POINT — solo se non c'è una società (altrimenti sono card dei blocchi) */}

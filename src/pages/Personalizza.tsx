@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { PasswordForm } from '@/components/auth/PasswordForm';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -31,6 +32,7 @@ export default function Personalizza() {
     setBusy(true);
     try {
       await update(fn);
+      toast.success('Preferenze salvate', { id: 'prefs-saved', duration: 1500 });
     } catch (e) {
       console.error(e);
       toast.error('Salvataggio non riuscito: le modifiche restano su questo dispositivo.');
@@ -139,6 +141,7 @@ export default function Personalizza() {
       </Card>
 
       {/* Dettaglio per blocco */}
+      <Accordion type="multiple" className="space-y-4">
       {prefs.blockOrder.map((id) => {
         const b = BLOCKS[id];
         const blockOn = !prefs.hiddenBlocks.includes(id);
@@ -148,16 +151,23 @@ export default function Personalizza() {
         );
         const selected = home.cards.filter((c) => available.some((a) => a.id === c));
         const unselected = available.filter((a) => !home.cards.includes(a.id));
+        const hiddenCount = b.items.filter((i) => prefs.hiddenItems.includes(i.url)).length;
+        const summary = blockOn
+          ? `${selected.length} card in Home · ${hiddenCount ? `${hiddenCount} ${hiddenCount === 1 ? 'voce nascosta' : 'voci nascoste'}` : 'tutte le voci nel menu'}`
+          : 'Blocco nascosto';
 
         return (
-          <Card key={id} className={blockOn ? '' : 'opacity-50'}>
-            <CardHeader>
-              <CardTitle className={`flex items-center gap-2 ${b.text}`}>
-                <span className={`h-3 w-3 rounded-full ${b.dot}`} /> {b.label}
-              </CardTitle>
-              <CardDescription>Voci di menu e card della Home di questo blocco.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
+          <AccordionItem key={id} value={id} className={`rounded-xl border bg-card ${blockOn ? '' : 'opacity-60'}`}>
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex flex-col items-start gap-1 text-left">
+                <span className={`flex items-center gap-2 text-lg font-semibold ${b.text}`}>
+                  <span className={`h-3 w-3 rounded-full ${b.dot}`} /> {b.label}
+                </span>
+                <span className="text-xs font-normal text-muted-foreground">{summary}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+            <div className="space-y-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Sezioni nel menu</p>
                 <div className="grid sm:grid-cols-2 gap-2">
@@ -223,10 +233,12 @@ export default function Personalizza() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            </AccordionContent>
+          </AccordionItem>
         );
       })}
+      </Accordion>
 
       {/* Voci generali */}
       {GENERAL_ITEMS.some(itemAvailable) && (

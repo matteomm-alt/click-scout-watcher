@@ -26,7 +26,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { BLOCKS, GENERAL_ITEMS, HOME_ITEM, type NavItem } from '@/lib/navConfig';
 import {
   BarChart3, LogOut, Shield, Settings, HelpCircle, Bell, Zap, Sun, Moon, SlidersHorizontal,
-  Megaphone, ClipboardCheck, ListChecks,
+  Megaphone, ClipboardCheck, ListChecks, ChevronDown,
 } from 'lucide-react';
 
 const SCOUT_MODE_KEY = 'sidebar_scout_mode';
@@ -68,6 +68,17 @@ export function AppSidebar() {
       return next;
     });
   };
+
+  const CLOSED_KEY = 'sidebar_closed_blocks';
+  const [closedBlocks, setClosedBlocks] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem(CLOSED_KEY) ?? '[]'); } catch { return []; }
+  });
+  const toggleBlockOpen = (id: string) =>
+    setClosedBlocks((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      try { localStorage.setItem(CLOSED_KEY, JSON.stringify(next)); } catch { /* storage non disponibile */ }
+      return next;
+    });
 
   const totalNotifs = counts.comunicazioni + counts.presenze + counts.convocazioni;
 
@@ -207,19 +218,30 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {blockGroups.map(({ block, items }) => (
-          <SidebarGroup key={block.id}>
-            {!collapsed && (
-              <SidebarGroupLabel className={`${block.text} font-bold tracking-widest uppercase`}>
-                <span className={`mr-2 inline-block h-2 w-2 rounded-full ${block.dot}`} />
-                {block.label}
-              </SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu>{renderItems(items)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {blockGroups.map(({ block, items }) => {
+          const closed = closedBlocks.includes(block.id) && !collapsed;
+          return (
+            <SidebarGroup key={block.id}>
+              {!collapsed && (
+                <button
+                  type="button"
+                  onClick={() => toggleBlockOpen(block.id)}
+                  aria-expanded={!closed}
+                  className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-bold uppercase tracking-widest hover:bg-muted/50 ${block.text}`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${block.dot}`} />
+                  {block.label}
+                  <ChevronDown className={`ml-auto h-3.5 w-3.5 transition-transform ${closed ? '-rotate-90' : ''}`} />
+                </button>
+              )}
+              {!closed && (
+                <SidebarGroupContent>
+                  <SidebarMenu>{renderItems(items)}</SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </SidebarGroup>
+          );
+        })}
 
         {isAdmin && (
           <SidebarGroup>
@@ -279,35 +301,44 @@ export function AppSidebar() {
             </div>
           )}
         </div>
-        <button
-          onClick={toggleTheme}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-        >
-          {theme === 'dark'
-            ? <Sun className="w-4 h-4" />
-            : <Moon className="w-4 h-4" />}
-          {!collapsed && (theme === 'dark' ? 'Tema chiaro' : 'Tema scuro')}
-        </button>
-        <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start">
-          <LogOut className="w-4 h-4" />
-          {!collapsed && <span className="ml-2">Esci</span>}
-        </Button>
-        <NavLink
-          to="/personalizza"
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-          activeClassName="bg-primary/10 text-primary font-semibold"
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          {!collapsed && <span>Personalizza</span>}
-        </NavLink>
-        <NavLink
-          to="/supporto"
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-          activeClassName="bg-primary/10 text-primary font-semibold"
-        >
-          <HelpCircle className="w-4 h-4" />
-          {!collapsed && <span>Supporto</span>}
-        </NavLink>
+        <div className={`grid gap-1 ${collapsed ? 'grid-cols-1' : 'grid-cols-4'}`}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
+            title={theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'}
+            className="flex h-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <NavLink
+            to="/personalizza"
+            aria-label="Personalizza"
+            title="Personalizza"
+            className="flex h-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            activeClassName="bg-primary/10 text-primary"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </NavLink>
+          <NavLink
+            to="/supporto"
+            aria-label="Supporto"
+            title="Supporto"
+            className="flex h-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            activeClassName="bg-primary/10 text-primary"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </NavLink>
+          <button
+            type="button"
+            onClick={signOut}
+            aria-label="Esci"
+            title="Esci"
+            className="flex h-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
