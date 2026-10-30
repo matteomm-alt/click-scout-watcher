@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PLAN_FUNDAMENTALS } from '@/lib/volleyConstants';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { LayoutTemplate, Plus, Pencil, Trash2, Copy, ChevronDown, ChevronUp, X, Info } from 'lucide-react';
@@ -28,10 +29,7 @@ const TIPI_STRUTTURA = [
 
 const GIORNI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
-const FONDAMENTALI = [
-  'Ricezione', 'Attacco', 'Battuta', 'Muro', 'Difesa', 'Alzata',
-  'Bagher', 'Palleggio', 'Fisico', 'Tattica', 'Gioco libero',
-];
+const FONDAMENTALI: readonly string[] = PLAN_FUNDAMENTALS;
 
 const FORME = [
   '6vs6', '3vs3', 'Esercizio analitico', 'Situazione', 'Partita',

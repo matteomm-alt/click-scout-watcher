@@ -13,6 +13,15 @@ export const FUNDAMENTALS = [
 
 export type Fundamental = typeof FUNDAMENTALS[number];
 
+/** Fondamentali tecnici + attività trasversali: lista unica per scheletri, programmazione e volume. */
+export const PLAN_FUNDAMENTALS = [
+  ...FUNDAMENTALS,
+  'Fisico',
+  'Tattica',
+  'Gioco libero',
+  'Situazionale',
+] as const;
+
 // Ruoli pallavolo (per filtro target negli allenamenti)
 export const VOLLEY_ROLES = [
   'Palleggiatore',

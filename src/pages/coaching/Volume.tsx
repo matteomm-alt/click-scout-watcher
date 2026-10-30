@@ -12,7 +12,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { TagPicker } from '@/components/TagPicker';
-import { FUNDAMENTALS } from '@/lib/volleyConstants';
+import { PLAN_FUNDAMENTALS as FUNDAMENTALS } from '@/lib/volleyConstants';
 import {
   BarChart3, Loader2, Tag as TagIcon, Clock, Calendar as CalendarIcon, X, TrendingUp,
   AlertTriangle,
