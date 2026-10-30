@@ -122,3 +122,34 @@ describe('dvwExporter — nuovi test (P62)', () => {
   });
 });
 });
+
+describe('dvwExporter — rotazioni e sostituzioni', () => {
+  const mk = (id: string, homeLineup: number[], extra: Record<string, unknown> = {}): ScoutAction => ({
+    id, timestamp: '12:00:00', team: 'home', playerNumber: 1,
+    skill: 'S', skillType: 'H', evaluation: '+',
+    setNumber: 1, homeScore: 0, awayScore: 0,
+    homeSetterPosition: 1, awaySetterPosition: 1,
+    homeLineup, awayLineup: [3, 12, 10, 5, 13, 6],
+    code: '*01SH+~~', ...extra,
+  } as ScoutAction);
+  const subLines = (out: string) => out.split(/\r?\n/).filter((l) => /^[*a]c\d\d:\d\d/.test(l));
+
+  it('una rotazione (stessi sei giocatori, posizioni diverse) non genera sostituzioni', () => {
+    const actions = [mk('1', [1, 11, 9, 4, 7, 2]), mk('2', [11, 9, 4, 7, 2, 1]), mk('3', [9, 4, 7, 2, 1, 11])];
+    const out = generateDVW(matchInfo, home, away, lineup, lineup, actions, [], 0, 0);
+    expect(subLines(out)).toHaveLength(0);
+  });
+
+  it('un cambio reale (esce 4, entra 8) genera una sola sostituzione, anche dopo una rotazione', () => {
+    const actions = [mk('1', [1, 11, 9, 4, 7, 2]), mk('2', [11, 9, 4, 7, 2, 1]), mk('3', [11, 9, 8, 7, 2, 1])];
+    const out = generateDVW(matchInfo, home, away, lineup, lineup, actions, [], 0, 0);
+    expect(subLines(out)).toHaveLength(1);
+    expect(subLines(out)[0]).toMatch(/^\*c08:04/);
+  });
+
+  it('il reset della formazione a inizio set non è una sostituzione', () => {
+    const actions = [mk('1', [4, 7, 2, 1, 11, 9]), mk('2', [1, 11, 9, 4, 7, 2], { setNumber: 2 })];
+    const out = generateDVW(matchInfo, home, away, lineup, lineup, actions, [], 0, 0);
+    expect(subLines(out)).toHaveLength(0);
+  });
+});

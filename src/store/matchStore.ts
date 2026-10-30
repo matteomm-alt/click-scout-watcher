@@ -475,6 +475,15 @@ export const useMatchStore = create<MatchStore>()(
           toast.error('Limite sostituzioni raggiunto (6/6)');
           return;
         }
+        // Il centrale sostituito dal libero è, per regolamento, ancora "in campo":
+        // non può rientrare al posto di un altro giocatore (si corromperebbe la formazione).
+        const benchedMb = team === 'home' ? matchState.homeBenchedMb : matchState.awayBenchedMb;
+        const teamPlayers = (team === 'home' ? get().homeTeam : get().awayTeam).players;
+        const outIsLibero = !!teamPlayers.find((p) => p.number === outNumber)?.isLibero;
+        if (benchedMb != null && inNumber === benchedMb && !outIsLibero) {
+          toast.error(`#${inNumber} è sostituito dal libero: non può entrare al posto di un altro giocatore`);
+          return;
+        }
         const event: MatchEvent = {
           type: 'substitution',
           id: safeUUID(),

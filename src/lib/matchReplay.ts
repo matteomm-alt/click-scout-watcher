@@ -204,6 +204,7 @@ function applyEventInternal(
         homeBenchedMb: home.benchedMb,
         awayBenchedMb: away.benchedMb,
         servingTeam: event.servingTeam,
+        setFirstServer: event.servingTeam,
         teamTacticalPhases: getInitialPhases(event.servingTeam),
       };
       }
@@ -396,6 +397,12 @@ function applyEventInternal(
       const newAwaySetsWon = state.awaySetsWon + (homeWon ? 0 : 1);
       const maxSets = Math.ceil(ctx.totalSets / 2);
       const isMatchOver = newHomeSetsWon >= maxSets || newAwaySetsWon >= maxSets;
+      // Regolamento: la battuta iniziale si alterna a ogni set (nel set decisivo si rifà il sorteggio:
+      // l'operatore può correggerla da "✎ Corr"). Senza questa riga il set successivo partiva con
+      // chi aveva battuto per ultimo nel set precedente.
+      const nextFirstServer: 'home' | 'away' | undefined = state.setFirstServer
+        ? (state.setFirstServer === 'home' ? 'away' : 'home')
+        : undefined;
       const setResult: SetResult = {
         homeScore: event.homeScore,
         awayScore: event.awayScore,
@@ -420,6 +427,13 @@ function applyEventInternal(
         awayCurrentLineup: event.awayLineupNext,
         homeBenchedMb: event.homeBenchedMbNext,
         awayBenchedMb: event.awayBenchedMbNext,
+        ...(!isMatchOver && nextFirstServer
+          ? {
+              servingTeam: nextFirstServer,
+              setFirstServer: nextFirstServer,
+              teamTacticalPhases: getInitialPhases(nextFirstServer),
+            }
+          : {}),
         setOverPending: false,
       };
     }
@@ -490,6 +504,8 @@ function applyEventInternal(
       return {
         ...state,
         servingTeam: event.team,
+        // Se il set non è ancora iniziato, è la battuta iniziale del set.
+        setFirstServer: state.homeScore === 0 && state.awayScore === 0 ? event.team : state.setFirstServer,
         teamTacticalPhases: getInitialPhases(event.team),
       };
 

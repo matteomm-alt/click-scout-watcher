@@ -1,3 +1,4 @@
+import { autoPointWinner } from '@/lib/autoPoint';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, Zap, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -597,12 +598,9 @@ export function LiveScout() {
               timestamp: '',
               code: '',
             });
-            if (settings.autoPoint && evaluation === '#' && (pendingSkill === 'S' || pendingSkill === 'A' || pendingSkill === 'B')) {
-              addPoint(selectedPlayer.team);
-            } else if (settings.autoPoint && evaluation === '='
-                && (pendingSkill === 'S' || pendingSkill === 'A')) {
-              const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
-              addPoint(opp);
+            if (settings.autoPoint) {
+              const winner = autoPointWinner(pendingSkill, evaluation, selectedPlayer.team);
+              if (winner) addPoint(winner);
             }
             handleActionComplete(id, pendingSkill);
           }}
@@ -861,12 +859,9 @@ export function LiveScout() {
                     timestamp: '',
                     code: '',
                   });
-                  if (settings.autoPoint && evaluation === '#' && (skillToUse === 'S' || skillToUse === 'A' || skillToUse === 'B')) {
-                    addPoint(selectedPlayer.team);
-                  } else if (settings.autoPoint && evaluation === '='
-                      && (skillToUse === 'S' || skillToUse === 'A')) {
-                    const opp = selectedPlayer.team === 'home' ? 'away' : 'home';
-                    addPoint(opp);
+                  if (settings.autoPoint) {
+                    const winner = autoPointWinner(skillToUse, evaluation, selectedPlayer.team);
+                    if (winner) addPoint(winner);
                   }
                   handleActionComplete(id, skillToUse);
                 }}
@@ -1148,8 +1143,12 @@ function SubstitutionPicker({
     const p = teamData.players.find((pp) => pp.number === n);
     return { number: n, name: p?.lastName || `#${n}`, isLibero: p?.isLibero };
   });
+  const benchedMb = team === 'home' ? matchState.homeBenchedMb : matchState.awayBenchedMb;
+  const outIsLibero = !!teamData.players.find((p) => p.number === outNumber)?.isLibero;
   const bench = teamData.players
     .filter((p) => !lineup.includes(p.number) && !p.isLibero)
+    // il centrale rimpiazzato dal libero non è disponibile come subentrante
+    .filter((p) => outIsLibero || p.number !== benchedMb)
     .sort((a, b) => a.number - b.number);
 
   return (

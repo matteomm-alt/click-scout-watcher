@@ -83,44 +83,34 @@ function extractSubstitutions(actions: ScoutAction[]): {
     awayScore: number;
     timestamp: string;
   }[] = [];
-  const seenKeys = new Set<string>();
+  // Una sostituzione (o un cambio libero) cambia CHI è in campo; una rotazione cambia solo
+  // le posizioni degli stessi sei giocatori. Confrontare posizione per posizione scambiava
+  // ogni rotazione per una raffica di sostituzioni false: si confrontano gli insiemi.
+  const diff = (before: number[], after: number[]) => ({
+    out: before.filter((n) => !after.includes(n)),
+    inn: after.filter((n) => !before.includes(n)),
+  });
 
   for (let i = 1; i < actions.length; i++) {
     const prev = actions[i - 1];
     const curr = actions[i];
+    if (prev.setNumber !== curr.setNumber) continue; // all'inizio del set la formazione riparte da capo
 
-    for (let pos = 0; pos < 6; pos++) {
-      if (prev.homeLineup[pos] !== curr.homeLineup[pos]) {
-        const key = `h-${curr.setNumber}-${prev.homeLineup[pos]}-${curr.homeLineup[pos]}`;
-        if (!seenKeys.has(key)) {
-          seenKeys.add(key);
-          subs.push({
-            team: 'home',
-            playerOut: prev.homeLineup[pos],
-            playerIn: curr.homeLineup[pos],
-            setNumber: curr.setNumber,
-            homeScore: curr.homeScore,
-            awayScore: curr.awayScore,
-            timestamp: curr.timestamp,
-          });
-        }
-      }
-    }
-    for (let pos = 0; pos < 6; pos++) {
-      if (prev.awayLineup[pos] !== curr.awayLineup[pos]) {
-        const key = `a-${curr.setNumber}-${prev.awayLineup[pos]}-${curr.awayLineup[pos]}`;
-        if (!seenKeys.has(key)) {
-          seenKeys.add(key);
-          subs.push({
-            team: 'away',
-            playerOut: prev.awayLineup[pos],
-            playerIn: curr.awayLineup[pos],
-            setNumber: curr.setNumber,
-            homeScore: curr.homeScore,
-            awayScore: curr.awayScore,
-            timestamp: curr.timestamp,
-          });
-        }
+    for (const team of ['home', 'away'] as const) {
+      const before = team === 'home' ? prev.homeLineup : prev.awayLineup;
+      const after = team === 'home' ? curr.homeLineup : curr.awayLineup;
+      const { out, inn } = diff(before, after);
+      const n = Math.min(out.length, inn.length);
+      for (let k = 0; k < n; k++) {
+        subs.push({
+          team,
+          playerOut: out[k],
+          playerIn: inn[k],
+          setNumber: curr.setNumber,
+          homeScore: curr.homeScore,
+          awayScore: curr.awayScore,
+          timestamp: curr.timestamp,
+        });
       }
     }
   }

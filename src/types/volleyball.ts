@@ -231,6 +231,8 @@ export interface MatchState {
   homeCurrentLineup: number[]; // 6 player numbers P1-P6
   awayCurrentLineup: number[]; // 6 player numbers P1-P6
   homeCourtSide: 'left' | 'right';
+  /** Squadra che ha battuto per prima nel set in corso (serve per alternare la battuta nel set successivo). */
+  setFirstServer?: 'home' | 'away';
   isMatchStarted: boolean;
   isMatchEnded: boolean;
   singleTeamMode?: boolean;
