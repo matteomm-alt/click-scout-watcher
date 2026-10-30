@@ -42,14 +42,39 @@ function HomeCard({
   linkLabel?: string;
   children: ReactNode;
 }) {
+  const navigate = useNavigate();
+  const interactive = to
+    ? {
+        role: 'link' as const,
+        tabIndex: 0,
+        onClick: () => navigate(to),
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            navigate(to);
+          }
+        },
+      }
+    : {};
   return (
-    <Card className="p-4 flex flex-col gap-3 min-h-[148px]">
+    <Card
+      {...interactive}
+      className={`p-4 flex flex-col gap-3 min-h-[148px] ${
+        to ? `cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary` : ''
+      }`}
+    >
       <div className="flex items-center justify-between gap-2">
         <p className={`text-[11px] uppercase tracking-widest font-bold flex items-center gap-2 ${block.text}`}>
           <Icon className="w-3.5 h-3.5" /> {title}
         </p>
         {to && (
-          <Link to={to} className="text-xs text-primary font-bold hover:underline shrink-0">{linkLabel}</Link>
+          <Link
+            to={to}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-primary font-bold hover:underline shrink-0"
+          >
+            {linkLabel}
+          </Link>
         )}
       </div>
       <div className="flex-1 min-w-0">{children}</div>
@@ -74,11 +99,11 @@ function LinkCard({ block, icon, title, to, text, cta }: {
   block: BlockDef; icon: LucideIcon; title: string; to: string; text: string; cta: string;
 }) {
   return (
-    <HomeCard block={block} icon={icon} title={title}>
+    <HomeCard block={block} icon={icon} title={title} to={to} linkLabel="">
       <p className="text-sm text-muted-foreground mb-3">{text}</p>
-      <Link to={to}>
-        <Button size="sm" variant="outline" className="font-bold">{cta}</Button>
-      </Link>
+      <Button asChild size="sm" variant="outline" className="font-bold">
+        <span>{cta}</span>
+      </Button>
     </HomeCard>
   );
 }
@@ -165,13 +190,15 @@ function NextTrainingCard({ block, societyId }: { block: BlockDef; societyId: st
 
 function RecentTrainingsCard({ block, societyId }: { block: BlockDef; societyId: string }) {
   const { data = [], isLoading } = useQuery({
-    queryKey: queryKeys.dashboard.trainings(societyId),
+    queryKey: [...queryKeys.dashboard.trainings(societyId), 'past'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('trainings')
         .select('id, title, scheduled_date')
         .eq('society_id', societyId)
-        .order('scheduled_date', { ascending: false, nullsFirst: false })
+        .eq('is_template', false)
+        .lte('scheduled_date', localDay())
+        .order('scheduled_date', { ascending: false })
         .limit(3);
       if (error) throw error;
       return data ?? [];
@@ -263,22 +290,17 @@ function InjuriesCard({ block, societyId }: { block: BlockDef; societyId: string
 /* ────────────────────────── card: SCOUTING ────────────────────────── */
 
 function LastMatchCard({ block }: { block: BlockDef }) {
-  const navigate = useNavigate();
   const { data: dvw, isLoading } = useDvwKpi();
   return (
     <HomeCard block={block} icon={Trophy} title="Ultima partita" to={dvw?.lastMatchId ? `/match/${dvw.lastMatchId}` : '/archive'} linkLabel="Analizza →">
       {isLoading ? <Skeleton className="h-12" /> : !dvw?.lastResult ? <Empty>Nessuna partita analizzata.</Empty> : (
-        <button
-          type="button"
-          className="text-left"
-          onClick={() => dvw.lastMatchId && navigate(`/match/${dvw.lastMatchId}`)}
-        >
+        <div className="text-left">
           <p className={`text-4xl font-black leading-none ${dvw.lastResult.won ? 'text-primary' : 'text-destructive'}`}>
             {dvw.lastResult.won ? 'V' : 'P'}
           </p>
           <p className="text-sm mt-2 truncate">vs {dvw.lastResult.opponent || '—'}</p>
           <p className="text-xs text-muted-foreground">{fmtDate(dvw.lastResult.date)}</p>
-        </button>
+        </div>
       )}
     </HomeCard>
   );
