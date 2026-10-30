@@ -560,7 +560,7 @@ export function LiveScout() {
   const recentActions = [...matchState.actions].reverse().slice(0, 50);
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-[calc(100dvh-3rem)] flex flex-col bg-background overflow-hidden">
       <FullscreenToggle />
 
       {/* HEADER: ScoreBoard */}

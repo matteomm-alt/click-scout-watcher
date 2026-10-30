@@ -38,7 +38,7 @@ export function FullscreenToggle() {
   };
 
   return (
-    <div className="fixed top-3 right-3 z-50 flex gap-1.5 bg-background/80 backdrop-blur-md border border-border/60 rounded-lg p-1 shadow-lg">
+    <div className="fixed top-3 right-14 z-50 flex gap-1.5 bg-background/80 backdrop-blur-md border border-border/60 rounded-lg p-1 shadow-lg">
       <Button
         type="button"
         size="icon"

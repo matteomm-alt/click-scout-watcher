@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShieldCheck } from 'lucide-react';
 
@@ -8,8 +8,10 @@ import { ShieldCheck } from 'lucide-react';
  */
 export function ClaimSuperAdminBadge() {
   const { user, isSuperAdmin, loading } = useAuth();
+  const { pathname } = useLocation();
 
-  if (loading || !user || isSuperAdmin) return null;
+  // In Scout Live copriva i pulsanti di fine set / DVW: lì non deve comparire.
+  if (loading || !user || isSuperAdmin || pathname.startsWith('/scout')) return null;
 
   return (
     <Link
