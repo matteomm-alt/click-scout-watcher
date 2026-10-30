@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { FileUp, Activity, BarChart3, Library, LogOut } from 'lucide-react';
-import { HomeDashboard } from '@/components/home/HomeDashboard';
+import { HomeBlocks } from '@/components/home/HomeBlocks';
+import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { GettingStarted } from '@/components/home/GettingStarted';
 import { InstallPrompt } from '@/components/home/InstallPrompt';
 
@@ -12,6 +13,8 @@ import { InstallPrompt } from '@/components/home/InstallPrompt';
  */
 export default function Home() {
   const { user, isSuperAdmin, signOut } = useAuth();
+  const { societyId, loading: societyLoading } = useActiveSociety();
+  const noSociety = !societyLoading && !societyId;
 
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
@@ -41,20 +44,21 @@ export default function Home() {
       </header>
 
       {/* HERO */}
-      <section className="container py-12">
+      <section className="container py-8">
         <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">
           Pannello Coach
         </p>
-        <h2 className="text-5xl md:text-6xl font-black italic uppercase leading-[0.9] tracking-tight mb-3">
+        <h2 className="text-4xl md:text-5xl font-black italic uppercase leading-[0.9] tracking-tight mb-3">
           Cosa vuoi fare<br />
           <span className="text-primary">oggi?</span>
         </h2>
         <p className="text-muted-foreground max-w-xl">
-          Importa file DataVolley (.dvw) per analizzare le partite avversarie, oppure avvia uno scouting dal vivo per la tua squadra.
+          Tecnica, scouting e gestionale: scegli da dove partire.
         </p>
       </section>
 
-      {/* DUE ENTRY POINT */}
+      {/* DUE ENTRY POINT — solo se non c'è una società (altrimenti sono card dei blocchi) */}
+      {noSociety && (
       <section className="container pb-8 grid md:grid-cols-2 gap-4">
         {/* Importa DVW */}
         <Link
@@ -100,8 +104,10 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform" />
         </Link>
       </section>
+      )}
 
       {/* ARCHIVIO */}
+      {noSociety && (
       <section className="container pb-12">
         <Link
           to="/archive"
@@ -119,11 +125,12 @@ export default function Home() {
           <span className="text-primary font-bold">→</span>
         </Link>
       </section>
+      )}
 
       {/* DASHBOARD OPERATIVA */}
       <InstallPrompt />
       <GettingStarted />
-      <HomeDashboard />
+      <HomeBlocks />
     </div>
   );
 }

@@ -50,6 +50,7 @@ import Infortuni from "./pages/atleta/Infortuni.tsx";
 // Admin
 import SocietyFeatures from "./pages/admin/SocietyFeatures.tsx";
 import SocietySettings from "./pages/SocietySettings.tsx";
+import Personalizza from "./pages/Personalizza.tsx";
 
 // Lazy-loaded heavy routes (bundle splitting)
 const MatchAnalysis = lazy(() => import("./pages/MatchAnalysis.tsx"));
@@ -159,6 +160,9 @@ const App = () => (
 
                   {/* Impostazioni società (society_admin) */}
                   <Route path="/impostazioni" element={<SocietySettings />} />
+
+                  {/* Preferenze personali (tutti gli utenti) */}
+                  <Route path="/personalizza" element={<Personalizza />} />
 
                   {/* Admin */}
                   <Route path="/admin" element={<AdminSocieties />} />

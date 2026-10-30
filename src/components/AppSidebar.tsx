@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink } from '@/components/NavLink';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/hooks/useTheme';
@@ -21,68 +21,16 @@ import { SeasonSelector } from '@/components/SeasonSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useNotifications } from '@/hooks/useNotifications';
-import { isFeatureEnabled, type FeatureKey } from '@/lib/societyFeatures';
+import { isFeatureEnabled } from '@/lib/societyFeatures';
+import { usePreferences } from '@/hooks/usePreferences';
+import { BLOCKS, GENERAL_ITEMS, HOME_ITEM, type NavItem } from '@/lib/navConfig';
 import {
-  Home, FileUp, Activity, Library,
-  Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
-  Dumbbell, ClipboardList, LayoutTemplate, GitBranch, Workflow, BarChart3, Target, LayoutGrid, BookOpen,
-  PieChart, UserCircle, Star, HeartPulse,
-  LogOut, Shield, Boxes, Settings, HelpCircle, Bell, Zap,
-  Sun, Moon,
-  FileSpreadsheet,
+  BarChart3, LogOut, Shield, Settings, HelpCircle, Bell, Zap, Sun, Moon, SlidersHorizontal,
+  Megaphone, ClipboardCheck, ListChecks,
 } from 'lucide-react';
 
 const SCOUT_MODE_KEY = 'sidebar_scout_mode';
 const SCOUT_MODE_URLS = new Set(['/', '/scout', '/archive', '/import', '/atleti', '/calendario', '/presenze']);
-
-interface NavItem {
-  title: string;
-  url: string;
-  icon: typeof Home;
-  /** Se presente, la voce è visibile solo se la feature è attiva (default: sempre visibile). */
-  feature?: FeatureKey;
-  /** Chiave per associare il badge notifiche. */
-  badgeKey?: 'comunicazioni' | 'presenze' | 'convocazioni';
-}
-
-const MAIN: NavItem[] = [
-  { title: 'Home', url: '/', icon: Home },
-  { title: 'Importa DVW', url: '/import', icon: FileUp, feature: 'advanced_stats' },
-  { title: 'Scout Live', url: '/scout', icon: Activity, feature: 'live_scout' },
-  { title: 'Archivio', url: '/archive', icon: Library, feature: 'advanced_stats' },
-];
-
-const GESTIONALE: NavItem[] = [
-  { title: 'Calendario', url: '/calendario', icon: Calendar },
-  { title: 'Presenze', url: '/presenze', icon: ClipboardCheck, badgeKey: 'presenze' },
-  { title: 'Convocazioni', url: '/convocazioni', icon: ListChecks, badgeKey: 'convocazioni' },
-  { title: 'Comunicazioni', url: '/comunicazioni', icon: Megaphone, feature: 'communications', badgeKey: 'comunicazioni' },
-  { title: 'Magazzino', url: '/magazzino', icon: Package, feature: 'athletes' },
-  { title: 'Import Excel', url: '/importa-dati', icon: FileSpreadsheet },
-];
-
-const COACHING: NavItem[] = [
-  { title: 'Esercizi', url: '/esercizi', icon: Dumbbell, feature: 'exercises' },
-  { title: 'Allenamenti', url: '/allenamenti', icon: ClipboardList, feature: 'exercises' },
-  { title: 'Scheletri', url: '/scheletri', icon: LayoutTemplate, feature: 'training_calendar' },
-  { title: 'Schemi', url: '/schemi', icon: GitBranch, feature: 'training_calendar' },
-  { title: 'Volume', url: '/volume', icon: BarChart3, feature: 'training_calendar' },
-  { title: 'Programmazione', url: '/programmazione', icon: LayoutGrid, feature: 'training_calendar' },
-  { title: 'Obiettivi', url: '/obiettivi', icon: Target },
-  { title: 'Guida Tecnica', url: '/guida-tecnica', icon: BookOpen, feature: 'guidelines' },
-];
-
-const ANALISI: NavItem[] = [
-  { title: 'Report Stagione', url: '/report-stagione', icon: PieChart, feature: 'advanced_stats' },
-  { title: 'Profilo Avversario', url: '/profilo-avversario', icon: Shield, feature: 'advanced_stats' },
-];
-
-const ATLETA: NavItem[] = [
-  { title: 'Atleti', url: '/atleti', icon: UserCircle, feature: 'athletes' },
-  { title: 'Valutazioni', url: '/valutazioni', icon: Star, feature: 'athletes' },
-  { title: 'Infortuni', url: '/infortuni', icon: HeartPulse, feature: 'injuries' },
-  { title: 'Inventario', url: '/inventario', icon: Boxes, feature: 'athletes' },
-];
 
 function Badge({ value }: { value: number }) {
   if (value <= 0) return null;
@@ -99,6 +47,7 @@ export function AppSidebar() {
   const { user, isSuperAdmin, signOut } = useAuth();
   const { societyId, societyName, features, isAdmin } = useActiveSociety();
   const counts = useNotifications(societyId, user?.id ?? null);
+  const { prefs } = usePreferences();
   const [bellOpen, setBellOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
@@ -123,7 +72,9 @@ export function AppSidebar() {
   const totalNotifs = counts.comunicazioni + counts.presenze + counts.convocazioni;
 
   const visible = (items: NavItem[]) => {
-    const filtered = items.filter((i) => !i.feature || isFeatureEnabled(features, i.feature));
+    const filtered = items.filter(
+      (i) => (!i.feature || isFeatureEnabled(features, i.feature)) && !prefs.hiddenItems.includes(i.url),
+    );
     return scoutMode ? filtered.filter((i) => SCOUT_MODE_URLS.has(i.url)) : filtered;
   };
 
@@ -145,16 +96,12 @@ export function AppSidebar() {
       </SidebarMenuItem>
     ));
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mainItems = useMemo(() => visible(MAIN), [features, scoutMode]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const gestionaleItems = useMemo(() => visible(GESTIONALE), [features, scoutMode]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const coachingItems = useMemo(() => visible(COACHING), [features, scoutMode]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const analisiItems = useMemo(() => visible(ANALISI), [features, scoutMode]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const atletaItems = useMemo(() => visible(ATLETA), [features, scoutMode]);
+  const homeItems = [HOME_ITEM];
+  const generalItems = visible(GENERAL_ITEMS);
+  const blockGroups = prefs.blockOrder
+    .filter((id) => !prefs.hiddenBlocks.includes(id))
+    .map((id) => ({ block: BLOCKS[id], items: visible(BLOCKS[id].items) }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <Sidebar collapsible="icon">
@@ -254,50 +201,25 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {mainItems.length > 0 && (
-          <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Principale</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>{renderItems(mainItems)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>{renderItems([...homeItems, ...generalItems])}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        {gestionaleItems.length > 0 && (
-          <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Gestionale</SidebarGroupLabel>}
+        {blockGroups.map(({ block, items }) => (
+          <SidebarGroup key={block.id}>
+            {!collapsed && (
+              <SidebarGroupLabel className={`${block.text} font-bold tracking-widest uppercase`}>
+                <span className={`mr-2 inline-block h-2 w-2 rounded-full ${block.dot}`} />
+                {block.label}
+              </SidebarGroupLabel>
+            )}
             <SidebarGroupContent>
-              <SidebarMenu>{renderItems(gestionaleItems)}</SidebarMenu>
+              <SidebarMenu>{renderItems(items)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
-
-        {coachingItems.length > 0 && (
-          <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Coaching</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>{renderItems(coachingItems)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {analisiItems.length > 0 && (
-          <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Analisi</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>{renderItems(analisiItems)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {atletaItems.length > 0 && (
-          <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel>Atleta &amp; Magazzino</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>{renderItems(atletaItems)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        ))}
 
         {isAdmin && (
           <SidebarGroup>
@@ -370,6 +292,14 @@ export function AppSidebar() {
           <LogOut className="w-4 h-4" />
           {!collapsed && <span className="ml-2">Esci</span>}
         </Button>
+        <NavLink
+          to="/personalizza"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+          activeClassName="bg-primary/10 text-primary font-semibold"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          {!collapsed && <span>Personalizza</span>}
+        </NavLink>
         <NavLink
           to="/supporto"
           className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm hover:bg-muted/60 text-muted-foreground hover:text-foreground"
