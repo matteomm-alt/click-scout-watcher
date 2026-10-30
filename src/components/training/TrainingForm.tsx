@@ -1,7 +1,7 @@
 import { safeUUID } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  DndContext, DragEndEvent, DragOverlay, KeyboardSensor, PointerSensor, closestCenter,
+  DndContext, DragEndEvent, pointerWithin, CollisionDetection, DragOverlay, KeyboardSensor, PointerSensor, closestCenter,
   useSensor, useSensors,
 } from '@dnd-kit/core';
 import {
@@ -120,6 +120,15 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
       setSkeletons((data as typeof skeletons) ?? []);
     })();
   }, []);
+
+  // Dalla libreria conta il punto dove si rilascia; per il riordino il centro dell'elemento.
+  const collision: CollisionDetection = (args) => {
+    if (String(args.active.id).startsWith(LIB_DRAG_PREFIX)) {
+      const hits = pointerWithin(args);
+      return hits.length > 0 ? hits : closestCenter(args);
+    }
+    return closestCenter(args);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -534,7 +543,8 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
 
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={collision}
+          autoScroll={false}
           onDragStart={(e) => {
             const id = String(e.active.id);
             if (id.startsWith(LIB_DRAG_PREFIX)) {

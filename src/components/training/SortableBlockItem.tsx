@@ -57,7 +57,7 @@ const NONE = '__NONE__';
 const INTENSITIES = ['Bassa', 'Media', 'Alta', 'Massimale'] as const;
 
 export function SortableBlockItem({ block, index, exercises, onChange, onRemove }: Props) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, active } = useSortable({
     id: block.key,
   });
   const [expanded, setExpanded] = useState(false);
@@ -106,7 +106,10 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
           ? `4px solid ${borderColor}`
           : '4px solid transparent',
       }}
-      className="rounded-lg border border-border bg-card overflow-hidden"
+      className={`rounded-lg border bg-card overflow-hidden transition-shadow ${
+        isOver && !isDragging && String(active?.id ?? '').startsWith('lib:')
+          ? 'border-primary ring-2 ring-primary/50' : 'border-border'
+      }`}
     >
       {/* Header riga compatta */}
       <div className="flex items-center gap-2 p-2.5 bg-muted/30">
@@ -114,7 +117,7 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
           type="button"
           {...attributes}
           {...listeners}
-          className="touch-none cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded text-muted-foreground"
+          className="touch-none cursor-grab active:cursor-grabbing p-2 -m-1 hover:bg-muted rounded text-muted-foreground"
           aria-label="Trascina per riordinare"
         >
           <GripVertical className="w-4 h-4" />

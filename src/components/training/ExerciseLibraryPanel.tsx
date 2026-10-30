@@ -29,18 +29,15 @@ function DraggableExercise({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-md border border-border bg-background p-2 flex items-start gap-1.5 ${
+      {...attributes}
+      {...listeners}
+      className={`rounded-md border border-border bg-background p-2 flex items-start gap-1.5 cursor-grab active:cursor-grabbing touch-none select-none hover:border-primary/60 ${
         isDragging ? 'opacity-40' : ''
       }`}
     >
-      <button
-        type="button"
-        className="cursor-grab active:cursor-grabbing text-muted-foreground mt-0.5"
-        {...attributes}
-        {...listeners}
-      >
+      <span className="text-muted-foreground mt-0.5" aria-hidden="true">
         <GripVertical className="w-3.5 h-3.5" />
-      </button>
+      </span>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold leading-tight truncate">{ex.name}</p>
         <div className="flex flex-wrap gap-1 mt-1">
@@ -55,6 +52,7 @@ function DraggableExercise({
       <Button
         type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0"
         onClick={() => onAdd(ex)}
+        onPointerDown={(e) => e.stopPropagation()}
         title="Aggiungi come nuovo blocco"
       >
         <Plus className="w-3.5 h-3.5" />

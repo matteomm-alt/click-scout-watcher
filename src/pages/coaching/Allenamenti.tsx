@@ -785,7 +785,7 @@ export default function Allenamenti() {
 
       {/* Dialog form */}
       <Dialog open={dlgOpen} onOpenChange={setDlgOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[96vw] max-w-6xl max-h-[94vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{form.id ? 'Modifica allenamento' : 'Nuovo allenamento'}</DialogTitle>
             <DialogDescription>
