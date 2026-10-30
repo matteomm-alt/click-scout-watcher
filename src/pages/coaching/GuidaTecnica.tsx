@@ -444,7 +444,7 @@ export default function GuidaTecnica() {
                     <Badge variant="outline" className={fundColor}>{g.fundamental}</Badge>
                   )}
                   {g.age_group && (
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                    <Badge variant="outline" className="bg-primary/10 text-orange-800 dark:text-primary border-primary/30">
                       {g.age_group}
                     </Badge>
                   )}

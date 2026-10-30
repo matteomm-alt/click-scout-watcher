@@ -288,7 +288,7 @@ export function AppSidebar() {
           {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-black text-sm shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary/15 text-orange-800 dark:text-primary flex items-center justify-center font-black text-sm shrink-0">
               {(profile?.full_name ?? user?.email ?? '?')[0]?.toUpperCase()}
             </div>
           )}

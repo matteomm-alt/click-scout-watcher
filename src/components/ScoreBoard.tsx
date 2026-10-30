@@ -123,13 +123,13 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
       <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
         <TeamSanctions team="home" />
         <ServingDot active={matchState.servingTeam === 'home'} />
-        <span className="text-[10px] text-muted-foreground/80 truncate max-w-[80px] font-bold uppercase tracking-wider">
+        <span className="text-[10px] text-muted-foreground truncate max-w-[80px] font-bold uppercase tracking-wider">
           {homeTeam.name || 'Casa'}
         </span>
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-primary tabular-nums">
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-orange-800 dark:text-primary tabular-nums">
           R{matchState.homeSetterPosition}
         </span>
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-warning tabular-nums">
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-amber-900 dark:text-warning tabular-nums">
           #{matchState.homeCurrentLineup[0]}
         </span>
         <TimeoutDots used={matchState.homeTimeoutsUsed} />
@@ -185,13 +185,13 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
           T-out
         </button>
         <TimeoutDots used={matchState.awayTimeoutsUsed} />
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-warning tabular-nums">
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-amber-900 dark:text-warning tabular-nums">
           #{matchState.awayCurrentLineup[0]}
         </span>
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-primary tabular-nums">
+        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-orange-800 dark:text-primary tabular-nums">
           R{matchState.awaySetterPosition}
         </span>
-        <span className="text-[10px] text-muted-foreground/80 truncate max-w-[80px] font-bold uppercase tracking-wider">
+        <span className="text-[10px] text-muted-foreground truncate max-w-[80px] font-bold uppercase tracking-wider">
           {awayTeam.name || 'Ospite'}
         </span>
         <ServingDot active={matchState.servingTeam === 'away'} />

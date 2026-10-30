@@ -134,7 +134,7 @@ export function AtletaScoutTab({ number, active }: { number: number | null; acti
             {kpi.rec.pos}%
           </p>
           <p className="text-xs text-muted-foreground">positive su {kpi.rec.tot} azioni</p>
-          <p className={`text-sm font-semibold mt-2 ${kpi.rec.neg > 20 ? 'text-red-400' : 'text-muted-foreground'}`}>
+          <p className={`text-sm font-semibold mt-2 ${kpi.rec.neg > 20 ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'}`}>
             {kpi.rec.neg}% negative
           </p>
           <div className="mt-3 space-y-1">
@@ -156,7 +156,7 @@ export function AtletaScoutTab({ number, active }: { number: number | null; acti
           <p className="text-xs text-muted-foreground">efficienza su {kpi.att.tot} attacchi</p>
           <div className="mt-3 space-y-1 text-sm">
             <p className={kpi.att.kill > 50 ? 'text-green-400 font-semibold' : ''}>Kill: {kpi.att.kill}%</p>
-            <p className={kpi.att.err > 10 ? 'text-red-400 font-semibold' : ''}>Errori: {kpi.att.err}%</p>
+            <p className={kpi.att.err > 10 ? 'text-red-700 dark:text-red-400 font-semibold' : ''}>Errori: {kpi.att.err}%</p>
           </div>
         </Card>
 
@@ -166,7 +166,7 @@ export function AtletaScoutTab({ number, active }: { number: number | null; acti
             {kpi.srv.ace}%
           </p>
           <p className="text-xs text-muted-foreground">ace su {kpi.srv.tot} battute</p>
-          <p className={`text-sm font-semibold mt-3 ${kpi.srv.err > 15 ? 'text-red-400' : 'text-muted-foreground'}`}>
+          <p className={`text-sm font-semibold mt-3 ${kpi.srv.err > 15 ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'}`}>
             Errori: {kpi.srv.err}%
           </p>
         </Card>

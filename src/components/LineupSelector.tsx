@@ -161,7 +161,7 @@ function TeamLineup({
                     onClick={() => handlePositionClick(pos.key)}
                     className={`w-full p-3 rounded-lg border-2 transition-all ${
                       isSetter
-                        ? 'border-primary bg-primary/20 text-primary'
+                        ? 'border-primary bg-primary/20 text-orange-800 dark:text-primary'
                         : 'border-court-line/50 bg-secondary/50 text-foreground hover:border-primary/50'
                     }`}
                   >

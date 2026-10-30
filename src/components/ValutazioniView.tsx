@@ -22,7 +22,7 @@ import { EvalTemplateEditor } from '@/components/EvalTemplateEditor';
 
 type Phase = 'inizio' | 'meta' | 'fine';
 const PHASES: { id: Phase; label: string; short: string; color: string; hex: string }[] = [
-  { id: 'inizio', label: 'Inizio stagione', short: 'I', color: 'text-blue-400 border-blue-400 bg-blue-500/10', hex: '#3B82F6' },
+  { id: 'inizio', label: 'Inizio stagione', short: 'I', color: 'text-blue-700 dark:text-blue-400 border-blue-400 bg-blue-500/10', hex: '#3B82F6' },
   { id: 'meta',   label: 'Metà stagione',   short: 'M', color: 'text-orange-400 border-orange-400 bg-orange-500/10', hex: '#F97316' },
   { id: 'fine',   label: 'Fine stagione',   short: 'F', color: 'text-green-400 border-green-400 bg-green-500/10', hex: '#22C55E' },
 ];
@@ -32,7 +32,7 @@ function getTappa(media: number) {
   if (media >= 3.5) return { label: 'Automatizzazione', color: 'text-green-400 border-green-400' };
   if (media >= 2.5) return { label: 'Consolidamento', color: 'text-yellow-400 border-yellow-400' };
   if (media >= 1.5) return { label: 'Acquisizione', color: 'text-orange-400 border-orange-400' };
-  return { label: 'Scoperta', color: 'text-red-400 border-red-400' };
+  return { label: 'Scoperta', color: 'text-red-700 dark:text-red-400 border-red-400' };
 }
 
 interface Athlete {
@@ -257,7 +257,7 @@ export function ValutazioniView() {
           <button
             type="button"
             onClick={() => setEditingTemplate(true)}
-            className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg px-3 py-1.5 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold text-orange-800 dark:text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg px-3 py-1.5 transition-colors"
           >
             <Settings className="w-3.5 h-3.5" /> Personalizza
           </button>

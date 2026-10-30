@@ -98,7 +98,7 @@ export function AtletaAllenamentiTab({ athleteId, active }: { athleteId: string;
     <div className="space-y-4">
       <Card className="p-6">
         <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Presenze allenamenti</p>
-        <p className={`text-5xl font-black ${pct >= 70 ? 'text-green-400' : 'text-red-400'}`}>{pct}%</p>
+        <p className={`text-5xl font-black ${pct >= 70 ? 'text-green-400' : 'text-red-700 dark:text-red-400'}`}>{pct}%</p>
         <p className="text-sm text-muted-foreground mt-1">
           {trainingAttendances.filter(a => a.status === 'presente').length} su {trainingAttendances.length} allenamenti
         </p>

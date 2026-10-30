@@ -16,7 +16,7 @@ export function ClaimSuperAdminBadge() {
   return (
     <Link
       to="/claim-super-admin"
-      className="fixed bottom-3 right-3 z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/90 hover:bg-primary text-primary-foreground text-xs font-semibold shadow-lg backdrop-blur-sm transition-all hover:scale-105"
+      className="fixed bottom-3 right-3 z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-lg backdrop-blur-sm transition-all hover:scale-105"
       title="Promuoviti a super-admin con il secret"
     >
       <ShieldCheck className="w-4 h-4" />

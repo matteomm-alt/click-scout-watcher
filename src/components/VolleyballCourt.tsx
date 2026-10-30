@@ -280,7 +280,7 @@ export function VolleyballCourt({
 
         {/* Etichetta ricezione */}
         {isReceiving && !simplifiedView && (
-          <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-accent/90 text-[9px] font-black uppercase tracking-wider text-accent-foreground shadow-md">
+          <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-emerald-800 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
             Ricezione · S{setterPosition}
           </span>
         )}
@@ -310,7 +310,7 @@ export function VolleyballCourt({
                       className={`pointer-events-auto flex-1 border border-dashed transition-colors flex items-center justify-center text-[10px] font-black uppercase tracking-wider ${
                         active
                           ? 'bg-primary/70 border-primary text-primary-foreground'
-                          : 'bg-black/25 border-white/40 text-white/80 hover:bg-primary/30 hover:border-primary/70'
+                          : 'bg-black/45 border-white/50 text-white font-bold hover:bg-primary/30 hover:border-primary/70'
                       }`}
                       title={`Servizio da zona ${zone}`}
                       aria-label={`Servizio da zona ${zone}`}
@@ -320,7 +320,7 @@ export function VolleyballCourt({
                   );
                 })}
               </div>
-              <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider text-white/70 whitespace-nowrap">
+              <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wider text-white bg-black/55 rounded px-1 whitespace-nowrap">
                 Battuta
               </span>
             </div>
@@ -398,7 +398,7 @@ export function VolleyballCourt({
               >
                 {info.number}
                 {isSetter && (
-                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-900 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">S</span>
+                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-950 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">S</span>
                 )}
                 {isLibero && (
                   <span className="absolute -right-1.5 -bottom-1.5 rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">L</span>
@@ -406,7 +406,7 @@ export function VolleyballCourt({
               </button>
 
               {!simplifiedView && (
-                <span className="mt-0.5 max-w-16 truncate text-[11px] font-bold text-white/95 drop-shadow">{info.name}</span>
+                <span className="mt-0.5 max-w-16 truncate rounded bg-black/55 px-1 text-[11px] font-bold text-white">{info.name}</span>
               )}
             </div>
           );

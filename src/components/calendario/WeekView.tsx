@@ -55,7 +55,7 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
 
             <div className="flex flex-col gap-1.5 flex-1">
               {dayEvents.length === 0 && (
-                <span className="text-[11px] text-muted-foreground/50 italic">—</span>
+                <span className="text-[11px] text-muted-foreground italic">—</span>
               )}
               {dayEvents.map((evt) => {
                 const meta = getEventMeta(evt.event_type);
@@ -84,20 +84,21 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
                         <Repeat className={'w-2.5 h-2.5 shrink-0'} />
                       )}
                     </div>
-                    <p className="font-semibold truncate text-foreground mt-0.5">{evt.title}</p>
+                    <p className="font-semibold truncate mt-0.5" style={{ color: ec.text }}>{evt.title}</p>
                     {evt.location && (
                       <a
                         href={`https://maps.google.com/?q=${encodeURIComponent(evt.location)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1 text-[10px] text-primary hover:underline truncate mt-0.5"
+                        className="flex items-center gap-1 text-[10px] underline-offset-2 hover:underline truncate mt-0.5"
+                        style={{ color: ec.text }}
                       >
                         <MapPin className="w-2.5 h-2.5 shrink-0" /> {evt.location}
                       </a>
                     )}
                     {showCreator && evt.creator_name && (
-                      <p className="text-[10px] text-muted-foreground/70 truncate italic">
+                      <p className="text-[10px] text-muted-foreground truncate italic">
                         {evt.creator_name}
                       </p>
                     )}
@@ -110,7 +111,7 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
                             `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent(evt.location || '')}`,
                           );
                         }}
-                        className="mt-1.5 inline-flex items-center min-h-7 px-2 text-[10px] font-bold bg-primary/10 text-primary border border-primary/30 rounded-md hover:bg-primary/20"
+                        className="mt-1.5 inline-flex items-center min-h-7 px-2 text-[10px] font-bold bg-primary/10 text-orange-800 dark:text-primary border border-primary/30 rounded-md hover:bg-primary/20"
                       >
                         📋 Convocazione
                       </span>

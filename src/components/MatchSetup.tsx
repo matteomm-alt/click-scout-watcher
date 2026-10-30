@@ -57,7 +57,7 @@ export function MatchSetup() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="glass rounded-2xl p-8 w-full max-w-2xl space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-orange-800 dark:text-primary mb-4">
             <Trophy className="w-4 h-4" />
             <span className="text-sm font-medium">Setup Partita</span>
           </div>

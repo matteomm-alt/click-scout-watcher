@@ -20,7 +20,7 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: 'Allenamento',
     icon: Dumbbell,
     bgClass: 'bg-blue-500/15',
-    textClass: 'text-blue-400',
+    textClass: 'text-blue-700 dark:text-blue-400',
     borderClass: 'border-l-blue-500',
     dotClass: 'bg-blue-500',
   },
@@ -29,7 +29,7 @@ export const EVENT_TYPES: EventTypeMeta[] = [
     label: 'Partita',
     icon: Trophy,
     bgClass: 'bg-red-500/15',
-    textClass: 'text-red-400',
+    textClass: 'text-red-700 dark:text-red-400',
     borderClass: 'border-l-red-500',
     dotClass: 'bg-red-500',
   },
@@ -72,7 +72,7 @@ export const EVENT_TYPE_COLORS: Record<string, { bg: string; text: string; borde
   partita: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
   riunione: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
   torneo: { bg: '#ede9fe', text: '#5b21b6', border: '#c4b5fd' },
-  altro: { bg: '#f3f4f6', text: '#6b7280', border: '#d1d5db' },
+  altro: { bg: '#f3f4f6', text: '#4b5563', border: '#d1d5db' },
 };
 
 export function getEventColors(type: string) {

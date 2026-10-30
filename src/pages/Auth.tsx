@@ -330,7 +330,7 @@ export default function Auth() {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               {capsLockOn && (
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-500">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-500">
                   Caps Lock attivo
                 </span>
               )}

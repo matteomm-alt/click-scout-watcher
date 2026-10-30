@@ -253,7 +253,7 @@ export function TacticalEditor({
       )}
 
       {!readOnly && arrowMode && (
-        <div className="text-[11px] text-primary px-2 py-1 rounded bg-primary/10 border border-primary/30">
+        <div className="text-[11px] text-orange-800 dark:text-primary px-2 py-1 rounded bg-primary/10 border border-primary/30">
           {arrowStart
             ? '🎯 Clicca il punto di arrivo della freccia'
             : '📍 Clicca il punto di partenza della freccia'}

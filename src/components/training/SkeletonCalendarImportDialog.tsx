@@ -250,7 +250,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
                   onClick={() => setEndMode(m)}
                   className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors ${
                     endMode === m
-                      ? 'bg-primary/15 text-primary border-primary/40'
+                      ? 'bg-primary/15 text-orange-800 dark:text-primary border-primary/40'
                       : 'bg-secondary border-border text-muted-foreground hover:border-primary/40'
                   }`}
                 >

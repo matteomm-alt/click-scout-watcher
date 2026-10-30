@@ -190,7 +190,7 @@ export function SetProgressTab({ actions }: Props) {
                         const startPt = points[run.startIdx];
                         const isHome = run.team === 'home';
                         return (
-                          <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-bold ${isHome ? 'bg-primary/15 text-primary' : 'bg-destructive/15 text-destructive'}`}>
+                          <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-bold ${isHome ? 'bg-primary/15 text-orange-800 dark:text-primary' : 'bg-destructive/15 text-destructive'}`}>
                             {isHome ? 'Casa' : 'Ospite'} +{run.length}{startPt ? ` (da ${startPt.home}-${startPt.away})` : ''}
                           </span>
                         );

@@ -83,7 +83,7 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
           {/* Azioni rapide */}
           <div className="flex gap-1 p-2 border-b border-border">
             <button onClick={selectAll}
-              className="flex-1 text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 font-semibold">
+              className="flex-1 text-xs px-2 py-1 rounded bg-primary/10 text-orange-800 dark:text-primary hover:bg-primary/20 font-semibold">
               Tutte
             </button>
             <button onClick={selectNone}

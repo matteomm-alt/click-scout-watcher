@@ -61,7 +61,7 @@ function colorFor(v: number | null): string {
   if (v === null) return 'text-muted-foreground';
   if (v > 50) return 'text-emerald-400';
   if (v >= 40) return 'text-amber-400';
-  return 'text-red-400';
+  return 'text-red-700 dark:text-red-400';
 }
 
 export function LiveKpiPanel({
@@ -173,7 +173,7 @@ export function LiveKpiPanel({
           <div>
             <div className="text-[9px] uppercase text-muted-foreground">P{kpi.currentRot ?? '—'}</div>
             <div className={`text-xl font-black tabular-nums ${
-              kpi.delta > 0 ? 'text-emerald-400' : kpi.delta < 0 ? 'text-red-400' : 'text-muted-foreground'
+              kpi.delta > 0 ? 'text-emerald-400' : kpi.delta < 0 ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'
             }`}>
               {kpi.delta > 0 ? `+${kpi.delta}` : kpi.delta}
             </div>

@@ -140,7 +140,7 @@ export function TagPicker({
                             className={cn(
                               'text-xs px-2 py-1 rounded border transition-colors inline-flex items-center gap-1',
                               sel
-                                ? 'bg-primary/15 border-primary/40 text-primary'
+                                ? 'bg-primary/15 border-primary/40 text-orange-800 dark:text-primary'
                                 : 'border-border hover:border-primary/40 hover:bg-muted'
                             )}
                           >
@@ -169,7 +169,7 @@ export function TagPicker({
                             className={cn(
                               'text-xs px-2 py-1 rounded border transition-colors inline-flex items-center gap-1',
                               sel
-                                ? 'bg-primary/15 border-primary/40 text-primary'
+                                ? 'bg-primary/15 border-primary/40 text-orange-800 dark:text-primary'
                                 : 'border-border hover:border-primary/40 hover:bg-muted'
                             )}
                           >

@@ -126,7 +126,7 @@ export function TrainingDetailCard({ value, onChange, objectives, phases, scheme
                   onClick={() => toggleScheme(s.id)}
                   className={`px-3 py-1.5 rounded-md border text-xs font-semibold transition-colors ${
                     active
-                      ? 'border-primary bg-primary/15 text-primary'
+                      ? 'border-primary bg-primary/15 text-orange-800 dark:text-primary'
                       : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground'
                   }`}
                 >

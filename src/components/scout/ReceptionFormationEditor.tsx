@@ -326,7 +326,7 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
                 {!showSaveForm ? (
                   <button
                     onClick={() => setShowSaveForm(true)}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 text-xs font-bold text-primary hover:bg-primary/5 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 text-xs font-bold text-orange-800 dark:text-primary hover:bg-primary/5 transition-colors"
                   >
                     <Save className="w-3.5 h-3.5" />
                     Salva schema corrente come template
@@ -393,7 +393,7 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-bold text-foreground truncate">{tpl.name}</div>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-primary/15 text-orange-800 dark:text-primary">
                               {tpl.template_type === 'both' ? '↙↗' : tpl.template_type === 'reception' ? '↙ Ric' : '↗ Att'}
                             </span>
                             {tpl.description && (
@@ -404,7 +404,7 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={() => applyTemplate(tpl)}
-                            className="px-2 py-1 rounded-md text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            className="px-2 py-1 rounded-md text-[10px] font-bold bg-primary/10 text-orange-800 dark:text-primary hover:bg-primary/20 transition-colors"
                             title="Applica al team selezionato"
                           >
                             Applica

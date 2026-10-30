@@ -419,7 +419,7 @@ export function StrutturaSettimanaleView() {
                     <button
                       type="button"
                       onClick={() => setCreateFromSkeleton(s)}
-                      className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors"
+                      className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-orange-800 dark:text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors"
                     >
                       ➕ Crea allenamento
                     </button>
@@ -482,7 +482,7 @@ export function StrutturaSettimanaleView() {
                                     {(b.fondamentali || []).length > 0 && (
                                       <div className="flex gap-1 flex-wrap">
                                         {(b.fondamentali || []).map(f => (
-                                          <span key={f} className="text-[10px] px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">{f}</span>
+                                          <span key={f} className="text-[10px] px-2 py-0.5 rounded-md bg-primary/10 text-orange-800 dark:text-primary font-medium">{f}</span>
                                         ))}
                                         {b.forma && <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">{b.forma}</span>}
                                       </div>

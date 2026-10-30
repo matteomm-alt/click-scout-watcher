@@ -13,7 +13,7 @@
     --card-foreground: 228 25% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 228 25% 12%;
-    --primary: 24 95% 48%;
+    --primary: 22 90% 40%;
     --primary-foreground: 0 0% 100%;
     --secondary: 228 15% 92%;
     --secondary-foreground: 228 25% 20%;
@@ -24,9 +24,9 @@
     --opponent: 217 85% 48%;
     --destructive: 0 72% 47%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142 65% 36%;
+    --success: 142 65% 28%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 44%;
+    --warning: 36 92% 32%;
     --warning-foreground: 0 0% 100%;
     /* il campo resta scuro anche in tema chiaro: le linee sono bianche */
     --court: 228 30% 14%;
@@ -38,24 +38,24 @@
     --set-back: 270 60% 50%;
     --border: 228 15% 86%;
     --input: 228 15% 86%;
-    --ring: 24 95% 48%;
+    --ring: 22 90% 40%;
     --radius: 0.75rem;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 228 25% 15%;
-    --sidebar-primary: 24 95% 48%;
+    --sidebar-primary: 22 90% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 228 15% 93%;
     --sidebar-accent-foreground: 228 25% 20%;
     --sidebar-border: 228 15% 88%;
-    --sidebar-ring: 24 95% 48%;
+    --sidebar-ring: 22 90% 40%;
 
     --cs-team-a: 320 65% 45%;
     --cs-team-b: 217 85% 48%;
     --cs-rail: 220 30% 32%;
     --cs-rail-fg: 0 0% 100%;
     --cs-court: 24 88% 52%;
-    --cs-cta: 24 95% 48%;
-    --cs-cta-yellow: 24 95% 48%;
+    --cs-cta: 22 90% 40%;
+    --cs-cta-yellow: 22 90% 40%;
     --cs-end-match: 142 65% 36%;
   }
 
@@ -67,11 +67,11 @@
     --popover: 228 25% 11%;
     --popover-foreground: 210 20% 92%;
     --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 228 30% 6%;
     --secondary: 228 20% 18%;
     --secondary-foreground: 210 20% 85%;
     --muted: 228 18% 15%;
-    --muted-foreground: 215 15% 55%;
+    --muted-foreground: 215 16% 63%;
     --accent: 160 84% 39%;
     --accent-foreground: 0 0% 100%;
     --opponent: 217 91% 60%;
@@ -95,15 +95,15 @@
     --sidebar-background: 228 25% 9%;
     --sidebar-foreground: 210 20% 92%;
     --sidebar-primary: 24 95% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 228 30% 6%;
     --sidebar-accent: 228 20% 18%;
     --sidebar-accent-foreground: 210 20% 85%;
     --sidebar-border: 228 18% 20%;
     --sidebar-ring: 24 95% 53%;
 
     /* Click&Scout layout tokens — fedeli al layout originale, colori del nostro tema */
-    --cs-team-a: 320 70% 55%;        /* magenta/rosa squadra di casa */
-    --cs-team-b: 217 91% 60%;        /* blu squadra ospite */
+    --cs-team-a: 320 65% 45%;        /* magenta/rosa squadra di casa */
+    --cs-team-b: 217 85% 48%;        /* blu squadra ospite */
     --cs-rail: 220 35% 22%;          /* blu scuro pannelli laterali TO/SUB/SERVE */
     --cs-rail-fg: 210 30% 88%;
     --cs-court: 24 88% 58%;          /* arancio campo (variante più calda di --primary) */

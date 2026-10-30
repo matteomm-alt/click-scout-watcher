@@ -190,7 +190,7 @@ export function TeamFormationsTab({ teamId, societyId, athletes }: Props) {
               <div key={f.id} className="rounded-lg border border-border/60 p-3 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-bold">{f.name}</span>
-                  {f.is_default && <Badge className="bg-primary/20 text-primary border-primary/40">Predefinita</Badge>}
+                  {f.is_default && <Badge className="bg-primary/20 text-orange-800 dark:text-primary border-primary/40">Predefinita</Badge>}
                   {f.rotations.libero != null && (
                     <Badge variant="outline">Libero {f.rotations.libero}</Badge>
                   )}

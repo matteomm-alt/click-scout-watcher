@@ -94,7 +94,7 @@ function CustomSubInput({ fondId, onAdd }: CustomSubInputProps) {
         type="button"
         onClick={() => { onAdd(fondId, val); setVal(''); }}
         disabled={!val.trim()}
-        className="h-8 w-8 rounded-md flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-30"
+        className="h-8 w-8 rounded-md flex items-center justify-center bg-primary/10 text-orange-800 dark:text-primary hover:bg-primary/20 disabled:opacity-30"
       >
         <Plus className="w-3.5 h-3.5" />
       </button>
@@ -371,7 +371,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                         <ChevronDown className="w-3.5 h-3.5" />
                       </button>
                       <button type="button" onClick={() => toggleVisible(f.id)}
-                        className={`p-1.5 rounded-md transition-colors ${visible ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-secondary'}`}
+                        className={`p-1.5 rounded-md transition-colors ${visible ? 'text-orange-800 dark:text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-secondary'}`}
                         title={visible ? 'Nascondi' : 'Mostra'}>
                         {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                       </button>
@@ -407,7 +407,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                               key={`std-${i}`}
                               variant="secondary"
                               onClick={() => setEditingSub({ fondId: f.id, subIndex: i, currentValue: displayName })}
-                              className={`text-[10px] font-normal cursor-pointer hover:bg-primary/10 ${isRenamed ? 'text-primary border-primary/40 border' : ''}`}
+                              className={`text-[10px] font-normal cursor-pointer hover:bg-primary/10 ${isRenamed ? 'text-orange-800 dark:text-primary border-primary/40 border' : ''}`}
                               title={isRenamed ? `Originale: "${sa}" — clicca per modificare` : 'Clicca per rinominare'}
                             >
                               {displayName}
@@ -437,7 +437,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                         />
                         <button type="button" onClick={() => addSubAspect(f.id)}
                           disabled={!newSubAspect[f.id]?.trim()}
-                          className="h-8 w-8 rounded-md flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-30">
+                          className="h-8 w-8 rounded-md flex items-center justify-center bg-primary/10 text-orange-800 dark:text-primary hover:bg-primary/20 disabled:opacity-30">
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>

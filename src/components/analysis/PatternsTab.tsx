@@ -18,8 +18,8 @@ export function PatternsTab({ allActions, myTeamId, opponentName }: Props) {
   const receivers = useMemo(() => serveTargetReceivers(allActions, myTeamId), [allActions, myTeamId]);
   const chains = useMemo(() => losingBreakChains(allActions, myTeamId, 3), [allActions, myTeamId]);
 
-  const effColor = (e: number) => e >= 40 ? 'text-emerald-500' : e >= 20 ? 'text-blue-500' : e >= 0 ? 'text-amber-500' : 'text-red-500';
-  const xpColor = (x: number) => x >= 0.7 ? 'text-emerald-500' : x >= 0.5 ? 'text-amber-500' : 'text-red-500';
+  const effColor = (e: number) => e >= 40 ? 'text-emerald-700 dark:text-emerald-500' : e >= 20 ? 'text-blue-600 dark:text-blue-500' : e >= 0 ? 'text-amber-700 dark:text-amber-500' : 'text-red-600 dark:text-red-500';
+  const xpColor = (x: number) => x >= 0.7 ? 'text-emerald-700 dark:text-emerald-500' : x >= 0.5 ? 'text-amber-700 dark:text-amber-500' : 'text-red-600 dark:text-red-500';
 
   return (
     <div className="space-y-8">

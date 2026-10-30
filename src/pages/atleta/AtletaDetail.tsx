@@ -116,7 +116,7 @@ export default function AtletaDetail() {
   }, [evaluations]);
 
   const scoreColor = (s: number) =>
-    s >= 4 ? 'text-green-400' : s >= 3 ? 'text-yellow-400' : 'text-red-400';
+    s >= 4 ? 'text-green-400' : s >= 3 ? 'text-yellow-400' : 'text-red-700 dark:text-red-400';
 
   const activeInjuries = injuries.filter(i => i.status === 'attivo');
 
@@ -150,7 +150,7 @@ export default function AtletaDetail() {
     );
     if (days < 0) return <Badge variant="destructive">⚠️ Cert. scaduto</Badge>;
     if (days <= 30) return <Badge variant="outline" className="border-warning text-warning">⏰ Scade tra {days}gg</Badge>;
-    return <Badge variant="outline" className="border-green-600 text-green-500">✅ Cert. ok</Badge>;
+    return <Badge variant="outline" className="border-green-600 text-green-700 dark:text-green-500">✅ Cert. ok</Badge>;
   };
 
   const handlePdf = async (mode: PdfColorMode = 'color') => {
@@ -293,7 +293,7 @@ export default function AtletaDetail() {
               <Card className="p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
                 <a href={`mailto:${athlete.email}`}
-                  className="font-semibold mt-1 inline-flex items-center gap-1 text-blue-400 hover:text-blue-300">
+                  className="font-semibold mt-1 inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 hover:text-blue-300">
                   <Mail className="w-4 h-4" /> {athlete.email}
                 </a>
               </Card>
@@ -366,7 +366,7 @@ export default function AtletaDetail() {
               </p>
               <div className="flex items-end gap-4 flex-wrap">
                 <div>
-                  <p className={`text-5xl font-black ${attendanceStat.pct >= 70 ? 'text-green-400' : 'text-red-400'}`}>
+                  <p className={`text-5xl font-black ${attendanceStat.pct >= 70 ? 'text-green-400' : 'text-red-700 dark:text-red-400'}`}>
                     {attendanceStat.pct}%
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">

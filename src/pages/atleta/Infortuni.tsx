@@ -164,11 +164,11 @@ export default function Infortuni() {
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">In recupero</p>
-          <p className="text-3xl font-black text-orange-500">{kpiRecovery}</p>
+          <p className="text-3xl font-black text-orange-700 dark:text-orange-500">{kpiRecovery}</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Risolti</p>
-          <p className="text-3xl font-black text-green-500">{kpiResolved}</p>
+          <p className="text-3xl font-black text-green-700 dark:text-green-500">{kpiResolved}</p>
         </Card>
         <Card className="p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Stop medio (gg)</p>

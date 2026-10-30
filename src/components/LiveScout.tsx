@@ -620,11 +620,11 @@ export function LiveScout() {
             {suggestion?.skill && suggestion.team && (
               <div className={`min-h-[44px] px-3 rounded-md border-2 flex items-center gap-2 text-xs font-black uppercase tracking-wider ${
                 suggestion.team === 'home'
-                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
-                  : 'border-red-500/40 bg-red-500/10 text-red-400'
+                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-400'
+                  : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400'
               }`}>
                 <span>{SKILL_BANNER[suggestion.skill]}</span>
-                <span className="opacity-60">→</span>
+                <span>→</span>
                 <span className="truncate max-w-[120px]">
                   {suggestion.team === 'home'
                     ? (homeTeam.name || 'Casa')
@@ -647,7 +647,7 @@ export function LiveScout() {
               className={cn(
                 'min-h-[44px] px-3 rounded-md border-2 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 active:scale-95',
                 showLiveHeatmap
-                  ? 'bg-primary/20 border-primary text-primary'
+                  ? 'bg-primary/20 border-primary text-orange-800 dark:text-primary'
                   : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
               )}
               title="Mostra/nascondi heatmap sul campo"
@@ -658,7 +658,7 @@ export function LiveScout() {
               <button
                 type="button"
                 onClick={skipZone}
-                className="min-h-[44px] px-3 rounded-md border-2 border-warning bg-warning/20 text-warning text-xs font-black uppercase tracking-wider active:scale-95"
+                className="min-h-[44px] px-3 rounded-md border-2 border-warning bg-warning/20 text-amber-900 dark:text-warning text-xs font-black uppercase tracking-wider active:scale-95"
               >
                 Skip zona
               </button>
@@ -1119,7 +1119,7 @@ function ActionLog({ actions }: { actions: ScoutAction[] }) {
                 {a.startZone || '?'}→{a.endZone || '?'}
               </span>
             )}
-            <span className="text-muted-foreground/50 ml-auto text-[10px]">{a.timestamp}</span>
+            <span className="text-muted-foreground ml-auto text-[10px]">{a.timestamp}</span>
           </div>
         ))}
       </div>

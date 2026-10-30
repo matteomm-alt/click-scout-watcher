@@ -31,7 +31,7 @@ function ToolbarBtn({
   const v: Record<string, string> = {
     default: 'bg-secondary text-foreground border-border hover:bg-secondary/80',
     primary: 'bg-primary text-primary-foreground border-primary hover:brightness-110',
-    warning: 'bg-warning text-background border-warning hover:brightness-110',
+    warning: 'bg-warning text-warning-foreground border-warning hover:brightness-110',
     destructive: 'bg-destructive text-destructive-foreground border-destructive hover:brightness-110',
     home: 'bg-[hsl(var(--cs-team-a))] text-white border-[hsl(var(--cs-team-a))] hover:brightness-110',
     away: 'bg-[hsl(var(--cs-team-b))] text-white border-[hsl(var(--cs-team-b))] hover:brightness-110',
@@ -85,7 +85,7 @@ function LongPressBtn({
 
   const v: Record<string, string> = {
     default: 'bg-secondary text-foreground border-border',
-    warning: 'bg-warning text-background border-warning',
+    warning: 'bg-warning text-warning-foreground border-warning',
     destructive: 'bg-destructive text-destructive-foreground border-destructive',
     primary: 'bg-primary text-primary-foreground border-primary',
   };

@@ -145,7 +145,7 @@ export function ComunicazioniView() {
                     ) : (
                       <button
                         onClick={() => markAsRead(c.id)}
-                        className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1.5">
+                        className="min-h-9 px-3 text-xs font-bold bg-primary/10 text-orange-800 dark:text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1.5">
                         <Check className="w-3.5 h-3.5" /> Segna come letta
                       </button>
                     )}

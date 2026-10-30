@@ -340,7 +340,7 @@ export function PlayerStatsPanel() {
                         {r.recPositive}/{r.recErrors}/{r.recTot}
                       </div>
                     </td>
-                    <td className="px-1 py-1 text-right font-bold text-blue-400">{r.srvAces}</td>
+                    <td className="px-1 py-1 text-right font-bold text-blue-700 dark:text-blue-400">{r.srvAces}</td>
                     <td className="px-1 py-1 text-right font-bold text-purple-400">{r.blkKills}</td>
                   </tr>
                 );

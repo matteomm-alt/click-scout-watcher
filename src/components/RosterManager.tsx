@@ -195,7 +195,7 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
               type="button"
               onClick={handleImportFromDb}
               disabled={loadingFromDb}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider bg-primary/15 text-primary hover:bg-primary/25 border border-primary/30 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider bg-primary/15 text-orange-800 dark:text-primary hover:bg-primary/25 border border-primary/30 transition-colors disabled:opacity-50"
             >
               <Download className="w-3 h-3" />
               {loadingFromDb ? 'Caricamento…' : 'Importa da Atleti'}
@@ -261,7 +261,7 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
               key={player.id}
               className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
             >
-              <span className="w-10 h-10 rounded-lg bg-primary/10 text-primary font-bold text-lg flex items-center justify-center">
+              <span className="w-10 h-10 rounded-lg bg-primary/10 text-orange-800 dark:text-primary font-bold text-lg flex items-center justify-center">
                 {player.number}
               </span>
               <div className="flex-1">
@@ -271,12 +271,12 @@ function TeamRoster({ side, team }: { side: 'home' | 'away'; team: Team }) {
                 )}
               </div>
               <span className={`text-xs font-bold px-2 py-1 rounded ${
-                player.isLibero ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary'
+                player.isLibero ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-orange-800 dark:text-primary'
               }`}>
                 {ROLE_LABELS[player.role]}
               </span>
               {player.isCaptain && (
-                <span className="text-xs font-bold px-2 py-1 rounded bg-warning/20 text-warning">C</span>
+                <span className="text-xs font-bold px-2 py-1 rounded bg-warning/20 text-amber-900 dark:text-warning">C</span>
               )}
               <button
                 onClick={() => removePlayer(side, player.id)}

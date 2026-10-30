@@ -15,8 +15,8 @@ const EVAL_COLOR: Record<Evaluation, string> = {
   '+': 'text-emerald-300',
   '!': 'text-slate-300',
   '-': 'text-orange-400',
-  '/': 'text-red-400 font-black',
-  '=': 'text-red-500 font-black',
+  '/': 'text-red-700 dark:text-red-400 font-black',
+  '=': 'text-red-600 dark:text-red-500 font-black',
 };
 
 export function CSLiveString() {
@@ -42,7 +42,7 @@ export function CSLiveString() {
 
   if (rallyActions.length === 0) {
     return (
-      <div className="px-3 py-1.5 font-mono text-[11px] text-muted-foreground/70 border-t border-border bg-secondary/20 truncate">
+      <div className="px-3 py-1.5 font-mono text-[11px] text-muted-foreground border-t border-border bg-secondary/20 truncate">
         — In attesa della prima azione —
       </div>
     );

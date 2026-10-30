@@ -49,10 +49,10 @@ const SKILLS_CFG: {
     colorMuted:'bg-orange-500/10 text-orange-400 border-orange-500/40 hover:bg-orange-500/20' },
   { key:'R', label:'R', fullLabel:'Ricezione', advancedOnly:false,
     color:'bg-blue-500 text-white border-blue-500',
-    colorMuted:'bg-blue-500/10 text-blue-400 border-blue-500/40 hover:bg-blue-500/20' },
+    colorMuted:'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/40 hover:bg-blue-500/20' },
   { key:'A', label:'A', fullLabel:'Attacco',   advancedOnly:false,
     color:'bg-red-600 text-white border-red-600',
-    colorMuted:'bg-red-500/10 text-red-400 border-red-500/40 hover:bg-red-500/20' },
+    colorMuted:'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/40 hover:bg-red-500/20' },
   { key:'B', label:'B', fullLabel:'Muro',      advancedOnly:false,
     color:'bg-purple-600 text-white border-purple-600',
     colorMuted:'bg-purple-500/10 text-purple-400 border-purple-500/40 hover:bg-purple-500/20' },
@@ -124,7 +124,7 @@ export function TouchFlowPanel({
   const teamAccent = selectedPlayer?.team === 'home' ? 'blue' : 'red';
   const teamBorderActive = teamAccent === 'blue'
     ? 'border-blue-500/40 bg-blue-500/10' : 'border-red-500/40 bg-red-500/10';
-  const teamText = teamAccent === 'blue' ? 'text-blue-400' : 'text-red-400';
+  const teamText = teamAccent === 'blue' ? 'text-blue-700 dark:text-blue-400' : 'text-red-700 dark:text-red-400';
 
   return (
     <div className="flex flex-col h-full glass rounded-xl overflow-hidden border border-border/50">
@@ -147,7 +147,7 @@ export function TouchFlowPanel({
                       ? 'bg-[hsl(var(--cs-rail))] text-white border-[hsl(var(--cs-rail))] shadow-md'
                       : done
                         ? 'bg-secondary/40 text-foreground/80 border-border/60'
-                        : 'bg-background/50 text-muted-foreground/60 border-border/40',
+                        : 'bg-background/50 text-muted-foreground border-border/40',
                   )}
                 >
                   <span
@@ -157,7 +157,7 @@ export function TouchFlowPanel({
                         ? 'bg-white/20 text-white'
                         : done
                           ? 'bg-emerald-500/80 text-white'
-                          : 'bg-background/60 text-muted-foreground/70',
+                          : 'bg-background/60 text-muted-foreground',
                     )}
                   >
                     {done && !isActive ? '✓' : s.n}
@@ -331,7 +331,7 @@ export function TouchFlowPanel({
               </div>
             </div>
 
-            <div className="mt-3 text-[10px] text-muted-foreground/80 italic px-1">
+            <div className="mt-3 text-[10px] text-muted-foreground italic px-1">
               Seleziona tipo e combo, poi appare la valutazione.
             </div>
           </>
@@ -386,7 +386,7 @@ export function TouchFlowPanel({
               ← cambia
             </button>
           )}
-          <span className="text-muted-foreground/70 font-bold">
+          <span className="text-muted-foreground font-bold">
             {active === 'player' ? 'Step 1 di ' + steps.length
               : active === 'skill' ? `Step 2 di ${steps.length}`
               : active === 'combo' ? `Step 3 di ${steps.length}`

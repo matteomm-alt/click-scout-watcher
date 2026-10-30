@@ -207,7 +207,7 @@ export function PlayersTab({ actions, allActions, playerNames, match, teamName, 
                   <td className="text-center">
                     <button
                       onClick={() => exportPlayerPdf(p.number)}
-                      className="min-h-8 px-2 text-xs font-bold rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
+                      className="min-h-8 px-2 text-xs font-bold rounded-lg bg-primary/10 text-orange-800 dark:text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
                       title="Scheda PDF"
                     >📄 PDF</button>
                   </td>
@@ -258,11 +258,11 @@ function AttackPhaseView({ actions, side, playerNames }: { actions: DbAction[]; 
               <td className="text-center border-l border-border/40">{p.K1.total}</td>
               <td className="text-center">{p.K1.total ? p.K1.killPct.toFixed(0) + '%' : '—'}</td>
               <td className="text-center">{p.K1.total ? p.K1.errorPct.toFixed(0) + '%' : '—'}</td>
-              <td className={`text-center font-semibold ${p.K1.efficiency >= 30 ? 'text-emerald-500' : p.K1.efficiency < 0 ? 'text-destructive' : ''}`}>{p.K1.total ? p.K1.efficiency.toFixed(0) + '%' : '—'}</td>
+              <td className={`text-center font-semibold ${p.K1.efficiency >= 30 ? 'text-emerald-700 dark:text-emerald-500' : p.K1.efficiency < 0 ? 'text-destructive' : ''}`}>{p.K1.total ? p.K1.efficiency.toFixed(0) + '%' : '—'}</td>
               <td className="text-center border-l border-border/40">{p.K2.total}</td>
               <td className="text-center">{p.K2.total ? p.K2.killPct.toFixed(0) + '%' : '—'}</td>
               <td className="text-center">{p.K2.total ? p.K2.errorPct.toFixed(0) + '%' : '—'}</td>
-              <td className={`text-center font-semibold ${p.K2.efficiency >= 30 ? 'text-emerald-500' : p.K2.efficiency < 0 ? 'text-destructive' : ''}`}>{p.K2.total ? p.K2.efficiency.toFixed(0) + '%' : '—'}</td>
+              <td className={`text-center font-semibold ${p.K2.efficiency >= 30 ? 'text-emerald-700 dark:text-emerald-500' : p.K2.efficiency < 0 ? 'text-destructive' : ''}`}>{p.K2.total ? p.K2.efficiency.toFixed(0) + '%' : '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -306,7 +306,7 @@ function AttackBreakdownView({ actions, playerNames }: { actions: DbAction[]; pl
                   <td className="text-center">{z.kills}</td>
                   <td className="text-center">{z.errors}</td>
                   <td className="text-center">{z.killPct.toFixed(0)}%</td>
-                  <td className={`text-center font-semibold ${z.efficiency >= 30 ? 'text-emerald-500' : z.efficiency < 0 ? 'text-destructive' : ''}`}>{z.efficiency.toFixed(0)}%</td>
+                  <td className={`text-center font-semibold ${z.efficiency >= 30 ? 'text-emerald-700 dark:text-emerald-500' : z.efficiency < 0 ? 'text-destructive' : ''}`}>{z.efficiency.toFixed(0)}%</td>
                 </tr>
               ))}
             </tbody>
@@ -327,7 +327,7 @@ function AttackBreakdownView({ actions, playerNames }: { actions: DbAction[]; pl
                   <td className="text-center">{t.kills}</td>
                   <td className="text-center">{t.errors}</td>
                   <td className="text-center">{t.killPct.toFixed(0)}%</td>
-                  <td className={`text-center font-semibold ${t.efficiency >= 30 ? 'text-emerald-500' : t.efficiency < 0 ? 'text-destructive' : ''}`}>{t.efficiency.toFixed(0)}%</td>
+                  <td className={`text-center font-semibold ${t.efficiency >= 30 ? 'text-emerald-700 dark:text-emerald-500' : t.efficiency < 0 ? 'text-destructive' : ''}`}>{t.efficiency.toFixed(0)}%</td>
                 </tr>
               ))}
             </tbody>
@@ -367,7 +367,7 @@ function ReceptionXPView({ actions, playerNames }: { actions: DbAction[]; player
               <td className="text-center">{r.positivePct.toFixed(0)}%</td>
               <td className="text-center">{r.errorPct.toFixed(0)}%</td>
               <td className="text-center">{r.xpTotal.toFixed(1)}</td>
-              <td className={`text-center font-bold ${r.xpAverage >= 0.7 ? 'text-emerald-500' : r.xpAverage < 0.4 ? 'text-destructive' : 'text-primary'}`}>{r.xpAverage.toFixed(2)}</td>
+              <td className={`text-center font-bold ${r.xpAverage >= 0.7 ? 'text-emerald-700 dark:text-emerald-500' : r.xpAverage < 0.4 ? 'text-destructive' : 'text-primary'}`}>{r.xpAverage.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
@@ -405,7 +405,7 @@ function ServePressureView({ allActions, teamId, playerNames }: { allActions: Db
               <td className="text-center">{r.errorPct.toFixed(0)}%</td>
               <td className="text-center">{r.receptionsForced}</td>
               <td className="text-center">{r.pressureServes}</td>
-              <td className={`text-center font-bold ${r.pressurePct >= 50 ? 'text-emerald-500' : r.pressurePct < 25 ? 'text-destructive' : 'text-primary'}`}>{r.pressurePct.toFixed(0)}%</td>
+              <td className={`text-center font-bold ${r.pressurePct >= 50 ? 'text-emerald-700 dark:text-emerald-500' : r.pressurePct < 25 ? 'text-destructive' : 'text-primary'}`}>{r.pressurePct.toFixed(0)}%</td>
             </tr>
           ))}
         </tbody>

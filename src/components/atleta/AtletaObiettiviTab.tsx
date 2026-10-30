@@ -165,7 +165,7 @@ export function AtletaObiettiviTab({ athleteId }: { athleteId: string }) {
                 {o.status !== 'completato' ? (
                   <Button variant="ghost" size="icon" title="Segna come completato"
                     onClick={() => setStatus(o.id, 'completato')}>
-                    <Check className="w-4 h-4 text-green-500" />
+                    <Check className="w-4 h-4 text-green-700 dark:text-green-500" />
                   </Button>
                 ) : (
                   <Button variant="ghost" size="icon" title="Riapri"

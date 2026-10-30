@@ -1116,7 +1116,7 @@ function IndividualSection({
         {phase.tecnica_individuale.map((a, idx) => (
           <Card key={a.id} className="p-3 space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-full bg-primary/15 text-orange-800 dark:text-primary flex items-center justify-center font-bold text-xs">
                 {initials(a.atleta_nome)}
               </div>
               <div className="flex-1 min-w-0">

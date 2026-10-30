@@ -87,9 +87,9 @@ export function TeamComparison() {
       </div>
 
       <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 pb-1">
-        <div className="text-right text-blue-400 truncate pr-2">{(homeTeam.name || 'Casa').slice(0, 12)}</div>
+        <div className="text-right text-blue-700 dark:text-blue-400 truncate pr-2">{(homeTeam.name || 'Casa').slice(0, 12)}</div>
         <div className="text-center"></div>
-        <div className="text-left text-red-400 truncate pl-2">{(awayTeam.name || 'Ospite').slice(0, 12)}</div>
+        <div className="text-left text-red-700 dark:text-red-400 truncate pl-2">{(awayTeam.name || 'Ospite').slice(0, 12)}</div>
       </div>
 
       <div className="space-y-1.5">

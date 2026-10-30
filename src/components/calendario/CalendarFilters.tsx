@@ -59,7 +59,7 @@ export function CalendarFilters({
                   key={type.value}
                   className={cn(
                     'flex h-9 cursor-pointer items-center gap-2 border border-border px-3 text-xs font-bold uppercase tracking-wider transition-colors',
-                    checked && 'border-primary bg-primary/10 text-primary',
+                    checked && 'border-primary bg-primary/10 text-orange-800 dark:text-primary',
                   )}
                 >
                   <Checkbox checked={checked} onCheckedChange={() => toggleType(type.value)} />

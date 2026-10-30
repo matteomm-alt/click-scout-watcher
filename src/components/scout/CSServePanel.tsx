@@ -17,7 +17,7 @@ export function CSServePanel({ onShowDirections }: { onShowDirections?: () => vo
       <span className="text-[9px] font-black uppercase tracking-widest opacity-70">Al servizio</span>
       <span className="text-sm font-black truncate max-w-[120px]">{teamName}</span>
       {server != null && (
-        <span className="px-2 py-0.5 rounded bg-[hsl(var(--cs-cta))] text-white text-xs font-black tabular-nums">
+        <span className="px-2 py-0.5 rounded bg-[hsl(var(--cs-cta))] text-[hsl(var(--primary-foreground))] text-xs font-black tabular-nums">
           #{server}
         </span>
       )}

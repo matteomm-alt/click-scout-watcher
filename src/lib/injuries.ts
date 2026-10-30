@@ -67,15 +67,15 @@ export const STATUS_LABEL: Record<InjuryStatus, string> = {
 
 /** Tailwind class per badge di gravità (token semantici). */
 export const SEVERITY_BADGE: Record<InjurySeverity, string> = {
-  lieve: 'bg-yellow-500/15 text-yellow-500 border border-yellow-500/30',
-  media: 'bg-orange-500/15 text-orange-500 border border-orange-500/30',
-  grave: 'bg-destructive/15 text-destructive border border-destructive/30',
+  lieve: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-400 border border-yellow-500/30',
+  media: 'bg-orange-500/15 text-orange-800 dark:text-orange-400 border border-orange-500/30',
+  grave: 'bg-destructive/15 text-red-800 dark:text-red-300 border border-destructive/30',
 };
 
 export const STATUS_BADGE: Record<InjuryStatus, string> = {
-  attivo: 'bg-destructive/15 text-destructive border border-destructive/30',
-  in_recupero: 'bg-orange-500/15 text-orange-500 border border-orange-500/30',
-  risolto: 'bg-green-500/15 text-green-500 border border-green-500/30',
+  attivo: 'bg-destructive/15 text-red-800 dark:text-red-300 border border-destructive/30',
+  in_recupero: 'bg-orange-500/15 text-orange-800 dark:text-orange-400 border border-orange-500/30',
+  risolto: 'bg-green-500/15 text-green-800 dark:text-green-400 border border-green-500/30',
 };
 
 /**
