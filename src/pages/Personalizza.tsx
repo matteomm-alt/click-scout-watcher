@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { PasswordForm } from '@/components/auth/PasswordForm';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -244,6 +245,16 @@ export default function Personalizza() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cambia password</CardTitle>
+          <CardDescription>Imposta una nuova password per il tuo account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PasswordForm submitLabel="Aggiorna password" />
+        </CardContent>
+      </Card>
 
       <p className="text-xs text-muted-foreground text-center">
         I moduli disponibili sono decisi dalla società; qui puoi solo nascondere ciò che non ti serve.
