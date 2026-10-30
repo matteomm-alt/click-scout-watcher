@@ -115,13 +115,15 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
     }
     setSaving(true);
     try {
+      const durOf = (o: Occurrence) =>
+        (o.seduta.blocchi ?? []).reduce((t, b) => t + (Number(b.minuti) || 0), 0) || duration || 90;
       const mkEvent = (o: Occurrence) => ({
         society_id: societyId,
         created_by: userId,
         title: skeleton.name,
         event_type: 'allenamento' as const,
         start_at: o.date.toISOString(),
-        end_at: new Date(o.date.getTime() + (duration || 90) * 60000).toISOString(),
+        end_at: new Date(o.date.getTime() + durOf(o) * 60000).toISOString(),
         location: o.seduta.palestra?.trim() || location.trim() || null,
         description: `Da scheletro: ${skeleton.name}`,
         team_id: skeleton.team_id,
@@ -165,7 +167,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
           team_id: skeleton.team_id,
           title: `${skeleton.name} — ${format(o.date, 'EEE d MMM', { locale: it })}`,
           scheduled_date: format(o.date, 'yyyy-MM-dd'),
-          duration_min: duration || null,
+          duration_min: durOf(o) || null,
           status: 'programmato',
           season: season ?? null,
           is_template: false,

@@ -291,23 +291,26 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
           </div>
           {selectedSkeletonId && (() => {
             const skel = skeletons.find((s) => s.id === selectedSkeletonId);
-            const blocksJson = skel?.blocks as { settimane?: { sedute?: { fondamentale?: string; note?: string; durata_min?: number }[] }[] } | null;
-            const settimane = blocksJson?.settimane ?? [];
+            type Blk = { nome?: string; fondamentali?: string[]; forma?: string; minuti?: number | string };
+            const blocksJson = skel?.blocks as { settimane?: { sedute?: { giorno?: number | null; blocchi?: Blk[] }[] }[] } | null;
+            const sedute = (blocksJson?.settimane ?? []).flatMap((w, wi) =>
+              (w.sedute ?? []).map((sed, si) => ({ wi, si, sed })));
+            const sel = sedute[selectedWeekIndex];
             return (
               <div className="flex flex-col md:flex-row md:items-center gap-3">
-                {settimane.length > 1 && (
+                {sedute.length > 1 && (
                   <>
                     <Label className="text-xs uppercase tracking-wider text-accent font-semibold shrink-0">
-                      Quale settimana
+                      Quale seduta
                     </Label>
                     <Select value={String(selectedWeekIndex)} onValueChange={(v) => setSelectedWeekIndex(Number(v))}>
                       <SelectTrigger className="h-8 flex-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {settimane.map((_, wi) => (
-                          <SelectItem key={wi} value={String(wi)}>
-                            Settimana {wi + 1}{settimane.length === 2 ? (wi === 0 ? ' (A)' : ' (B)') : ''}
+                        {sedute.map((x, i) => (
+                          <SelectItem key={i} value={String(i)}>
+                            Sett. {x.wi + 1} · Seduta {x.si + 1}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -318,23 +321,23 @@ export function TrainingForm({ value, onChange, exercises, teams, athletes, temp
                   size="sm"
                   variant="secondary"
                   onClick={() => {
-                    if (!skel) return;
-                    const sedute = settimane[selectedWeekIndex]?.sedute ?? [];
-                    const newBlocks: BlockDraft[] = sedute.map((s, i) => ({
+                    if (!skel || !sel) return;
+                    const newBlocks: BlockDraft[] = (sel.sed.blocchi ?? []).map((bl, i) => ({
                       key: safeUUID(),
-                      title: s.fondamentale ?? `Blocco ${i + 1}`,
-                      description: s.note ?? '',
+                      title: bl.nome || `Blocco ${i + 1}`,
+                      description: bl.fondamentali?.join(', ') ?? '',
                       exercise_id: null,
-                      duration_min: s.durata_min ?? null,
+                      duration_min: Number(bl.minuti) || null,
                       reps: null,
-                      intensity: null,
+                      intensity: bl.forma ?? null,
                       players_count: null,
-                      roles: [],
+                      roles: bl.fondamentali ?? [],
                     }));
+                    const tot = newBlocks.reduce((t, x) => t + (x.duration_min ?? 0), 0);
                     onChange({
                       ...value,
                       blocks: newBlocks,
-                      ...(skel.total_duration_min ? { duration_min: skel.total_duration_min } : {}),
+                      ...(tot > 0 ? { duration_min: tot } : {}),
                     });
                     toast({ title: '✅ Struttura applicata', description: 'Personalizza i dettagli dei blocchi.' });
                     setSkeletonApplied(true);

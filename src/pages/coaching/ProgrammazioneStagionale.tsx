@@ -74,7 +74,7 @@ interface Phase {
 interface Athlete {
   id: string; first_name: string | null; last_name: string; role: string | null;
 }
-interface SkeletonRow { id: string; name: string; schedule: unknown; }
+interface SkeletonRow { id: string; name: string; schedule: unknown; blocks?: { settimane?: unknown[] } | null; }
 
 interface FondColor { sfondo: string; testo: string; }
 interface CustomFond { id: string; nome: string; colore_sfondo: string; colore_testo: string; }
@@ -504,7 +504,7 @@ export default function ProgrammazioneStagionale() {
       const [{ data: a }, { data: s }] = await Promise.all([
         supabase.from('athletes').select('id, first_name, last_name, role')
           .eq('society_id', societyId).order('last_name'),
-        supabase.from('training_skeletons').select('id, name, schedule')
+        supabase.from('training_skeletons').select('id, name, schedule, blocks')
           .eq('society_id', societyId).order('name'),
       ]);
       setAthletes((a ?? []) as Athlete[]);
@@ -1180,23 +1180,48 @@ function GridEditor({
     if (!sk) { toast.error('Seleziona uno scheletro'); return; }
     const gd = { ...(phase.grid_data ?? {}) };
     const week = { ...(gd[String(weekIdx)] ?? {}) };
-    // schedule shape: { [day]: [{fundamental, note}] } best-effort
-    const sched = (sk.schedule ?? {}) as Record<string, unknown>;
-    for (let d = 0; d < 7; d++) {
-      const raw = (sched[String(d)] ?? sched[DAYS[d]] ?? []) as unknown;
-      if (!Array.isArray(raw)) continue;
-      const blocks: GridBlock[] = raw.map((r) => {
-        const rec = (r ?? {}) as Record<string, unknown>;
-        const f = String(rec.fundamental ?? rec.name ?? rec.title ?? 'Situazionale');
-        const n = rec.note ? String(rec.note) : undefined;
-        return { id: safeUUID(), fundamental: f, note: n };
+    // Nuovo formato: blocks.settimane[w].sedute[{giorno, blocchi[{nome, fondamentali[], minuti}]}]
+    const settimane = ((sk.blocks?.settimane ?? []) as unknown[]) as {
+      sedute?: { giorno?: number | null; blocchi?: { nome?: string; fondamentali?: string[]; minuti?: number | string }[] }[];
+    }[];
+    let imported = 0;
+    if (settimane.length > 0) {
+      const sett = settimane[weekIdx % settimane.length];
+      (sett?.sedute ?? []).forEach((sed) => {
+        if (sed.giorno === null || sed.giorno === undefined || sed.giorno < 0 || sed.giorno > 6) return;
+        const blocks: GridBlock[] = (sed.blocchi ?? []).flatMap((b) => {
+          const fs = b.fondamentali?.length ? b.fondamentali : ['Situazionale'];
+          const note = [b.nome, b.minuti ? `${b.minuti}'` : ''].filter(Boolean).join(' · ') || undefined;
+          return fs.map((f) => ({ id: safeUUID(), fundamental: f, note }));
+        });
+        if (blocks.length > 0) {
+          week[String(sed.giorno)] = [...(week[String(sed.giorno)] ?? []), ...blocks];
+          imported += blocks.length;
+        }
       });
-      if (blocks.length > 0) week[String(d)] = [...(week[String(d)] ?? []), ...blocks];
+    } else {
+      // Formato legacy: schedule { [day]: [{fundamental, note}] }
+      const sched = (sk.schedule ?? {}) as Record<string, unknown>;
+      for (let d = 0; d < 7; d++) {
+        const raw = (sched[String(d)] ?? sched[DAYS[d]] ?? []) as unknown;
+        if (!Array.isArray(raw)) continue;
+        const blocks: GridBlock[] = raw.map((r) => {
+          const rec = (r ?? {}) as Record<string, unknown>;
+          const f = String(rec.fundamental ?? rec.name ?? rec.title ?? 'Situazionale');
+          const n = rec.note ? String(rec.note) : undefined;
+          return { id: safeUUID(), fundamental: f, note: n };
+        });
+        if (blocks.length > 0) {
+          week[String(d)] = [...(week[String(d)] ?? []), ...blocks];
+          imported += blocks.length;
+        }
+      }
     }
+    if (imported === 0) { toast.error('Lo scheletro non ha sedute con giorno e blocchi da importare'); return; }
     gd[String(weekIdx)] = week;
     onChange(gd);
     setImportOpen(null); setImportSkelId('');
-    toast.success('Scheletro importato');
+    toast.success(`Scheletro importato (${imported} blocchi)`);
     void importKeepColors;
   };
 

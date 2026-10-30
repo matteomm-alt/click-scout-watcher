@@ -49,6 +49,7 @@ interface TrainingRow {
   title: string;
   status: string;
   is_template: boolean;
+  team_id: string | null;
 }
 interface BlockRow {
   id: string;
@@ -56,6 +57,7 @@ interface BlockRow {
   exercise_id: string | null;
   duration_min: number | null;
   title: string;
+  roles: string[] | null;
 }
 
 /** Una "unità di volume" calcolata: minuti spesi su un fondamentale/tags in una data */
@@ -67,9 +69,12 @@ interface VolumeUnit {
   source: 'block' | 'training-only';
   trainingTitle: string;
   exerciseName?: string;
+  status: string;
+  teamId: string | null;
 }
 
 const ALL = '__ALL__';
+type VolumeMode = 'svolto' | 'pianificato' | 'tutto';
 
 export default function Volume() {
   const { societyId, societyName, seasonStart, seasonEnd, loading: socLoading } = useActiveSociety();
@@ -86,6 +91,9 @@ export default function Volume() {
   const [fTags, setFTags] = useState<string[]>([]);
   const [fFrom, setFFrom] = useState<string>('');
   const [fTo, setFTo] = useState<string>('');
+  const [fMode, setFMode] = useState<VolumeMode>('svolto');
+  const [fTeam, setFTeam] = useState<string>(ALL);
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [view, setView] = useState<'week' | 'month' | 'season'>('week');
 
   const load = async () => {
@@ -94,18 +102,20 @@ export default function Volume() {
       return;
     }
     setLoading(true);
-    const [exRes, trRes] = await Promise.all([
+    const [exRes, trRes, teamRes] = await Promise.all([
       supabase.from('exercises').select('id, name, fundamental, tags').eq('society_id', societyId),
       supabase
         .from('trainings')
-        .select('id, scheduled_date, duration_min, title, status, is_template')
+        .select('id, scheduled_date, duration_min, title, status, is_template, team_id')
         .eq('society_id', societyId)
         .eq('season', currentSeason)
         .eq('is_template', false)
-        .eq('status', 'completato')
+        .in('status', ['completato', 'programmato'])
         .order('scheduled_date', { ascending: false })
-        .limit(500),
+        .limit(1000),
+      supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
     ]);
+    setTeams((teamRes.data || []) as { id: string; name: string }[]);
     if (exRes.error) toast({ title: 'Errore esercizi', description: exRes.error.message, variant: 'destructive' });
     if (trRes.error) toast({ title: 'Errore allenamenti', description: trRes.error.message, variant: 'destructive' });
 
@@ -115,7 +125,7 @@ export default function Volume() {
       const ids = trainingsList.map((t) => t.id);
       const blRes = await supabase
         .from('training_blocks')
-        .select('id, training_id, exercise_id, duration_min, title')
+        .select('id, training_id, exercise_id, duration_min, title, roles')
         .in('training_id', ids);
       if (blRes.error) toast({ title: 'Errore blocchi', description: blRes.error.message, variant: 'destructive' });
       blocksList = (blRes.data || []) as BlockRow[];
@@ -148,6 +158,8 @@ export default function Volume() {
             tags: [],
             source: 'training-only',
             trainingTitle: t.title,
+            status: t.status,
+            teamId: t.team_id,
           });
         }
         continue;
@@ -163,15 +175,23 @@ export default function Volume() {
         const minutes = b.duration_min ?? perUnknown;
         if (minutes <= 0) continue;
         const ex = b.exercise_id ? exerciseMap.get(b.exercise_id) : null;
-        out.push({
-          date: t.scheduled_date,
-          minutes,
-          fundamental: ex?.fundamental ?? null,
-          tags: ex?.tags ?? [],
-          source: 'block',
-          trainingTitle: t.title,
-          exerciseName: ex?.name,
-        });
+        // Blocco ancora senza esercizio (es. da scheletro): uso i fondamentali pianificati,
+        // dividendo i minuti in parti uguali se sono più di uno.
+        const planned = !ex ? (b.roles ?? []).filter(Boolean) : [];
+        const parts = planned.length > 0 ? planned : [ex?.fundamental ?? null];
+        for (const f of parts) {
+          out.push({
+            date: t.scheduled_date,
+            minutes: minutes / parts.length,
+            fundamental: f,
+            tags: ex?.tags ?? [],
+            source: 'block',
+            trainingTitle: t.title,
+            exerciseName: ex?.name,
+            status: t.status,
+            teamId: t.team_id,
+          });
+        }
       }
     }
     return out;
@@ -193,7 +213,10 @@ export default function Volume() {
   const filteredUnits = useMemo(() => {
     const tagFilters = fTags.map((t) => t.toLowerCase());
     return units.filter((u) => {
-      if (fFund !== ALL && u.fundamental !== fFund) return false;
+      if (fMode === 'svolto' && u.status !== 'completato') return false;
+      if (fMode === 'pianificato' && u.status !== 'programmato') return false;
+      if (fTeam !== ALL && u.teamId !== fTeam) return false;
+      if (fFund !== ALL && (u.fundamental ?? 'Generico') !== fFund) return false;
       if (fFrom && u.date < fFrom) return false;
       if (fTo && u.date > fTo) return false;
       if (tagFilters.length > 0) {
@@ -202,7 +225,7 @@ export default function Volume() {
       }
       return true;
     });
-  }, [units, fFund, fTags, fFrom, fTo]);
+  }, [units, fFund, fTags, fFrom, fTo, fMode, fTeam]);
 
   // ── Aggregazioni KPI ───────────────────────────────────────────────────────
   const totalMinutes = filteredUnits.reduce((s, u) => s + u.minutes, 0);
@@ -330,14 +353,30 @@ export default function Volume() {
             Volume di lavoro
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl">
-            Minuti calcolati automaticamente dagli <strong className="text-foreground">allenamenti completati</strong> di{' '}
-            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag ereditati dagli esercizi nei blocchi.
+            Minuti calcolati automaticamente dagli <strong className="text-foreground">allenamenti {fMode === 'svolto' ? 'completati' : fMode === 'pianificato' ? 'programmati' : 'completati e programmati'}</strong> di{' '}
+            <strong className="text-foreground">{societyName}</strong>. Fondamentali e tag ereditati dagli esercizi nei blocchi; se l'esercizio non è ancora scelto, valgono i fondamentali previsti dallo scheletro.
           </p>
         </div>
       </div>
 
       {/* Filtri */}
       <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Tabs value={fMode} onValueChange={(v) => setFMode(v as VolumeMode)}>
+            <TabsList>
+              <TabsTrigger value="svolto">Svolto</TabsTrigger>
+              <TabsTrigger value="pianificato">Pianificato</TabsTrigger>
+              <TabsTrigger value="tutto">Tutto</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Select value={fTeam} onValueChange={setFTeam}>
+            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Squadra" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Tutte le squadre</SelectItem>
+              {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <Select value={fFund} onValueChange={setFFund}>
             <SelectTrigger><SelectValue placeholder="Fondamentale" /></SelectTrigger>
@@ -356,8 +395,8 @@ export default function Volume() {
             <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} />
           </div>
           <div className="flex items-end">
-            {(fFrom || fTo || fFund !== ALL || fTags.length > 0) && (
-              <Button variant="outline" size="sm" onClick={() => { setFFrom(''); setFTo(''); setFFund(ALL); setFTags([]); }} className="gap-1 w-full">
+            {(fFrom || fTo || fFund !== ALL || fTags.length > 0 || fTeam !== ALL) && (
+              <Button variant="outline" size="sm" onClick={() => { setFFrom(''); setFTo(''); setFFund(ALL); setFTags([]); setFTeam(ALL); }} className="gap-1 w-full">
                 <X className="w-3 h-3" /> Reset filtri
               </Button>
             )}

@@ -83,9 +83,14 @@ function creaSettimane(nSett: number, nSed: number, existing?: Settimana[]): Set
   }));
 }
 
+function sedutaMinuti(s: { blocchi?: { minuti?: number | string }[] }): number {
+  return (s.blocchi ?? []).reduce((t, b) => t + (Number(b.minuti) || 0), 0);
+}
+
+/** Durata media di una seduta (min), su tutte le settimane dello scheletro. */
 function totalMinuti(blocks: StrutturaBlocks): number {
-  return blocks.settimane[0]?.sedute.reduce((tot, s) =>
-    tot + s.blocchi.reduce((t, b) => t + (Number(b.minuti) || 0), 0), 0) || 0;
+  const durate = blocks.settimane.flatMap((w) => w.sedute ?? []).map(sedutaMinuti).filter((m) => m > 0);
+  return durate.length ? Math.round(durate.reduce((a, b) => a + b, 0) / durate.length) : 0;
 }
 
 // ── Componente principale ─────────────────────────────────────────────
@@ -112,6 +117,7 @@ export function StrutturaSettimanaleView() {
   const [cfsDate, setCfsDate] = useState(new Date().toISOString().slice(0, 10));
   const [cfsTeamId, setCfsTeamId] = useState<string>('');
   const [cfsDuration, setCfsDuration] = useState<number>(60);
+  const [cfsSeduta, setCfsSeduta] = useState<string>('0-0');
   const [cfsSaving, setCfsSaving] = useState(false);
 
   // Form state
@@ -299,7 +305,9 @@ export function StrutturaSettimanaleView() {
     if (!createFromSkeleton) return;
     setCfsDate(new Date().toISOString().slice(0, 10));
     setCfsTeamId('');
-    setCfsDuration(createFromSkeleton.total_duration_min ?? 60);
+    setCfsSeduta('0-0');
+    const first = createFromSkeleton.blocks?.settimane?.[0]?.sedute?.[0];
+    setCfsDuration((first && sedutaMinuti(first)) || createFromSkeleton.total_duration_min || 60);
     if (!societyId) return;
     supabase.from('teams').select('id,name').eq('society_id', societyId).order('name')
       .then(({ data }) => setCfsTeams(data ?? []));
@@ -310,9 +318,8 @@ export function StrutturaSettimanaleView() {
     if (!skeleton || !societyId || !user || !cfsDate) return;
     setCfsSaving(true);
     try {
-      const allBlocchi = (skeleton.blocks?.settimane ?? [])
-        .flatMap((sett) => sett.sedute ?? [])
-        .flatMap((sed) => sed.blocchi ?? []);
+      const [cw, cs] = cfsSeduta.split('-').map(Number);
+      const allBlocchi = skeleton.blocks?.settimane?.[cw]?.sedute?.[cs]?.blocchi ?? [];
 
       const { data: training, error } = await supabase
         .from('trainings')
@@ -682,6 +689,26 @@ export function StrutturaSettimanaleView() {
             <DialogTitle>Crea allenamento da {createFromSkeleton?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label>Seduta dello scheletro</Label>
+              <Select value={cfsSeduta} onValueChange={(v) => {
+                setCfsSeduta(v);
+                const [w, i] = v.split('-').map(Number);
+                const sed = createFromSkeleton?.blocks?.settimane?.[w]?.sedute?.[i];
+                if (sed) setCfsDuration(sedutaMinuti(sed) || cfsDuration);
+              }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(createFromSkeleton?.blocks?.settimane ?? []).flatMap((w, wi) =>
+                    (w.sedute ?? []).map((sed, si) => (
+                      <SelectItem key={`${wi}-${si}`} value={`${wi}-${si}`}>
+                        Sett. {wi + 1} · Seduta {si + 1}{sed.giorno != null ? ` (${['Lun','Mar','Mer','Gio','Ven','Sab','Dom'][sed.giorno] ?? ''})` : ''} · {sedutaMinuti(sed)} min
+                      </SelectItem>
+                    )),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label>Data allenamento *</Label>
               <Input type="date" value={cfsDate} onChange={(e) => setCfsDate(e.target.value)} />

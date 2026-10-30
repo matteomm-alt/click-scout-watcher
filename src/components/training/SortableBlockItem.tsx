@@ -193,11 +193,15 @@ export function SortableBlockItem({ block, index, exercises, onChange, onRemove 
                 <SelectTrigger className="h-9"><SelectValue placeholder="Nessuno" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>Nessuno</SelectItem>
-                  {exercises.map((ex) => (
-                    <SelectItem key={ex.id} value={ex.id}>
-                      {ex.name}{ex.fundamental ? ` · ${ex.fundamental}` : ''}
-                    </SelectItem>
-                  ))}
+                  {[...exercises]
+                    .sort((a, b) => Number(!!b.fundamental && block.roles.includes(b.fundamental))
+                      - Number(!!a.fundamental && block.roles.includes(a.fundamental)))
+                    .map((ex) => (
+                      <SelectItem key={ex.id} value={ex.id}>
+                        {ex.fundamental && block.roles.includes(ex.fundamental) ? '★ ' : ''}
+                        {ex.name}{ex.fundamental ? ` · ${ex.fundamental}` : ''}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               {linkedExercise && linkedExercise.tags.length > 0 && (
