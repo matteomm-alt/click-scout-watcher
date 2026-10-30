@@ -7,6 +7,8 @@ import {
 } from '@/lib/tacticalPhases';
 
 // ── Copia identica da matchStore — NON modificare ──────────────────
+const swapSide = (side: 'left' | 'right' | undefined): 'left' | 'right' => (side === 'left' ? 'right' : 'left');
+
 export function applyLiberoAutoSwap(
   lineup: number[],
   team: Team,
@@ -343,6 +345,10 @@ function applyEventInternal(
           setOverPending: true,
         };
       }
+      // Set decisivo: le squadre cambiano campo quando la prima arriva a 8 punti.
+      const prevLeader = Math.max(event.homeScoreBefore, event.awayScoreBefore);
+      const newLeader = Math.max(newHomeScore, newAwayScore);
+      const switchSidesAt8 = state.currentSet === ctx.totalSets && prevLeader < 8 && newLeader === 8;
       const needsRotation = event.servingTeamBefore !== event.team;
       let newHomeLineup = [...event.homeLineupBefore];
       let newAwayLineup = [...event.awayLineupBefore];
@@ -381,6 +387,7 @@ function applyEventInternal(
         homeScore: newHomeScore,
         awayScore: newAwayScore,
         servingTeam: event.team,
+        ...(switchSidesAt8 ? { homeCourtSide: swapSide(state.homeCourtSide) } : {}),
         homeCurrentLineup: newHomeLineup,
         awayCurrentLineup: newAwayLineup,
         homeSetterPosition: newHomeSetterPos,
@@ -427,6 +434,8 @@ function applyEventInternal(
         awayCurrentLineup: event.awayLineupNext,
         homeBenchedMb: event.homeBenchedMbNext,
         awayBenchedMb: event.awayBenchedMbNext,
+        // Cambio campo a ogni set.
+        homeCourtSide: isMatchOver ? state.homeCourtSide : swapSide(state.homeCourtSide),
         ...(!isMatchOver && nextFirstServer
           ? {
               servingTeam: nextFirstServer,
