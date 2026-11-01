@@ -191,3 +191,65 @@ describe('matchStore — sorteggio set decisivo', () => {
     expect(ms.homeCourtSide).toBe(side === 'left' ? 'right' : 'left');
   });
 });
+
+describe('matchStore — sostituzioni (limite 8, libero escluso, un solo partner)', () => {
+  const bigRoster: Player[] = [
+    ...roster,
+    mkPlayer(8, 'O'), mkPlayer(9, 'O'), mkPlayer(10, 'M'), mkPlayer(11, 'OP'),
+    mkPlayer(12, 'S'), mkPlayer(13, 'O'), mkPlayer(14, 'M'), mkPlayer(15, 'O'),
+    mkPlayer(16, 'O'), mkPlayer(17, 'O'),
+  ];
+  beforeEach(() => {
+    const s = useMatchStore.getState();
+    s.resetMatch();
+    s.setHomeTeam({ players: bigRoster });
+    s.setAwayTeam({ players: roster.map((p) => ({ ...p, id: `a${p.number}` })) });
+    s.setHomeLineup(lineup);
+    s.setAwayLineup({ ...lineup, p1: 'a1', p2: 'a5', p3: 'a2', p4: 'a6', p5: 'a4', p6: 'a3', libero1: 'a7', setter: 'a1' });
+    s.startMatch();
+  });
+  const used = () => useMatchStore.getState().matchState.homeSubstitutionsUsed;
+  const onCourt = () => useMatchStore.getState().matchState.homeCurrentLineup;
+
+  it('permette 8 sostituzioni (4 coppie, uscita e rientro) e blocca la nona', () => {
+    const st = () => useMatchStore.getState();
+    const starters = onCourt().filter((n) => n !== 7).slice(0, 5);
+    expect(starters.length).toBe(5);
+    const bench = [8, 9, 10, 11, 12];
+    for (let i = 0; i < 4; i++) {
+      st().substitutePlayer('home', starters[i], bench[i]);
+      st().substitutePlayer('home', bench[i], starters[i]);
+    }
+    expect(used()).toBe(8);
+    // nona sostituzione: bloccata dal limite
+    st().substitutePlayer('home', starters[4], bench[4]);
+    expect(used()).toBe(8);
+    expect(onCourt()).toContain(starters[4]);
+  });
+
+  it('un giocatore non può sostituirne due diversi', () => {
+    const st = () => useMatchStore.getState();
+    st().substitutePlayer('home', 4, 8);
+    expect(used()).toBe(1);
+    // 8 è in campo per 4: non può uscire per 9, ma può essere sostituito da 4
+    st().substitutePlayer('home', 8, 9);
+    expect(used()).toBe(1);
+    // 4 non può sostituire un altro giocatore
+    st().substitutePlayer('home', 5, 4);
+    expect(used()).toBe(1);
+    st().substitutePlayer('home', 8, 4);
+    expect(used()).toBe(2);
+    expect(onCourt()).toContain(4);
+  });
+
+  it('le sostituzioni del libero non contano nel limite', () => {
+    const st = () => useMatchStore.getState();
+    // il libero (7) entra al posto di un giocatore di seconda linea e poi esce
+    const back = onCourt().find((n) => n === 3 || n === 2);
+    expect(back).toBeDefined();
+    const before = used();
+    st().substitutePlayer('home', onCourt()[4], 7);
+    st().substitutePlayer('home', 7, onCourt()[4] ?? 4);
+    expect(used()).toBe(before);
+  });
+});

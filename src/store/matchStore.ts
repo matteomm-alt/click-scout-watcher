@@ -1,3 +1,4 @@
+import { MAX_SUBSTITUTIONS, substitutionPartners, pairAllowed, countsTowardsLimit } from '@/lib/substitutions';
 import { safeUUID } from '@/lib/utils';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -482,9 +483,18 @@ export const useMatchStore = create<MatchStore>()(
             localStorage.getItem('scout_settings') || '{}',
           ).sostituzioniLibere;
         } catch { /* ignore */ }
-        if (!libere && matchState[usedKey] >= 6) {
-          toast.error('Limite sostituzioni raggiunto (6/6)');
+        const subPlayers = (team === 'home' ? get().homeTeam : get().awayTeam).players;
+        const counts = countsTowardsLimit(subPlayers, outNumber, inNumber);
+        if (!libere && counts && matchState[usedKey] >= MAX_SUBSTITUTIONS) {
+          toast.error(`Limite sostituzioni raggiunto (${MAX_SUBSTITUTIONS}/${MAX_SUBSTITUTIONS})`);
           return;
+        }
+        if (!libere && counts) {
+          const partners = substitutionPartners(get().events, team, matchState.currentSet, subPlayers);
+          if (!pairAllowed(partners, outNumber, inNumber)) {
+            toast.error(`#${inNumber} non può sostituire #${outNumber}: ogni giocatore può cambiare con un solo compagno`);
+            return;
+          }
         }
         // Il centrale sostituito dal libero è, per regolamento, ancora "in campo":
         // non può rientrare al posto di un altro giocatore (si corromperebbe la formazione).
@@ -505,7 +515,7 @@ export const useMatchStore = create<MatchStore>()(
           setNumber: matchState.currentSet,
           homeScore: matchState.homeScore,
           awayScore: matchState.awayScore,
-          countTowardsLimit: !libere,
+          countTowardsLimit: !libere && counts,
         };
         set((s) => addEventAndApply(s, event));
       },
@@ -536,9 +546,17 @@ export const useMatchStore = create<MatchStore>()(
             localStorage.getItem('scout_settings') || '{}',
           ).sostituzioniLibere;
         } catch { /* ignore */ }
-        if (!libere && matchState[usedKey] >= 5) {
+        if (!libere && matchState[usedKey] >= MAX_SUBSTITUTIONS - 1) {
           toast.error('Sostituzioni insufficienti per doppio cambio');
           return;
+        }
+        if (!libere) {
+          const partners = substitutionPartners(get().events, team, matchState.currentSet, teamData.players);
+          if (!pairAllowed(partners, setterOnCourt, reserveOpp.number)
+            || !pairAllowed(partners, oppOnCourt, reserveSetter.number)) {
+            toast.error('Doppio cambio non consentito: un giocatore ha già cambiato con un altro compagno');
+            return;
+          }
         }
         const base = {
           timestamp: nowTime(),

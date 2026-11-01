@@ -1,3 +1,4 @@
+import { substitutionPartners, pairAllowed } from '@/lib/substitutions';
 import { autoPointWinner } from '@/lib/autoPoint';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, Zap, FileText } from 'lucide-react';
@@ -1136,8 +1137,9 @@ function SubstitutionPicker({
   onPickOut: (n: number) => void;
   onPickIn: (n: number) => void;
 }) {
-  const { homeTeam, awayTeam, matchState } = useMatchStore();
+  const { homeTeam, awayTeam, matchState, events } = useMatchStore();
   const teamData = team === 'home' ? homeTeam : awayTeam;
+  const partners = substitutionPartners(events, team, matchState.currentSet, teamData.players);
   const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
   const onCourt = lineup.map((n) => {
     const p = teamData.players.find((pp) => pp.number === n);
@@ -1149,6 +1151,8 @@ function SubstitutionPicker({
     .filter((p) => !lineup.includes(p.number) && !p.isLibero)
     // il centrale rimpiazzato dal libero non è disponibile come subentrante
     .filter((p) => outIsLibero || p.number !== benchedMb)
+    // un giocatore può cambiare con un solo compagno (salvo il libero, che non conta)
+    .filter((p) => outIsLibero || outNumber == null || pairAllowed(partners, outNumber, p.number))
     .sort((a, b) => a.number - b.number);
 
   return (
