@@ -43,6 +43,10 @@ export interface TouchEvent extends BaseEvent {
   endZone?: number;
   attackCode?: string;
   landingZone?: number;
+  // Coordinate reali (0..1, formato Data Volley), opzionali: vedi lib/courtCoords.ts
+  startX?: number; startY?: number;
+  endX?: number; endY?: number;
+  landingX?: number; landingY?: number;
   serveType?: ServeType;
   setNumber: number;
   homeScore: number;

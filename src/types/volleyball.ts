@@ -172,6 +172,10 @@ export interface ScoutAction {
   // palleggiatore in SetDistribution.tsx, da non alterare). Opzionale,
   // popolato solo quando l'operatore attiva la selezione manuale.
   landingZone?: number;
+  // Coordinate reali (0..1, formato Data Volley), opzionali: vedi lib/courtCoords.ts
+  startX?: number; startY?: number;
+  endX?: number; endY?: number;
+  landingX?: number; landingY?: number;
   attackCode?: string;
   serveType?: ServeType;
   setNumber: number;

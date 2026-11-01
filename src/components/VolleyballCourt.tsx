@@ -79,7 +79,7 @@ interface VolleyballCourtProps {
 
   /** Overlay zone cliccabili sopra al campo (per step zona post-azione) */
   selectedZone?: number | null;
-  onZoneClick?: (zone: number, team: 'home' | 'away') => void;
+  onZoneClick?: (zone: number, team: 'home' | 'away', point?: { x: number; y: number }) => void;
   /** Squadra su cui mostrare l'overlay zone (default: entrambe) */
   zoneSelectTeam?: 'home' | 'away';
   /** Skill in corso di selezione zona (per banner contestuale) */
@@ -257,8 +257,9 @@ export function VolleyballCourt({
               const rect = e.currentTarget.getBoundingClientRect();
               const xPct = ((e.clientX - rect.left) / rect.width) * 100;
               const yPct = ((e.clientY - rect.top) / rect.height) * 100;
-              const zone = nearestZone(team, { x: mx(xPct), y: my(yPct) });
-              onZoneClick?.(zone, team);
+              const point = { x: mx(xPct), y: my(yPct) };
+              const zone = nearestZone(team, point);
+              onZoneClick?.(zone, team, point);
             }}
             aria-label="Tocca un punto del campo per selezionare la zona"
           />

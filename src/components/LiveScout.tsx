@@ -1,5 +1,6 @@
 import { substitutionPartners, pairAllowed } from '@/lib/substitutions';
 import { autoPointWinner } from '@/lib/autoPoint';
+import { toCourtPoint } from '@/lib/courtCoords';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, Zap, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -412,7 +413,8 @@ export function LiveScout() {
     setSuggestion(nextSugg.skill ? { ...nextSugg, playerNumber: suggestedPlayerNumber } : null);
   };
 
-  const handleZoneSelect = (zone: number) => {
+  const handleZoneSelect = (zone: number, courtTeam?: 'home' | 'away', point?: { x: number; y: number }) => {
+    const coords = point ? toCourtPoint(courtTeam ?? pendingTeam ?? 'home', point) : null;
     if (pendingActionId) {
       const zs = zoneSkill ?? pendingSkill;
       if (zs === 'A') {
@@ -420,13 +422,13 @@ export function LiveScout() {
         // dell'attaccante, già impostata al momento del tocco — non
         // sovrascritta qui, per non alterare la distribuzione del
         // palleggiatore che dipende da quella).
-        updateAction(pendingActionId, { landingZone: zone });
+        updateAction(pendingActionId, { landingZone: zone, ...(coords ? { landingX: coords.x, landingY: coords.y } : {}) });
       } else if (zs === 'S') {
         // Zona di atterraggio della battuta, fissata manualmente sul campo di chi
         // riceve. Il giocatore che ha ricevuto si assegna toccandolo normalmente:
         // la sua azione R avrà una propria zona dedotta dalla sua posizione,
         // indipendente da questa (che resta quella scelta qui per la battuta).
-        updateAction(pendingActionId, { endZone: zone });
+        updateAction(pendingActionId, { endZone: zone, ...(coords ? { endX: coords.x, endY: coords.y } : {}) });
         toast.success(`Zona di atterraggio ${zone} registrata — ora tocca il giocatore che ha ricevuto`, { duration: 2200 });
         setSuggestion({ skill: 'R', team: pendingTeam!, playerNumber: null });
         setZoneSelectMode(false);
@@ -436,7 +438,7 @@ export function LiveScout() {
         setPendingTeam(null);
         return;
       } else {
-        updateAction(pendingActionId, { startZone: zone });
+        updateAction(pendingActionId, { startZone: zone, ...(coords ? { startX: coords.x, startY: coords.y } : {}) });
       }
       toast.success(`Zona ${zone} registrata`, { duration: 1200 });
     }
@@ -508,6 +510,9 @@ export function LiveScout() {
       away_setter_pos: a.awaySetterPosition ?? null,
       serving_side: a.servingTeam ?? null,
       landing_zone: a.landingZone ?? null,
+      start_x: a.startX ?? null, start_y: a.startY ?? null,
+      end_x: a.endX ?? null, end_y: a.endY ?? null,
+      landing_x: a.landingX ?? null, landing_y: a.landingY ?? null,
       timestamp_clock: a.timestamp ?? null,
     }));
     const mapPlayers = (team: typeof homeTeam, teamId: string) =>
@@ -803,7 +808,7 @@ export function LiveScout() {
               selectedPlayer={selectedPlayer}
               recentActionPlayer={recentActionPlayer}
               selectedZone={null}
-              onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
+              onZoneClick={zoneSelectMode ? (z, t, p) => handleZoneSelect(z, t, p) : undefined}
               zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
               zoneSelectSkill={zoneSelectMode ? (zoneSkill ?? pendingSkill) : undefined}
             />
@@ -942,7 +947,7 @@ export function LiveScout() {
             selectedPlayer={selectedPlayer}
             recentActionPlayer={recentActionPlayer}
             selectedZone={null}
-            onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
+            onZoneClick={zoneSelectMode ? (z, t, p) => handleZoneSelect(z, t, p) : undefined}
             zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
           />
         </div>

@@ -60,6 +60,9 @@ interface MatchStore {
     endZone?: number | null;
     attackCode?: string | null;
     landingZone?: number | null;
+    startX?: number | null; startY?: number | null;
+    endX?: number | null; endY?: number | null;
+    landingX?: number | null; landingY?: number | null;
   }) => void;
   deleteAction: (id: string) => void;
   setSingleTeamMode: (v: boolean) => void;
@@ -337,6 +340,8 @@ export const useMatchStore = create<MatchStore>()(
               ? { attackCode: updates.attackCode ?? undefined } : {}),
             ...(updates.landingZone !== undefined
               ? { landingZone: updates.landingZone ?? undefined } : {}),
+            ...(['startX', 'startY', 'endX', 'endY', 'landingX', 'landingY'] as const).reduce(
+              (acc, k) => (updates[k] !== undefined ? { ...acc, [k]: updates[k] ?? undefined } : acc), {}),
           } as TouchEvent;
         });
         set((s) => replaceEventsAndReplay(s, newEvents));
