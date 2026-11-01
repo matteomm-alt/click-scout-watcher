@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, UserCircle, HeartPulse, Star, ClipboardCheck,
-  Phone, Mail, AlertTriangle, FileText, Dumbbell, BarChart2, Target,
+  Phone, Mail, AlertTriangle, FileText, Dumbbell, BarChart2, Target, FolderCog,
 } from 'lucide-react';
 import { AtletaAllenamentiTab } from '@/components/atleta/AtletaAllenamentiTab';
 import { AtletaScoutTab } from '@/components/atleta/AtletaScoutTab';
+import { AtletaAmministrazioneTab } from '@/components/atleta/AtletaAmministrazioneTab';
 import { AtletaObiettiviTab } from '@/components/atleta/AtletaObiettiviTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -233,7 +234,7 @@ export default function AtletaDetail() {
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-3 md:grid-cols-7 w-full md:w-auto">
+        <TabsList className="grid grid-cols-3 md:grid-cols-8 w-full md:w-auto h-auto">
           <TabsTrigger value="info" className="gap-2"><UserCircle className="w-4 h-4" />Info</TabsTrigger>
           <TabsTrigger value="objectives" className="gap-2"><Target className="w-4 h-4" />Obiettivi</TabsTrigger>
           <TabsTrigger value="evals" className="gap-2"><Star className="w-4 h-4" />Valutazioni</TabsTrigger>
@@ -248,6 +249,7 @@ export default function AtletaDetail() {
               </Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="admin" className="gap-2"><FolderCog className="w-4 h-4" />Amministrazione</TabsTrigger>
         </TabsList>
 
         {/* OBIETTIVI */}
@@ -258,6 +260,11 @@ export default function AtletaDetail() {
         {/* ALLENAMENTI */}
         <TabsContent value="trainings" className="mt-4">
           <AtletaAllenamentiTab athleteId={id!} active={tab === 'trainings'} />
+        </TabsContent>
+
+        {/* AMMINISTRAZIONE (riservata agli amministratori) */}
+        <TabsContent value="admin" className="mt-4">
+          <AtletaAmministrazioneTab athleteId={id!} medicalCertExpiry={athlete.medical_cert_expiry} active={tab === 'admin'} />
         </TabsContent>
 
         {/* SCOUT */}

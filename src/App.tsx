@@ -29,6 +29,7 @@ const OAuthConsent = lazy(() => import("./pages/OAuthConsent.tsx"));
 // Gestionale
 const Calendario = lazy(() => import("./pages/gestionale/Calendario.tsx"));
 const Presenze = lazy(() => import("./pages/gestionale/Presenze.tsx"));
+const Scadenze = lazy(() => import("./pages/gestionale/Scadenze.tsx"));
 const Convocazioni = lazy(() => import("./pages/gestionale/Convocazioni.tsx"));
 const Comunicazioni = lazy(() => import("./pages/gestionale/Comunicazioni.tsx"));
 const Magazzino = lazy(() => import("./pages/gestionale/Magazzino.tsx"));
@@ -159,6 +160,7 @@ const App = () => (
                   {/* Gestionale */}
                   <Route path="/calendario" element={<Calendario />} />
                   <Route path="/presenze" element={<Presenze />} />
+                  <Route path="/scadenze" element={<Scadenze />} />
                   <Route path="/convocazioni" element={<Convocazioni />} />
                   <Route path="/comunicazioni" element={<Comunicazioni />} />
                   <Route path="/magazzino" element={<Magazzino />} />

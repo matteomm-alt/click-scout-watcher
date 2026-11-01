@@ -3,7 +3,7 @@ import {
   Home, FileUp, Activity, Library,
   Calendar, ClipboardCheck, ListChecks, Megaphone, Package,
   Dumbbell, ClipboardList, LayoutTemplate, GitBranch, BarChart3, Target, LayoutGrid, BookOpen,
-  PieChart, UserCircle, Star, HeartPulse, Shield, Boxes, FileSpreadsheet,
+  CalendarClock, PieChart, UserCircle, Star, HeartPulse, Shield, Boxes, FileSpreadsheet,
 } from 'lucide-react';
 import type { FeatureKey } from '@/lib/societyFeatures';
 
@@ -93,6 +93,7 @@ export const BLOCKS: Record<BlockId, BlockDef> = {
       { title: 'Presenze', url: '/presenze', icon: ClipboardCheck, badgeKey: 'presenze' },
       { title: 'Convocazioni', url: '/convocazioni', icon: ListChecks, badgeKey: 'convocazioni' },
       { title: 'Comunicazioni', url: '/comunicazioni', icon: Megaphone, feature: 'communications', badgeKey: 'comunicazioni' },
+      { title: 'Scadenze', url: '/scadenze', icon: CalendarClock, feature: 'athletes' },
       { title: 'Magazzino', url: '/magazzino', icon: Package, feature: 'athletes' },
       { title: 'Inventario', url: '/inventario', icon: Boxes, feature: 'athletes' },
       { title: 'Import Excel', url: '/importa-dati', icon: FileSpreadsheet },
