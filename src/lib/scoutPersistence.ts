@@ -7,8 +7,10 @@ import type { MatchState, MatchInfo, Team, ScoutAction } from '@/types/volleybal
  * Responsabilità:
  *  1. risolvere/creare le righe `scout_teams` per home/away (per coach_id),
  *  2. creare la riga `scout_matches` UNA SOLA VOLTA per sessione (upsert id),
- *  3. inserire incrementalmente le nuove azioni in `scout_actions`,
- *     senza re-inviare quelle gia' salvate.
+ *  3. salvare le azioni in `scout_actions` con upsert per id (l'id e' quello locale):
+ *     si re-inviano solo le azioni nuove o MODIFICATE dopo l'invio (zone, valutazione
+ *     corretta dalla correlazione automatica, coordinate), cosi' il database non
+ *     resta indietro rispetto a quello che si vede nello scout.
  *
  * Tutto best-effort: gli errori sono loggati, mai rilanciati, cosi' lo scout
  * resta utilizzabile offline. Lo stato di "cosa abbiamo gia' inviato" e' in
@@ -22,7 +24,8 @@ interface SessionCache {
   homeTeamId: string;
   awayTeamId: string;
   matchEnsured: boolean;
-  sentActionIds: Set<string>;
+  /** id azione -> firma della riga inviata (per re-inviare solo se cambia). */
+  sentActions: Map<string, string>;
 }
 
 const sessionCache = new Map<string, SessionCache>();
@@ -71,7 +74,7 @@ async function ensureSession(
     homeTeamId,
     awayTeamId,
     matchEnsured: false,
-    sentActionIds: cached?.sentActionIds ?? new Set<string>(),
+    sentActions: cached?.sentActions ?? new Map<string, string>(),
   };
   sessionCache.set(sessionId, entry);
   return entry;
@@ -134,9 +137,11 @@ export async function upsertScoutSession(
       c.actionByRally.set(rallyKey, actionIndex + 1);
       perSet.set(a.setNumber, c);
 
-      if (sess.sentActionIds.has(a.id)) continue;
-
-      rows.push(buildActionRow(sessionId, sess, a, rallyIndex, actionIndex));
+      const row = buildActionRow(sessionId, sess, a, rallyIndex, actionIndex);
+      const { _localId, ...payload } = row;
+      const sig = JSON.stringify(payload);
+      if (sess.sentActions.get(a.id) === sig) continue;
+      rows.push({ ...row, _sig: sig });
     }
 
     if (rows.length === 0) return;
@@ -144,16 +149,15 @@ export async function upsertScoutSession(
     // Batch insert (RLS verifica match->coach_id).
     const BATCH = 200;
     for (let i = 0; i < rows.length; i += BATCH) {
-      const slice = rows.slice(i, i + BATCH).map(({ _localId, ...rest }) => rest);
-      const { error } = await sb.from('scout_actions').insert(slice);
+      const slice = rows.slice(i, i + BATCH).map(({ _localId, _sig, ...rest }) => rest);
+      const { error } = await sb.from('scout_actions').upsert(slice, { onConflict: 'id' });
       if (error) {
         console.warn('[scoutPersistence] actions insert failed', error);
         return; // non marcare come inviate, riproveremo al prossimo flush
       }
     }
     for (const r of rows) {
-      const id = r._localId as string;
-      sess.sentActionIds.add(id);
+      sess.sentActions.set(r._localId as string, r._sig as string);
     }
   } catch (err) {
     console.warn('[scoutPersistence] save failed:', err);
@@ -168,7 +172,8 @@ function buildActionRow(
   actionIndex: number,
 ): Record<string, unknown> {
   return {
-    _localId: a.id, // stripped before insert
+    _localId: a.id, // stripped before upsert
+    id: a.id,
     scout_match_id: sessionId,
     scout_team_id: a.team === 'home' ? sess.homeTeamId : sess.awayTeamId,
     side: a.team,

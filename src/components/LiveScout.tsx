@@ -162,16 +162,32 @@ export function LiveScout() {
     });
   }, [matchState.homeScore, matchState.awayScore]);
 
-  // Salvataggio automatico su Supabase ogni 5 azioni (best-effort).
+  // Salvataggio automatico su Supabase (best-effort): al più ogni 8 secondi se è cambiato
+  // qualcosa. Si guarda il CONTENUTO delle azioni, non solo quante sono: zone, coordinate e
+  // valutazioni (corrette dalla correlazione automatica) arrivano dopo l'inserimento dell'azione.
+  const actionsSignature = useMemo(
+    () => matchState.actions.map((a) => [
+      a.id, a.evaluation, a.startZone, a.endZone, a.landingZone,
+      a.startX, a.startY, a.endX, a.endY, a.landingX, a.landingY, a.attackCode,
+    ].join('|')).join(';'),
+    [matchState.actions],
+  );
+  const flushTimerRef = useRef<number | null>(null);
+  const latestRef = useRef({ matchInfo, homeTeam, awayTeam, matchState });
+  latestRef.current = { matchInfo, homeTeam, awayTeam, matchState };
   useEffect(() => {
     if (!user || matchState.actions.length === 0) return;
-    if (matchState.actions.length % 5 !== 0) return;
-    upsertScoutSession(
-      sessionIdRef.current, user.id,
-      matchInfo, homeTeam, awayTeam, matchState,
-    );
+    if (flushTimerRef.current !== null) return;
+    flushTimerRef.current = window.setTimeout(() => {
+      flushTimerRef.current = null;
+      const cur = latestRef.current;
+      upsertScoutSession(sessionIdRef.current, user.id, cur.matchInfo, cur.homeTeam, cur.awayTeam, cur.matchState);
+    }, 8000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchState.actions.length]);
+  }, [actionsSignature, user]);
+  useEffect(() => () => {
+    if (flushTimerRef.current !== null) window.clearTimeout(flushTimerRef.current);
+  }, []);
 
   // Heatmap & live arrows — conteggi separati per squadra: ogni azione viene
   // disegnata sulla metà di campo della propria squadra (le zone sono già in
