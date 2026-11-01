@@ -42,14 +42,14 @@ export function CSLiveString() {
 
   if (rallyActions.length === 0) {
     return (
-      <div className="px-3 py-1.5 font-mono text-[11px] text-muted-foreground border-t border-border bg-secondary/20 truncate">
+      <div className="px-3 py-1.5 font-mono text-xs text-muted-foreground border-t border-border bg-secondary/20 truncate">
         — In attesa della prima azione —
       </div>
     );
   }
 
   return (
-    <div className="px-3 py-1.5 font-mono text-[11px] border-t border-border bg-secondary/20 overflow-x-auto whitespace-nowrap">
+    <div className="px-3 py-1.5 font-mono text-xs border-t border-border bg-secondary/20 overflow-x-auto whitespace-nowrap">
       <span className="text-muted-foreground mr-2 font-black uppercase">DVW:</span>
       {rallyActions.map((a, i) => {
         const code = toDvwCode(a);

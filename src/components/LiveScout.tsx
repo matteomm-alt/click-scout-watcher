@@ -1124,7 +1124,7 @@ export function LiveScout() {
 function ActionLog({ actions }: { actions: ScoutAction[] }) {
   return (
     <>
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
         Ultime azioni ({actions.length})
       </div>
       <div className="space-y-1">
@@ -1146,11 +1146,11 @@ function ActionLog({ actions }: { actions: ScoutAction[] }) {
               {a.evaluation}
             </span>
             {(a.startZone || a.endZone) && (
-              <span className="text-primary/60 text-[10px] font-mono">
+              <span className="text-primary/60 text-xs font-mono">
                 {a.startZone || '?'}→{a.endZone || '?'}
               </span>
             )}
-            <span className="text-muted-foreground ml-auto text-[10px]">{a.timestamp}</span>
+            <span className="text-muted-foreground ml-auto text-xs">{a.timestamp}</span>
           </div>
         ))}
       </div>

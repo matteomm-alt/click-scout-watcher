@@ -131,12 +131,12 @@ export default function Inventario() {
                     }`}
                   >
                     <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <span className="text-[11px] font-black text-primary">{a.number ?? '—'}</span>
+                      <span className="text-xs font-black text-primary">{a.number ?? '—'}</span>
                     </div>
                     <span className="flex-1 text-sm font-semibold truncate">
                       {a.last_name}{a.first_name ? ` ${a.first_name.charAt(0)}.` : ''}
                     </span>
-                    {c > 0 && <Badge variant="secondary" className="text-[10px]">{c}</Badge>}
+                    {c > 0 && <Badge variant="secondary" className="text-xs">{c}</Badge>}
                   </button>
                 );
               })}
@@ -168,15 +168,15 @@ export default function Inventario() {
 
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Articoli</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Articoli</p>
                     <p className="text-xl font-black">{active.length}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Restituiti</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Restituiti</p>
                     <p className="text-xl font-black text-muted-foreground">{returned.length}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Totale storico</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Totale storico</p>
                     <p className="text-xl font-black">{athleteAssignments.length}</p>
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function Inventario() {
                       <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-md bg-muted/30 border border-border/40">
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{a.inventory_items?.name ?? '—'}</p>
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {a.inventory_items?.category ?? 'Altro'} · consegnato {new Date(a.assigned_at).toLocaleDateString('it-IT')}
                           </p>
                         </div>
@@ -236,7 +236,7 @@ export default function Inventario() {
                         <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-md opacity-60">
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate line-through">{a.inventory_items?.name ?? '—'}</p>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               Consegnato {new Date(a.assigned_at).toLocaleDateString('it-IT')} · restituito {a.returned_at ? new Date(a.returned_at).toLocaleDateString('it-IT') : '—'}
                             </p>
                           </div>

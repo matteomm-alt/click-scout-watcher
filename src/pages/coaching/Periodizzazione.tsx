@@ -181,7 +181,7 @@ export default function Periodizzazione() {
 
               {/* Asse settimane */}
               <div
-                className="grid mb-2 text-[9px] text-muted-foreground"
+                className="grid mb-2 text-xs text-muted-foreground"
                 style={{ gridTemplateColumns: `repeat(${grid.totalWeeks}, minmax(28px, 1fr))` }}
               >
                 {Array.from({ length: grid.totalWeeks }).map((_, i) => {
@@ -201,7 +201,7 @@ export default function Periodizzazione() {
                   <div key={phase.id} className="grid items-center gap-0"
                     style={{ gridTemplateColumns: `repeat(${grid.totalWeeks}, minmax(28px, 1fr))` }}>
                     <div
-                      className={`${PHASE_COLOR[phase.name] ?? 'bg-muted'} ${LOAD_HEIGHT[phase.load_level ?? 'medio'] ?? 'h-10'} rounded flex items-center px-2 text-[10px] font-bold uppercase text-background shadow-md cursor-pointer transition-transform hover:scale-[1.02]`}
+                      className={`${PHASE_COLOR[phase.name] ?? 'bg-muted'} ${LOAD_HEIGHT[phase.load_level ?? 'medio'] ?? 'h-10'} rounded flex items-center px-2 text-xs font-bold uppercase text-background shadow-md cursor-pointer transition-transform hover:scale-[1.02]`}
                       style={{ gridColumn: `${startWeek + 1} / span ${widthWeeks}` }}
                       onMouseEnter={(e) => setHoveredPhase({
                         name: phase.name,
@@ -244,10 +244,10 @@ export default function Periodizzazione() {
                     <div className={`w-2 h-8 rounded ${PHASE_COLOR[ph.name] ?? 'bg-muted'}`} />
                     <div>
                       <p className={`font-bold uppercase italic ${PHASE_TEXT[ph.name] ?? ''}`}>{ph.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{ph.start_date} → {ph.end_date}</p>
+                      <p className="text-xs text-muted-foreground">{ph.start_date} → {ph.end_date}</p>
                     </div>
                   </div>
-                  {ph.load_level && <Badge variant="outline" className="text-[10px] mb-2">Carico: {ph.load_level}</Badge>}
+                  {ph.load_level && <Badge variant="outline" className="text-xs mb-2">Carico: {ph.load_level}</Badge>}
                   {ph.goals && <p className="text-xs text-muted-foreground line-clamp-3">{ph.goals}</p>}
                 </Card>
               ))}

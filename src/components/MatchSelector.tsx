@@ -106,10 +106,10 @@ export function MatchSelector({ currentMatchId, selectedIds, onChange }: Props) 
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground truncate">
                       {m.home_team.name} <span className="text-primary">{m.home_sets_won}-{m.away_sets_won}</span> {m.away_team.name}
-                      <span className="ml-1 text-[10px] text-muted-foreground">· {m.action_count ?? 0} az.</span>
-                      {isCurrent && <span className="ml-1 text-[10px] text-primary opacity-60">(corrente)</span>}
+                      <span className="ml-1 text-xs text-muted-foreground">· {m.action_count ?? 0} az.</span>
+                      {isCurrent && <span className="ml-1 text-xs text-primary opacity-60">(corrente)</span>}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{m.match_date || '—'} · {m.league || ''}</p>
+                    <p className="text-xs text-muted-foreground">{m.match_date || '—'} · {m.league || ''}</p>
                   </div>
                 </button>
               );

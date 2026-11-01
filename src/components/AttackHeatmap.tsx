@@ -164,7 +164,7 @@ export function AttackHeatmap({ team: initialTeam = 'all' }: AttackHeatmapProps)
         ))}
       </div>
 
-      <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
         <span className="uppercase tracking-wider">Bassa</span>
         <div
           className="flex-1 h-2.5 rounded-full"

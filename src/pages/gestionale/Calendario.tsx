@@ -559,7 +559,7 @@ export default function Calendario() {
             Calendario
           </h1>
           {isAdmin && (
-            <Badge variant="outline" className="mt-2 text-[10px] uppercase tracking-wider">
+            <Badge variant="outline" className="mt-2 text-xs uppercase tracking-wider">
               Admin · Vedi eventi di tutti i coach
             </Badge>
           )}
@@ -846,7 +846,7 @@ export default function Calendario() {
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Le nuove date vengono applicate al salvataggio (scegli "Solo questo evento" se fa parte di una serie).
                 </p>
               </div>
@@ -908,7 +908,7 @@ export default function Calendario() {
                     </div>
 
                     {recurrenceDates.length > 0 && (
-                      <div className="space-y-1 text-[11px]">
+                      <div className="space-y-1 text-xs">
                         <p className="text-muted-foreground uppercase tracking-wider font-bold">
                           Anteprima ({recurrenceDates.length + 1} eventi totali):
                         </p>

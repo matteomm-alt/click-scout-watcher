@@ -84,11 +84,11 @@ export function InSetStatsPanel() {
         return (
           <div key={sk.key} className="rounded-lg bg-secondary/40 border border-border/40 p-2">
             <div className="flex items-center justify-between mb-1">
-              <span className={`inline-flex items-center justify-center min-w-7 h-5 px-1.5 rounded text-[10px] font-black ${sk.color}`}>{sk.key}</span>
-              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{sk.label}</span>
+              <span className={`inline-flex items-center justify-center min-w-7 h-5 px-1.5 rounded text-xs font-black ${sk.color}`}>{sk.key}</span>
+              <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">{sk.label}</span>
               <span className="text-xs font-black tabular-nums">{s.tot}</span>
             </div>
-            <div className="flex items-center justify-between text-[10px] mb-1">
+            <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-emerald-400 font-bold">#{s.punti}</span>
               <span className="text-destructive font-bold">={s.errori}</span>
               <span className={`font-black tabular-nums ${effPos ? 'text-emerald-400' : 'text-destructive'}`}>{s.eff > 0 ? '+' : ''}{s.eff}%</span>
@@ -109,32 +109,32 @@ export function InSetStatsPanel() {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         <div className="glass rounded-xl p-2 text-center">
-          <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Set {matchState.currentSet}</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Set {matchState.currentSet}</div>
           <div className="text-2xl font-black tabular-nums">{matchState.homeScore} – {matchState.awayScore}</div>
         </div>
         <div className="glass rounded-xl p-2 text-center">
-          <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Rotazione P (S)</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Rotazione P (S)</div>
           <div className="text-2xl font-black tabular-nums">{matchState.homeSetterPosition} · {matchState.awaySetterPosition}</div>
         </div>
         <div className="glass rounded-xl p-2 text-center">
-          <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Side-out</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Side-out</div>
           <div className="text-base font-black tabular-nums">{sideoutHome}% · {sideoutAway}%</div>
         </div>
         <div className="glass rounded-xl p-2 text-center">
-          <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Break</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Break</div>
           <div className="text-base font-black tabular-nums">{breakHome}% · {breakAway}%</div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-blue-300 mb-1.5 text-center">
+          <div className="text-xs uppercase tracking-widest font-black text-blue-300 mb-1.5 text-center">
             {homeTeam.name || 'Casa'}
           </div>
           {renderRow('home')}
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-red-300 mb-1.5 text-center">
+          <div className="text-xs uppercase tracking-widest font-black text-red-300 mb-1.5 text-center">
             {awayTeam.name || 'Ospite'}
           </div>
           {renderRow('away')}
@@ -144,7 +144,7 @@ export function InSetStatsPanel() {
       {/* Breakdown per giocatore — set corrente */}
       {playerBreakdown.length > 0 && (
         <div className="rounded-xl border border-border/40 bg-secondary/30 p-2">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1.5 text-center">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-1.5 text-center">
             Top giocatori · set {matchState.currentSet}
           </div>
           <div className="space-y-1">
@@ -152,11 +152,11 @@ export function InSetStatsPanel() {
               const skMeta = SKILL_META.find(s => s.key === r.skill)!;
               const effPos = r.eff >= 0;
               return (
-                <div key={`${r.team}-${r.num}-${r.skill}`} className="flex items-center gap-2 text-[11px]">
+                <div key={`${r.team}-${r.num}-${r.skill}`} className="flex items-center gap-2 text-xs">
                   <span className={`w-1.5 h-1.5 rounded-full ${r.team === 'home' ? 'bg-blue-400' : 'bg-red-400'}`} />
                   <span className="font-mono font-black tabular-nums w-7 text-right">#{r.num}</span>
                   <span className="truncate flex-1 font-bold">{r.name}</span>
-                  <span className={`inline-flex items-center justify-center min-w-5 h-4 px-1 rounded text-[9px] font-black ${skMeta.color}`}>{r.skill}</span>
+                  <span className={`inline-flex items-center justify-center min-w-5 h-4 px-1 rounded text-xs font-black ${skMeta.color}`}>{r.skill}</span>
                   <span className="text-emerald-400 font-bold tabular-nums w-6 text-right">#{r.pts}</span>
                   <span className="text-destructive font-bold tabular-nums w-6 text-right">={r.err}</span>
                   <span className={`font-black tabular-nums w-12 text-right ${effPos ? 'text-emerald-400' : 'text-destructive'}`}>{r.eff > 0 ? '+' : ''}{r.eff}%</span>

@@ -77,7 +77,7 @@ export function QuickActions() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
           <Zap className="w-3 h-3" /> Quick Actions
         </h4>
         <div className="flex gap-1 p-0.5 rounded bg-secondary/40">
@@ -121,7 +121,7 @@ export function QuickActions() {
         </div>
       ) : (
         <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
-          <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
               {pendingPlayer.label} → scegli giocatore
             </span>
@@ -146,7 +146,7 @@ export function QuickActions() {
                 >
                   {num}
                   {player && (
-                    <span className="text-[11px] font-semibold opacity-80 truncate max-w-full px-0.5">
+                    <span className="text-xs font-semibold opacity-80 truncate max-w-full px-0.5">
                       {player.lastName.slice(0, 4)}
                     </span>
                   )}

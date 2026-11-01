@@ -216,10 +216,10 @@ export function TeamFormationsTab({ teamId, societyId, athletes }: Props) {
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {rotations.map((r) => (
                       <div key={r.steps} className="rounded-md bg-muted/40 p-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
+                        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
                           Rotazione P{r.setterPosition} (palleggiatore)
                         </p>
-                        <div className="grid grid-cols-3 gap-1 text-[11px]">
+                        <div className="grid grid-cols-3 gap-1 text-xs">
                           {(['p4', 'p3', 'p2', 'p5', 'p6', 'p1'] as PosKey[]).map((k) => (
                             <div key={k} className="rounded bg-background/70 px-1.5 py-1 truncate">
                               <span className="text-muted-foreground">{k.toUpperCase()} </span>

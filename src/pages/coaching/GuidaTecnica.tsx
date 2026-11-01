@@ -487,7 +487,7 @@ export default function GuidaTecnica() {
                     if (!txt || !txt.trim()) return null;
                     return (
                       <div key={cs.key} className="space-y-0.5">
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{cs.label}</p>
+                        <p className="text-xs font-bold text-primary uppercase tracking-widest">{cs.label}</p>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{txt}</p>
                       </div>
                     );
@@ -502,7 +502,7 @@ export default function GuidaTecnica() {
                         <li key={i} className="space-y-0.5">
                           <p className="text-xs font-semibold text-foreground">{e.errore}</p>
                           {e.causa && (
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               <span className="font-semibold">Causa: </span>{e.causa}
                             </p>
                           )}
@@ -523,7 +523,7 @@ export default function GuidaTecnica() {
                   </div>
                 )}
 
-                <footer className="text-[11px] text-muted-foreground mt-auto pt-2 border-t border-border/50">
+                <footer className="text-xs text-muted-foreground mt-auto pt-2 border-t border-border/50">
                   Aggiornata il {new Date(g.updated_at).toLocaleDateString('it-IT')}
                 </footer>
               </article>

@@ -139,7 +139,7 @@ export function PatternsTab({ allActions, myTeamId, opponentName }: Props) {
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-2xl font-black tabular-nums text-primary">{c.occurrences}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">occorrenze</div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">occorrenze</div>
                 </div>
               </li>
             ))}

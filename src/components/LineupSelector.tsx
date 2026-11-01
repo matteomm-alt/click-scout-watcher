@@ -115,7 +115,7 @@ function TeamLineup({
           <button
             type="button"
             onClick={handleAuto51}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 transition-colors"
           >
             <Wand2 className="w-3 h-3" /> Auto 5-1
           </button>
@@ -155,7 +155,7 @@ function TeamLineup({
             const isSetter = lineup.setter === lineup[pos.key] && lineup[pos.key];
             return (
               <div key={pos.key} className="relative">
-                <div className="text-[10px] text-court-line text-center mb-1">{pos.label}</div>
+                <div className="text-xs text-court-line text-center mb-1">{pos.label}</div>
                 {player ? (
                   <button
                     onClick={() => handlePositionClick(pos.key)}
@@ -166,8 +166,8 @@ function TeamLineup({
                     }`}
                   >
                     <div className="text-2xl font-bold">{player.number}</div>
-                    <div className="text-[10px] truncate">{player.lastName}</div>
-                    <div className="text-[9px] text-muted-foreground">{ROLE_LABELS[player.role]}</div>
+                    <div className="text-xs truncate">{player.lastName}</div>
+                    <div className="text-xs text-muted-foreground">{ROLE_LABELS[player.role]}</div>
                   </button>
                 ) : (
                   <div className="relative group">

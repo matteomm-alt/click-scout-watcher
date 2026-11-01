@@ -76,7 +76,7 @@ export function LiveFooter({
   return (
     <div className="shrink-0 border-t border-border bg-card/50 px-2 py-1.5 flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+        <span className="text-xs font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
           {selectedPlayer ? `#${selectedPlayer.number}` : 'Fondam.'}
         </span>
         <div className="flex-1 flex gap-1 flex-wrap">
@@ -108,7 +108,7 @@ export function LiveFooter({
 
       {showAttackType && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
             Tipo
           </span>
           <div className="flex-1 flex gap-1 flex-wrap">
@@ -137,7 +137,7 @@ export function LiveFooter({
 
       {showMiddleCombo && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
             Combo
           </span>
           <div className="flex-1 flex gap-1 flex-wrap">
@@ -166,7 +166,7 @@ export function LiveFooter({
 
       {showOtherCombos && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
             Combo
           </span>
           <div className="flex-1 flex gap-1 flex-wrap">
@@ -194,7 +194,7 @@ export function LiveFooter({
       )}
 
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
+        <span className="text-xs font-black uppercase tracking-wider text-muted-foreground w-14 shrink-0">
           Eval.
         </span>
         <div className="flex-1 flex gap-1 flex-wrap">

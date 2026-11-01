@@ -17,7 +17,7 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground font-body">
       {/* SALUTO COMPATTO: i blocchi devono stare sopra la piega */}
       <section className="container pt-6 pb-2">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-orange-700 dark:text-primary font-semibold mb-1">Pannello Coach</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-orange-700 dark:text-primary font-semibold mb-1">Pannello Coach</p>
         <h2 className="text-2xl md:text-3xl font-black italic uppercase leading-tight tracking-tight">
           Cosa vuoi fare <span className="text-primary">oggi?</span>
         </h2>

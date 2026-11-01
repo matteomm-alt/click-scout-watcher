@@ -87,7 +87,7 @@ export function ResizeHandle({ onResize }: { onResize: (deltaMinutes: number) =>
       onClick={(e) => e.stopPropagation()}
     >
       {preview !== null && (
-        <span className="absolute -top-5 right-0 text-[10px] font-bold text-primary bg-card border border-border rounded px-1">
+        <span className="absolute -top-5 right-0 text-xs font-bold text-primary bg-card border border-border rounded px-1">
           {preview > 0 ? `+${preview}` : preview} min
         </span>
       )}

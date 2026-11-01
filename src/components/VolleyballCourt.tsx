@@ -41,11 +41,11 @@ export function ZoneCourt({ onZoneClick, startZone, endZone, mode = 'display', l
             key={z.zone}
             disabled={!selectable}
             onClick={() => selectable && onZoneClick?.(z.zone)}
-            className={`relative flex items-center justify-center text-[10px] uppercase tracking-wider font-bold transition-colors min-h-[48px] ${
+            className={`relative flex items-center justify-center text-xs uppercase tracking-wider font-bold transition-colors min-h-[48px] ${
               active ? 'bg-primary text-primary-foreground' : 'bg-orange-700/40 text-white/90 hover:bg-orange-600/50'
             }`}
           >
-            <span className="absolute top-1 left-1 text-[10px] font-black opacity-80">{z.zone}</span>
+            <span className="absolute top-1 left-1 text-xs font-black opacity-80">{z.zone}</span>
             <span className="px-1 text-center leading-tight">{z.label}</span>
           </button>
         );
@@ -235,7 +235,7 @@ export function VolleyballCourt({
 
         {/* Banner contestuale zona */}
         {showZoneOverlay && zoneSelectSkill && (
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-black uppercase tracking-wider shadow-lg">
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-wider shadow-lg">
             {zoneSelectSkill === 'A' ? 'Dove è caduta?' :
              zoneSelectSkill === 'S' ? 'Dove è atterrata la battuta?' :
              zoneSelectSkill === 'R' ? 'Da dove è arrivata?' :
@@ -281,7 +281,7 @@ export function VolleyballCourt({
 
         {/* Etichetta ricezione */}
         {isReceiving && !simplifiedView && (
-          <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-emerald-800 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
+          <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-emerald-800 text-xs font-black uppercase tracking-wider text-white shadow-md">
             Ricezione · S{setterPosition}
           </span>
         )}
@@ -308,7 +308,7 @@ export function VolleyballCourt({
                       key={`serve-${team}-${zone}`}
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleServeStartClick(team, zone); }}
-                      className={`pointer-events-auto flex-1 border border-dashed transition-colors flex items-center justify-center text-[10px] font-black uppercase tracking-wider ${
+                      className={`pointer-events-auto flex-1 border border-dashed transition-colors flex items-center justify-center text-xs font-black uppercase tracking-wider ${
                         active
                           ? 'bg-primary/70 border-primary text-primary-foreground'
                           : 'bg-black/45 border-white/50 text-white font-bold hover:bg-primary/30 hover:border-primary/70'
@@ -321,7 +321,7 @@ export function VolleyballCourt({
                   );
                 })}
               </div>
-              <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wider text-white bg-black/55 rounded px-1 whitespace-nowrap">
+              <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-wider text-white bg-black/55 rounded px-1 whitespace-nowrap">
                 Battuta
               </span>
             </div>
@@ -399,15 +399,15 @@ export function VolleyballCourt({
               >
                 {info.number}
                 {isSetter && (
-                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-950 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">S</span>
+                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-950 px-1.5 py-0.5 text-xs font-black text-white border border-white/40">S</span>
                 )}
                 {isLibero && (
-                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-black text-white border border-white/40">L</span>
+                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-amber-700 px-1.5 py-0.5 text-xs font-black text-white border border-white/40">L</span>
                 )}
               </button>
 
               {!simplifiedView && (
-                <span className="mt-0.5 max-w-16 truncate rounded bg-black/55 px-1 text-[11px] font-bold text-white">{info.name}</span>
+                <span className="mt-0.5 max-w-16 truncate rounded bg-black/55 px-1 text-xs font-bold text-white">{info.name}</span>
               )}
             </div>
           );
@@ -426,7 +426,7 @@ export function VolleyballCourt({
               const to = zoneCenters.find((z) => z.zone === arr.endZone);
               if (!from || !to || arr.startZone === arr.endZone) return null;
               const opacity = 0.2 + (i / Math.max(1, arrs.length - 1)) * 0.75;
-              const color = arr.evaluation === '#' ? '#16a34a' : arr.evaluation === '=' ? '#dc2626' : '#ca8a04';
+              const color = arr.evaluation === '#' ? 'hsl(var(--success))' : arr.evaluation === '=' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))';
               return (
                 <line key={i} x1={mx(from.x)} y1={my(from.y)} x2={mx(to.x)} y2={my(to.y)}
                   stroke={color} strokeWidth="0.9" strokeLinecap="round"
@@ -460,11 +460,11 @@ export function VolleyballCourt({
   const sideOrder: ('home' | 'away')[] = swapSides ? ['home', 'away'] : ['away', 'home'];
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <div className="flex gap-2 items-stretch aspect-[2/1] w-full max-h-full mx-auto" style={{ maxWidth: '100%' }}>
+      <div className="flex gap-2 items-stretch aspect-[2/1] w-[calc(100%-1.25rem)] max-h-full mx-auto">
         {sideOrder.map((side, idx) => (
           <Fragment key={side}>
             <div className="relative aspect-square h-full">
-              <span className="absolute -top-4 left-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+              <span className="absolute -top-4 left-1 text-xs font-black uppercase tracking-wider text-muted-foreground">
                 {side === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
               </span>
               {renderHalf(side, idx === 0, swapSides)}

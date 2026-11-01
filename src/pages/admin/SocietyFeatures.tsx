@@ -135,7 +135,7 @@ export default function SocietyFeatures() {
         <div className="space-y-8">
           {grouped.map(([group, items]) => (
             <section key={group} className="space-y-3">
-              <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-bold flex items-center gap-2">
+              <h2 className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold flex items-center gap-2">
                 <ToggleRight className="w-3.5 h-3.5" /> {group}
               </h2>
               <div className="rounded-xl border border-border bg-card divide-y divide-border">
@@ -154,7 +154,7 @@ export default function SocietyFeatures() {
                           {f.label}
                         </Label>
                         <p className="text-xs text-muted-foreground mt-1">{f.description}</p>
-                        <p className="text-[10px] font-mono text-muted-foreground/60 mt-1">
+                        <p className="text-xs font-mono text-muted-foreground/60 mt-1">
                           {f.key}
                         </p>
                       </div>

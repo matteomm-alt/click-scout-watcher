@@ -23,7 +23,7 @@ export function CSHeader({ onClose }: { onClose?: () => void } = {}) {
         {matchState.awayScore}
       </div>
       <div className="px-3 flex flex-col items-center justify-center bg-[hsl(var(--cs-rail))] text-white">
-        <div className="text-[9px] font-bold uppercase tracking-widest opacity-70 leading-none">Set {matchState.currentSet}</div>
+        <div className="text-xs font-bold uppercase tracking-widest opacity-70 leading-none">Set {matchState.currentSet}</div>
         <div className="text-sm font-black tabular-nums leading-tight text-[hsl(var(--cs-cta-yellow))]">
           {matchState.homeSetsWon} - {matchState.awaySetsWon}
         </div>

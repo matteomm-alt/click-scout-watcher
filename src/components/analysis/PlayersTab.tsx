@@ -244,7 +244,7 @@ function AttackPhaseView({ actions, side, playerNames }: { actions: DbAction[]; 
             <th colSpan={4} className="border-l border-border/40">K1 — side-out</th>
             <th colSpan={4} className="border-l border-border/40">K2 — break</th>
           </tr>
-          <tr className="text-[10px]">
+          <tr className="text-xs">
             <th></th><th></th>
             <th className="border-l border-border/40">Att</th><th>Kill%</th><th>Err%</th><th>Eff%</th>
             <th className="border-l border-border/40">Att</th><th>Kill%</th><th>Err%</th><th>Eff%</th>
@@ -295,7 +295,7 @@ function AttackBreakdownView({ actions, playerNames }: { actions: DbAction[]; pl
         <Card className="p-5">
           <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Per zona di partenza attacco</h3>
           <table className="w-full text-sm">
-            <thead className="text-[10px] uppercase text-muted-foreground border-b border-border">
+            <thead className="text-xs uppercase text-muted-foreground border-b border-border">
               <tr><th className="text-left">Zona</th><th>Tot</th><th>Kill</th><th>Err</th><th>Kill%</th><th>Eff%</th></tr>
             </thead>
             <tbody>
@@ -316,13 +316,13 @@ function AttackBreakdownView({ actions, playerNames }: { actions: DbAction[]; pl
         <Card className="p-5">
           <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Per tempo di alzata</h3>
           <table className="w-full text-sm">
-            <thead className="text-[10px] uppercase text-muted-foreground border-b border-border">
+            <thead className="text-xs uppercase text-muted-foreground border-b border-border">
               <tr><th className="text-left">Tempo</th><th>Tot</th><th>Kill</th><th>Err</th><th>Kill%</th><th>Eff%</th></tr>
             </thead>
             <tbody>
               {current.byTempo.map(t => (
                 <tr key={t.tempo} className="border-b border-border/40">
-                  <td className="py-1.5 font-bold">{t.label} <span className="text-[10px] text-muted-foreground">({t.tempo})</span></td>
+                  <td className="py-1.5 font-bold">{t.label} <span className="text-xs text-muted-foreground">({t.tempo})</span></td>
                   <td className="text-center">{t.total}</td>
                   <td className="text-center">{t.kills}</td>
                   <td className="text-center">{t.errors}</td>

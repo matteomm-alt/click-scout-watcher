@@ -81,12 +81,12 @@ export function TeamComparison() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Confronto Squadre
         </h4>
       </div>
 
-      <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 pb-1">
+      <div className="grid grid-cols-3 text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border/50 pb-1">
         <div className="text-right text-blue-700 dark:text-blue-400 truncate pr-2">{(homeTeam.name || 'Casa').slice(0, 12)}</div>
         <div className="text-center"></div>
         <div className="text-left text-red-700 dark:text-red-400 truncate pl-2">{(awayTeam.name || 'Ospite').slice(0, 12)}</div>
@@ -110,7 +110,7 @@ export function TeamComparison() {
                   <Bar value={r.h} max={max} side="left" lowerIsBetter={lower} />
                 </div>
               </div>
-              <div className="text-center text-[9px] uppercase tracking-wider text-muted-foreground">
+              <div className="text-center text-xs uppercase tracking-wider text-muted-foreground">
                 {r.label}
               </div>
               <div className="flex flex-col items-start gap-0.5">

@@ -128,7 +128,7 @@ export function LiveKpiPanel({
 
   const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="flex-1 min-w-0 rounded-lg border border-border bg-card p-2">
-      <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
+      <div className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-1">
         {title}
       </div>
       {children}
@@ -140,13 +140,13 @@ export function LiveKpiPanel({
   }: { label1: string; val1: number | null; label2: string; val2: number | null }) => (
     <div className="flex items-baseline justify-between gap-2">
       <div className="min-w-0">
-        <div className="text-[9px] uppercase text-muted-foreground truncate">{label1}</div>
+        <div className="text-xs uppercase text-muted-foreground truncate">{label1}</div>
         <div className={`text-xl font-black tabular-nums ${colorFor(val1)}`}>
           {val1 === null ? '—' : `${val1}%`}
         </div>
       </div>
       <div className="min-w-0 text-right">
-        <div className="text-[9px] uppercase text-muted-foreground truncate">{label2}</div>
+        <div className="text-xs uppercase text-muted-foreground truncate">{label2}</div>
         <div className={`text-xl font-black tabular-nums ${colorFor(val2)}`}>
           {val2 === null ? '—' : `${val2}%`}
         </div>
@@ -171,14 +171,14 @@ export function LiveKpiPanel({
       <Card title="Rotazione">
         <div className="flex items-baseline justify-between gap-2">
           <div>
-            <div className="text-[9px] uppercase text-muted-foreground">P{kpi.currentRot ?? '—'}</div>
+            <div className="text-xs uppercase text-muted-foreground">P{kpi.currentRot ?? '—'}</div>
             <div className={`text-xl font-black tabular-nums ${
               kpi.delta > 0 ? 'text-emerald-400' : kpi.delta < 0 ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'
             }`}>
               {kpi.delta > 0 ? `+${kpi.delta}` : kpi.delta}
             </div>
           </div>
-          <div className="text-[9px] uppercase text-muted-foreground text-right">
+          <div className="text-xs uppercase text-muted-foreground text-right">
             {homeScore}-{awayScore}<br/>set {currentSet}
           </div>
         </div>
@@ -212,7 +212,7 @@ export function LiveKpiBanner({ actions, currentSet }: LiveKpiBannerProps) {
 
   const fmt = (v: number | null) => v === null ? '—' : `${v}%`;
   return (
-    <div className="text-[10px] font-bold uppercase tracking-wider text-center py-1 px-2 bg-secondary/60 border-t border-border">
+    <div className="text-xs font-bold uppercase tracking-wider text-center py-1 px-2 bg-secondary/60 border-t border-border">
       <span className="text-muted-foreground">SO </span>
       <span className={colorFor(kpi.soH)}>{fmt(kpi.soH)}</span>
       <span className="text-muted-foreground">·</span>

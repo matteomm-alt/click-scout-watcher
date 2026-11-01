@@ -397,7 +397,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                                   if (e.key === 'Escape') setEditingSub(null);
                                 }}
                                 onBlur={(e) => renameSubAspect(f.id, i, e.target.value)}
-                                className="h-6 text-[10px] w-48 px-2"
+                                className="h-6 text-xs w-48 px-2"
                               />
                             );
                           }
@@ -407,7 +407,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                               key={`std-${i}`}
                               variant="secondary"
                               onClick={() => setEditingSub({ fondId: f.id, subIndex: i, currentValue: displayName })}
-                              className={`text-[10px] font-normal cursor-pointer hover:bg-primary/10 ${isRenamed ? 'text-orange-800 dark:text-primary border-primary/40 border' : ''}`}
+                              className={`text-xs font-normal cursor-pointer hover:bg-primary/10 ${isRenamed ? 'text-orange-800 dark:text-primary border-primary/40 border' : ''}`}
                               title={isRenamed ? `Originale: "${sa}" — clicca per modificare` : 'Clicca per rinominare'}
                             >
                               {displayName}
@@ -418,13 +418,13 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                         {extras.map((sa, i) => (
                           <Badge key={`ext-${i}`} variant="outline"
                             onClick={() => removeSubAspect(f.id, sa)}
-                            className="text-[10px] font-normal border-primary/40 text-primary cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40"
+                            className="text-xs font-normal border-primary/40 text-primary cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40"
                             title="Clicca per rimuovere">
                             {sa} ×
                           </Badge>
                         ))}
                       </div>
-                      <p className="text-[10px] text-muted-foreground italic">
+                      <p className="text-xs text-muted-foreground italic">
                         Clicca su un criterio per rinominarlo. I nomi modificati appaiono in arancio.
                       </p>
                       <div className="flex gap-2">
@@ -471,7 +471,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                   <div className="flex items-center justify-between px-3 py-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold">{f.nome}</span>
-                      <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Custom</Badge>
+                      <Badge variant="outline" className="text-xs border-primary/40 text-primary">Custom</Badge>
                     </div>
                     <button type="button" onClick={() => removeCustomFond(f.id)}
                       className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
@@ -481,12 +481,12 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                   <div className="px-3 pb-3 space-y-2">
                     <div className="flex flex-wrap gap-1">
                       {f.subAspetti.length === 0 && (
-                        <span className="text-[11px] italic text-muted-foreground">Nessun sub-aspetto — valutazione con punteggio unico</span>
+                        <span className="text-xs italic text-muted-foreground">Nessun sub-aspetto — valutazione con punteggio unico</span>
                       )}
                       {f.subAspetti.map((sa, i) => (
                         <Badge key={i} variant="outline"
                           onClick={() => removeSubFromCustom(f.id, i)}
-                          className="text-[10px] font-normal cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40">
+                          className="text-xs font-normal cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40">
                           {sa} ×
                         </Badge>
                       ))}
@@ -570,7 +570,7 @@ export function EvalTemplateEditor({ template, saving, onSave, onReset }: Props)
                       </div>
                       <div>
                         <div className="text-xs font-bold text-foreground">{opt.title}</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{opt.desc}</div>
                       </div>
                     </button>
                   ))}

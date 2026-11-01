@@ -26,7 +26,7 @@ function Btn({ children, onClick, badge, disabled }: { children: ReactNode; onCl
         {children}
       </span>
       {badge != null && (
-        <span className="absolute top-1 right-1 min-w-5 h-5 px-1 rounded-full bg-[hsl(var(--cs-cta))] text-[10px] font-black text-[hsl(var(--primary-foreground))] flex items-center justify-center">
+        <span className="absolute top-1 right-1 min-w-5 h-5 px-1 rounded-full bg-[hsl(var(--cs-cta))] text-xs font-black text-[hsl(var(--primary-foreground))] flex items-center justify-center">
           {badge}
         </span>
       )}
@@ -38,7 +38,7 @@ export function CSSideRail({ side, onTimeout, onSubstitution, onPoint, timeoutsA
   return (
     <div className={`w-12 flex flex-col gap-[2px] rounded-md overflow-hidden border border-border/40 ${side === 'left' ? 'mr-1' : 'ml-1'}`}>
       {label && (
-        <div className="h-6 flex items-center justify-center bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] text-[9px] font-black uppercase tracking-widest">
+        <div className="h-6 flex items-center justify-center bg-[hsl(var(--cs-rail))] text-[hsl(var(--cs-rail-fg))] text-xs font-black uppercase tracking-widest">
           {label}
         </div>
       )}

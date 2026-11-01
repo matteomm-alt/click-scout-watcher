@@ -160,7 +160,7 @@ export default function Schemi() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold uppercase italic truncate">{s.name}</h3>
-                  {s.fundamental && <Badge variant="outline" className="text-[10px] mt-1">{s.fundamental}</Badge>}
+                  {s.fundamental && <Badge variant="outline" className="text-xs mt-1">{s.fundamental}</Badge>}
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(s)}>
@@ -186,7 +186,7 @@ export default function Schemi() {
               ) : null}
               {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
               {s.scheme_data?.notes && (
-                <p className="text-[11px] text-muted-foreground/80 line-clamp-3 italic border-l-2 border-primary/40 pl-2">
+                <p className="text-xs text-muted-foreground/80 line-clamp-3 italic border-l-2 border-primary/40 pl-2">
                   {s.scheme_data.notes}
                 </p>
               )}
@@ -222,7 +222,7 @@ export default function Schemi() {
             </div>
             <div>
               <Label>Diagramma tattico</Label>
-              <p className="text-[11px] text-muted-foreground mb-2">
+              <p className="text-xs text-muted-foreground mb-2">
                 Aggiungi giocatori e frecce di movimento direttamente sul campo.
                 Trascina per spostare · doppio click per etichettare.
               </p>
@@ -231,7 +231,7 @@ export default function Schemi() {
             <div><Label>URL immagine schema (opzionale)</Label>
               <Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
                 placeholder="https://…" />
-              <p className="text-[10px] text-muted-foreground mt-1">Incolla un link a un'immagine già hostata.</p>
+              <p className="text-xs text-muted-foreground mt-1">Incolla un link a un'immagine già hostata.</p>
             </div>
           </div>
           <DialogFooter>
@@ -249,7 +249,7 @@ export default function Schemi() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   {viewing.name}
-                  {viewing.fundamental && <Badge variant="outline" className="text-[10px]">{viewing.fundamental}</Badge>}
+                  {viewing.fundamental && <Badge variant="outline" className="text-xs">{viewing.fundamental}</Badge>}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-3">

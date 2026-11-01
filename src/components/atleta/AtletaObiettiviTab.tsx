@@ -158,7 +158,7 @@ export function AtletaObiettiviTab({ athleteId }: { athleteId: string }) {
               <div className="flex items-center gap-2">
                 <Badge
                   variant="outline"
-                  className="px-2 py-0.5 rounded-md text-[11px]"
+                  className="px-2 py-0.5 rounded-md text-xs"
                 >
                   {o.status.replace('_', ' ')}
                 </Badge>

@@ -83,13 +83,13 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
                 )}
               >
                 <span>{label}</span>
-                <span className="text-[10px] opacity-75 mt-0.5">{desc}</span>
+                <span className="text-xs opacity-75 mt-0.5">{desc}</span>
               </button>
             );
           })}
         </div>
         {getScoutingMode(settings) === 'custom' && (
-          <div className="mt-2 text-[11px] text-muted-foreground italic text-center">
+          <div className="mt-2 text-xs text-muted-foreground italic text-center">
             ✎ Configurazione personalizzata attiva
           </div>
         )}
@@ -106,7 +106,7 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
               className="min-h-16 rounded-xl border-2 border-border bg-secondary/30 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 p-2"
             >
               <span className="text-sm font-black text-foreground">{p.label}</span>
-              <span className="text-[10px] text-muted-foreground whitespace-pre-line text-center leading-tight">{p.desc}</span>
+              <span className="text-xs text-muted-foreground whitespace-pre-line text-center leading-tight">{p.desc}</span>
             </button>
           ))}
         </div>
@@ -148,7 +148,7 @@ export function ScoutSettingsPanel({ settings, setSetting, setSettings }: { sett
               ['Enter', 'Conferma giocatore'],
             ] as [string, string][]).map(([key, desc]) => (
               <div key={key} className="flex items-center justify-between gap-3">
-                <kbd className="px-2 py-0.5 rounded bg-background border border-border font-mono font-bold text-[11px] text-primary">
+                <kbd className="px-2 py-0.5 rounded bg-background border border-border font-mono font-bold text-xs text-primary">
                   {key}
                 </kbd>
                 <span className="text-muted-foreground text-right">{desc}</span>

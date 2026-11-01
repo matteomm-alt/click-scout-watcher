@@ -41,7 +41,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
         {dayLabels.map((d) => (
           <div
             key={d}
-            className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold py-2 text-center border-r border-border last:border-r-0"
+            className="text-xs uppercase tracking-widest text-muted-foreground font-bold py-2 text-center border-r border-border last:border-r-0"
           >
             {d}
           </div>
@@ -85,7 +85,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                       <button
                         onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
                         className={cn(
-                          'flex-1 text-left text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate hover:opacity-80 transition-colors',
+                          'flex-1 text-left text-xs px-1.5 py-0.5 rounded border-l-2 truncate hover:opacity-80 transition-colors',
                         )}
                         style={{ background: ec.bg, color: ec.text, borderLeftColor: ec.border }}
                         title={`${timeLabel} ${evt.title}${evt.location ? ' @ ' + evt.location : ''}`}
@@ -101,7 +101,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                           onClick={() => navigate(
                             `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent((evt as unknown as { location?: string }).location || '')}`,
                           )}
-                          className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-orange-800 dark:text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0"
+                          className="text-xs px-1 py-0.5 rounded bg-primary/10 text-orange-800 dark:text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0"
                           title="Crea convocazione"
                         >
                           📋
@@ -116,12 +116,12 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                 {dayEvents.length > 3 && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="text-[11px] font-semibold text-orange-700 dark:text-primary hover:underline text-left w-full px-1 py-0.5 rounded hover:bg-muted/50">
+                      <button className="text-xs font-semibold text-orange-700 dark:text-primary hover:underline text-left w-full px-1 py-0.5 rounded hover:bg-muted/50">
                         +{dayEvents.length - 3} altri
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-56 p-2 z-50" align="start">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
                         {format(day, 'd MMMM', { locale: it })}
                       </p>
                       <div className="flex flex-col gap-1">
@@ -131,7 +131,7 @@ export function MonthView({ anchor, events, onEventClick, draggable }: Props) {
                             <button
                               key={evt.id}
                               onClick={() => onEventClick ? onEventClick(evt) : navigate(`/calendario?id=${evt.id}`)}
-                              className="text-left text-[11px] px-1.5 py-1 rounded border-l-2 truncate hover:opacity-80 transition-colors"
+                              className="text-left text-xs px-1.5 py-1 rounded border-l-2 truncate hover:opacity-80 transition-colors"
                               style={{ background: ec.bg, color: ec.text, borderLeftColor: ec.border }}
                             >
                               <span className="font-bold mr-1">{format(new Date(evt.start_at), 'HH:mm')}</span>

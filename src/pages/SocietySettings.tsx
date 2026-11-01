@@ -627,7 +627,7 @@ export default function SocietySettings() {
                       <p className="text-sm font-medium flex items-center gap-2 truncate">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         {inv.email}
-                        <span className="text-[10px] uppercase tracking-wider text-primary border border-primary/30 rounded px-1.5 py-0.5">
+                        <span className="text-xs uppercase tracking-wider text-primary border border-primary/30 rounded px-1.5 py-0.5">
                           {ROLE_LABELS[inv.role]}
                         </span>
                         <span style={{

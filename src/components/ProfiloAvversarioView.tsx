@@ -249,9 +249,9 @@ export function ProfiloAvversarioView() {
                           return (
                             <div key={z} className="aspect-square border border-border rounded flex flex-col items-center justify-center relative text-center"
                               style={{ background: `hsl(var(--destructive) / ${0.05 + intensity * 0.5})` }}>
-                              <span className="absolute top-1 left-1 text-[9px] text-muted-foreground">{ZONE_LABELS[z]}</span>
+                              <span className="absolute top-1 left-1 text-xs text-muted-foreground">{ZONE_LABELS[z]}</span>
                               <span className="text-lg font-black">{cell.total || '—'}</span>
-                              {cell.total > 0 && <span className="text-[10px] font-semibold" style={{ color: effColor }}>{eff > 0 ? '+' : ''}{eff}%</span>}
+                              {cell.total > 0 && <span className="text-xs font-semibold" style={{ color: effColor }}>{eff > 0 ? '+' : ''}{eff}%</span>}
                             </div>
                           );
                         })}

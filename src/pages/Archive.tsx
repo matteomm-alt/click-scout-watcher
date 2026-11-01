@@ -231,7 +231,7 @@ export default function Archive() {
                   <p className="font-semibold text-sm truncate">{t.name}</p>
                   {t.city && <p className="text-xs text-muted-foreground">{t.city}</p>}
                 </div>
-                {t.is_own_team && <span className="text-[10px] uppercase font-bold text-primary">Mia</span>}
+                {t.is_own_team && <span className="text-xs uppercase font-bold text-primary">Mia</span>}
               </div>
             </Card>
           ))}

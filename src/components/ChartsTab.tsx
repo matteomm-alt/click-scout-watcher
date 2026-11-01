@@ -251,9 +251,9 @@ export function ChartsTab({ actions, playerNames }: Props) {
     return (
       <div className="aspect-square border border-border rounded flex flex-col items-center justify-center relative text-center"
         style={{ background: `hsl(var(--primary) / ${0.05 + intensity * 0.55})` }}>
-        <span className="absolute top-1 left-1 text-[9px] text-muted-foreground">{ZONE_LABELS[zone]}</span>
+        <span className="absolute top-1 left-1 text-xs text-muted-foreground">{ZONE_LABELS[zone]}</span>
         <span className="text-xl font-black italic">{data.tot || '—'}</span>
-        {data.tot > 0 && showEff && <span className="text-[10px] font-semibold" style={{ color: effColor }}>{eff > 0 ? '+' : ''}{eff}%</span>}
+        {data.tot > 0 && showEff && <span className="text-xs font-semibold" style={{ color: effColor }}>{eff > 0 ? '+' : ''}{eff}%</span>}
       </div>
     );
   };

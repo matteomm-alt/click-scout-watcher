@@ -365,10 +365,10 @@ export function AtletiView() {
                         >
                           {a.last_name}{a.first_name ? ` ${a.first_name}` : ''}
                         </Link>
-                        {a.is_captain && <Badge variant="default" className="text-[10px] px-1.5 py-0">C</Badge>}
-                        {a.is_libero && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">L</Badge>}
+                        {a.is_captain && <Badge variant="default" className="text-xs px-1.5 py-0">C</Badge>}
+                        {a.is_libero && <Badge variant="secondary" className="text-xs px-1.5 py-0">L</Badge>}
                         {injuriesEnabled && activeInjuries.has(a.id) && (
-                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 gap-1">
+                          <Badge variant="destructive" className="text-xs px-1.5 py-0 gap-1">
                             <HeartPulse className="w-2.5 h-2.5" /> Infortunato
                           </Badge>
                         )}
@@ -376,15 +376,15 @@ export function AtletiView() {
                           const exp = new Date(a.medical_cert_expiry);
                           const today = new Date();
                           const days = Math.floor((exp.getTime() - today.getTime()) / 86400000);
-                          if (days < 0) return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">⚠️ Cert. scaduto</Badge>;
-                          if (days <= 30) return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning">⏰ Scade tra {days}gg</Badge>;
-                          return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-600 text-green-700 dark:text-green-500">✅ Cert. ok</Badge>;
+                          if (days < 0) return <Badge variant="destructive" className="text-xs px-1.5 py-0">⚠️ Cert. scaduto</Badge>;
+                          if (days <= 30) return <Badge variant="outline" className="text-xs px-1.5 py-0 border-warning text-warning">⏰ Scade tra {days}gg</Badge>;
+                          return <Badge variant="outline" className="text-xs px-1.5 py-0 border-green-600 text-green-700 dark:text-green-500">✅ Cert. ok</Badge>;
                         })()}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {a.role && <span className="text-xs text-muted-foreground">{a.role}</span>}
                         {a.team_id && teamMap.get(a.team_id) && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/40 text-primary">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0 border-primary/40 text-primary">
                             {teamMap.get(a.team_id)}
                           </Badge>
                         )}

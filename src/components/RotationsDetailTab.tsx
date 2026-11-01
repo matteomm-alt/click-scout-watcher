@@ -81,7 +81,7 @@ export function RotationsDetailTab({ actions, side }: Props) {
                     <div style={{ width: `${100 - posPct - errPct}%`, background: 'hsl(var(--muted-foreground) / 0.2)' }} />
                     <div style={{ width: `${errPct}%`, background: 'hsl(var(--destructive))' }} />
                   </div>
-                  <div className="flex gap-2 text-[10px]" style={{ color: colors.text }}>
+                  <div className="flex gap-2 text-xs" style={{ color: colors.text }}>
                     <span># {perfPct}%</span>
                     <span>+ {posPct}%</span>
                     <span className="text-destructive">= {errPct}%</span>

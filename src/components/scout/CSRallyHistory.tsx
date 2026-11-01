@@ -55,7 +55,7 @@ export function CSRallyHistory() {
         {previous.map((a) => (
           <div
             key={a.id}
-            className={`shrink-0 px-2 py-1 rounded text-[11px] font-mono font-bold ${evalColor(a.evaluation)} ${teamBorder(a.team)} ${flashId === a.id ? 'ring-2 ring-primary animate-pulse' : ''}`}
+            className={`shrink-0 px-2 py-1 rounded text-xs font-mono font-bold ${evalColor(a.evaluation)} ${teamBorder(a.team)} ${flashId === a.id ? 'ring-2 ring-primary animate-pulse' : ''}`}
             title={`Set ${a.setNumber} • ${a.timestamp}`}
           >
             {formatCode(a)}
@@ -63,13 +63,13 @@ export function CSRallyHistory() {
         ))}
       </div>
       <div className={`shrink-0 px-3 flex flex-col items-center justify-center rounded-md font-black uppercase tracking-wider ${evalColor(last.evaluation)} ${teamBorder(last.team)} shadow`}>
-        <span className="text-[9px] opacity-80 leading-none">ULTIMA</span>
+        <span className="text-xs opacity-80 leading-none">ULTIMA</span>
         <span className="text-sm leading-tight font-mono">{formatCode(last)}</span>
       </div>
       <button
         type="button"
         onClick={undoLastAction}
-        className="shrink-0 w-12 rounded-md bg-destructive text-destructive-foreground font-black uppercase text-[10px] hover:brightness-110 active:scale-95 flex flex-col items-center justify-center gap-0.5"
+        className="shrink-0 w-12 rounded-md bg-destructive text-destructive-foreground font-black uppercase text-xs hover:brightness-110 active:scale-95 flex flex-col items-center justify-center gap-0.5"
         title="Annulla ultima azione"
       >
         <Undo2 className="w-4 h-4" />

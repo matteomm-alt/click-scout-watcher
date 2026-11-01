@@ -35,7 +35,7 @@ const SCOUT_MODE_URLS = new Set(['/', '/scout', '/archive', '/import', '/atleti'
 function Badge({ value }: { value: number }) {
   if (value <= 0) return null;
   return (
-    <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-destructive text-white text-[10px] font-black flex items-center justify-center">
+    <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-destructive text-white text-xs font-black flex items-center justify-center">
       {value > 99 ? '99+' : value}
     </span>
   );
@@ -125,13 +125,13 @@ export function AppSidebar() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold uppercase italic tracking-tight truncate">VolleyScout</p>
               {societyName ? (
-                <p className="text-[11px] font-semibold text-orange-700 dark:text-primary truncate" title={societyName}>
+                <p className="text-xs font-semibold text-orange-700 dark:text-primary truncate" title={societyName}>
                   {societyName}
                 </p>
               ) : (
-                <p className="text-[10px] text-muted-foreground truncate">Nessuna società</p>
+                <p className="text-xs text-muted-foreground truncate">Nessuna società</p>
               )}
-              <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           )}
           {!collapsed && (
@@ -143,7 +143,7 @@ export function AppSidebar() {
                 >
                   <Bell className="w-4 h-4" />
                   {totalNotifs > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-white text-[9px] font-black flex items-center justify-center">
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-white text-xs font-black flex items-center justify-center">
                       {totalNotifs > 99 ? '99+' : totalNotifs}
                     </span>
                   )}
@@ -188,7 +188,7 @@ export function AppSidebar() {
         </div>
         {!collapsed && (
           <div className="mx-2 mb-2 flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold shrink-0">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold shrink-0">
               Stagione
             </span>
             <SeasonSelector className="flex-1" />
@@ -198,7 +198,7 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={toggleScoutMode}
-            className={`mx-2 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors ${
+            className={`mx-2 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors ${
               scoutMode
                 ? 'bg-primary/15 text-orange-700 dark:text-primary border border-primary/30'
                 : 'bg-secondary text-muted-foreground hover:text-foreground border border-transparent'
@@ -297,7 +297,7 @@ export function AppSidebar() {
               <p className="text-xs font-bold truncate">
                 {profile?.full_name ?? user?.email?.split('@')[0] ?? 'Coach'}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           )}
         </div>

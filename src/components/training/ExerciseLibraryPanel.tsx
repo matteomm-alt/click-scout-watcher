@@ -42,10 +42,10 @@ function DraggableExercise({
         <p className="text-xs font-semibold leading-tight truncate">{ex.name}</p>
         <div className="flex flex-wrap gap-1 mt-1">
           {ex.fundamental && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{ex.fundamental}</Badge>
+            <Badge variant="secondary" className="text-xs px-1.5 py-0">{ex.fundamental}</Badge>
           )}
           {ex.duration_min ? (
-            <span className="text-[10px] text-muted-foreground">{ex.duration_min} min</span>
+            <span className="text-xs text-muted-foreground">{ex.duration_min} min</span>
           ) : null}
         </div>
       </div>
@@ -94,7 +94,7 @@ export function ExerciseLibraryPanel({
         title="Apri libreria esercizi"
       >
         <BookOpen className="w-4 h-4 text-primary" />
-        <span className="text-[10px] uppercase tracking-wider font-bold [writing-mode:vertical-rl]">
+        <span className="text-xs uppercase tracking-wider font-bold [writing-mode:vertical-rl]">
           Libreria esercizi
         </span>
       </button>
@@ -128,7 +128,7 @@ export function ExerciseLibraryPanel({
         </SelectContent>
       </Select>
 
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Trascina un esercizio su un blocco per collegarlo, oppure usa “+”.
       </p>
 

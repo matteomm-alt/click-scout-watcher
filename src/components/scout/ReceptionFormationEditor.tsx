@@ -101,8 +101,8 @@ function FormationCanvas({
     >
       {/* Stesso orientamento dello Scout: rete verticale verso il centro del campo. */}
       <div className={`absolute inset-y-0 z-10 w-1 bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)] ${teamOnLeft ? 'right-0' : 'left-0'}`} />
-      <span className={`absolute top-2 z-10 text-[9px] font-black uppercase tracking-widest text-white/70 [writing-mode:vertical-rl] ${teamOnLeft ? 'right-1.5' : 'left-1.5'}`}>RETE</span>
-      <span className={`absolute top-1.5 right-2 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
+      <span className={`absolute top-2 z-10 text-xs font-black uppercase tracking-widest text-white/70 [writing-mode:vertical-rl] ${teamOnLeft ? 'right-1.5' : 'left-1.5'}`}>RETE</span>
+      <span className={`absolute top-1.5 right-2 text-xs font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
         mode === 'reception' ? 'bg-blue-700 text-white'
           : mode === 'attack' ? 'bg-primary text-primary-foreground'
           : 'bg-slate-700 text-white'
@@ -139,7 +139,7 @@ function FormationCanvas({
             className={`absolute z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-grab active:cursor-grabbing ${dragging === slot ? 'scale-110' : ''}`}
             style={{ left: `${coord.x}%`, top: `${coord.y}%` }}
           >
-            <span className="mb-0.5 text-[9px] font-black tracking-wider text-white/80">P{slot}</span>
+            <span className="mb-0.5 text-xs font-black tracking-wider text-white/80">P{slot}</span>
             <div className={`relative flex size-9 items-center justify-center rounded-full text-xs font-black text-white shadow-lg ring-2 ring-white/60 ${
               isSetter ? 'bg-warning ring-warning' :
               isLibero ? 'bg-yellow-700 border-2 border-yellow-400' :
@@ -148,7 +148,7 @@ function FormationCanvas({
               {playerNum || '?'}
             </div>
             {player && (
-              <span className="mt-0.5 max-w-14 truncate text-[9px] font-bold text-white/95 drop-shadow">
+              <span className="mt-0.5 max-w-14 truncate text-xs font-bold text-white/95 drop-shadow">
                 {player.lastName}
               </span>
             )}
@@ -352,7 +352,7 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
                         <button
                           key={t}
                           onClick={() => setSaveType(t)}
-                          className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${
+                          className={`flex-1 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${
                             saveType === t
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -393,18 +393,18 @@ export function ReceptionFormationEditor({ open, onOpenChange }: Props) {
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-bold text-foreground truncate">{tpl.name}</div>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-primary/15 text-orange-800 dark:text-primary">
+                            <span className="text-xs font-black uppercase px-1.5 py-0.5 rounded bg-primary/15 text-orange-800 dark:text-primary">
                               {tpl.template_type === 'both' ? '↙↗' : tpl.template_type === 'reception' ? '↙ Ric' : '↗ Att'}
                             </span>
                             {tpl.description && (
-                              <span className="text-[10px] text-muted-foreground truncate">{tpl.description}</span>
+                              <span className="text-xs text-muted-foreground truncate">{tpl.description}</span>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={() => applyTemplate(tpl)}
-                            className="px-2 py-1 rounded-md text-[10px] font-bold bg-primary/10 text-orange-800 dark:text-primary hover:bg-primary/20 transition-colors"
+                            className="px-2 py-1 rounded-md text-xs font-bold bg-primary/10 text-orange-800 dark:text-primary hover:bg-primary/20 transition-colors"
                             title="Applica al team selezionato"
                           >
                             Applica

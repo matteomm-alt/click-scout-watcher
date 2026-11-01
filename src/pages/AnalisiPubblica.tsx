@@ -83,17 +83,17 @@ export default function AnalisiPubblica() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border border-border p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Azioni totali</p>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Azioni totali</p>
                   <p className="text-2xl font-black italic">{stats.total_actions}</p>
                 </div>
                 <div className="rounded-lg border border-border p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Set giocati</p>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Set giocati</p>
                   <p className="text-2xl font-black italic">{stats.total_sets}</p>
                 </div>
               </div>
               {Object.keys(stats.skill_breakdown || {}).length > 0 && (
                 <div className="rounded-lg border border-border p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Distribuzione fondamentali</p>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Distribuzione fondamentali</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
                     {Object.entries(stats.skill_breakdown).map(([k, v]) => (
                       <div key={k} className="flex justify-between gap-2 border-b border-border/50 py-1">

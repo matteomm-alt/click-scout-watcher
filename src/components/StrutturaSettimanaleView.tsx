@@ -370,7 +370,7 @@ export function StrutturaSettimanaleView() {
 
   return (
     <div className="container py-8 space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Coaching</p>
           <div className="flex items-center gap-3 mb-1">
@@ -408,11 +408,11 @@ export function StrutturaSettimanaleView() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold">{s.name}</span>
-                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{tipoLabel(blocks.nSettimane)}</Badge>
-                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{blocks.nSedute} sed/sett</Badge>
-                        {s.total_duration_min && <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium">{s.total_duration_min} min/sed</Badge>}
-                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
-                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-md font-medium">{tipoLabel(blocks.nSettimane)}</Badge>
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5 rounded-md font-medium">{blocks.nSedute} sed/sett</Badge>
+                        {s.total_duration_min && <Badge variant="secondary" className="text-xs px-2 py-0.5 rounded-md font-medium">{s.total_duration_min} min/sed</Badge>}
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-md font-medium">Usato in {usageCounts[s.id] ?? 0} all.</Badge>
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
                           {teams.find((t) => t.id === s.team_id)?.name ?? 'Nessuna squadra'}
                         </Badge>
                       </div>
@@ -461,10 +461,10 @@ export function StrutturaSettimanaleView() {
                                   <span className="text-xs font-bold text-primary uppercase">
                                     {sed.giorno !== null ? GIORNI[sed.giorno] : `Seduta ${si + 1}`}
                                   </span>
-                                  {totMin > 0 && <span className="text-[10px] text-muted-foreground">{totMin} min</span>}
+                                  {totMin > 0 && <span className="text-xs text-muted-foreground">{totMin} min</span>}
                                 </div>
                                 {(sed.orario || sed.palestra) && (
-                                  <p className="text-[10px] text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground">
                                     {[sed.orario, sed.palestra].filter(Boolean).join(' · ')}
                                   </p>
                                 )}
@@ -487,9 +487,9 @@ export function StrutturaSettimanaleView() {
                                     {(b.fondamentali || []).length > 0 && (
                                       <div className="flex gap-1 flex-wrap">
                                         {(b.fondamentali || []).map(f => (
-                                          <span key={f} className="text-[10px] px-2 py-0.5 rounded-md bg-primary/10 text-orange-800 dark:text-primary font-medium">{f}</span>
+                                          <span key={f} className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-orange-800 dark:text-primary font-medium">{f}</span>
                                         ))}
-                                        {b.forma && <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">{b.forma}</span>}
+                                        {b.forma && <span className="text-xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">{b.forma}</span>}
                                       </div>
                                     )}
                                   </div>
@@ -529,7 +529,7 @@ export function StrutturaSettimanaleView() {
                   <button key={t.id} onClick={() => changeNSettimane(t.id)}
                     className={`p-3 rounded-lg border text-left transition-colors ${nSettimane === t.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
                     <p className="text-xs font-bold">{t.label}</p>
-                    <p className="text-[10px] text-muted-foreground">{t.desc}</p>
+                    <p className="text-xs text-muted-foreground">{t.desc}</p>
                   </button>
                 ))}
               </div>
@@ -545,7 +545,7 @@ export function StrutturaSettimanaleView() {
                   {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 L'importazione nel calendario userà il calendario di questa squadra.
               </p>
             </div>
@@ -588,7 +588,7 @@ export function StrutturaSettimanaleView() {
                         <div className="flex gap-1 flex-wrap">
                           {GIORNI.map((g, gi) => (
                             <button key={gi} onClick={() => updateGiorno(wi, si, gi)}
-                              className={`w-8 h-7 rounded text-[10px] font-bold transition-colors border ${sed.giorno === gi ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:border-primary'}`}>
+                              className={`w-8 h-7 rounded text-xs font-bold transition-colors border ${sed.giorno === gi ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:border-primary'}`}>
                               {g}
                             </button>
                           ))}
@@ -597,7 +597,7 @@ export function StrutturaSettimanaleView() {
                       {/* Orario e palestra */}
                       <div className="grid grid-cols-[7rem_1fr] gap-2">
                         <div className="space-y-1">
-                          <Label className="text-[10px] uppercase text-muted-foreground">Orario</Label>
+                          <Label className="text-xs uppercase text-muted-foreground">Orario</Label>
                           <Input
                             type="time"
                             value={sed.orario ?? ''}
@@ -605,11 +605,11 @@ export function StrutturaSettimanaleView() {
                             className="h-8 text-xs"
                           />
                           {!sed.orario && (
-                            <p className="text-[10px] text-muted-foreground">Es. 18:30</p>
+                            <p className="text-xs text-muted-foreground">Es. 18:30</p>
                           )}
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] uppercase text-muted-foreground">Palestra / luogo</Label>
+                          <Label className="text-xs uppercase text-muted-foreground">Palestra / luogo</Label>
                           <Input
                             value={sed.palestra ?? ''}
                             onChange={e => updateSeduta(wi, si, 'palestra', e.target.value)}
@@ -617,7 +617,7 @@ export function StrutturaSettimanaleView() {
                             className="h-8 text-xs"
                           />
                           {!sed.palestra && (
-                            <p className="text-[10px] text-muted-foreground">Dove si svolge la seduta</p>
+                            <p className="text-xs text-muted-foreground">Dove si svolge la seduta</p>
                           )}
                         </div>
                       </div>
@@ -641,7 +641,7 @@ export function StrutturaSettimanaleView() {
                             <div className="flex gap-1 flex-wrap">
                               {FONDAMENTALI.map(f => (
                                 <button key={f} type="button" onClick={() => toggleFondamentale(wi, si, bi, f)}
-                                  className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors font-semibold ${
+                                  className={`text-xs px-2 py-0.5 rounded-full border transition-colors font-semibold ${
                                     (b.fondamentali || []).includes(f)
                                       ? 'bg-primary text-primary-foreground border-primary'
                                       : 'border-border text-muted-foreground hover:border-primary'

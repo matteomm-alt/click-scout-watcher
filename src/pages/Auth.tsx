@@ -330,7 +330,7 @@ export default function Auth() {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               {capsLockOn && (
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-500">
+                <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-500">
                   Caps Lock attivo
                 </span>
               )}
@@ -371,7 +371,7 @@ export default function Auth() {
                       />
                     ))}
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Forza password: <span className="font-medium text-foreground">{s.label}</span>
                   </p>
                 </div>

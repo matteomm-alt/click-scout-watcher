@@ -152,7 +152,7 @@ export function TouchFlowPanel({
                 >
                   <span
                     className={cn(
-                      'size-5 flex items-center justify-center rounded-full text-[10px] font-black tabular-nums shrink-0',
+                      'size-5 flex items-center justify-center rounded-full text-xs font-black tabular-nums shrink-0',
                       isActive
                         ? 'bg-white/20 text-white'
                         : done
@@ -164,7 +164,7 @@ export function TouchFlowPanel({
                   </span>
                   <span
                     className={cn(
-                      'text-[10px] font-black uppercase tracking-wider truncate',
+                      'text-xs font-black uppercase tracking-wider truncate',
                       !isActive && 'hidden sm:inline',
                     )}
                   >
@@ -172,7 +172,7 @@ export function TouchFlowPanel({
                   </span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <span className="text-muted-foreground/40 text-[10px]">›</span>
+                  <span className="text-muted-foreground/40 text-xs">›</span>
                 )}
               </div>
             );
@@ -192,11 +192,11 @@ export function TouchFlowPanel({
               {selectedPlayer.lastName}
             </span>
             {selectedPlayer.role && (
-              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                 {selectedPlayer.role}
               </span>
             )}
-            <span className={cn('text-[9px] font-black uppercase tracking-wider truncate max-w-[80px]', teamText)}>
+            <span className={cn('text-xs font-black uppercase tracking-wider truncate max-w-[80px]', teamText)}>
               {teamName}
             </span>
             <button
@@ -255,7 +255,7 @@ export function TouchFlowPanel({
                       {s.fullLabel}
                     </span>
                     {isSugg && (
-                      <span className="text-[9px] uppercase tracking-wider opacity-90">
+                      <span className="text-xs uppercase tracking-wider opacity-90">
                         ★
                       </span>
                     )}
@@ -272,7 +272,7 @@ export function TouchFlowPanel({
 
             {!isMiddleBlocker && (
               <div className="mb-3">
-                <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1.5">
+                <div className="text-xs uppercase tracking-wider font-black text-muted-foreground mb-1.5">
                   Tipo di attacco
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -300,7 +300,7 @@ export function TouchFlowPanel({
             )}
 
             <div>
-              <div className="text-[10px] uppercase tracking-wider font-black text-muted-foreground mb-1.5">
+              <div className="text-xs uppercase tracking-wider font-black text-muted-foreground mb-1.5">
                 Combo
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -331,7 +331,7 @@ export function TouchFlowPanel({
               </div>
             </div>
 
-            <div className="mt-3 text-[10px] text-muted-foreground italic px-1">
+            <div className="mt-3 text-xs text-muted-foreground italic px-1">
               Seleziona tipo e combo, poi appare la valutazione.
             </div>
           </>
@@ -362,7 +362,7 @@ export function TouchFlowPanel({
                     <span className="flex-1 text-left uppercase tracking-wider text-xs">
                       {e.label}
                     </span>
-                    {isSugg && <span className="text-[9px] uppercase tracking-wider">★</span>}
+                    {isSugg && <span className="text-xs uppercase tracking-wider">★</span>}
                   </button>
                 );
               })}
@@ -372,7 +372,7 @@ export function TouchFlowPanel({
       </div>
 
       {/* FOOTER: status + back */}
-      <div className="px-3 py-2 border-t border-border/40 flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
+      <div className="px-3 py-2 border-t border-border/40 flex items-center justify-between gap-2 text-xs uppercase tracking-wider">
         <span className="font-black text-muted-foreground">
           {mode === 'simple' ? '⚡ Simple' : '📊 Advanced'}
         </span>

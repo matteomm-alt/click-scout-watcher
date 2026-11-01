@@ -257,7 +257,7 @@ function SortableMacroCard({
         </button>
         <p className="font-bold text-sm truncate flex-1">{ph.name}</p>
         {isNowInside(ph) && (
-          <span className="text-[9px] font-bold text-primary flex items-center gap-1">
+          <span className="text-xs font-bold text-primary flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             in corso
           </span>
@@ -266,7 +266,7 @@ function SortableMacroCard({
       <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
         <div className="h-full bg-primary" style={{ width: `${width}%` }} />
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {weeks} sett. · {ph.start_date ?? '—'} → {ph.end_date ?? '—'}
       </p>
     </div>
@@ -723,13 +723,13 @@ export default function ProgrammazioneStagionale() {
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Coaching</p>
           <div className="flex items-center gap-3 mb-1">
             <LayoutGrid className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-black italic uppercase leading-none">Programmazione Stagionale</h1>
+            <h1 className="text-2xl sm:text-4xl font-black italic uppercase leading-none">Programmazione Stagionale</h1>
           </div>
           <p className="text-muted-foreground">Macrocicli, griglia settimanale e periodizzazione.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <Select value={planId ?? ''} onValueChange={(v) => setPlanId(v)}>
-            <SelectTrigger className="w-[260px]"><SelectValue placeholder="Nessun piano" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[260px]"><SelectValue placeholder="Nessun piano" /></SelectTrigger>
             <SelectContent>
               {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.name} · {p.season}</SelectItem>)}
             </SelectContent>
@@ -821,12 +821,12 @@ export default function ProgrammazioneStagionale() {
                         />
                         <div className="flex gap-2 flex-wrap">
                           <div className="flex-1 min-w-[140px]">
-                            <Label className="text-[10px] uppercase text-muted-foreground">Inizio</Label>
+                            <Label className="text-xs uppercase text-muted-foreground">Inizio</Label>
                             <Input type="date" value={selectedPhase.start_date ?? ''}
                               onChange={(e) => patchPhase(selectedPhase.id, { start_date: e.target.value || null })} />
                           </div>
                           <div className="flex-1 min-w-[140px]">
-                            <Label className="text-[10px] uppercase text-muted-foreground">Fine</Label>
+                            <Label className="text-xs uppercase text-muted-foreground">Fine</Label>
                             <Input type="date" value={selectedPhase.end_date ?? ''}
                               onChange={(e) => patchPhase(selectedPhase.id, { end_date: e.target.value || null })} />
                           </div>
@@ -1125,7 +1125,7 @@ function IndividualSection({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold truncate">{a.atleta_nome}</p>
-                {a.ruolo && <Badge variant="outline" className="text-[9px]">{a.ruolo}</Badge>}
+                {a.ruolo && <Badge variant="outline" className="text-xs">{a.ruolo}</Badge>}
               </div>
               <Button size="icon" variant="ghost" className="h-7 w-7"
                 onClick={() => onChange(phase.tecnica_individuale.filter(x => x.id !== a.id))}>
@@ -1232,7 +1232,7 @@ function GridEditor({
   return (
     <Card className="p-4 overflow-x-auto prog-print">
       <div className="min-w-[900px]">
-        <div className="grid grid-cols-[88px_repeat(7,1fr)] gap-1 mb-1 text-[10px] uppercase font-bold text-muted-foreground">
+        <div className="grid grid-cols-[88px_repeat(7,1fr)] gap-1 mb-1 text-xs uppercase font-bold text-muted-foreground">
           <div />
           {DAYS.map(d => <div key={d} className="text-center py-1">{d}</div>)}
         </div>
@@ -1243,7 +1243,7 @@ function GridEditor({
           const weekEnd = addDays(weekStart, 6);
           return (
             <div key={w} className="grid grid-cols-[88px_repeat(7,1fr)] gap-1 mb-1 group">
-              <div className="text-[10px] p-2 border border-border rounded bg-muted/30 relative">
+              <div className="text-xs p-2 border border-border rounded bg-muted/30 relative">
                 <p className="font-bold">S{w + 1}</p>
                 <p className="text-muted-foreground">{fmtDate(weekStart)}–{fmtDate(weekEnd)}</p>
                 <button
@@ -1333,7 +1333,7 @@ function BlockChip({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="grid-block w-full text-left px-2 py-1 rounded text-[10px] font-semibold truncate"
+          className="grid-block w-full text-left px-2 py-1 rounded text-xs font-semibold truncate"
           style={{ backgroundColor: color.sfondo, color: color.testo }}
           title={block.note ?? block.fundamental}
         >
@@ -1379,7 +1379,7 @@ function AddBlockButton({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="w-full text-[10px] text-muted-foreground border border-dashed border-border rounded py-0.5 hover:bg-muted/40 hover:text-foreground"
+          className="w-full text-xs text-muted-foreground border border-dashed border-border rounded py-0.5 hover:bg-muted/40 hover:text-foreground"
         >
           + blocco
         </button>

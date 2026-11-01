@@ -198,7 +198,7 @@ export function TacticalEditor({
                 type="button"
                 onClick={() => addMarker(role)}
                 title={`Aggiungi ${cfg.label}`}
-                className="w-7 h-7 rounded-full border-2 border-border text-[10px] font-black
+                className="w-7 h-7 rounded-full border-2 border-border text-xs font-black
                            flex items-center justify-center transition-all hover:scale-110
                            active:scale-95 hover:border-white/60"
                 style={{ background: cfg.bg, color: cfg.color }}
@@ -219,7 +219,7 @@ export function TacticalEditor({
             }}
             title={arrowMode ? 'Esci modalità freccia' : 'Aggiungi freccia (clicca inizio → fine)'}
             className={cn(
-              'px-2.5 h-7 rounded-lg border text-[10px] font-bold transition-all',
+              'px-2.5 h-7 rounded-lg border text-xs font-bold transition-all',
               arrowMode
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-secondary border-border text-muted-foreground hover:border-primary/40',
@@ -233,7 +233,7 @@ export function TacticalEditor({
               type="button"
               onClick={deleteSelected}
               className="px-2.5 h-7 rounded-lg border border-destructive/50 bg-destructive/10
-                         text-destructive text-[10px] font-bold hover:bg-destructive/20"
+                         text-destructive text-xs font-bold hover:bg-destructive/20"
             >
               🗑 Elimina
             </button>
@@ -244,7 +244,7 @@ export function TacticalEditor({
               type="button"
               onClick={resetDiagram}
               className="ml-auto px-2.5 h-7 rounded-lg border border-border bg-secondary
-                         text-muted-foreground text-[10px] font-bold hover:text-foreground"
+                         text-muted-foreground text-xs font-bold hover:text-foreground"
             >
               Reset campo
             </button>
@@ -253,7 +253,7 @@ export function TacticalEditor({
       )}
 
       {!readOnly && arrowMode && (
-        <div className="text-[11px] text-orange-800 dark:text-primary px-2 py-1 rounded bg-primary/10 border border-primary/30">
+        <div className="text-xs text-orange-800 dark:text-primary px-2 py-1 rounded bg-primary/10 border border-primary/30">
           {arrowStart
             ? '🎯 Clicca il punto di arrivo della freccia'
             : '📍 Clicca il punto di partenza della freccia'}
@@ -430,7 +430,7 @@ export function TacticalEditor({
       )}
 
       {!readOnly && (
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
+        <p className="text-xs text-muted-foreground leading-relaxed">
           Clicca un bottone per aggiungere un giocatore · Trascina per spostare ·
           Doppio click per etichetta · → Freccia per movimenti ·
           Doppio click freccia per cambiare stile

@@ -141,7 +141,7 @@ export function MatchFilters({ filters, onChange, availableSets, availableSkills
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5 font-semibold">{label}</p>
+      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 font-semibold">{label}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   );

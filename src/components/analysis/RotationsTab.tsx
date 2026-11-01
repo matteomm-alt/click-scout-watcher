@@ -120,9 +120,9 @@ export function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; t
                     const cell = skillRotGrid[rot][sk];
                     const invalid = isNaN(cell.eff);
                     const color = invalid ? 'hsl(var(--muted-foreground))'
-                      : cell.eff >= 30 ? '#16a34a'
+                      : cell.eff >= 30 ? 'hsl(var(--success))'
                       : cell.eff >= 0 ? '#d97706'
-                      : '#dc2626';
+                      : 'hsl(var(--destructive))';
                     return (
                       <td key={sk} className="text-center p-2">
                         {invalid ? (

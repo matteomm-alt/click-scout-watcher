@@ -29,7 +29,7 @@ function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePo
         <svg viewBox="0 0 90 60" width="100%" className="mt-4 rounded-xl bg-orange-900/20">
           {[30, 60].map((x) => <line key={`v-${x}`} x1={x} y1="0" x2={x} y2="60" stroke="rgba(255,255,255,.25)" />)}
           {[20, 40].map((y) => <line key={`h-${y}`} x1="0" y1={y} x2="90" y2={y} stroke="rgba(255,255,255,.25)" />)}
-          {serveActions.map((a) => { const s = zonePos(a.startZone); const e = zonePos(a.endZone); if (!s || !e) return null; const c = a.evaluation === '#' ? '#000' : a.evaluation === '=' ? '#dc2626' : a.evaluation === '/' ? '#ea580c' : '#ca8a04'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth="1.8" strokeLinecap="round" />; })}
+          {serveActions.map((a) => { const s = zonePos(a.startZone); const e = zonePos(a.endZone); if (!s || !e) return null; const c = a.evaluation === '#' ? '#000' : a.evaluation === '=' ? 'hsl(var(--destructive))' : a.evaluation === '/' ? '#ea580c' : 'hsl(var(--warning))'; return <line key={a.id} x1={s[0]} y1={s[1]} x2={e[0]} y2={e[1]} stroke={c} strokeWidth="1.8" strokeLinecap="round" />; })}
         </svg>
         <div className="mt-3 grid grid-cols-4 gap-2 text-center"><div><div className="text-xs text-muted-foreground">Tot</div><div className="text-xl font-black">{serveActions.length}</div></div><div><div className="text-xs text-muted-foreground">Ace%</div><div className="text-xl font-black">{pct(stat.ace)}</div></div><div><div className="text-xs text-muted-foreground">Err%</div><div className="text-xl font-black">{pct(stat.err)}</div></div><div><div className="text-xs text-muted-foreground">Pos%</div><div className="text-xl font-black">{pct(stat.pos)}</div></div></div>
         <button type="button" onClick={() => setOpen(false)} className="mt-4 min-h-14 w-full rounded bg-secondary font-bold">Chiudi</button>
@@ -129,25 +129,25 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
   const pct = (n: number) => serveActions.length ? Math.round((n / serveActions.length) * 100) : 0;
 
   return (
-    <div className={`glass rounded-lg px-2 py-1 flex items-center gap-2 text-xs ${awayFirst ? 'flex-row-reverse' : ''}`}>
+    <div className={`glass rounded-lg px-2 py-1 flex items-center gap-2 text-xs flex-wrap md:flex-nowrap ${awayFirst ? 'flex-row-reverse' : ''}`}>
       {/* HOME compact */}
-      <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
+      <div className="flex items-center gap-1.5 min-w-0 flex-1 basis-[45%] md:basis-0 flex-wrap md:flex-nowrap justify-end">
         <TeamSanctions team="home" />
         <ServingDot active={matchState.servingTeam === 'home'} />
-        <span className="text-[10px] text-muted-foreground truncate max-w-[80px] font-bold uppercase tracking-wider">
+        <span className="text-xs text-muted-foreground truncate max-w-[80px] font-bold uppercase tracking-wider">
           {homeTeam.name || 'Casa'}
         </span>
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-orange-800 dark:text-primary tabular-nums">
+        <span className="text-xs font-black px-1 py-0.5 rounded bg-primary/20 text-orange-800 dark:text-primary tabular-nums">
           R{matchState.homeSetterPosition}
         </span>
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-amber-900 dark:text-warning tabular-nums">
+        <span className="text-xs font-black px-1 py-0.5 rounded bg-warning/20 text-amber-900 dark:text-warning tabular-nums">
           #{matchState.homeCurrentLineup[0]}
         </span>
         <TimeoutDots used={matchState.homeTimeoutsUsed} />
         <button
           type="button"
           onClick={() => handleTimeout('home')}
-          className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-[9px] font-bold uppercase tracking-wider active:scale-95"
+          className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-wider active:scale-95"
           title="Time-out Casa"
         >
           T-out
@@ -155,9 +155,9 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
       </div>
 
       {/* SETS + SCORE — riga unica compatta */}
-      <div className={`flex items-center gap-1.5 shrink-0 ${awayFirst ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex items-center gap-1.5 shrink-0 order-first basis-full justify-center md:order-none md:basis-auto ${awayFirst ? 'flex-row-reverse' : ''}`}>
         <span className="text-base font-bold text-primary tabular-nums">{matchState.homeSetsWon}</span>
-        <span className="text-[9px] font-bold text-muted-foreground uppercase">Set</span>
+        <span className="text-xs font-bold text-muted-foreground uppercase">Set</span>
         <span className="text-muted-foreground/40">·</span>
         <div className={`text-2xl font-black tabular-nums leading-none transition-all ${
           matchState.servingTeam === 'home' ? 'text-warning' : 'text-foreground/80'
@@ -177,32 +177,32 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
           {matchState.awayScore}
         </div>
         <span className="text-muted-foreground/40">·</span>
-        <span className="text-[9px] font-bold text-muted-foreground uppercase">Set</span>
+        <span className="text-xs font-bold text-muted-foreground uppercase">Set</span>
         <span className="text-base font-bold text-primary tabular-nums">{matchState.awaySetsWon}</span>
         <span className="ml-1 px-1.5 py-0.5 rounded bg-secondary text-center">
-          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mr-1">Set</span>
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mr-1">Set</span>
           <span className="text-xs font-bold text-primary tabular-nums">{matchState.currentSet}</span>
         </span>
       </div>
 
       {/* AWAY compact */}
-      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      <div className="flex items-center gap-1.5 min-w-0 flex-1 basis-[45%] md:basis-0 flex-wrap md:flex-nowrap">
         <button
           type="button"
           onClick={() => handleTimeout('away')}
-          className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-[9px] font-bold uppercase tracking-wider active:scale-95"
+          className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-wider active:scale-95"
           title="Time-out Ospite"
         >
           T-out
         </button>
         <TimeoutDots used={matchState.awayTimeoutsUsed} />
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-warning/20 text-amber-900 dark:text-warning tabular-nums">
+        <span className="text-xs font-black px-1 py-0.5 rounded bg-warning/20 text-amber-900 dark:text-warning tabular-nums">
           #{matchState.awayCurrentLineup[0]}
         </span>
-        <span className="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-orange-800 dark:text-primary tabular-nums">
+        <span className="text-xs font-black px-1 py-0.5 rounded bg-primary/20 text-orange-800 dark:text-primary tabular-nums">
           R{matchState.awaySetterPosition}
         </span>
-        <span className="text-[10px] text-muted-foreground truncate max-w-[80px] font-bold uppercase tracking-wider">
+        <span className="text-xs text-muted-foreground truncate max-w-[80px] font-bold uppercase tracking-wider">
           {awayTeam.name || 'Ospite'}
         </span>
         <ServingDot active={matchState.servingTeam === 'away'} />
@@ -215,7 +215,7 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
         <DialogTrigger asChild>
           <button
             type="button"
-            className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider active:scale-95"
+            className="h-7 px-1.5 rounded bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-wider active:scale-95"
             title="Cartellino / Sanzione"
           >
             <Square className="w-3 h-3" />
@@ -295,7 +295,7 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
       </Dialog>
 
       <Dialog open={correctionOpen} onOpenChange={setCorrectionOpen}>
-        <DialogTrigger asChild><button type="button" className="h-7 px-1.5 text-[9px] font-bold bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground rounded uppercase tracking-wider">✎ Corr</button></DialogTrigger>
+        <DialogTrigger asChild><button type="button" className="h-7 px-1.5 text-xs font-bold bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground rounded uppercase tracking-wider">✎ Corr</button></DialogTrigger>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Correzione</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => adjustScore('home', 1)} className="min-h-12 px-4 font-black bg-secondary rounded">+1 Casa</button>

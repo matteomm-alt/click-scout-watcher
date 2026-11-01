@@ -435,15 +435,15 @@ export default function AdminSocieties() {
                     )}
                     <div className="flex flex-col gap-1 items-end">
                       {socAdmins.length > 0 && (
-                        <Badge variant="outline" className="border-primary/50 text-primary text-[10px]">
+                        <Badge variant="outline" className="border-primary/50 text-primary text-xs">
                           {socAdmins.length} admin
                         </Badge>
                       )}
-                      <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+                      <Badge variant="outline" className="border-primary/30 text-primary text-xs">
                         {socCoaches.length} coach
                       </Badge>
                       {(pendingAdmin.length + pendingCoach.length) > 0 && (
-                        <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px]">
+                        <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-xs">
                           {pendingAdmin.length + pendingCoach.length} invito{(pendingAdmin.length + pendingCoach.length) === 1 ? '' : 'i'}
                         </Badge>
                       )}
@@ -454,7 +454,7 @@ export default function AdminSocieties() {
                 {/* Lista membri attivi (admin + coach) */}
                 {socMembers.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
                       <Users className="w-3 h-3" /> Membri attivi
                     </p>
                     {[...socAdmins, ...socCoaches].map((c) => (
@@ -470,7 +470,7 @@ export default function AdminSocieties() {
                         <span className="truncate flex-1" title={c.email || c.full_name || c.user_id}>
                           {c.full_name || <span className="font-mono text-muted-foreground">{c.user_id.slice(0, 8)}…</span>}
                           {c.email && <span className="text-muted-foreground"> · {c.email}</span>}
-                          <span className="ml-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+                          <span className="ml-1 text-xs uppercase tracking-wider text-muted-foreground">
                             {c.role === 'society_admin' ? 'admin' : 'coach'}
                           </span>
                         </span>
@@ -490,7 +490,7 @@ export default function AdminSocieties() {
                 {/* Inviti pendenti */}
                 {(pendingAdmin.length + pendingCoach.length) > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       Inviti in attesa
                     </p>
                     {[...pendingAdmin, ...pendingCoach].map((inv) => (
@@ -501,7 +501,7 @@ export default function AdminSocieties() {
                         <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                         <Badge
                           variant="outline"
-                          className={`text-[9px] px-1 py-0 shrink-0 ${
+                          className={`text-xs px-1 py-0 shrink-0 ${
                             inv.role === 'society_admin'
                               ? 'border-primary/40 text-primary'
                               : 'border-muted-foreground/30 text-muted-foreground'
@@ -573,7 +573,7 @@ export default function AdminSocieties() {
                       <span className="flex items-center gap-1.5">
                         <ToggleRight className="w-3.5 h-3.5" /> Moduli attivi
                       </span>
-                      <span className="text-[10px] font-mono">
+                      <span className="text-xs font-mono">
                         {expandedFeatures === s.id ? '−' : '+'}
                       </span>
                     </button>
@@ -589,7 +589,7 @@ export default function AdminSocieties() {
                             >
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-semibold truncate">{f.label}</p>
-                                <p className="text-[10px] text-muted-foreground font-mono truncate">
+                                <p className="text-xs text-muted-foreground font-mono truncate">
                                   {f.key}
                                 </p>
                               </div>

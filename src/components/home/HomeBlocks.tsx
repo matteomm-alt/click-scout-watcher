@@ -64,7 +64,7 @@ function HomeCard({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className={`text-[11px] uppercase tracking-widest font-bold flex items-center gap-2 ${block.text}`}>
+        <p className={`text-xs uppercase tracking-widest font-bold flex items-center gap-2 ${block.text}`}>
           <Icon className="w-3.5 h-3.5" /> {title}
         </p>
         {to && (
@@ -238,7 +238,7 @@ function ObjectivesCard({ block, societyId }: { block: BlockDef; societyId: stri
           <Row
             key={o.id}
             left={o.title}
-            right={<Badge variant="outline" className="text-[10px]">{OBJ_LABEL[o.status] ?? o.status}</Badge>}
+            right={<Badge variant="outline" className="text-xs">{OBJ_LABEL[o.status] ?? o.status}</Badge>}
           />
         ))
       )}
@@ -279,7 +279,7 @@ function InjuriesCard({ block, societyId }: { block: BlockDef; societyId: string
           <Row
             key={i.id}
             left={`${i.name} · ${i.body_part}`}
-            right={<Badge variant={SEV_VARIANT[i.severity] ?? 'outline'} className="text-[10px]">{i.severity}</Badge>}
+            right={<Badge variant={SEV_VARIANT[i.severity] ?? 'outline'} className="text-xs">{i.severity}</Badge>}
           />
         ))
       )}
@@ -312,9 +312,9 @@ function KpiCard({ block }: { block: BlockDef }) {
     <HomeCard block={block} icon={TrendingUp} title="KPI stagione" to="/report-stagione" linkLabel="Report →">
       {isLoading || !dvw ? <Skeleton className="h-12" /> : (
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div><p className="text-2xl font-black">{dvw.total}</p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Partite</p></div>
-          <div><p className="text-2xl font-black text-orange-700 dark:text-primary">{dvw.wins}</p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Vittorie</p></div>
-          <div><p className="text-2xl font-black">{dvw.winRate}<span className="text-sm">%</span></p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Win rate</p></div>
+          <div><p className="text-2xl font-black">{dvw.total}</p><p className="text-xs uppercase tracking-widest text-muted-foreground">Partite</p></div>
+          <div><p className="text-2xl font-black text-orange-700 dark:text-primary">{dvw.wins}</p><p className="text-xs uppercase tracking-widest text-muted-foreground">Vittorie</p></div>
+          <div><p className="text-2xl font-black">{dvw.winRate}<span className="text-sm">%</span></p><p className="text-xs uppercase tracking-widest text-muted-foreground">Win rate</p></div>
         </div>
       )}
     </HomeCard>
@@ -392,7 +392,7 @@ function AttendanceAlertsCard({ block, societyId }: { block: BlockDef; societyId
     <HomeCard block={block} icon={AlertTriangle} title="Allerte presenze" to="/presenze" linkLabel="Gestisci →">
       {isLoading ? <Skeleton className="h-12" /> : data.length === 0 ? <Empty>Tutti gli atleti sopra il 70% di presenze. 👍</Empty> : (
         data.map((a) => (
-          <Row key={a.athleteId} left={a.name} right={<Badge variant="destructive" className="text-[10px] px-1.5">{a.pct}%</Badge>} />
+          <Row key={a.athleteId} left={a.name} right={<Badge variant="destructive" className="text-xs px-1.5">{a.pct}%</Badge>} />
         ))
       )}
     </HomeCard>
@@ -428,7 +428,7 @@ function CertificatesCard({ block, societyId }: { block: BlockDef; societyId: st
               key={a.id}
               left={`${a.last_name}${a.first_name ? ' ' + a.first_name : ''}`}
               right={n < 0
-                ? <Badge variant="destructive" className="text-[10px]">scaduto</Badge>
+                ? <Badge variant="destructive" className="text-xs">scaduto</Badge>
                 : <span>{fmtDate(a.medical_cert_expiry)}</span>}
             />
           );

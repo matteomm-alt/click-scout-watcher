@@ -156,7 +156,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
 
       {/* Fondamentale */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{t('scout.ui.selectFundamental')}</div>
+        <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">{t('scout.ui.selectFundamental')}</div>
         <div className="grid grid-cols-6 gap-2">
           {visibleSkills.map((s) => {
             const active = selectedSkill === s.key;
@@ -178,7 +178,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
           })}
         </div>
         {suggestedSkill && selectedSkill === suggestedSkill && (
-          <div className="text-[10px] text-muted-foreground mt-1.5 italic">
+          <div className="text-xs text-muted-foreground mt-1.5 italic">
             {t('scout.ui.suggestedSkill')}
           </div>
         )}
@@ -187,7 +187,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
       {/* Tipo attacco (solo se A selezionato) */}
       {selectedSkill === 'A' && (
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+          <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
             {t('scout.ui.attackType')}
           </div>
           <div className="grid grid-cols-5 gap-2">
@@ -213,7 +213,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
             const combos = suggestCombos({ playerRole: pData?.role, isBackRow });
             return (
               <div className="mt-3">
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                   Combinazione alzata
                 </div>
                 <div className="grid grid-cols-6 gap-1.5">
@@ -232,13 +232,13 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
                         }`}
                       >
                         <span>{c.code}</span>
-                        <span className="text-[8px] font-normal opacity-70 truncate w-full px-1">{c.label}</span>
+                        <span className="text-xs font-normal opacity-70 truncate w-full px-1">{c.label}</span>
                       </button>
                     );
                   })}
                 </div>
                 {selectedCombo && (
-                  <div className="text-[10px] text-muted-foreground mt-1.5 italic">
+                  <div className="text-xs text-muted-foreground mt-1.5 italic">
                     Combo selezionata: <span className="text-primary font-bold">{selectedCombo}</span>. Tocca di nuovo per togliere.
                   </div>
                 )}
@@ -252,7 +252,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
 
       {/* Valutazione */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+        <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
           {t('scout.ui.selectEvaluation')} {selectedSkill ? `· ${SKILL_FULL[selectedSkill]}` : ''}
         </div>
         <div className="grid grid-cols-6 gap-2">
@@ -271,7 +271,7 @@ export function ActionPanel({ player, suggestedSkill, onComplete, onClose }: Act
         </div>
       </div>
 
-      <div className="text-[10px] text-muted-foreground text-center pt-1">
+      <div className="text-xs text-muted-foreground text-center pt-1">
         Tocca prima il fondamentale, poi la valutazione. L&apos;azione viene registrata automaticamente.
       </div>
     </div>

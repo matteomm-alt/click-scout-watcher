@@ -77,7 +77,7 @@ export function TrainingDetailCard({ value, onChange, objectives, phases, scheme
           </Select>
           <div className="flex items-center gap-2">
             {value.objective_id && (
-              <Badge variant="outline" className="text-[11px]">
+              <Badge variant="outline" className="text-xs">
                 {objectives.find((o) => o.id === value.objective_id)?.status ?? '—'}
               </Badge>
             )}

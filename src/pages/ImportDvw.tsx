@@ -168,7 +168,7 @@ export default function ImportDvw() {
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <div><strong>{parsed.warnings.length} codici non riconosciuti</strong> — le azioni standard sono comunque state importate.</div>
                 </summary>
-                <div className="mt-3 pl-6 font-mono text-[11px] space-y-1 max-h-48 overflow-auto">
+                <div className="mt-3 pl-6 font-mono text-xs space-y-1 max-h-48 overflow-auto">
                   {Object.entries(parsed.warnings.reduce<Record<string, number>>((acc, w) => { acc[w] = (acc[w] || 0) + 1; return acc; }, {}))
                     .sort((a, b) => b[1] - a[1])
                     .map(([code, count]) => (

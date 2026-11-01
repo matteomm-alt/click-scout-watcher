@@ -225,7 +225,7 @@ export function TrainingAttendanceDialog({
                   {st && (
                     <Badge
                       style={{ background: STATUS_STYLE[st].bg, color: STATUS_STYLE[st].text, border: 'none' }}
-                      className="text-[10px] px-2 py-0.5 rounded-md font-semibold uppercase"
+                      className="text-xs px-2 py-0.5 rounded-md font-semibold uppercase"
                     >
                       {st}
                     </Badge>

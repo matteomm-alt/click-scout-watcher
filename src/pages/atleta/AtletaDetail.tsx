@@ -243,7 +243,7 @@ export default function AtletaDetail() {
           <TabsTrigger value="injuries" className="gap-2">
             <HeartPulse className="w-4 h-4" />Infortuni
             {activeInjuries.length > 0 && (
-              <Badge variant="destructive" className="ml-1 h-4 px-1 text-[10px]">
+              <Badge variant="destructive" className="ml-1 h-4 px-1 text-xs">
                 {activeInjuries.length}
               </Badge>
             )}
@@ -334,7 +334,7 @@ export default function AtletaDetail() {
                   <Card key={e.id} className="p-4 text-center">
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">{e.fundamental}</p>
                     <p className={`text-3xl font-black mt-2 ${scoreColor(e.score)}`}>{e.score}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(e.evaluated_at).toLocaleDateString('it-IT', { month: 'short', year: '2-digit' })}
                     </p>
                   </Card>

@@ -558,7 +558,7 @@ export default function Allenamenti() {
   return (
     <div className="container py-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Coaching</p>
           <h1 className="text-4xl md:text-5xl font-black italic uppercase leading-[0.9] tracking-tight flex items-center gap-3">
@@ -677,7 +677,7 @@ export default function Allenamenti() {
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
                   {t.is_template && (
-                    <Badge variant="secondary" className="text-[10px] mb-1.5 gap-1">
+                    <Badge variant="secondary" className="text-xs mb-1.5 gap-1">
                       <Bookmark className="w-2.5 h-2.5" /> TEMPLATE
                     </Badge>
                   )}
@@ -691,10 +691,10 @@ export default function Allenamenti() {
                         if (!t.scheduled_date) return null;
                         const diff = differenceInDays(parseISO(t.scheduled_date), new Date());
                         if (diff === 0) return (
-                          <Badge className="text-[9px] px-1.5 py-0 bg-primary">OGGI</Badge>
+                          <Badge className="text-xs px-1.5 py-0 bg-primary">OGGI</Badge>
                         );
                         if (diff > 0 && diff <= 3) return (
-                          <Badge variant="outline" className="text-[9px] px-1.5 py-0">tra {diff}g</Badge>
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">tra {diff}g</Badge>
                         );
                         return null;
                       })()}
@@ -720,7 +720,7 @@ export default function Allenamenti() {
                 <p className="text-xs text-muted-foreground mb-2 line-clamp-2">🎯 {t.goal}</p>
               )}
 
-              <div className="flex flex-wrap gap-1.5 mb-3 text-[11px]">
+              <div className="flex flex-wrap gap-1.5 mb-3 text-xs">
                 {t.team_id && teamMap.get(t.team_id) && (
                   <Badge variant="outline" className="gap-1">
                     <Users className="w-2.5 h-2.5" />

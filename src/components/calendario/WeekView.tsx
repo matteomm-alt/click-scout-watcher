@@ -40,7 +40,7 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
             )}
           >
             <div className="flex items-baseline justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
                 {format(day, 'EEE', { locale: it })}
               </span>
               <span
@@ -55,7 +55,7 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
 
             <div className="flex flex-col gap-1.5 flex-1">
               {dayEvents.length === 0 && (
-                <span className="text-[11px] text-muted-foreground italic">—</span>
+                <span className="text-xs text-muted-foreground italic">—</span>
               )}
               {dayEvents.map((evt) => {
                 const meta = getEventMeta(evt.event_type);
@@ -91,14 +91,14 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1 text-[10px] underline-offset-2 hover:underline truncate mt-0.5"
+                        className="flex items-center gap-1 text-xs underline-offset-2 hover:underline truncate mt-0.5"
                         style={{ color: ec.text }}
                       >
                         <MapPin className="w-2.5 h-2.5 shrink-0" /> {evt.location}
                       </a>
                     )}
                     {showCreator && evt.creator_name && (
-                      <p className="text-[10px] text-muted-foreground truncate italic">
+                      <p className="text-xs text-muted-foreground truncate italic">
                         {evt.creator_name}
                       </p>
                     )}
@@ -111,7 +111,7 @@ export function WeekView({ anchor, events, showCreator, onEventClick, onResize, 
                             `/convocazioni?event_id=${evt.id}&title=${encodeURIComponent(evt.title)}&date=${evt.start_at}&location=${encodeURIComponent(evt.location || '')}`,
                           );
                         }}
-                        className="mt-1.5 inline-flex items-center min-h-7 px-2 text-[10px] font-bold bg-primary/10 text-orange-800 dark:text-primary border border-primary/30 rounded-md hover:bg-primary/20"
+                        className="mt-1.5 inline-flex items-center min-h-7 px-2 text-xs font-bold bg-primary/10 text-orange-800 dark:text-primary border border-primary/30 rounded-md hover:bg-primary/20"
                       >
                         📋 Convocazione
                       </span>

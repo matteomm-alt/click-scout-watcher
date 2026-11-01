@@ -37,9 +37,9 @@ export function SetProgressTab({ actions }: Props) {
         <div className="flex items-center gap-2">
           <div className="flex gap-1 bg-muted rounded p-0.5">
             <button onClick={() => setView('efficiency')}
-              className={`min-h-7 px-2 rounded text-[11px] font-bold uppercase ${view === 'efficiency' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Efficienza</button>
+              className={`min-h-7 px-2 rounded text-xs font-bold uppercase ${view === 'efficiency' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Efficienza</button>
             <button onClick={() => setView('momentum')}
-              className={`min-h-7 px-2 rounded text-[11px] font-bold uppercase ${view === 'momentum' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Momentum</button>
+              className={`min-h-7 px-2 rounded text-xs font-bold uppercase ${view === 'momentum' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Momentum</button>
           </div>
           {view === 'efficiency' && (
             <div className="flex gap-1">
@@ -70,8 +70,8 @@ export function SetProgressTab({ actions }: Props) {
                     {s.eff > 0 ? '+' : ''}{s.eff}%
                   </span>
                   <div className="w-full rounded-t overflow-hidden" style={{ height: `${Math.max(h, 4)}%`, background: col, minHeight: 4 }} />
-                  <span className="text-[10px] text-muted-foreground">Set {s.setNum}</span>
-                  <span className="text-[10px] text-muted-foreground">{s.tot} az.</span>
+                  <span className="text-xs text-muted-foreground">Set {s.setNum}</span>
+                  <span className="text-xs text-muted-foreground">{s.tot} az.</span>
                 </div>
               );
             })}
@@ -140,7 +140,7 @@ export function SetProgressTab({ actions }: Props) {
         };
         return (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ background: 'hsl(var(--primary) / 0.6)' }} />Casa</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded" style={{ background: 'rgba(239,68,68,0.5)' }} />Ospite</span>
               <span>Run evidenziati = 3+ punti consecutivi</span>
@@ -176,9 +176,9 @@ export function SetProgressTab({ actions }: Props) {
                         return (
                           <g key={i}>
                             <rect x={xStart} y={isHome ? 8 : 26} width={width} height={6}
-                              fill="none" stroke={isHome ? 'hsl(var(--primary))' : '#dc2626'} strokeWidth="1.5" rx="2" />
+                              fill="none" stroke={isHome ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} strokeWidth="1.5" rx="2" />
                             <text x={xStart + width / 2} y={isHome ? 6 : 38} textAnchor="middle"
-                              fontSize="6" fontWeight="bold" fill={isHome ? 'hsl(var(--primary))' : '#dc2626'}>+{run.length}</text>
+                              fontSize="6" fontWeight="bold" fill={isHome ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'}>+{run.length}</text>
                           </g>
                         );
                       })}
@@ -190,7 +190,7 @@ export function SetProgressTab({ actions }: Props) {
                         const startPt = points[run.startIdx];
                         const isHome = run.team === 'home';
                         return (
-                          <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-bold ${isHome ? 'bg-primary/15 text-orange-800 dark:text-primary' : 'bg-destructive/15 text-destructive'}`}>
+                          <span key={i} className={`px-2 py-0.5 rounded text-xs font-bold ${isHome ? 'bg-primary/15 text-orange-800 dark:text-primary' : 'bg-destructive/15 text-destructive'}`}>
                             {isHome ? 'Casa' : 'Ospite'} +{run.length}{startPt ? ` (da ${startPt.home}-${startPt.away})` : ''}
                           </span>
                         );

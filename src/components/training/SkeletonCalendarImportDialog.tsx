@@ -285,7 +285,7 @@ export function SkeletonCalendarImportDialog({ skeleton, societyId, userId, seas
             </div>
           </div>
 
-          <div className="rounded-lg border border-border p-3 text-[11px] space-y-1">
+          <div className="rounded-lg border border-border p-3 text-xs space-y-1">
             <p className="uppercase tracking-wider font-bold text-muted-foreground">
               Anteprima ({occurrences.length} allenamenti)
               {finalEnd && ` · fino al ${format(finalEnd, 'd MMM yyyy', { locale: it })}`}

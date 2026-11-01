@@ -272,7 +272,7 @@ export default function MatchAnalysis() {
         availableRotations={availableRotations}
         players={playerOptions}
       />
-      <p className="text-[11px] text-muted-foreground mt-2 px-1">
+      <p className="text-xs text-muted-foreground mt-2 px-1">
         Mostrando <strong className="text-foreground">{filteredTeamActions.length}</strong> di {teamActionsRaw.length} azioni
       </p>
     </>

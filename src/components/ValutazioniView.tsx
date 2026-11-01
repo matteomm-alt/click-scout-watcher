@@ -326,7 +326,7 @@ export function ValutazioniView() {
                 onClick={() => setExpanded(expanded === f.id ? null : f.id)}>
                 <p className="text-xs text-muted-foreground truncate mb-1">{f.nome}</p>
                 <p className="text-2xl font-black italic text-primary">{media > 0 ? media.toFixed(1) : '—'}</p>
-                {media > 0 && <p className={`text-[10px] font-semibold border rounded-full px-1 mt-1 ${tappa.color}`}>{tappa.label}</p>}
+                {media > 0 && <p className={`text-xs font-semibold border rounded-full px-1 mt-1 ${tappa.color}`}>{tappa.label}</p>}
               </Card>
             );
           })}
@@ -399,7 +399,7 @@ export function ValutazioniView() {
                               const v = getScore(key, p.id);
                               return (
                                 <span key={p.id}
-                                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${p.color} ${v ? '' : 'opacity-40'}`}>
+                                  className={`text-xs px-1.5 py-0.5 rounded font-bold border ${p.color} ${v ? '' : 'opacity-40'}`}>
                                   {p.short}:{v || '—'}
                                 </span>
                               );

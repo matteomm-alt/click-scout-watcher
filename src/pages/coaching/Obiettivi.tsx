@@ -161,21 +161,21 @@ export default function Obiettivi() {
               <span className={`font-bold ${o.status === 'completato' ? 'line-through text-muted-foreground' : ''}`}>{o.title}</span>
               {(() => {
                 const oc = OBJ_COLORS[o.status] ?? OBJ_COLORS['aperto'];
-                return <Badge style={{ background: oc.bg, color: oc.text, border: 'none' }} className="text-[10px] px-2 py-0.5 rounded-md font-semibold uppercase">{STATUS_LABEL[o.status]}</Badge>;
+                return <Badge style={{ background: oc.bg, color: oc.text, border: 'none' }} className="text-xs px-2 py-0.5 rounded-md font-semibold uppercase">{STATUS_LABEL[o.status]}</Badge>;
               })()}
               {o.phase_id && (
-                <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
+                <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-md font-medium border-primary/40 text-primary">
                   📍 {phases.find(p => p.id === o.phase_id)?.name ?? 'Fase'}
                 </Badge>
               )}
               {o.target_date && (
-                <span className="text-[11px] text-muted-foreground">scad. {new Date(o.target_date).toLocaleDateString('it-IT')}</span>
+                <span className="text-xs text-muted-foreground">scad. {new Date(o.target_date).toLocaleDateString('it-IT')}</span>
               )}
             </div>
             {o.description && <p className="text-xs text-muted-foreground line-clamp-2">{o.description}</p>}
             <div className="flex gap-1 mt-2">
               {STATUSES.filter(s => s !== o.status).map(s => (
-                <Button key={s} size="sm" variant="ghost" className="h-6 text-[10px] px-2"
+                <Button key={s} size="sm" variant="ghost" className="h-6 text-xs px-2"
                   onClick={() => quickStatus(o, s)}>
                   → {STATUS_LABEL[s]}
                 </Button>

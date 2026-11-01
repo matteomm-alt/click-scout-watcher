@@ -257,7 +257,7 @@ export function MagazzinoView() {
                                 {item.size && <p className="text-xs text-muted-foreground">Taglia: {item.size}</p>}
                               </div>
                               {item.min_quantity > 0 && item.quantity < item.min_quantity && (
-                                <Badge variant="destructive" className="text-[10px]">Scorta bassa</Badge>
+                                <Badge variant="destructive" className="text-xs">Scorta bassa</Badge>
                               )}
                               <Badge variant="outline">×{item.quantity}</Badge>
                               <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
@@ -362,7 +362,7 @@ export function MagazzinoView() {
                       {aItems.map(a => (
                         <div key={a.id} className="flex items-center gap-1.5 text-xs bg-muted/40 rounded-full px-3 py-1">
                           <span className="font-semibold">{a.inventory_items?.name}</span>
-                          {a.size && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{a.size}</Badge>}
+                          {a.size && <Badge variant="outline" className="text-xs px-1.5 py-0">{a.size}</Badge>}
                           <span className="text-muted-foreground">×{a.quantity}</span>
                           <button onClick={() => returnItem(a.id)} className="text-primary hover:text-primary/70 ml-1 transition-colors">×</button>
                         </div>

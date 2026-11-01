@@ -131,7 +131,7 @@ export function ComunicazioniView() {
                     {c.priority === 'urgente' && <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />}
                     <Badge variant={PRIORITY_VARIANT[c.priority]}>{c.priority}</Badge>
                     {isUrgent && !mineRead && (
-                      <Badge variant="destructive" className="animate-pulse text-[10px] px-1.5 py-0">● URGENTE</Badge>
+                      <Badge variant="destructive" className="animate-pulse text-xs px-1.5 py-0">● URGENTE</Badge>
                     )}
                     <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('it-IT')}</span>
                   </div>

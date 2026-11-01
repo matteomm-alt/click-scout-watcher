@@ -44,7 +44,7 @@ const MARKER_CFG: Record<CourtMarkerKind, { label: string; bg: string; fg: strin
   player: { label: 'G', bg: '#f97316', fg: '#111', title: 'Giocatore' },
   coach:  { label: 'T', bg: '#1d4ed8', fg: '#fff', title: 'Allenatore' },
   basket: { label: '⬤', bg: '#111', fg: '#fbbf24', title: 'Cesta palloni' },
-  cone:   { label: '▲', bg: '#dc2626', fg: '#fff', title: 'Cono' },
+  cone:   { label: '▲', bg: 'hsl(var(--destructive))', fg: '#fff', title: 'Cono' },
   ball:   { label: '⚽', bg: '#fbbf24', fg: '#111', title: 'Pallone' },
   target: { label: '✕', bg: '#7c3aed', fg: '#fff', title: 'Bersaglio' },
 };
@@ -208,7 +208,7 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
             type="button"
             onClick={toggleType}
             className={cn(
-              'h-7 px-2 rounded-md text-[11px] font-bold border transition-colors flex items-center gap-1',
+              'h-7 px-2 rounded-md text-xs font-bold border transition-colors flex items-center gap-1',
               isFull
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-secondary border-border text-muted-foreground hover:text-foreground',
@@ -240,13 +240,13 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
               type="button"
               onClick={() => addMarker(kind)}
               title={`Aggiungi ${cfg.title}`}
-              className="h-8 px-2 rounded-md border border-border text-[11px] font-bold
+              className="h-8 px-2 rounded-md border border-border text-xs font-bold
                          flex items-center gap-1.5 transition-all hover:scale-105
                          active:scale-95 hover:border-primary/50"
               style={{ background: 'hsl(var(--secondary))' }}
             >
               <span
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-black"
                 style={{ background: cfg.bg, color: cfg.fg }}
               >
                 {cfg.label}
@@ -262,7 +262,7 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
           type="button"
           onClick={() => { setArrowMode(!arrowMode); setArrowStart(null); setArrowPreview(null); }}
           className={cn(
-            'h-8 px-2 rounded-md border text-[11px] font-bold transition-all flex items-center gap-1',
+            'h-8 px-2 rounded-md border text-xs font-bold transition-all flex items-center gap-1',
             arrowMode
               ? 'bg-primary text-primary-foreground border-primary'
               : 'bg-secondary border-border text-muted-foreground hover:text-foreground',
@@ -278,7 +278,7 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
             type="button"
             onClick={deleteSelected}
             className="h-8 px-2 rounded-md border border-destructive/50 bg-destructive/10
-                       text-destructive text-[11px] font-bold hover:bg-destructive/20 flex items-center gap-1"
+                       text-destructive text-xs font-bold hover:bg-destructive/20 flex items-center gap-1"
           >
             <X className="w-3 h-3" /> Elimina
           </button>
@@ -289,7 +289,7 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
             type="button"
             onClick={resetAll}
             className="ml-auto h-8 px-2 rounded-md border border-border bg-secondary
-                       text-muted-foreground text-[11px] font-bold hover:text-foreground flex items-center gap-1"
+                       text-muted-foreground text-xs font-bold hover:text-foreground flex items-center gap-1"
           >
             <RotateCcw className="w-3 h-3" /> Reset
           </button>
@@ -297,7 +297,7 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
       </div>
 
       {arrowMode && (
-        <div className="text-[11px] text-orange-800 dark:text-primary px-2 py-1 rounded bg-primary/10 border border-primary/30">
+        <div className="text-xs text-orange-800 dark:text-primary px-2 py-1 rounded bg-primary/10 border border-primary/30">
           {arrowStart ? '🎯 Clicca il punto di arrivo' : '📍 Clicca il punto di partenza'}
         </div>
       )}
@@ -407,7 +407,7 @@ function SingleCourt({ value, onChange, onRemove, index }: SingleCourtProps) {
         </svg>
       </div>
 
-      <p className="text-[10px] text-muted-foreground leading-relaxed">
+      <p className="text-xs text-muted-foreground leading-relaxed">
         Clicca un pulsante per aggiungere · Trascina per spostare · Freccia per movimenti · Doppio click sulla freccia per stile
       </p>
     </div>

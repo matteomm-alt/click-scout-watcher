@@ -259,15 +259,15 @@ function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; sid
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 border border-border rounded">
                 <p className="text-2xl font-black italic">{totalSets}</p>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Alzate totali</p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Alzate totali</p>
               </div>
               <div className="p-3 border border-border rounded">
                 <p className="text-2xl font-black italic">{pct(sets.filter(a=>[4,3,2].includes(a.end_zone??0)).length, totalSets)}%</p>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verso prima linea</p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Verso prima linea</p>
               </div>
               <div className="p-3 border border-border rounded">
                 <p className="text-2xl font-black italic">{pct(sets.filter(a=>[1,5,6].includes(a.end_zone??0)).length, totalSets)}%</p>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verso seconda linea</p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Verso seconda linea</p>
               </div>
             </div>
 
@@ -305,7 +305,7 @@ function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; sid
                           <span className="font-bold">{d.label}</span>
                           <div className="relative h-4 bg-background rounded overflow-hidden">
                             <div className="absolute inset-y-0 left-0 bg-primary/40" style={{ width: `${d.pctOfTotal}%` }} />
-                            <span className="absolute inset-0 flex items-center justify-end pr-1 text-[10px] font-bold">{d.count}</span>
+                            <span className="absolute inset-0 flex items-center justify-end pr-1 text-xs font-bold">{d.count}</span>
                           </div>
                           <span className="text-right text-muted-foreground">{d.pctOfTotal}%</span>
                           {d.killPct !== null ? (
@@ -314,7 +314,7 @@ function DistributionAnalysis({ actions, side, pct }: { actions: DbAction[]; sid
                         </div>
                       ))}
                     </div>
-                    <p className="mt-2 text-[10px] text-muted-foreground">kill% = % di # sull'azione successiva alla alzata</p>
+                    <p className="mt-2 text-xs text-muted-foreground">kill% = % di # sull'azione successiva alla alzata</p>
                   </div>
                 );
               })}
@@ -331,7 +331,7 @@ function ReceptionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 
   const rec = actions.filter((a) => a.skill === 'R');
   const zc: Record<number, [number, number]> = { 4:[15,10],3:[45,10],2:[75,10],5:[15,30],6:[45,30],1:[75,30],7:[15,50],8:[45,50],9:[75,50] };
   const band = (z: number | null) => [5,7,4].includes(z || 0) ? 'sinistra' : [6,8,3].includes(z || 0) ? 'centro' : [1,9,2].includes(z || 0) ? 'destra' : 'n/d';
-  const dot = (ev: string) => ev === '#' ? '#16a34a' : ev === '=' ? '#dc2626' : '#ca8a04';
+  const dot = (ev: string) => ev === '#' ? 'hsl(var(--success))' : ev === '=' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))';
   return (
     <Card className="p-5">
       <h3 className="mb-4 text-sm font-bold uppercase italic">Ricezione</h3>
@@ -355,8 +355,8 @@ function ReceptionAnalysis({ actions, side, pct }: { actions: DbAction[]; side: 
                     <div key={num} className="rounded border border-border/60 bg-background/40 p-2">
                       <div className="mb-1 text-xs font-black">#{num}</div>
                       <MiniField>{list.map((a, i) => { const c = zc[a.end_zone || 0]; return c ? <circle key={a.id || i} cx={c[0]} cy={c[1]} r="4" fill={dot(a.evaluation)} fillOpacity="0.85" /> : null; })}</MiniField>
-                      <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]"><span>Tot <b>{list.length}</b></span><span>Prf <b>{pct(list.filter(a=>a.evaluation==='#').length, list.length)}%</b></span><span>Err <b>{pct(list.filter(a=>a.evaluation==='=').length, list.length)}%</b></span><span>Pos <b>{pct(pos, list.length)}%</b></span></div>
-                      <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] text-muted-foreground">{bands.map(b => <span key={b.name}>{b.name.slice(0,3)} <b className="text-foreground">{b.pct}%</b></span>)}</div>
+                      <div className="mt-2 grid grid-cols-4 gap-1 text-center text-xs"><span>Tot <b>{list.length}</b></span><span>Prf <b>{pct(list.filter(a=>a.evaluation==='#').length, list.length)}%</b></span><span>Err <b>{pct(list.filter(a=>a.evaluation==='=').length, list.length)}%</b></span><span>Pos <b>{pct(pos, list.length)}%</b></span></div>
+                      <div className="mt-2 grid grid-cols-3 gap-1 text-center text-xs text-muted-foreground">{bands.map(b => <span key={b.name}>{b.name.slice(0,3)} <b className="text-foreground">{b.pct}%</b></span>)}</div>
                     </div>
                   );
                 })}
@@ -374,7 +374,7 @@ function ServeAnalysis({ actions, pct }: { actions: DbAction[]; pct: (n: number,
   const serves = actions.filter((a) => a.skill === 'S' && (selectedType === 'all' || a.skill_type === selectedType));
   const players = [...new Set(serves.map((a) => a.player_number).filter((n): n is number => n !== null))].sort((a,b)=>a-b);
   const zc: Record<number, [number, number]> = { 4:[15,10],3:[45,10],2:[75,10],5:[15,30],6:[45,30],1:[75,30],7:[15,50],8:[45,50],9:[75,50] };
-  const color = (ev: string) => ev === '#' ? '#000' : ev === '=' ? '#dc2626' : ev === '/' ? '#ea580c' : '#ca8a04';
+  const color = (ev: string) => ev === '#' ? '#000' : ev === '=' ? 'hsl(var(--destructive))' : ev === '/' ? '#ea580c' : 'hsl(var(--warning))';
   return (
     <Card className="p-5">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -383,7 +383,7 @@ function ServeAnalysis({ actions, pct }: { actions: DbAction[]; pct: (n: number,
       </div>
       <div className="grid gap-4 md:grid-cols-2">{players.map((n)=>{
         const playerServes = serves.filter(a=>a.player_number===n);
-        return <div key={n} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">#{n}</div><div className="grid gap-2 sm:grid-cols-3">{SERVE_TYPES.map(t => { const items = playerServes.filter(a => a.skill_type === t.key); if (!items.length) return null; return <div key={t.key}><div className="mb-1 text-[10px] font-bold uppercase text-muted-foreground">{t.label}</div><MiniField>{items.map(a=>{const st=zc[a.start_zone || 0], e=zc[a.end_zone || 0]; if(!st||!e)return null; return <line key={a.id} x1={st[0]} y1={st[1]} x2={e[0]} y2={e[1]} stroke={color(a.evaluation)} strokeWidth="1.5" />})}</MiniField></div>; })}</div><div className="mt-2 grid grid-cols-3 text-center text-xs"><span>Tot <b>{playerServes.length}</b></span><span>Ace% <b>{pct(playerServes.filter(a=>a.evaluation==='#').length, playerServes.length)}</b></span><span>Err% <b>{pct(playerServes.filter(a=>a.evaluation==='=').length, playerServes.length)}</b></span></div></div>;
+        return <div key={n} className="rounded-lg border border-border bg-muted/30 p-3"><div className="mb-2 font-black">#{n}</div><div className="grid gap-2 sm:grid-cols-3">{SERVE_TYPES.map(t => { const items = playerServes.filter(a => a.skill_type === t.key); if (!items.length) return null; return <div key={t.key}><div className="mb-1 text-xs font-bold uppercase text-muted-foreground">{t.label}</div><MiniField>{items.map(a=>{const st=zc[a.start_zone || 0], e=zc[a.end_zone || 0]; if(!st||!e)return null; return <line key={a.id} x1={st[0]} y1={st[1]} x2={e[0]} y2={e[1]} stroke={color(a.evaluation)} strokeWidth="1.5" />})}</MiniField></div>; })}</div><div className="mt-2 grid grid-cols-3 text-center text-xs"><span>Tot <b>{playerServes.length}</b></span><span>Ace% <b>{pct(playerServes.filter(a=>a.evaluation==='#').length, playerServes.length)}</b></span><span>Err% <b>{pct(playerServes.filter(a=>a.evaluation==='=').length, playerServes.length)}</b></span></div></div>;
       })}</div>
     </Card>
   );

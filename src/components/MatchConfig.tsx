@@ -121,7 +121,7 @@ export function MatchConfig() {
                 <span className="block text-sm font-black uppercase">
                   Casa a {side === 'left' ? 'sinistra' : 'destra'}
                 </span>
-                <span className="mt-1 block truncate text-[11px] font-bold opacity-75">
+                <span className="mt-1 block truncate text-xs font-bold opacity-75">
                   {leftName} ← rete → {rightName}
                 </span>
               </button>
@@ -151,7 +151,7 @@ export function MatchConfig() {
               )}>
               <Icon className="w-5 h-5" />
               <span className="text-sm font-black uppercase">{label}</span>
-              <span className="text-[10px] opacity-75">{desc}</span>
+              <span className="text-xs opacity-75">{desc}</span>
             </button>
           ))}
         </div>
@@ -212,7 +212,7 @@ export function MatchConfig() {
             <Move className="w-5 h-5 text-primary" />
             <span className="flex flex-col items-start">
               <span className="text-sm font-bold">Schemi ricezione / attacco / difesa</span>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 S1→S6 per tutte le fasi · Carica template
               </span>
             </span>

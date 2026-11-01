@@ -108,7 +108,7 @@ export function SetDistribution() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Distribuzione Alzata · {ROLE_LABELS.S}
         </h4>
       </div>
@@ -125,7 +125,7 @@ export function SetDistribution() {
               key={k}
               type="button"
               onClick={() => setTeam(k)}
-              className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${cls}`}
+              className={`text-xs font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${cls}`}
             >
               {(k === 'home' ? homeTeam.name || 'Casa' : awayTeam.name || 'Ospite').slice(0, 14)}
             </button>
@@ -143,7 +143,7 @@ export function SetDistribution() {
             const max = Math.max(...Object.values(r.zoneCounts), 1);
             return (
               <div key={r.setterNumber} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono font-bold text-warning">#{r.setterNumber}</span>
                     <span className="text-foreground truncate max-w-[100px]">{r.setterName}</span>
@@ -166,10 +166,10 @@ export function SetDistribution() {
                           backgroundColor: c === 0 ? 'transparent' : `hsl(var(--primary) / ${(0.1 + intensity * 0.5).toFixed(2)})`,
                         }}
                       >
-                        <div className="text-[8px] uppercase tracking-wider text-muted-foreground">Z{z}</div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Z{z}</div>
                         <div className="text-sm font-bold text-foreground tabular-nums">{c}</div>
                         {c > 0 && (
-                          <div className={`text-[9px] font-bold tabular-nums ${
+                          <div className={`text-xs font-bold tabular-nums ${
                             pct >= 50 ? 'text-emerald-400' : pct >= 30 ? 'text-warning' : 'text-destructive'
                           }`}>
                             {pct}% K
@@ -194,10 +194,10 @@ export function SetDistribution() {
                           backgroundColor: c === 0 ? 'transparent' : `hsl(var(--primary) / ${(0.1 + intensity * 0.5).toFixed(2)})`,
                         }}
                       >
-                        <div className="text-[8px] uppercase tracking-wider text-muted-foreground">Z{z}</div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Z{z}</div>
                         <div className="text-sm font-bold text-foreground tabular-nums">{c}</div>
                         {c > 0 && (
-                          <div className={`text-[9px] font-bold tabular-nums ${
+                          <div className={`text-xs font-bold tabular-nums ${
                             pct >= 50 ? 'text-emerald-400' : pct >= 30 ? 'text-warning' : 'text-destructive'
                           }`}>
                             {pct}% K
@@ -214,12 +214,12 @@ export function SetDistribution() {
       )}
 
       <div className="space-y-2 pt-2 border-t border-border/50">
-        <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+        <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Alzata per rotazione
         </h5>
         <div className="space-y-2">
           {rotationRows.map((row) => (
-            <div key={row.rotation} className="grid grid-cols-[28px_1fr] items-center gap-2 text-[10px]">
+            <div key={row.rotation} className="grid grid-cols-[28px_1fr] items-center gap-2 text-xs">
               <div className="font-mono font-black text-primary">R{row.rotation}</div>
               {row.total < 3 ? (
                 <div className="h-8 rounded border border-border/40 flex items-center justify-center text-muted-foreground font-bold">—</div>
@@ -232,7 +232,7 @@ export function SetDistribution() {
                     return (
                       <div
                         key={group.key}
-                        className={`h-full min-w-8 flex items-center justify-center text-[9px] font-black text-primary-foreground ${group.className}`}
+                        className={`h-full min-w-8 flex items-center justify-center text-xs font-black text-primary-foreground ${group.className}`}
                         style={{ width: `${width}%` }}
                         title={`${group.label}: ${Math.round(width)}%`}
                       >
@@ -247,7 +247,7 @@ export function SetDistribution() {
         </div>
       </div>
 
-      <div className="text-[9px] text-muted-foreground italic">
+      <div className="text-xs text-muted-foreground italic">
         * Inferita dalla zona di partenza degli attacchi e dal setter in posizione
       </div>
     </div>

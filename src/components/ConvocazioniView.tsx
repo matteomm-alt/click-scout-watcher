@@ -291,7 +291,7 @@ export function ConvocazioniView() {
                           const rc = ROLE_COLORS[dbRole] ?? ROLE_COLORS['non_convocato'];
                           return (
                             <span
-                              className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md"
+                              className="text-xs font-semibold uppercase px-2 py-0.5 rounded-md"
                               style={{ background: rc.bg, color: rc.text }}
                             >
                               {role}

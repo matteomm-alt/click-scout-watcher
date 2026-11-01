@@ -195,7 +195,7 @@ export function CompareTab({ actions, match, currentTeamId }: { actions: DbActio
                     points={t.points.map((p, i) => `${(i / (t.points.length - 1 || 1)) * w},${20 - (p.lead / max) * 18}`).join(' ')}
                   />
                 </svg>
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
                   <span>{match.home_team.name} avanti ↑</span>
                   <span>{match.away_team.name} avanti ↓</span>
                 </div>

@@ -123,19 +123,19 @@ export function HeatmapTab({ actions, forcedSkills }: { actions: DbAction[]; for
                 const cx = 10 + xVal * 280;
                 const cy = 5 + yVal * 155;
                 const color =
-                  a.evaluation === '#' ? '#16a34a'
-                  : a.evaluation === '=' || a.evaluation === '/' ? '#dc2626'
+                  a.evaluation === '#' ? 'hsl(var(--success))'
+                  : a.evaluation === '=' || a.evaluation === '/' ? 'hsl(var(--destructive))'
                   : a.evaluation === '+' ? '#2563eb'
-                  : '#ca8a04';
+                  : 'hsl(var(--warning))';
                 return <circle key={a.id || i} cx={cx} cy={cy} r="2.5" fill={color} fillOpacity="0.75" />;
               })}
             </svg>
           </div>
-          <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-muted-foreground">
-            <span><span style={{ color: '#16a34a' }}>●</span> Perfetto (#)</span>
+          <div className="flex flex-wrap gap-3 mt-3 text-xs text-muted-foreground">
+            <span><span style={{ color: 'hsl(var(--success))' }}>●</span> Perfetto (#)</span>
             <span><span style={{ color: '#2563eb' }}>●</span> Positivo (+)</span>
-            <span><span style={{ color: '#ca8a04' }}>●</span> OK/Scarso</span>
-            <span><span style={{ color: '#dc2626' }}>●</span> Errore (= /)</span>
+            <span><span style={{ color: 'hsl(var(--warning))' }}>●</span> OK/Scarso</span>
+            <span><span style={{ color: 'hsl(var(--destructive))' }}>●</span> Errore (= /)</span>
           </div>
         </Card>
       )}

@@ -202,16 +202,16 @@ export function PlayerStatsPanel() {
     const positive = inverse ? value < 0 : value > 0;
     const negative = inverse ? value > 0 : value < 0;
     const cls = positive ? 'text-emerald-400' : negative ? 'text-destructive' : 'text-muted-foreground';
-    return <span className={`font-mono text-[10px] font-bold ${cls}`}>{value > 0 ? '+' : ''}{value}%</span>;
+    return <span className={`font-mono text-xs font-bold ${cls}`}>{value > 0 ? '+' : ''}{value}%</span>;
   };
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Statistiche Giocatori
         </h4>
-        <span className="text-[10px] font-mono text-muted-foreground">{rows.length} att.</span>
+        <span className="text-xs font-mono text-muted-foreground">{rows.length} att.</span>
       </div>
 
       <div className="flex items-center gap-1">
@@ -248,7 +248,7 @@ export function PlayerStatsPanel() {
               key={k}
               type="button"
               onClick={() => { setTeam(k); setSelectedPlayer('all'); }}
-              className={`text-[10px] font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${cls}`}
+              className={`text-xs font-bold uppercase tracking-wider py-1 rounded transition-colors truncate ${cls}`}
             >
               {label.slice(0, 14)}
             </button>
@@ -284,10 +284,10 @@ export function PlayerStatsPanel() {
           ) : singlePlayerStats.map((s) => (
             <div key={s.key} className="rounded border border-border/40 p-2 bg-background/60">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-bold uppercase text-foreground">{s.label}</span>
-                <span className="text-[10px] font-mono text-muted-foreground">Tot {s.total}</span>
+                <span className="text-xs font-bold uppercase text-foreground">{s.label}</span>
+                <span className="text-xs font-mono text-muted-foreground">Tot {s.total}</span>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-[10px]">
+              <div className="grid grid-cols-3 gap-2 text-xs">
                 <div>
                   <div className="text-muted-foreground uppercase">Perfetti</div>
                   <div className="font-bold tabular-nums">{s.perfectPct}% {renderDelta(s.deltas.perfectPct)}</div>
@@ -306,7 +306,7 @@ export function PlayerStatsPanel() {
         </div>
       ) : (
         <div className="overflow-x-auto -mx-1">
-          <table className="w-full text-[10px]">
+          <table className="w-full text-xs">
             <thead>
               <tr className="text-muted-foreground uppercase tracking-wider">
                 <th className="text-left px-1 py-1 font-bold">#</th>
@@ -331,13 +331,13 @@ export function PlayerStatsPanel() {
                     <td className="px-1 py-1 text-right font-bold text-destructive">{r.totalErrors}</td>
                     <td className={`px-1 py-1 text-right font-bold tabular-nums ${colorBy(attEff, 'eff')}`}>
                       {r.attTot > 0 ? `${attEff}%` : '–'}
-                      <div className="text-[8px] text-muted-foreground font-normal">
+                      <div className="text-xs text-muted-foreground font-normal">
                         {r.attKills}/{r.attErrors}/{r.attTot}
                       </div>
                     </td>
                     <td className={`px-1 py-1 text-right font-bold tabular-nums ${colorBy(recPos, 'pct')}`}>
                       {r.recTot > 0 ? `${recPos}%` : '–'}
-                      <div className="text-[8px] text-muted-foreground font-normal">
+                      <div className="text-xs text-muted-foreground font-normal">
                         {r.recPositive}/{r.recErrors}/{r.recTot}
                       </div>
                     </td>
@@ -348,7 +348,7 @@ export function PlayerStatsPanel() {
               })}
             </tbody>
           </table>
-          <div className="text-[9px] text-muted-foreground mt-1 px-1">
+          <div className="text-xs text-muted-foreground mt-1 px-1">
             Att%: efficienza (kill-err)/tot · Ric%: positive/tot · sotto: kill/err/tot
           </div>
         </div>
