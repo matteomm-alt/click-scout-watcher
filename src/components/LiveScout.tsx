@@ -63,6 +63,9 @@ export function LiveScout() {
   const [zoneSelectMode, setZoneSelectMode] = useState(false);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [pendingSkill, setPendingSkill] = useState<Skill | null>(null);
+  // Fondamentale a cui appartiene la zona in selezione. Separato da pendingSkill, che si
+  // azzera a fine rally (ace/kill): senza, il click finiva su startZone invece che su endZone/landingZone.
+  const [zoneSkill, setZoneSkill] = useState<Skill | null>(null);
   const [pendingAttackType, setPendingAttackType] = useState<AttackType>(settings.attaccoPredefinito as AttackType);
   const [pendingMiddleCombo, setPendingMiddleCombo] = useState<string | null>(null);
   const [pendingOtherCombo, setPendingOtherCombo] = useState<string | null>(null);
@@ -370,6 +373,7 @@ export function LiveScout() {
       const receivingTeam = team === 'home' ? 'away' : 'home';
       setPendingActionId(actionId);
       setPendingSkill(skill);
+      setZoneSkill(skill);
       setPendingTeam(receivingTeam);
       setZoneSelectMode(true);
     }
@@ -381,6 +385,7 @@ export function LiveScout() {
       const landingTeam = team === 'home' ? 'away' : 'home';
       setPendingActionId(actionId);
       setPendingSkill(skill);
+      setZoneSkill(skill);
       setPendingTeam(landingTeam);
       setZoneSelectMode(true);
     }
@@ -409,13 +414,14 @@ export function LiveScout() {
 
   const handleZoneSelect = (zone: number) => {
     if (pendingActionId) {
-      if (pendingSkill === 'A') {
+      const zs = zoneSkill ?? pendingSkill;
+      if (zs === 'A') {
         // Punto di caduta reale, distinto da endZone (posizione
         // dell'attaccante, già impostata al momento del tocco — non
         // sovrascritta qui, per non alterare la distribuzione del
         // palleggiatore che dipende da quella).
         updateAction(pendingActionId, { landingZone: zone });
-      } else if (pendingSkill === 'S') {
+      } else if (zs === 'S') {
         // Zona di atterraggio della battuta, fissata manualmente sul campo di chi
         // riceve. Il giocatore che ha ricevuto si assegna toccandolo normalmente:
         // la sua azione R avrà una propria zona dedotta dalla sua posizione,
@@ -426,6 +432,7 @@ export function LiveScout() {
         setZoneSelectMode(false);
         setPendingActionId(null);
         setPendingSkill(null);
+        setZoneSkill(null);
         setPendingTeam(null);
         return;
       } else {
@@ -436,6 +443,7 @@ export function LiveScout() {
     setZoneSelectMode(false);
     setPendingActionId(null);
     setPendingSkill(null);
+    setZoneSkill(null);
     setPendingTeam(null);
   };
 
@@ -443,6 +451,7 @@ export function LiveScout() {
     setZoneSelectMode(false);
     setPendingActionId(null);
     setPendingSkill(null);
+    setZoneSkill(null);
     setPendingTeam(null);
   };
 
@@ -796,7 +805,7 @@ export function LiveScout() {
               selectedZone={null}
               onZoneClick={zoneSelectMode ? (z) => handleZoneSelect(z) : undefined}
               zoneSelectTeam={zoneSelectMode && pendingTeam ? pendingTeam : undefined}
-              zoneSelectSkill={zoneSelectMode ? pendingSkill : undefined}
+              zoneSelectSkill={zoneSelectMode ? (zoneSkill ?? pendingSkill) : undefined}
             />
           </div>
 
