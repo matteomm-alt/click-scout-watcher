@@ -165,3 +165,29 @@ describe('matchStore — snapshot azione (Phase 11)', () => {
     expect(b.phase).toBe('K2');
   });
 });
+
+describe('matchStore — sorteggio set decisivo', () => {
+  beforeEach(() => bootstrap());
+
+  const playSet = (winner: 'home' | 'away', n = 25) => {
+    for (let i = 0; i < n; i++) useMatchStore.getState().addPoint(winner);
+    useMatchStore.getState().endSet();
+  };
+
+  it('tossPending solo all\'inizio del set decisivo e si chiude con battuta e lato', () => {
+    useMatchStore.getState().setMatchInfo({ totalSets: 5 });
+    playSet('home'); expect(useMatchStore.getState().matchState.tossPending).toBeFalsy();
+    playSet('away'); playSet('home'); playSet('away');
+    let ms = useMatchStore.getState().matchState;
+    expect(ms.currentSet).toBe(5);
+    expect(ms.tossPending).toBe(true);
+    const side = ms.homeCourtSide;
+    useMatchStore.getState().setCourtSide(side === 'left' ? 'right' : 'left');
+    useMatchStore.getState().setServingTeam('away');
+    ms = useMatchStore.getState().matchState;
+    expect(ms.tossPending).toBe(false);
+    expect(ms.servingTeam).toBe('away');
+    expect(ms.setFirstServer).toBe('away');
+    expect(ms.homeCourtSide).toBe(side === 'left' ? 'right' : 'left');
+  });
+});

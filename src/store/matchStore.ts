@@ -64,6 +64,7 @@ interface MatchStore {
   setSingleTeamMode: (v: boolean) => void;
   adjustScore: (team: 'home' | 'away', delta: number) => void;
   setServingTeam: (team: 'home' | 'away') => void;
+  setCourtSide: (homeSide: 'left' | 'right') => void;
   addPoint: (team: 'home' | 'away') => void;
   rotateTeam: (team: 'home' | 'away') => void;
   endSet: () => void;
@@ -356,6 +357,16 @@ export const useMatchStore = create<MatchStore>()(
           timestamp: nowTime(),
           team,
           delta,
+        };
+        set((s) => addEventAndApply(s, event));
+      },
+
+      setCourtSide: (homeSide) => {
+        const event: MatchEvent = {
+          type: 'court_side_set',
+          id: safeUUID(),
+          timestamp: nowTime(),
+          homeSide,
         };
         set((s) => addEventAndApply(s, event));
       },

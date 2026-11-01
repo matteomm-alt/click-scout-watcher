@@ -12,7 +12,8 @@ export type MatchEventType =
   | 'timeout'
   | 'sanction'
   | 'score_adjustment'
-  | 'serving_team_set';
+  | 'serving_team_set'
+  | 'court_side_set';
 
 interface BaseEvent {
   id: string;
@@ -122,6 +123,11 @@ export interface ServingTeamSetEvent extends BaseEvent {
   team: 'home' | 'away';
 }
 
+export interface CourtSideSetEvent extends BaseEvent {
+  type: 'court_side_set';
+  homeSide: 'left' | 'right';
+}
+
 export interface RotationEvent extends BaseEvent {
   type: 'rotation';
   team: 'home' | 'away';
@@ -131,6 +137,7 @@ export interface RotationEvent extends BaseEvent {
 }
 
 export type MatchEvent =
+  | CourtSideSetEvent
   | MatchStartedEvent
   | TouchEvent
   | PointEvent

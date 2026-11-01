@@ -444,6 +444,7 @@ function applyEventInternal(
             }
           : {}),
         setOverPending: false,
+        tossPending: !isMatchOver && ctx.totalSets > 1 && state.currentSet + 1 === ctx.totalSets,
       };
     }
 
@@ -509,9 +510,13 @@ function applyEventInternal(
       return { ...state, [key]: Math.max(0, state[key] + event.delta) };
     }
 
+    case 'court_side_set':
+      return { ...state, homeCourtSide: event.homeSide, tossPending: false };
+
     case 'serving_team_set':
       return {
         ...state,
+        tossPending: false,
         servingTeam: event.team,
         // Se il set non è ancora iniziato, è la battuta iniziale del set.
         setFirstServer: state.homeScore === 0 && state.awayScore === 0 ? event.team : state.setFirstServer,

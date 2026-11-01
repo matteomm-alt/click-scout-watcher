@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { Square, AlertTriangle, RotateCcw, BarChart2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -41,7 +41,7 @@ function ServeAnalysisButton({ open, setOpen, serverNumber, serveActions, zonePo
 export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
   const {
     homeTeam, awayTeam, matchState,
-    callTimeout, addSanction, resetMatch, adjustScore, setServingTeam, rotateTeam,
+    callTimeout, addSanction, resetMatch, adjustScore, setServingTeam, setCourtSide, rotateTeam,
   } = useMatchStore();
 
   const [sanctionOpen, setSanctionOpen] = useState(false);
@@ -51,6 +51,17 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
   const [sanctionType, setSanctionType] = useState<SanctionType>('yellow');
   const [sanctionPlayer, setSanctionPlayer] = useState<string>('');
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  // Sorteggio del set decisivo (battuta + lato campo)
+  const [tossDismissedSet, setTossDismissedSet] = useState<number | null>(null);
+  const [tossServe, setTossServe] = useState<'home' | 'away'>('home');
+  const [tossSide, setTossSide] = useState<'left' | 'right'>('right');
+  const tossOpen = !!matchState.tossPending && !matchState.isMatchEnded
+    && matchState.homeScore === 0 && matchState.awayScore === 0
+    && tossDismissedSet !== matchState.currentSet;
+  useEffect(() => {
+    if (tossOpen) { setTossServe(matchState.servingTeam); setTossSide(matchState.homeCourtSide); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tossOpen]);
 
   const handleTimeout = (team: 'home' | 'away') => {
     const ok = callTimeout(team);
@@ -295,6 +306,42 @@ export function ScoreBoard({ awayFirst = true }: { awayFirst?: boolean } = {}) {
             <button onClick={() => setServingTeam('away')} className="min-h-12 px-6 font-bold bg-secondary rounded">Serve Ospite</button>
             <button onClick={() => rotateTeam('home')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Casa ↺</button>
             <button onClick={() => rotateTeam('away')} className="min-h-12 px-4 font-black bg-secondary rounded">Ruota Ospite ↺</button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={tossOpen} onOpenChange={(o) => { if (!o) setTossDismissedSet(matchState.currentSet); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Set decisivo: sorteggio</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Inserisci l'esito del sorteggio: chi batte per primo e da che lato gioca {homeTeam.name || 'Casa'}.</p>
+          <div className="space-y-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Batte per primo</div>
+              <div className="grid grid-cols-2 gap-2">
+                {(['home', 'away'] as const).map((t) => (
+                  <button key={t} type="button" onClick={() => setTossServe(t)}
+                    className={`min-h-12 px-4 font-bold rounded bg-secondary ${tossServe === t ? 'ring-2 ring-primary' : 'opacity-80'}`}>
+                    {t === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Lato di {homeTeam.name || 'Casa'}</div>
+              <div className="grid grid-cols-2 gap-2">
+                {(['left', 'right'] as const).map((sd) => (
+                  <button key={sd} type="button" onClick={() => setTossSide(sd)}
+                    className={`min-h-12 px-4 font-bold rounded bg-secondary ${tossSide === sd ? 'ring-2 ring-primary' : 'opacity-80'}`}>
+                    {sd === 'left' ? 'Sinistra' : 'Destra'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Button className="w-full min-h-12" onClick={() => {
+              if (tossSide !== matchState.homeCourtSide) setCourtSide(tossSide);
+              setServingTeam(tossServe);
+              setTossDismissedSet(matchState.currentSet);
+            }}>Conferma</Button>
           </div>
         </DialogContent>
       </Dialog>
