@@ -1,4 +1,3 @@
-import { substitutionPartners, pairAllowed } from '@/lib/substitutions';
 import { autoPointWinner } from '@/lib/autoPoint';
 import { toCourtPoint } from '@/lib/courtCoords';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -10,11 +9,13 @@ import { generateDVW } from '@/lib/dvwExporter';
 import { upsertScoutSession } from '@/lib/scoutPersistence';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
-import { SKILL_LABELS, ATTACK_COMBOS } from '@/types/volleyball';
-import type { Skill, ScoutAction, AttackType } from '@/types/volleyball';
+import { ATTACK_COMBOS } from '@/types/volleyball';
+import type { Skill, AttackType } from '@/types/volleyball';
 import { safeUUID, cn } from '@/lib/utils';
 
 import { ScoreBoard } from '@/components/ScoreBoard';
+import { getInitialPhases } from '@/lib/tacticalPhases';
+import { computeLiveHeatmap, liveHeatmapColor, lastAttackArrows, buildLiveReportInput } from '@/lib/liveScoutData';
 import { VolleyballCourt, logicalRoleForSlot } from '@/components/VolleyballCourt';
 import { ActionPanel } from '@/components/ActionPanel';
 import { AttackHeatmap } from '@/components/AttackHeatmap';
@@ -37,7 +38,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import type { DbAction } from '@/lib/scoutAnalysis';
+import { LiveHeatmapFilters, EndSetDialog, ActionLog, SubstitutionPicker } from '@/components/scout/LiveScoutParts';
+
 
 type RightTab = 'log' | 'stats' | 'heat' | 'quick' | 'kpi';
 
@@ -192,43 +194,18 @@ export function LiveScout() {
   // Heatmap & live arrows — conteggi separati per squadra: ogni azione viene
   // disegnata sulla metà di campo della propria squadra (le zone sono già in
   // numerazione team-relative, calcolate con nearestZone(team, …)).
-  const liveHeatmapData = useMemo(() => {
-    if (!showLiveHeatmap) return undefined;
-    const home: Record<number, number> = {};
-    const away: Record<number, number> = {};
-    matchState.actions
-      .filter((a) => {
-        if (a.skill !== heatmapSkillFilter) return false;
-        if (heatmapTeamFilter !== 'all' && a.team !== heatmapTeamFilter) return false;
-        if (heatmapEvalFilter !== 'all' && a.evaluation !== heatmapEvalFilter) return false;
-        if (heatmapPlayerFilter !== null && a.playerNumber !== heatmapPlayerFilter) return false;
-        return true;
-      })
-      .forEach((a) => {
-        const zone = heatmapSkillFilter === 'A' ? a.endZone : a.startZone;
-        if (!zone) return;
-        const target = a.team === 'home' ? home : away;
-        target[zone] = (target[zone] || 0) + 1;
-      });
-    return (Object.keys(home).length > 0 || Object.keys(away).length > 0)
-      ? { home, away }
-      : undefined;
-  }, [matchState.actions, showLiveHeatmap, heatmapTeamFilter, heatmapSkillFilter, heatmapEvalFilter, heatmapPlayerFilter]);
-
-  // Colore della heatmap in base al fondamentale selezionato
-  const heatmapColor = heatmapSkillFilter === 'A'
-    ? 'hsl(0 84% 55%)'      // rosso = attacco
-    : heatmapSkillFilter === 'S'
-      ? 'hsl(142 71% 45%)'  // verde = battuta
-      : 'hsl(217 91% 60%)'; // blu = ricezione
-
-  const liveArrows = useMemo(() =>
-    matchState.actions
-      .filter((a) => a.skill === 'A' && a.startZone != null && a.endZone != null)
-      .slice(-5)
-      .map((a) => ({ startZone: a.startZone!, endZone: a.endZone!, evaluation: a.evaluation, team: a.team })),
-    [matchState.actions]
+  const liveHeatmapData = useMemo(
+    () => (showLiveHeatmap
+      ? computeLiveHeatmap(matchState.actions, {
+          skill: heatmapSkillFilter, team: heatmapTeamFilter, evaluation: heatmapEvalFilter, player: heatmapPlayerFilter,
+        })
+      : undefined),
+    [matchState.actions, showLiveHeatmap, heatmapTeamFilter, heatmapSkillFilter, heatmapEvalFilter, heatmapPlayerFilter],
   );
+
+  const heatmapColor = liveHeatmapColor(heatmapSkillFilter);
+
+  const liveArrows = useMemo(() => lastAttackArrows(matchState.actions), [matchState.actions]);
 
   // === Handlers ===
 
@@ -243,7 +220,7 @@ export function LiveScout() {
     const slotPos = lineup?.indexOf(num);
     if (slotPos == null || slotPos < 0) return null;
     const setterPosition = team === 'home' ? matchState.homeSetterPosition : matchState.awaySetterPosition;
-    const phase = team === 'home' ? matchState.teamTacticalPhases.home : matchState.teamTacticalPhases.away;
+    const phase = team === 'home' ? (matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam ?? 'home')).home : (matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam ?? 'home')).away;
     const pos = resolvePlayerPosition({
       team,
       slotPos: slotPos + 1,
@@ -357,7 +334,7 @@ export function LiveScout() {
           const setterNum = lineup?.[setterPosition - 1];
           const setterSlot = setterNum != null ? lineup?.indexOf(setterNum) : -1;
           if (setterSlot != null && setterSlot >= 0) {
-            const phase = team === 'home' ? matchState.teamTacticalPhases.home : matchState.teamTacticalPhases.away;
+            const phase = team === 'home' ? (matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam ?? 'home')).home : (matchState.teamTacticalPhases ?? getInitialPhases(matchState.servingTeam ?? 'home')).away;
             const setterPos = resolvePlayerPosition({
               team,
               slotPos: setterSlot + 1,
@@ -500,64 +477,9 @@ export function LiveScout() {
 
   // Report PDF immediato da scout live
   const handleGenerateReportLive = async () => {
-    const homeTeamId = homeTeam.id || 'home';
-    const awayTeamId = awayTeam.id || 'away';
-    const actions: DbAction[] = matchState.actions.map((a, i) => ({
-      id: a.id,
-      scout_match_id: sessionIdRef.current,
-      scout_team_id: a.team === 'home' ? homeTeamId : awayTeamId,
-      side: a.team,
-      set_number: a.setNumber,
-      rally_index: 0,
-      action_index: i,
-      player_number: a.playerNumber,
-      skill: a.skill,
-      skill_type: a.skillType ?? null,
-      evaluation: a.evaluation,
-      start_zone: a.startZone ?? null,
-      end_zone: a.endZone ?? null,
-      end_subzone: null,
-      attack_combo: a.attackCode ?? null,
-      home_score: a.homeScore,
-      away_score: a.awayScore,
-      home_rotation: a.homeLineup ?? null,
-      away_rotation: a.awayLineup ?? null,
-      home_setter_pos: a.homeSetterPosition ?? null,
-      away_setter_pos: a.awaySetterPosition ?? null,
-      serving_side: a.servingTeam ?? null,
-      landing_zone: a.landingZone ?? null,
-      start_x: a.startX ?? null, start_y: a.startY ?? null,
-      end_x: a.endX ?? null, end_y: a.endY ?? null,
-      landing_x: a.landingX ?? null, landing_y: a.landingY ?? null,
-      timestamp_clock: a.timestamp ?? null,
-    }));
-    const mapPlayers = (team: typeof homeTeam, teamId: string) =>
-      (team.players ?? []).map(p => ({
-        scout_team_id: teamId,
-        number: p.number,
-        last_name: p.lastName || String(p.number),
-        first_name: p.firstName || null,
-        role: p.role ?? null,
-      }));
-    const players = [
-      ...mapPlayers(homeTeam, homeTeamId),
-      ...mapPlayers(awayTeam, awayTeamId),
-    ];
-    const meta = {
-      homeName: homeTeam.name || 'Casa',
-      awayName: awayTeam.name || 'Ospite',
-      homeTeamId,
-      awayTeamId,
-      date: matchInfo.date,
-      venue: matchInfo.venue || '',
-      league: matchInfo.league || '',
-      setResults: matchState.setResults.map(r => ({
-        intermediates: [`${r.homeScore}-${r.awayScore}`],
-        duration: r.duration,
-      })),
-      homeSetsWon: matchState.homeSetsWon,
-      awaySetsWon: matchState.awaySetsWon,
-    };
+    const { homeTeamId, awayTeamId, actions, players, meta } = buildLiveReportInput(
+      matchInfo, homeTeam, awayTeam, matchState, sessionIdRef.current,
+    );
     const { downloadMatchReport, logReportGenerated } = await import('@/lib/pdfReport');
     downloadMatchReport(meta, actions, players);
     if (user && societyId) {
@@ -698,111 +620,13 @@ export function LiveScout() {
 
           {/* Pannello filtri heatmap (visibile solo con HEAT attivo) */}
           {showLiveHeatmap && (
-            <div className="flex flex-wrap gap-2 px-3 py-2 bg-black/30 border-b border-border/50 text-xs">
-
-              {/* Fondamentale */}
-              {(['A', 'S', 'R'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setHeatmapSkillFilter(s)}
-                  className={cn('px-2 py-0.5 rounded',
-                    heatmapSkillFilter === s
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground')}
-                >
-                  {s === 'A' ? 'Attacco' : s === 'S' ? 'Battuta' : 'Ricezione'}
-                </button>
-              ))}
-
-              <div className="w-px bg-border" />
-
-              {/* Squadra */}
-              {(['all', 'home', 'away'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setHeatmapTeamFilter(t)}
-                  className={cn('px-2 py-0.5 rounded',
-                    heatmapTeamFilter === t
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground')}
-                >
-                  {t === 'all' ? 'Tutte' : t === 'home'
-                    ? (homeTeam.name || 'Casa').slice(0, 8)
-                    : (awayTeam.name || 'Ospite').slice(0, 8)}
-                </button>
-              ))}
-
-              <div className="w-px bg-border" />
-
-              {/* Valutazione */}
-              {(['all', '#', '+', '='] as const).map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setHeatmapEvalFilter(e)}
-                  className={cn('px-2 py-0.5 rounded',
-                    heatmapEvalFilter === e
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground')}
-                >
-                  {e === 'all' ? 'Tutti' : e === '#' ? 'Punto'
-                    : e === '+' ? 'Positivo' : 'Errore'}
-                </button>
-              ))}
-
-              <div className="w-px bg-border" />
-
-              {/* Giocatore — Select con tutti i giocatori della squadra filtrata */}
-              <select
-                value={heatmapPlayerFilter ?? ''}
-                onChange={(e) => setHeatmapPlayerFilter(
-                  e.target.value ? Number(e.target.value) : null
-                )}
-                className="bg-muted text-muted-foreground rounded px-2 py-0.5 text-xs border border-border"
-              >
-                <option value="">Tutti i giocatori</option>
-                {(heatmapTeamFilter === 'away' ? awayTeam : homeTeam)
-                  .players?.map((p) => (
-                  <option key={p.number} value={p.number}>
-                    #{p.number} {p.lastName}
-                  </option>
-                ))}
-                {heatmapTeamFilter === 'all' && (
-                  <>
-                    <optgroup label={homeTeam.name || 'Casa'}>
-                      {homeTeam.players?.map((p) => (
-                        <option key={`h${p.number}`} value={p.number}>
-                          #{p.number} {p.lastName}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label={awayTeam.name || 'Ospite'}>
-                      {awayTeam.players?.map((p) => (
-                        <option key={`a${p.number}`} value={p.number}>
-                          #{p.number} {p.lastName}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </>
-                )}
-              </select>
-
-              {/* Reset filtri */}
-              <button
-                type="button"
-                onClick={() => {
-                  setHeatmapTeamFilter('all');
-                  setHeatmapSkillFilter('A');
-                  setHeatmapEvalFilter('all');
-                  setHeatmapPlayerFilter(null);
-                }}
-                className="px-2 py-0.5 rounded bg-muted text-muted-foreground hover:text-foreground"
-              >
-                Reset
-              </button>
-            </div>
+            <LiveHeatmapFilters
+              homeTeam={homeTeam} awayTeam={awayTeam}
+              skill={heatmapSkillFilter} setSkill={setHeatmapSkillFilter}
+              team={heatmapTeamFilter} setTeam={setHeatmapTeamFilter}
+              evaluation={heatmapEvalFilter} setEvaluation={setHeatmapEvalFilter}
+              player={heatmapPlayerFilter} setPlayer={setHeatmapPlayerFilter}
+            />
           )}
 
           {/* Campi affiancati */}
@@ -1053,50 +877,23 @@ export function LiveScout() {
       </Sheet>
 
       {/* Dialog fine set */}
-      <Dialog open={endSetDialog} onOpenChange={setEndSetDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Fine set {matchState.currentSet}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-center text-3xl font-black">
-              {homeTeam.name || 'Casa'} {matchState.homeScore} — {matchState.awayScore} {awayTeam.name || 'Ospite'}
-            </div>
-            <Button variant="outline" onClick={handleGenerateReportLive} className="w-full">
-              <FileText className="w-4 h-4 mr-2" />
-              Genera report PDF
-            </Button>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setEndSetDialog(false)}
-                className="min-h-12 flex-1 rounded bg-secondary font-bold"
-              >
-                Annulla
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Salvataggio forzato a fine set: chiude in modo sicuro il
-                  // set corrente su Supabase, indipendentemente dal modulo-5
-                  // dell'autosave e dal fatto che il dialog sia stato aperto
-                  // manualmente o dal setOverPending.
-                  if (user) {
-                    upsertScoutSession(
-                      sessionIdRef.current, user.id,
-                      matchInfo, homeTeam, awayTeam, matchState,
-                    );
-                  }
-                  endSet(); setEndSetDialog(false);
-                }}
-                className="min-h-12 flex-1 rounded bg-primary font-black text-primary-foreground"
-              >
-                Conferma
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EndSetDialog
+        open={endSetDialog}
+        onOpenChange={setEndSetDialog}
+        currentSet={matchState.currentSet}
+        homeName={homeTeam.name || 'Casa'}
+        awayName={awayTeam.name || 'Ospite'}
+        homeScore={matchState.homeScore}
+        awayScore={matchState.awayScore}
+        onReport={handleGenerateReportLive}
+        onConfirm={() => {
+          // Salvataggio forzato a fine set: chiude in modo sicuro il set corrente su Supabase.
+          if (user) {
+            upsertScoutSession(sessionIdRef.current, user.id, matchInfo, homeTeam, awayTeam, matchState);
+          }
+          endSet(); setEndSetDialog(false);
+        }}
+      />
 
       {/* Dialog sostituzione */}
       <Dialog open={subDialog.open} onOpenChange={(o) => setSubDialog((s) => ({ ...s, open: o, out: null }))}>
@@ -1113,132 +910,6 @@ export function LiveScout() {
           />
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Sub-components                                                       */
-/* ------------------------------------------------------------------ */
-
-function ActionLog({ actions }: { actions: ScoutAction[] }) {
-  return (
-    <>
-      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
-        Ultime azioni ({actions.length})
-      </div>
-      <div className="space-y-1">
-        {actions.length === 0 && (
-          <div className="text-center text-muted-foreground text-xs py-6">
-            Nessuna azione registrata
-          </div>
-        )}
-        {actions.map((a) => (
-          <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/30 text-xs">
-            <span className={`w-1.5 h-1.5 rounded-full ${a.team === 'home' ? 'bg-blue-500' : 'bg-red-500'}`} />
-            <span className="font-mono text-primary font-bold">#{a.playerNumber}</span>
-            <span className="text-muted-foreground">{SKILL_LABELS[a.skill]}</span>
-            <span className={`font-bold ${
-              a.evaluation === '#' || a.evaluation === '+' ? 'text-accent' :
-              a.evaluation === '=' || a.evaluation === '/' ? 'text-destructive' :
-              'text-warning'
-            }`}>
-              {a.evaluation}
-            </span>
-            {(a.startZone || a.endZone) && (
-              <span className="text-primary/60 text-xs font-mono">
-                {a.startZone || '?'}→{a.endZone || '?'}
-              </span>
-            )}
-            <span className="text-muted-foreground ml-auto text-xs">{a.timestamp}</span>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function SubstitutionPicker({
-  team, setTeam, outNumber, onPickOut, onPickIn,
-}: {
-  team: 'home' | 'away';
-  setTeam: (t: 'home' | 'away') => void;
-  outNumber: number | null;
-  onPickOut: (n: number) => void;
-  onPickIn: (n: number) => void;
-}) {
-  const { homeTeam, awayTeam, matchState, events } = useMatchStore();
-  const teamData = team === 'home' ? homeTeam : awayTeam;
-  const partners = substitutionPartners(events, team, matchState.currentSet, teamData.players);
-  const lineup = team === 'home' ? matchState.homeCurrentLineup : matchState.awayCurrentLineup;
-  const onCourt = lineup.map((n) => {
-    const p = teamData.players.find((pp) => pp.number === n);
-    return { number: n, name: p?.lastName || `#${n}`, isLibero: p?.isLibero };
-  });
-  const benchedMb = team === 'home' ? matchState.homeBenchedMb : matchState.awayBenchedMb;
-  const outIsLibero = !!teamData.players.find((p) => p.number === outNumber)?.isLibero;
-  const bench = teamData.players
-    .filter((p) => !lineup.includes(p.number) && !p.isLibero)
-    // il centrale rimpiazzato dal libero non è disponibile come subentrante
-    .filter((p) => outIsLibero || p.number !== benchedMb)
-    // un giocatore può cambiare con un solo compagno (salvo il libero, che non conta)
-    .filter((p) => outIsLibero || outNumber == null || pairAllowed(partners, outNumber, p.number))
-    .sort((a, b) => a.number - b.number);
-
-  return (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        {(['home', 'away'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTeam(t)}
-            className={`min-h-12 flex-1 px-4 rounded text-sm font-bold active:scale-95 ${
-              team === t ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-            }`}
-          >
-            {t === 'home' ? (homeTeam.name || 'Casa') : (awayTeam.name || 'Ospite')}
-          </button>
-        ))}
-      </div>
-      {!outNumber ? (
-        <>
-          <p className="text-xs text-muted-foreground">Chi esce?</p>
-          <div className="grid grid-cols-3 gap-2">
-            {onCourt.map((p) => (
-              <button
-                key={p.number}
-                type="button"
-                onClick={() => onPickOut(p.number)}
-                className="min-h-[56px] p-3 rounded-lg bg-secondary hover:bg-destructive/20 text-foreground text-sm font-bold active:scale-95"
-              >
-                #{p.number} {p.name}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="text-xs text-muted-foreground">Chi entra al posto di #{outNumber}?</p>
-          <div className="grid grid-cols-3 gap-2">
-            {bench.map((p) => (
-              <button
-                key={p.number}
-                type="button"
-                onClick={() => onPickIn(p.number)}
-                className="min-h-[56px] p-3 rounded-lg bg-secondary hover:bg-accent/20 text-foreground text-sm font-bold active:scale-95"
-              >
-                #{p.number} {p.lastName}
-              </button>
-            ))}
-            {bench.length === 0 && (
-              <div className="col-span-3 text-center text-xs text-muted-foreground italic py-4">
-                Nessun giocatore disponibile in panchina
-              </div>
-            )}
-          </div>
-        </>
-      )}
     </div>
   );
 }

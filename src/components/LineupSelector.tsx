@@ -73,7 +73,7 @@ function TeamLineup({
     // Remove from any current position first
     const updates: Partial<Lineup> = {};
     POSITION_KEYS.forEach(k => {
-      if (lineup[k] === playerId) updates[k] = null;
+      if (lineup[k] === playerId) (updates as Record<string, string | null>)[k] = null;
     });
     Object.assign(updates, { [posKey]: playerId });
     setLineup(updates);
