@@ -1,3 +1,4 @@
+import { isErrorEval } from '@/lib/evalRules';
 import { safeUUID } from '@/lib/utils';
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -382,7 +383,7 @@ export default function MatchAnalysis() {
           const list = acts.filter(a => a.skill === skill);
           const tot = list.length;
           const ace = list.filter(a => a.evaluation === '#').length;
-          const err = list.filter(a => a.evaluation === '=' || a.evaluation === '/').length;
+          const err = list.filter(a => isErrorEval(skill, a.evaluation)).length;
           const pos = list.filter(a => a.evaluation === '#' || a.evaluation === '+' || a.evaluation === '!').length;
           return { tot, ace, err, pos, pct: (n: number) => tot ? Math.round(n / tot * 100) : 0 };
         };

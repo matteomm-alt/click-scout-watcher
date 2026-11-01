@@ -1,3 +1,4 @@
+import { isErrorEval } from '@/lib/evalRules';
 import { getTooltipStyle, SKILL_COLORS } from '@/lib/chartTheme';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -88,7 +89,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
         const skActs = acts.filter(a => a.skill === sk);
         if (skActs.length > 0) {
           const perf = skActs.filter(a => a.evaluation === '#').length;
-          const err = skActs.filter(a => ['=','/'].includes(a.evaluation)).length;
+          const err = skActs.filter(a => isErrorEval(sk, a.evaluation)).length;
           row[SKILL_NAMES[sk]] = Math.round((perf - err) / skActs.length * 100);
         }
       });
@@ -165,7 +166,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
           const skActs = actsRows.filter((a) => a.skill === sk);
           if (skActs.length >= 3) {
             const perf = skActs.filter((a) => a.evaluation === '#').length;
-            const err = skActs.filter((a) => ['=','/'].includes(a.evaluation)).length;
+            const err = skActs.filter((a) => isErrorEval(sk, a.evaluation)).length;
             row[SKILL_NAMES[sk]] = Math.round((perf - err) / skActs.length * 100);
           }
         });
@@ -218,7 +219,7 @@ export function ChartsTab({ actions, playerNames }: Props) {
       if (!result[fz] || tz < 1 || tz > 9) return;
       result[fz][tz].tot++;
       if (a.evaluation === '#') result[fz][tz].perf++;
-      if (['=','/'].includes(a.evaluation)) result[fz][tz].err++;
+      if (isErrorEval('E', a.evaluation)) result[fz][tz].err++;
     });
     return result;
   }, [actions]);

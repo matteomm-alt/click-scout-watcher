@@ -1,3 +1,4 @@
+import { isErrorEval } from '@/lib/evalRules';
 /**
  * KPI avanzati per giocatore (Fase 1 del piano analisi DVW).
  *
@@ -200,7 +201,7 @@ export function receptionExpectedPointsPerPlayer(teamActions: DbAction[]): Recep
     row.xpTotal += RECEPTION_WEIGHTS[a.evaluation] ?? 0;
     if (a.evaluation === '#') { row.perfect++; row.positive++; }
     else if (a.evaluation === '+') { row.positive++; }
-    else if (a.evaluation === '=' || a.evaluation === '/') { row.errors++; }
+    else if (isErrorEval('R', a.evaluation)) { row.errors++; }
   }
   for (const r of map.values()) {
     r.xpAverage = r.receptions ? r.xpTotal / r.receptions : 0;
@@ -264,7 +265,7 @@ export function servePressureIndexPerPlayer(
     }
     row.serves++;
     if (a.evaluation === '#') row.aces++;
-    else if (a.evaluation === '=' || a.evaluation === '/') row.errors++;
+    else if (isErrorEval('S', a.evaluation)) row.errors++;
 
     const k = `${a.set_number}-${a.rally_index}`;
     const rec = oppReceptionByRally.get(k);

@@ -1,3 +1,4 @@
+import { isErrorEval } from '@/lib/evalRules';
 import { useMemo, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -30,7 +31,7 @@ interface PlayerRow {
   totalPoints: number;    // ace + kill + block point
 }
 
-const isError = (e: ScoutAction['evaluation']) => e === '=' || e === '/';
+const isError = (skill: string, e: ScoutAction['evaluation']) => isErrorEval(skill, e);
 const isPositive = (e: ScoutAction['evaluation']) => e === '+' || e === '#';
 const isPoint = (e: ScoutAction['evaluation']) => e === '#';
 
@@ -49,11 +50,11 @@ function buildRow(actions: ScoutAction[], number: number, name: string): PlayerR
     if (skill === 'A') {
       row.attTot++;
       if (isPoint(a.evaluation)) row.attKills++;
-      if (isError(a.evaluation)) row.attErrors++;
+      if (isError('A', a.evaluation)) row.attErrors++;
     } else if (skill === 'R') {
       row.recTot++;
       if (isPositive(a.evaluation)) row.recPositive++;
-      if (isError(a.evaluation)) row.recErrors++;
+      if (isError('R', a.evaluation)) row.recErrors++;
     } else if (skill === 'S') {
       row.srvTot++;
       if (isPoint(a.evaluation)) row.srvAces++;
@@ -92,7 +93,7 @@ function playerSkillMetrics(actions: ScoutAction[], playerNumber: number, skill:
   const skillActions = actions.filter((a) => a.playerNumber === playerNumber && a.skill === skill);
   const total = skillActions.length;
   const perfect = skillActions.filter((a) => a.evaluation === '#').length;
-  const errors = skillActions.filter((a) => isError(a.evaluation)).length;
+  const errors = skillActions.filter((a) => isError(skill, a.evaluation)).length;
   return {
     total,
     perfectPct: pct(perfect, total),

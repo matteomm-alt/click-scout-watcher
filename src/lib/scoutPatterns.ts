@@ -1,3 +1,4 @@
+import { isErrorEval, rallyWinnerSide } from '@/lib/evalRules';
 /**
  * Pattern e tendenze (Fase 2 del piano analisi DVW).
  *
@@ -128,7 +129,7 @@ export function serveTargetReceivers(
     row.receptions++;
     if (a.evaluation === '#') { row.perfect++; row.positive++; }
     else if (a.evaluation === '+') { row.positive++; }
-    else if (a.evaluation === '=' || a.evaluation === '/') { row.errors++; }
+    else if (isErrorEval('R', a.evaluation)) { row.errors++; }
     row.xpAverage += RX_W[a.evaluation] ?? 0;
   }
   for (const r of map.values()) {
@@ -182,16 +183,7 @@ export function losingBreakChains(
     if (first.serving_side === mySide) continue;
 
     // vincitore
-    let winner: 'home' | 'away' | null = null;
-    for (let i = rally.length - 1; i >= 0; i--) {
-      const a = rally[i];
-      if (a.evaluation === '#' && (a.skill === 'A' || a.skill === 'B' || a.skill === 'S')) {
-        winner = a.side; break;
-      }
-      if (a.evaluation === '=' || a.evaluation === '/') {
-        winner = a.side === 'home' ? 'away' : 'home'; break;
-      }
-    }
+    const winner = rallyWinnerSide(rally);
     if (winner !== (mySide === 'home' ? 'away' : 'home')) continue;
     // se non abbiamo perso, skip
     if (winner === mySide) continue;

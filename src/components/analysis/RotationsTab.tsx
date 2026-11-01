@@ -1,3 +1,4 @@
+import { isErrorEval } from '@/lib/evalRules';
 import { useMemo } from 'react';
 import { type DbAction, rotationStats, rotationOf, SKILL_NAMES } from '@/lib/scoutAnalysis';
 import { Card } from '@/components/ui/card';
@@ -54,7 +55,7 @@ export function RotationsTab({ actions, teamId, side }: { actions: DbAction[]; t
       const cell = grid[rot][a.skill as GridSkill];
       cell.total++;
       if (a.evaluation === '#') cell.perfect++;
-      if (a.evaluation === '=' || a.evaluation === '/') cell.errors++;
+      if (isErrorEval(a.skill, a.evaluation)) cell.errors++;
     }
     for (let r = 1; r <= 6; r++) {
       for (const sk of GRID_SKILLS) {

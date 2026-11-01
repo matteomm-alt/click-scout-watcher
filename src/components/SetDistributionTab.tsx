@@ -1,3 +1,4 @@
+import { isErrorEval } from '@/lib/evalRules';
 import { type DbAction } from '@/lib/scoutAnalysis';
 import { Card } from '@/components/ui/card';
 
@@ -44,7 +45,7 @@ export function SetDistributionTab({ actions }: Props) {
     const b = byZone.get(z)!;
     b.tot++;
     if (a.evaluation === '#') b.kills++;
-    if (a.evaluation === '=' || a.evaluation === '/') b.err++;
+    if (isErrorEval('E', a.evaluation)) b.err++;
   });
 
   // Se non ci sono alzate con zone, usa gli attacchi per zona

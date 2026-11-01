@@ -3,6 +3,8 @@
  * Calcola statistiche per skill, per giocatore, per rotazione e KPI confronto squadre.
  */
 
+import { isErrorEval, isPositiveServeSlash, rallyWinnerSide } from '@/lib/evalRules';
+
 export interface DbAction {
   id: string;
   scout_match_id: string;
@@ -113,7 +115,8 @@ export function statsBySkill(actions: DbAction[]): SkillStats[] {
     s.total++;
     if (a.evaluation === '#') { s.perfect++; s.positive++; }
     else if (a.evaluation === '+') { s.positive++; }
-    else if (a.evaluation === '=' || a.evaluation === '/') { s.errors++; }
+    else if (isPositiveServeSlash(a.skill, a.evaluation)) { s.positive++; }
+    else if (isErrorEval(a.skill, a.evaluation)) { s.errors++; }
   }
   for (const s of map.values()) {
     s.efficiency = s.total ? ((s.perfect - s.errors) / s.total) * 100 : 0;
@@ -168,7 +171,7 @@ export function zoneStats(actions: DbAction[], which: 'start' | 'end'): ZoneCell
     const cell = map.get(z)!;
     cell.total++;
     if (a.evaluation === '#') cell.perfect++;
-    if (a.evaluation === '=' || a.evaluation === '/') cell.errors++;
+    if (isErrorEval(a.skill, a.evaluation)) cell.errors++;
   }
   for (const c of map.values()) {
     c.efficiency = c.total ? ((c.perfect - c.errors) / c.total) * 100 : 0;
@@ -235,23 +238,8 @@ export function rotationStats(actions: DbAction[], teamId: string, opts: { side:
     if (!servingSide) continue;
 
     // Determina vincitore del rally
-    let winner: 'home' | 'away' | null = null;
-    for (let i = rally.length - 1; i >= 0; i--) {
-      const a = rally[i];
-      if (a.evaluation === '#') {
-        if (a.skill === 'A' || a.skill === 'B' || a.skill === 'S') winner = a.side;
-        else if (a.skill === 'E' && (a.skill_type === 'T' || a.skill_type === 'H')) winner = a.side;
-        if (winner) break;
-      }
-      if (a.evaluation === '=' || a.evaluation === '/') {
-        winner = a.side === 'home' ? 'away' : 'home';
-        break;
-      }
-    }
-    if (!winner) {
-      const last = rally[rally.length - 1];
-      winner = last.home_score > last.away_score ? 'home' : 'away';
-    }
+    const winner = rallyWinnerSide(rally);
+    if (!winner) continue;
 
     const rs = map.get(bucket)!;
     rs.rallies++;
@@ -414,22 +402,7 @@ export function phaseBreakdown(
     rallies.get(k)!.push(a);
   }
 
-  const winnerOf = (rally: DbAction[]): 'home' | 'away' | null => {
-    for (let i = rally.length - 1; i >= 0; i--) {
-      const a = rally[i];
-      if (a.evaluation === '#') {
-        if (['A', 'B', 'S'].includes(a.skill)) return a.side;
-        if (a.skill === 'E' && (a.skill_type === 'T' || a.skill_type === 'H')) return a.side;
-      }
-      if (a.evaluation === '=' || a.evaluation === '/') {
-        return a.side === 'home' ? 'away' : 'home';
-      }
-    }
-    const last = rally[rally.length - 1];
-    if (!last) return null;
-    return last.home_score > last.away_score ? 'home'
-      : last.away_score > last.home_score ? 'away' : null;
-  };
+  const winnerOf = rallyWinnerSide;
 
   const rallyPhase = new Map<string, Phase | null>();
   const rallyWinner = new Map<string, 'home' | 'away' | null>();
@@ -505,7 +478,7 @@ export function statsByAttackCombo(actions: DbAction[]): ComboStats[] {
     s.total++;
     if (a.evaluation === '#') { s.kills++; s.positive++; }
     else if (a.evaluation === '+') { s.positive++; }
-    else if (a.evaluation === '=' || a.evaluation === '/') { s.errors++; }
+    else if (isErrorEval('A', a.evaluation)) { s.errors++; }
   }
   for (const s of map.values()) {
     s.efficiency = s.total ? ((s.kills - s.errors) / s.total) * 100 : 0;
