@@ -21,3 +21,5 @@ export default defineMcp({
   }),
   tools: [listTeamsTool, listAthletesTool, listMatchesTool],
 });
+
+// regenerate bundle
