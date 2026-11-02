@@ -2,6 +2,7 @@ import { MAX_SUBSTITUTIONS, substitutionPartners, pairAllowed, countsTowardsLimi
 import { safeUUID } from '@/lib/utils';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { LEGACY_DEFENSE_V0, LEGACY_DEFENSE_V1, LEGACY_ATTACK_V1 } from '@/lib/legacyFormations';
 import type {
   Team, Player, MatchInfo, Lineup, MatchState, ScoutAction,
   AppStep, SanctionType, Evaluation,
@@ -909,13 +910,24 @@ export const useMatchStore = create<MatchStore>()(
     {
       name: 'volley-scout-storage-v2',
       storage: createJSONStorage(() => localStorage),
-      // v1: le tabelle difesa di default erano nel sistema di coordinate sbagliato.
-      version: 1,
+      // v2: i default attacco/difesa mettono ogni giocatore nella propria zona.
+      // Le tabelle salvate ancora uguali ai vecchi default vengono rimpiazzate,
+      // quelle personalizzate dal tecnico restano.
+      version: 2,
       migrate: (persisted: unknown, version: number) => {
         const state = (persisted ?? {}) as Record<string, unknown>;
-        if (version < 1) {
-          state.homeDefenseFormations = cloneDefaultDefenseFormations();
-          state.awayDefenseFormations = cloneDefaultDefenseFormations();
+        if ((version ?? 0) < 2) {
+          const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+          (['home', 'away'] as const).forEach((team) => {
+            const dKey = `${team}DefenseFormations`;
+            if (!state[dKey] || eq(state[dKey], LEGACY_DEFENSE_V0) || eq(state[dKey], LEGACY_DEFENSE_V1)) {
+              state[dKey] = cloneDefaultDefenseFormations();
+            }
+            const aKey = `${team}AttackFormations`;
+            if (!state[aKey] || eq(state[aKey], LEGACY_ATTACK_V1)) {
+              state[aKey] = cloneDefaultAttackFormations();
+            }
+          });
         }
         return state as never;
       },

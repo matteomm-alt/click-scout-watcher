@@ -70,59 +70,24 @@ export function getReceptionPositions(
 }
 
 /**
- * Posizioni di attacco standard 5-1 per ogni rotazione del palleggiatore.
- * Rappresentano dove si trovano fisicamente le giocatrici durante l'alzata.
+ * Default "ognuno nella propria zona": ogni slot P1..P6 sta nella zona della
+ * sua rotazione (P4/P3/P2 a rete: sinistra/centro/destra; P5/P6/P1 in fondo).
+ * Coordinate canoniche dell'editor (rete in alto y=0, x = lato della squadra).
+ * Il tecnico personalizza gli schieramenti dall'editor "Schemi"; il palleggiatore
+ * che sale a rete e' gestito dall'override di fase (getPhasePositionOverride).
  */
-export const DEFAULT_ATTACK_FORMATIONS: ReceptionFormations = {
-  1: {
-    1: { x: 78, y: 12 },
-    2: { x: 50, y: 40 },
-    3: { x: 50, y: 8 },
-    4: { x: 16, y: 12 },
-    5: { x: 16, y: 20 },
-    6: { x: 50, y: 72 },
-  },
-  2: {
-    1: { x: 50, y: 40 },
-    2: { x: 78, y: 12 },
-    3: { x: 50, y: 8 },
-    4: { x: 16, y: 12 },
-    5: { x: 20, y: 14 },
-    6: { x: 50, y: 72 },
-  },
-  3: {
-    1: { x: 50, y: 40 },
-    2: { x: 78, y: 14 },
-    3: { x: 65, y: 10 },
-    4: { x: 16, y: 12 },
-    5: { x: 18, y: 22 },
-    6: { x: 50, y: 72 },
-  },
-  4: {
-    1: { x: 50, y: 40 },
-    2: { x: 78, y: 14 },
-    3: { x: 50, y: 8 },
-    4: { x: 68, y: 10 },
-    5: { x: 18, y: 22 },
-    6: { x: 50, y: 72 },
-  },
-  5: {
-    1: { x: 50, y: 40 },
-    2: { x: 16, y: 14 },
-    3: { x: 50, y: 8 },
-    4: { x: 16, y: 18 },
-    5: { x: 68, y: 10 },
-    6: { x: 50, y: 72 },
-  },
-  6: {
-    1: { x: 78, y: 40 },
-    2: { x: 50, y: 8 },
-    3: { x: 50, y: 10 },
-    4: { x: 16, y: 14 },
-    5: { x: 18, y: 22 },
-    6: { x: 68, y: 10 },
-  },
+const IN_ZONE_SLOTS: SlotPositions = {
+  1: { x: 78, y: 78 }, 2: { x: 78, y: 18 }, 3: { x: 50, y: 18 },
+  4: { x: 22, y: 18 }, 5: { x: 22, y: 78 }, 6: { x: 50, y: 78 },
 };
+function inZoneForAllRotations(): ReceptionFormations {
+  const out = {} as ReceptionFormations;
+  ([1, 2, 3, 4, 5, 6] as const).forEach((r) => { out[r] = JSON.parse(JSON.stringify(IN_ZONE_SLOTS)); });
+  return out;
+}
+
+/** Posizioni di attacco di default: ognuno nella propria zona (vedi sopra). */
+export const DEFAULT_ATTACK_FORMATIONS: ReceptionFormations = inZoneForAllRotations();
 
 export function getAttackPositions(
   formations: ReceptionFormations,
@@ -144,16 +109,7 @@ export function cloneDefaultAttackFormations(): ReceptionFormations {
   return JSON.parse(JSON.stringify(DEFAULT_ATTACK_FORMATIONS));
 }
 
-export const DEFAULT_DEFENSE_FORMATIONS: ReceptionFormations = {
-  // Stesso sistema di ricezione/attacco: rete in alto (y=0), x = lato, y = profondita'.
-  // Rete: P2/P3/P4 a rete (y=20); P5 fondo sx, P6 fondo dx, P1 fondo centro.
-  1: { 1:{x:50,y:75}, 2:{x:80,y:20}, 3:{x:50,y:20}, 4:{x:20,y:20}, 5:{x:20,y:65}, 6:{x:80,y:65} },
-  2: { 1:{x:50,y:75}, 2:{x:80,y:20}, 3:{x:50,y:20}, 4:{x:20,y:20}, 5:{x:20,y:65}, 6:{x:80,y:65} },
-  3: { 1:{x:50,y:75}, 2:{x:80,y:20}, 3:{x:50,y:20}, 4:{x:20,y:20}, 5:{x:20,y:65}, 6:{x:80,y:65} },
-  4: { 1:{x:50,y:75}, 2:{x:80,y:20}, 3:{x:50,y:20}, 4:{x:20,y:20}, 5:{x:20,y:65}, 6:{x:80,y:65} },
-  5: { 1:{x:50,y:75}, 2:{x:80,y:20}, 3:{x:50,y:20}, 4:{x:20,y:20}, 5:{x:20,y:65}, 6:{x:80,y:65} },
-  6: { 1:{x:50,y:75}, 2:{x:80,y:20}, 3:{x:50,y:20}, 4:{x:20,y:20}, 5:{x:20,y:65}, 6:{x:80,y:65} },
-};
+export const DEFAULT_DEFENSE_FORMATIONS: ReceptionFormations = inZoneForAllRotations();
 
 export function cloneDefaultDefenseFormations(): ReceptionFormations {
   return JSON.parse(JSON.stringify(DEFAULT_DEFENSE_FORMATIONS));
