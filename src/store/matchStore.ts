@@ -909,6 +909,16 @@ export const useMatchStore = create<MatchStore>()(
     {
       name: 'volley-scout-storage-v2',
       storage: createJSONStorage(() => localStorage),
+      // v1: le tabelle difesa di default erano nel sistema di coordinate sbagliato.
+      version: 1,
+      migrate: (persisted: unknown, version: number) => {
+        const state = (persisted ?? {}) as Record<string, unknown>;
+        if (version < 1) {
+          state.homeDefenseFormations = cloneDefaultDefenseFormations();
+          state.awayDefenseFormations = cloneDefaultDefenseFormations();
+        }
+        return state as never;
+      },
       partialize: (state) => ({
         step: state.step,
         matchInfo: state.matchInfo,
