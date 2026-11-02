@@ -3,11 +3,11 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.1";
 
 // src/lib/mcp/tools/list-teams.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.103.3";
-import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.1";
 function supabaseForUser(ctx) {
   return createClient(
     process.env.SUPABASE_URL,
@@ -41,7 +41,7 @@ var list_teams_default = defineTool({
 
 // src/lib/mcp/tools/list-athletes.ts
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.103.3";
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z } from "npm:zod@^4.4.3";
 function supabaseForUser2(ctx) {
   return createClient2(
@@ -80,7 +80,7 @@ var list_athletes_default = defineTool2({
 
 // src/lib/mcp/tools/list-matches.ts
 import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.103.3";
-import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z2 } from "npm:zod@^4.4.3";
 function supabaseForUser3(ctx) {
   return createClient3(
@@ -116,7 +116,7 @@ var list_matches_default = defineTool3({
 });
 
 // src/lib/mcp/index.ts
-var projectRef = "ooqiqwlkmyzdiqvuvcqe";
+var projectRef = "gifvnvnwhbtjsxajzrse";
 var mcp_default = defineMcp({
   name: "volleyscout-mcp",
   title: "VolleyScout Pro",
@@ -130,5 +130,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.0/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.1/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));
