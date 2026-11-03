@@ -156,6 +156,19 @@ export const ROLE_LABELS: Record<PlayerRole, string> = {
   U: 'Universale',
 };
 
+/**
+ * Sigle italiane mostrate a video. I codici interni (S, O, OP, M, L, U) restano
+ * invariati perche' la logica e l'export DVW li usano.
+ */
+export const ROLE_SHORT: Record<PlayerRole, string> = {
+  S: 'P',   // Palleggiatore
+  O: 'S',   // Schiacciatore
+  OP: 'O',  // Opposto
+  M: 'C',   // Centrale
+  L: 'L',   // Libero
+  U: 'U',   // Universale
+};
+
 export interface ScoutAction {
   id: string;
   timestamp: string;

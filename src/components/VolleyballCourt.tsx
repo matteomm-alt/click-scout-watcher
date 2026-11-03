@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { getInitialPhases } from '@/lib/tacticalPhases';
 import { resolvePlayerPosition, nearestZone, ZONE_CENTERS_HOME, ZONE_CENTERS_AWAY } from '@/lib/courtPositionResolver';
+import { ROLE_SHORT } from '@/types/volleyball';
 
 /* ------------------------------------------------------------------ */
 /* Legacy ZoneCourt (manteniamo l'export per retro-compatibilità)      */
@@ -282,7 +283,7 @@ export function VolleyballCourt({
         {/* Etichetta ricezione */}
         {isReceiving && !simplifiedView && (
           <span className="pointer-events-none absolute top-1.5 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-emerald-800 text-xs font-black uppercase tracking-wider text-white shadow-md">
-            Ricezione · S{setterPosition}
+            Ricezione · {ROLE_SHORT.S}{setterPosition}
           </span>
         )}
 
@@ -399,7 +400,7 @@ export function VolleyballCourt({
               >
                 {info.number}
                 {isSetter && (
-                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-950 px-1.5 py-0.5 text-xs font-black text-white border border-white/40">S</span>
+                  <span className="absolute -right-1.5 -bottom-1.5 rounded bg-blue-950 px-1.5 py-0.5 text-xs font-black text-white border border-white/40">{ROLE_SHORT.S}</span>
                 )}
                 {isLibero && (
                   <span className="absolute -right-1.5 -bottom-1.5 rounded bg-amber-700 px-1.5 py-0.5 text-xs font-black text-white border border-white/40">L</span>

@@ -1,5 +1,5 @@
 import type { Skill, Evaluation, AttackType } from '@/types/volleyball';
-import { ATTACK_TYPES, ATTACK_COMBOS } from '@/types/volleyball';
+import { ATTACK_TYPES, ATTACK_COMBOS, ROLE_SHORT } from '@/types/volleyball';
 import { cn } from '@/lib/utils';
 
 export type ScoutingMode = 'simple' | 'advanced';
@@ -193,7 +193,7 @@ export function TouchFlowPanel({
             </span>
             {selectedPlayer.role && (
               <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                {selectedPlayer.role}
+                {ROLE_SHORT[selectedPlayer.role] ?? selectedPlayer.role}
               </span>
             )}
             <span className={cn('text-xs font-black uppercase tracking-wider truncate max-w-[80px]', teamText)}>
