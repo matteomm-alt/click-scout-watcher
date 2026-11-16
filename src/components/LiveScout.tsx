@@ -38,6 +38,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { SetLineupDialog } from '@/components/scout/SetLineupDialog';
 import { LiveHeatmapFilters, EndSetDialog, ActionLog, SubstitutionPicker } from '@/components/scout/LiveScoutParts';
 
 
@@ -128,6 +129,7 @@ export function LiveScout() {
   const [rightTab, setRightTab] = useState<RightTab>('log');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [endSetDialog, setEndSetDialog] = useState(false);
+  const [setLineupOpen, setSetLineupOpen] = useState(false);
   const [subDialog, setSubDialog] = useState<{ open: boolean; team: 'home' | 'away'; out: number | null }>({ open: false, team: 'home', out: null });
   const [simplified, setSimplified] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -892,7 +894,14 @@ export function LiveScout() {
             upsertScoutSession(sessionIdRef.current, user.id, matchInfo, homeTeam, awayTeam, matchState);
           }
           endSet(); setEndSetDialog(false);
+          if (!useMatchStore.getState().matchState.isMatchEnded) setSetLineupOpen(true);
         }}
+      />
+
+      <SetLineupDialog
+        open={setLineupOpen}
+        setNumber={matchState.currentSet}
+        onDone={() => setSetLineupOpen(false)}
       />
 
       {/* Dialog sostituzione */}

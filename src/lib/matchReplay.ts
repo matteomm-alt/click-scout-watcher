@@ -431,8 +431,8 @@ function applyEventInternal(
         awayTimeoutsUsed: isMatchOver ? state.awayTimeoutsUsed : 0,
         homeSubstitutionsUsed: 0,
         awaySubstitutionsUsed: 0,
-        homeSetterPosition: 1,
-        awaySetterPosition: 1,
+        homeSetterPosition: event.homeSetterPositionNext ?? 1,
+        awaySetterPosition: event.awaySetterPositionNext ?? 1,
         homeCurrentLineup: event.homeLineupNext,
         awayCurrentLineup: event.awayLineupNext,
         homeBenchedMb: event.homeBenchedMbNext,
@@ -448,6 +448,19 @@ function applyEventInternal(
           : {}),
         setOverPending: false,
         tossPending: !isMatchOver && ctx.totalSets > 1 && state.currentSet + 1 === ctx.totalSets,
+      };
+    }
+
+    case 'set_started': {
+      return {
+        ...state,
+        homeCurrentLineup: event.homeLineup,
+        awayCurrentLineup: event.awayLineup,
+        homeSetterPosition: event.homeSetterPosition,
+        awaySetterPosition: event.awaySetterPosition,
+        homeBenchedMb: event.homeBenchedMb,
+        awayBenchedMb: event.awayBenchedMb,
+        teamTacticalPhases: getInitialPhases(state.servingTeam),
       };
     }
 

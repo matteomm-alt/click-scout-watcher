@@ -253,3 +253,42 @@ describe('matchStore — sostituzioni (limite 8, libero escluso, un solo partner
     expect(used()).toBe(before);
   });
 });
+
+describe('matchStore — formazione iniziale a ogni set', () => {
+  beforeEach(() => bootstrap());
+
+  const finishSet1 = () => {
+    for (let i = 0; i < 25; i++) useMatchStore.getState().addPoint('home');
+    useMatchStore.getState().endSet();
+  };
+
+  it('fine set: il palleggiatore parte dalla posizione della formazione, non sempre da 1', () => {
+    // Formazione casa con palleggiatore in P4
+    useMatchStore.getState().setHomeLineup({ p1: 'p6', p4: 'p1', setter: 'p1' });
+    finishSet1();
+    expect(useMatchStore.getState().matchState.homeSetterPosition).toBe(4);
+  });
+
+  it('startSet registra una formazione diversa e il replay la mantiene', () => {
+    finishSet1();
+    useMatchStore.getState().setHomeLineup({ p1: 'p2', p3: 'p1', setter: 'p1', p2: 'p5', p4: 'p6', p5: 'p4', p6: 'p3' });
+    useMatchStore.getState().startSet();
+    const ms = useMatchStore.getState().matchState;
+    expect(ms.currentSet).toBe(2);
+    expect(ms.homeSetterPosition).toBe(3);
+    expect(ms.homeCurrentLineup).toContain(1);
+    expect(ms.homeCurrentLineup[2]).toBe(1);
+
+    // Punto e annulla: stato ricostruito dal replay uguale a prima
+    useMatchStore.getState().addPoint('home');
+    useMatchStore.getState().undoLastAction();
+    const after = useMatchStore.getState().matchState;
+    expect(after.homeSetterPosition).toBe(3);
+    expect(after.homeCurrentLineup).toEqual(ms.homeCurrentLineup);
+  });
+
+  it('salvataggi vecchi: set_ended senza posizione successiva riparte da 1', () => {
+    finishSet1();
+    expect(useMatchStore.getState().matchState.homeSetterPosition).toBe(1);
+  });
+});

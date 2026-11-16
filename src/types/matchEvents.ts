@@ -8,6 +8,7 @@ export type MatchEventType =
   | 'point'
   | 'rotation'
   | 'set_ended'
+  | 'set_started'
   | 'substitution'
   | 'timeout'
   | 'sanction'
@@ -86,6 +87,21 @@ export interface SetEndedEvent extends BaseEvent {
   awayLineupNext: number[];
   homeBenchedMbNext: number | null;
   awayBenchedMbNext: number | null;
+  /** Posizione del palleggiatore nella formazione del set successivo (assente nei salvataggi vecchi = 1). */
+  homeSetterPositionNext?: number;
+  awaySetterPositionNext?: number;
+}
+
+/** Formazione iniziale scelta dall'operatore all'inizio di ogni set dopo il primo. */
+export interface SetStartedEvent extends BaseEvent {
+  type: 'set_started';
+  setNumber: number;
+  homeLineup: number[];
+  awayLineup: number[];
+  homeSetterPosition: number;
+  awaySetterPosition: number;
+  homeBenchedMb: number | null;
+  awayBenchedMb: number | null;
 }
 
 export interface SubstitutionEvent extends BaseEvent {
@@ -147,6 +163,7 @@ export type MatchEvent =
   | PointEvent
   | RotationEvent
   | SetEndedEvent
+  | SetStartedEvent
   | SubstitutionEvent
   | TimeoutEvent
   | SanctionEvent

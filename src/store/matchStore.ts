@@ -50,6 +50,8 @@ interface MatchStore {
   matchState: MatchState;
 
   startMatch: () => void;
+  /** Registra la formazione iniziale del set corrente (dal secondo set in poi). */
+  startSet: () => void;
   addAction: (action: Omit<ScoutAction,
     'id' | 'setNumber' | 'homeScore' | 'awayScore' |
     'homeSetterPosition' | 'awaySetterPosition' |
@@ -103,6 +105,12 @@ interface MatchStore {
   resetDefenseFormations: (team: 'home'|'away') => void;
   loadDefenseFormations: (team: 'home'|'away', formations: ReceptionFormations) => void;
   removeLastTouchFromCurrentRally: () => boolean;
+}
+
+function findSetterPos(lineup: Lineup): number {
+  const positions = [lineup.p1, lineup.p2, lineup.p3, lineup.p4, lineup.p5, lineup.p6];
+  const idx = positions.findIndex(pid => pid === lineup.setter);
+  return idx >= 0 ? idx + 1 : 1;
 }
 
 const defaultMatchInfo: MatchInfo = {
@@ -226,14 +234,6 @@ export const useMatchStore = create<MatchStore>()(
 
       startMatch: () => {
         const { homeLineup, awayLineup, homeTeam, awayTeam, matchState, matchInfo } = get();
-        const findSetterPos = (lineup: Lineup): number => {
-          const positions = [
-            lineup.p1, lineup.p2, lineup.p3,
-            lineup.p4, lineup.p5, lineup.p6,
-          ];
-          const idx = positions.findIndex(pid => pid === lineup.setter);
-          return idx >= 0 ? idx + 1 : 1;
-        };
         const homeBase = getLineupNumbers(homeLineup, homeTeam);
         const awayBase = getLineupNumbers(awayLineup, awayTeam);
         const homeLib = homeTeam.players
@@ -428,6 +428,29 @@ export const useMatchStore = create<MatchStore>()(
         set((s) => addEventAndApply(s, event));
       },
 
+      startSet: () => {
+        const { homeLineup, awayLineup, homeTeam, awayTeam, matchState } = get();
+        const homeBase = getLineupNumbers(homeLineup, homeTeam);
+        const awayBase = getLineupNumbers(awayLineup, awayTeam);
+        const homeLib = homeTeam.players.find(p => p.id === homeLineup.libero1)?.number ?? null;
+        const awayLib = awayTeam.players.find(p => p.id === awayLineup.libero1)?.number ?? null;
+        const home = applyLiberoAutoSwap(homeBase, homeTeam, homeLib, null, liberoTargets(homeTeam, homeLineup));
+        const away = applyLiberoAutoSwap(awayBase, awayTeam, awayLib, null, liberoTargets(awayTeam, awayLineup));
+        const event: MatchEvent = {
+          type: 'set_started',
+          id: safeUUID(),
+          timestamp: nowTime(),
+          setNumber: matchState.currentSet,
+          homeLineup: home.lineup,
+          awayLineup: away.lineup,
+          homeSetterPosition: findSetterPos(homeLineup),
+          awaySetterPosition: findSetterPos(awayLineup),
+          homeBenchedMb: home.benchedMb,
+          awayBenchedMb: away.benchedMb,
+        };
+        set((s) => addEventAndApply(s, event));
+      },
+
       endSet: () => {
         const { matchState, homeTeam, awayTeam, homeLineup, awayLineup } = get();
         const homeBase = getLineupNumbers(homeLineup, homeTeam);
@@ -449,6 +472,8 @@ export const useMatchStore = create<MatchStore>()(
           awayLineupNext: away.lineup,
           homeBenchedMbNext: home.benchedMb,
           awayBenchedMbNext: away.benchedMb,
+          homeSetterPositionNext: findSetterPos(homeLineup),
+          awaySetterPositionNext: findSetterPos(awayLineup),
         };
         set((s) => addEventAndApply(s, event));
         try {
