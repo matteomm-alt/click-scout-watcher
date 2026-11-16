@@ -30,7 +30,7 @@ function TeamColumn({
         <label key={k} className="flex items-center gap-2 text-sm">
           <span className="w-8 font-mono uppercase">{k}</span>
           <select
-            className="flex-1 h-10 rounded-md border bg-background px-2"
+            className="flex-1 h-11 rounded-md border bg-background px-2"
             value={lineup[k] ?? NONE}
             onChange={(e) => onChange({ [k]: e.target.value === NONE ? null : e.target.value } as Partial<Lineup>)}
           >
@@ -47,7 +47,7 @@ function TeamColumn({
             aria-label={`Palleggiatore in ${k}`}
             checked={!!lineup[k] && lineup.setter === lineup[k]}
             onChange={() => onChange({ setter: lineup[k] })}
-            className="h-5 w-5"
+            className="h-6 w-6"
           />
         </label>
       ))}
@@ -88,11 +88,11 @@ export function SetLineupDialog({ open, setNumber, onDone }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={() => { /* si chiude solo confermando */ }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Formazione iniziale · Set {setNumber}</DialogTitle>
           <DialogDescription>
-            Parte da quella del set precedente: cambia solo ciò che serve.
+            Parte dalla formazione iniziale del set precedente: cambia solo ciò che serve.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -104,7 +104,7 @@ export function SetLineupDialog({ open, setNumber, onDone }: Props) {
             {problems.map((m) => <li key={m}>{m}</li>)}
           </ul>
         )}
-        <DialogFooter>
+        <DialogFooter className="sticky bottom-0 bg-background pt-2">
           <Button onClick={confirm} disabled={problems.length > 0} className="h-11">Inizia il set</Button>
         </DialogFooter>
       </DialogContent>
