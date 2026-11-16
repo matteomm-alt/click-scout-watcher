@@ -73,16 +73,40 @@ export default function MatchAnalysis() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
+  const [shareExpires, setShareExpires] = useState<string | null>(null);
+
+  const SHARE_DAYS = 30;
 
   const handleShare = async () => {
     if (!id) return;
     let token = match?.share_token ?? null;
-    if (!token) {
+    let expires = match?.share_token_expires_at ?? null;
+    const expired = !!expires && new Date(expires) <= new Date();
+    if (!token || expired) {
       token = safeUUID();
-      await supabase.from('scout_matches').update({ share_token: token }).eq('id', id);
+      expires = new Date(Date.now() + SHARE_DAYS * 86400000).toISOString();
+      const { error } = await supabase
+        .from('scout_matches')
+        .update({ share_token: token, share_token_expires_at: expires })
+        .eq('id', id);
+      if (error) { toast.error('Impossibile creare il link'); return; }
+      setMatch((m) => (m ? { ...m, share_token: token, share_token_expires_at: expires } : m));
     }
+    setShareExpires(expires);
     setShareUrl(`${window.location.origin}/analisi-pubblica/${id}?t=${token}`);
     setShareDialogOpen(true);
+  };
+
+  const handleRevokeShare = async () => {
+    if (!id) return;
+    const { error } = await supabase
+      .from('scout_matches')
+      .update({ share_token: null, share_token_expires_at: null })
+      .eq('id', id);
+    if (error) { toast.error('Impossibile revocare il link'); return; }
+    setMatch((m) => (m ? { ...m, share_token: null, share_token_expires_at: null } : m));
+    setShareDialogOpen(false);
+    toast.success('Link revocato: non funziona più');
   };
 
   useEffect(() => {
@@ -132,7 +156,7 @@ export default function MatchAnalysis() {
       setLoading(true);
       const { data: m } = await supabase
         .from('scout_matches')
-        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename, share_token,
+        .select(`id, match_date, league, venue, home_sets_won, away_sets_won, set_results, source_filename, share_token, share_token_expires_at,
                  home_team:home_team_id(id,name), away_team:away_team_id(id,name)`)
         .eq('id', id).single();
       if (m) setMatch(m as unknown as MatchRow);
@@ -558,7 +582,10 @@ export default function MatchAnalysis() {
           <DialogHeader>
             <DialogTitle>🔗 Condividi analisi</DialogTitle>
             <DialogDescription>
-              Chiunque abbia questo link può vedere le statistiche base della partita.
+              Chiunque abbia questo link può vedere le statistiche base della partita (squadre, punteggio, conteggio dei fondamentali; nessun nome di giocatore).
+              {shareExpires
+                ? ` Scade il ${new Date(shareExpires).toLocaleDateString('it-IT')}.`
+                : ' Questo link non ha scadenza: revocalo se non serve più.'}
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-2">
@@ -576,6 +603,9 @@ export default function MatchAnalysis() {
               📋 Copia
             </Button>
           </div>
+          <Button variant="outline" className="text-destructive" onClick={handleRevokeShare}>
+            Revoca il link
+          </Button>
         </DialogContent>
       </Dialog>
 

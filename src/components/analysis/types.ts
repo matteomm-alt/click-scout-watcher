@@ -8,6 +8,7 @@ export interface MatchRow {
   set_results: unknown;
   source_filename: string | null;
   share_token?: string | null;
+  share_token_expires_at?: string | null;
   home_team: { id: string; name: string };
   away_team: { id: string; name: string };
 }

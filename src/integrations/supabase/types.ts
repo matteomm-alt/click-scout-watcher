@@ -1379,6 +1379,7 @@ export type Database = {
           season: string | null
           set_results: Json
           share_token: string | null
+          share_token_expires_at: string | null
           source_filename: string | null
           updated_at: string
           venue: string | null
@@ -1400,6 +1401,7 @@ export type Database = {
           season?: string | null
           set_results?: Json
           share_token?: string | null
+          share_token_expires_at?: string | null
           source_filename?: string | null
           updated_at?: string
           venue?: string | null
@@ -1421,6 +1423,7 @@ export type Database = {
           season?: string | null
           set_results?: Json
           share_token?: string | null
+          share_token_expires_at?: string | null
           source_filename?: string | null
           updated_at?: string
           venue?: string | null
