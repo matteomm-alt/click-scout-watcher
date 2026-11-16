@@ -152,3 +152,14 @@
     stroke-dashoffset: -10;
   }
 }
+
+/* Telefono: pulsanti compatti (h-7/h-8/h-9) portati ad almeno 44 px per il tocco con il pollice.
+   Su schermi più larghi restano come sono. */
+@media (max-width: 767px) {
+  button.h-7, button.h-8, button.h-9, a.h-7, a.h-8, a.h-9 {
+    min-height: 44px;
+  }
+  button.w-7, button.w-8, button.w-9, a.w-7, a.w-8, a.w-9 {
+    min-width: 44px;
+  }
+}

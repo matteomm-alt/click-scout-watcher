@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import type { PostgrestError } from '@supabase/supabase-js';
+import { isNetworkError, NETWORK_ERROR_MESSAGE } from '@/lib/networkError';
 
 const PG_MESSAGES: Record<string, string> = {
   '23505': 'Elemento già esistente — controlla i dati inseriti.',
@@ -41,6 +42,11 @@ export function handleSupabaseError(
     console.error(`[Supabase${context ? ` · ${context}` : ''}]`, error);
   }
   if (silent) return;
+
+  if (isNetworkError(error)) {
+    toast.error(NETWORK_ERROR_MESSAGE);
+    return;
+  }
 
   let message: string;
   if (error && typeof error === 'object' && 'code' in error) {

@@ -748,7 +748,7 @@ export default function Allenamenti() {
                 )}
               </div>
 
-              <div className="flex items-center gap-1 mt-auto pt-2 border-t border-border">
+              <div className="flex flex-wrap items-center gap-1 mt-auto pt-2 border-t border-border">
                 <Button size="sm" variant="ghost" className="flex-1 gap-1.5 h-8" onClick={() => openEdit(t.id)}>
                   <Pencil className="w-3.5 h-3.5" /> Modifica
                 </Button>

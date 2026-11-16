@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isNetworkError, NETWORK_ERROR_MESSAGE } from '@/lib/networkError';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -178,6 +179,7 @@ export default function Auth() {
   }, [user, authLoading, inviteToken, navigate, from]);
 
   const translateAuthError = (raw: string): string => {
+    if (isNetworkError(raw)) return NETWORK_ERROR_MESSAGE;
     const m = raw.toLowerCase();
     if (m.includes('invalid login')) return 'Email o password errate.';
     if (m.includes('email not confirmed')) return 'Email non confermata. Controlla la casella di posta.';

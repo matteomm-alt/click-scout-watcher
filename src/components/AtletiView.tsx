@@ -358,7 +358,7 @@ export function AtletiView() {
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 font-semibold">{role}</p>
               <div className="grid md:grid-cols-2 gap-2">
                 {roleAthletes.map(a => (
-                  <Card key={a.id} className="p-4 flex items-center gap-4">
+                  <Card key={a.id} className="p-4 flex items-center gap-4 min-w-0 max-md:flex-wrap">
                     {/* Numero */}
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-black text-primary">#{a.number || '—'}</span>
@@ -415,7 +415,7 @@ export function AtletiView() {
                       </div>
                     </div>
                     {/* Azioni */}
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex gap-1 flex-shrink-0 max-md:w-full max-md:justify-end">
                       {injuriesEnabled && (
                         <Button
                           size="icon"
