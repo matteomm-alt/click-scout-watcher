@@ -9,12 +9,14 @@ import {
 } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
+import { fetchAttendanceSummary, type AttendanceSummaryRow } from '@/lib/attendanceSummary';
+import { toast } from 'sonner';
 
 interface Athlete {
   id: string; last_name: string; first_name: string | null; number: number | null; team_id: string | null;
 }
 interface TeamLite { id: string; name: string; }
-interface AttRow { athlete_id: string; status: string; }
 
 const SOGLIA = 70;
 
@@ -22,7 +24,8 @@ export function PresenzeView() {
   const { societyId } = useActiveSociety();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [teams, setTeams] = useState<TeamLite[]>([]);
-  const [rows, setRows] = useState<AttRow[]>([]);
+  const { currentSeason } = useCurrentSeason();
+  const [rows, setRows] = useState<AttendanceSummaryRow[]>([]);
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
@@ -35,26 +38,27 @@ export function PresenzeView() {
         supabase.from('athletes').select('id, last_name, first_name, number, team_id')
           .eq('society_id', societyId).order('last_name'),
         supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
-        supabase.from('attendances').select('athlete_id, status').eq('society_id', societyId),
+        fetchAttendanceSummary(societyId, currentSeason).catch((e) => { toast.error('Errore caricamento presenze'); console.error(e); return [] as AttendanceSummaryRow[]; }),
       ]);
       if (cancelled) return;
       setAthletes((athRes.data ?? []) as Athlete[]);
       setTeams((teamRes.data ?? []) as TeamLite[]);
-      setRows((attRes.data ?? []) as AttRow[]);
+      setRows(attRes);
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [societyId]);
+  }, [societyId, currentSeason]);
 
   const perAthlete = useMemo(() => {
     const byAth: Record<string, { p: number; a: number; g: number; t: number }> = {};
     for (const a of athletes) byAth[a.id] = { p: 0, a: 0, g: 0, t: 0 };
     for (const r of rows) {
-      if (!byAth[r.athlete_id]) continue;
-      byAth[r.athlete_id].t += 1;
-      if (r.status === 'presente' || r.status === 'ritardo') byAth[r.athlete_id].p += 1;
-      else if (r.status === 'assente') byAth[r.athlete_id].a += 1;
-      else if (r.status === 'giustificato') byAth[r.athlete_id].g += 1;
+      const b = byAth[r.athlete_id];
+      if (!b) continue;
+      b.t += r.totale;
+      b.p += r.presenti + r.ritardi;
+      b.a += r.assenti;
+      b.g += r.giustificati;
     }
     return athletes
       .filter((a) => teamFilter === 'all' || a.team_id === teamFilter)

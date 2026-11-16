@@ -23,14 +23,18 @@ interface TeamRow { id: string; name: string; is_own_team: boolean }
 
 function pct(n: number, tot: number) { return tot > 0 ? Math.round((n / tot) * 1000) / 10 : 0; }
 
+import { fetchAll } from '@/lib/fetchAll';
+
 export function AtletaScoutTab({ number, active }: { number: number | null; active: boolean }) {
   const { data: actions = [], isLoading } = useQuery({
     queryKey: ['athlete-scout-actions', number],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await fetchAll((from, to) => supabase
         .from('scout_actions')
         .select('skill, evaluation, scout_match_id, scout_matches!inner(match_date, home_sets_won, away_sets_won, home_team_id, away_team_id)')
-        .eq('player_number', number!);
+        .eq('player_number', number!)
+        .order('id')
+        .range(from, to));
       if (error) { handleSupabaseError(error, 'caricamento azioni scout'); return []; }
       return (data ?? []) as unknown as ScoutActionRow[];
     },

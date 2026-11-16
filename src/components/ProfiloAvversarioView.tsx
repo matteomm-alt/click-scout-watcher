@@ -1,3 +1,4 @@
+import { fetchAll } from '@/lib/fetchAll';
 import { getTooltipStyle } from '@/lib/chartTheme';
 import { useEffect, useState, useMemo } from 'react';
 import { Shield, ChevronDown, ChevronUp, TrendingUp, Target } from 'lucide-react';
@@ -72,9 +73,10 @@ export function ProfiloAvversarioView() {
     (async () => {
       const all: DbAction[] = [];
       for (const m of teamMatches) {
-        const { data } = await supabase.from('scout_actions').select('*')
-          .eq('scout_match_id', m.id).eq('scout_team_id', selectedTeam.id);
-        if (data) all.push(...((data as unknown) as DbAction[]));
+        const { data } = await fetchAll((from, to) => supabase.from('scout_actions').select('*')
+          .eq('scout_match_id', m.id).eq('scout_team_id', selectedTeam.id)
+          .order('id').range(from, to));
+        all.push(...((data as unknown) as DbAction[]));
       }
       setActions(all);
       setLoadingActions(false);

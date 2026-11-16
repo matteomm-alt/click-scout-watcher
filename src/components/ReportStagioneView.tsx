@@ -5,6 +5,7 @@ import { PieChart as PieIcon, TrendingUp, Users, Dumbbell, Trophy } from 'lucide
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchAttendanceSummary, type AttendanceSummaryRow } from '@/lib/attendanceSummary';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -22,7 +23,7 @@ const TOOLTIP_STYLE = getTooltipStyle();
 
 interface Athlete { id: string; last_name: string; first_name: string | null; number: number | null; role: string | null; }
 interface Evaluation { athlete_id: string; fundamental: string; score: number; season_phase: string | null; evaluated_at: string; }
-interface Attendance { athlete_id: string; status: string; }
+type Attendance = AttendanceSummaryRow;
 interface Match { id: string; home_sets_won: number; away_sets_won: number; home_team_id: string; away_team_id: string; match_date: string | null; }
 
 export function ReportStagioneView() {
@@ -45,14 +46,14 @@ export function ReportStagioneView() {
       const evalFrom = seasonStart || seasonFrom;
       const evalTo = seasonEnd || seasonTo;
 
-      const [{ data: at }, { data: ev, error: evErr }, { data: att }, { data: tr, error: trErr }] = await Promise.all([
+      const [{ data: at }, { data: ev, error: evErr }, att, { data: tr, error: trErr }] = await Promise.all([
         supabase.from('athletes').select('id, last_name, first_name, number, role').eq('society_id', societyId).order('last_name'),
         supabase.from('athlete_evaluations')
           .select('athlete_id, fundamental, score, season_phase, evaluated_at')
           .eq('society_id', societyId)
           .gte('evaluated_at', evalFrom)
           .lte('evaluated_at', evalTo),
-        supabase.from('attendances').select('athlete_id, status').eq('society_id', societyId),
+        fetchAttendanceSummary(societyId, currentSeason).catch(() => { toast.error('Errore caricamento presenze'); return [] as AttendanceSummaryRow[]; }),
         supabase.from('trainings').select('id, scheduled_date, duration_min, status')
           .eq('society_id', societyId)
           .eq('season', currentSeason),
@@ -69,7 +70,7 @@ export function ReportStagioneView() {
       if (mErr) toast.error('Errore caricamento partite');
       setAthletes(((at ?? []) as unknown as Athlete[]));
       setEvaluations(((ev ?? []) as unknown as Evaluation[]));
-      setAttendances(((att ?? []) as unknown as Attendance[]));
+      setAttendances(att);
       setTrainings(((tr ?? []) as unknown as typeof trainings));
       setMatches(((m ?? []) as unknown as Match[]));
       setLoading(false);
@@ -87,8 +88,9 @@ export function ReportStagioneView() {
   const mediaPresenze = useMemo(() => {
     if (athletes.length === 0 || attendances.length === 0) return 0;
     const presPerAtleta = athletes.map(a => {
-      const tot = attendances.filter(x => x.athlete_id === a.id).length;
-      const pres = attendances.filter(x => x.athlete_id === a.id && x.status === 'presente').length;
+      const r = attendances.find(x => x.athlete_id === a.id);
+      const tot = r?.totale ?? 0;
+      const pres = r?.presenti ?? 0;
       return tot > 0 ? Math.round(pres / tot * 100) : null;
     }).filter(v => v !== null) as number[];
     return presPerAtleta.length ? Math.round(presPerAtleta.reduce((a, b) => a + b, 0) / presPerAtleta.length) : 0;
@@ -96,8 +98,9 @@ export function ReportStagioneView() {
 
   // ── Presenze per atleta ───────────────────────────────────────────
   const presenzeData = useMemo(() => athletes.map(a => {
-    const tot = attendances.filter(x => x.athlete_id === a.id).length;
-    const pres = attendances.filter(x => x.athlete_id === a.id && x.status === 'presente').length;
+    const r = attendances.find(x => x.athlete_id === a.id);
+    const tot = r?.totale ?? 0;
+    const pres = r?.presenti ?? 0;
     const pct = tot > 0 ? Math.round(pres / tot * 100) : 0;
     return { name: `#${a.number} ${a.last_name}`, pct, tot, pres };
   }).filter(a => a.tot > 0).sort((a, b) => b.pct - a.pct), [athletes, attendances]);
@@ -262,8 +265,9 @@ export function ReportStagioneView() {
               </thead>
               <tbody>
                 {athletes.map(a => {
-                  const tot = attendances.filter(x => x.athlete_id === a.id).length;
-                  const pres = attendances.filter(x => x.athlete_id === a.id && x.status === 'presente').length;
+                  const r = attendances.find(x => x.athlete_id === a.id);
+                  const tot = r?.totale ?? 0;
+                  const pres = r?.presenti ?? 0;
                   const presP = tot > 0 ? Math.round(pres / tot * 100) : null;
                   const aEvs = evaluations.filter(e => e.athlete_id === a.id);
                   const mediaFase = (fase: string) => {

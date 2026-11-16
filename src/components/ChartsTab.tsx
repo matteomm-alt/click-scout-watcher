@@ -1,3 +1,4 @@
+import { fetchAll } from '@/lib/fetchAll';
 import { isErrorEval } from '@/lib/evalRules';
 import { getTooltipStyle, SKILL_COLORS } from '@/lib/chartTheme';
 import { useEffect, useMemo, useState } from 'react';
@@ -146,13 +147,15 @@ export function ChartsTab({ actions, playerNames }: Props) {
       const rows: TrendRow[] = [];
       for (const m of (matches as unknown as TrendMatchRow[])) {
         const side = m.home_team_id === teamId ? 'home' : 'away';
-        const { data: acts } = await supabase
+        const { data: acts } = await fetchAll((from, to) => supabase
           .from('scout_actions')
           .select('skill, evaluation, scout_team_id')
           .eq('scout_match_id', m.id)
-          .eq('scout_team_id', teamId);
+          .eq('scout_team_id', teamId)
+          .order('id')
+          .range(from, to));
 
-        if (!acts || acts.length === 0) continue;
+        if (acts.length === 0) continue;
         const opponent = side === 'home' ? m.away_team?.name : m.home_team?.name;
         const won = side === 'home' ? m.home_sets_won > m.away_sets_won : m.away_sets_won > m.home_sets_won;
         const row: TrendRow = {

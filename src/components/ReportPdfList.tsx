@@ -1,3 +1,4 @@
+import { fetchAll } from '@/lib/fetchAll';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { FileText, RefreshCw, Trash2 } from 'lucide-react';
@@ -55,12 +56,15 @@ export function ReportPdfList() {
         .select('*, home_team:home_team_id(name,id), away_team:away_team_id(name,id)')
         .eq('id', report.scout_match_id)
         .single();
-      const { data: actions } = await supabase
+      const { data: actions, error: actErr } = await fetchAll((from, to) => supabase
         .from('scout_actions')
         .select('*')
-        .eq('scout_match_id', report.scout_match_id)
-        .order('action_index');
-      if (!match || !actions) { toast.error('Dati partita non trovati'); return; }
+        .eq('scout_match_id', report.scout_match_id!)
+        .order('action_index')
+        .order('id')
+        .range(from, to));
+      if (actErr) { toast.error('Errore caricamento azioni'); return; }
+      if (!match || actions.length === 0) { toast.error('Dati partita non trovati'); return; }
       const { data: players } = await supabase
         .from('scout_players')
         .select('scout_team_id, number, last_name, first_name, role')

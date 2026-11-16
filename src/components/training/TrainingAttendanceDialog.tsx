@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { calcCurrentSeason } from '@/hooks/useCurrentSeason';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Check, X, AlertCircle, Loader2, ClipboardCheck, Clock } from 'lucide-react';
@@ -108,7 +109,7 @@ export function TrainingAttendanceDialog({
             start_at: startAt,
             end_at: endAt,
             team_id: training.team_id || null,
-            season: training.season ?? null,
+            season: training.season ?? calcCurrentSeason(),
             description: `training:${training.id}`,
           }).select('id').single();
           evId = newEv?.id ?? null;
@@ -152,7 +153,7 @@ export function TrainingAttendanceDialog({
         society_id: societyId,
         status,
         recorded_by: user.id,
-        season: training.season ?? null,
+        season: training.season ?? calcCurrentSeason(),
       });
     if (error) toast.error('Errore salvataggio presenza');
     else setStatuses((prev) => ({ ...prev, [athleteId]: status }));

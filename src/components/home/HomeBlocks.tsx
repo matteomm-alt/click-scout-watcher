@@ -6,6 +6,8 @@ import {
   Activity, FileUp, Library, ShieldAlert, MailPlus, SlidersHorizontal, ChevronDown, ChevronUp,
   type LucideIcon,
 } from 'lucide-react';
+import { fetchAttendanceSummary } from '@/lib/attendanceSummary';
+import { useCurrentSeason } from '@/hooks/useCurrentSeason';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useAuth } from '@/contexts/AuthContext';
@@ -359,22 +361,16 @@ function NextEventCard({ block, societyId }: { block: BlockDef; societyId: strin
 }
 
 function AttendanceAlertsCard({ block, societyId }: { block: BlockDef; societyId: string }) {
+  const { currentSeason: season } = useCurrentSeason();
   const { data = [], isLoading } = useQuery({
-    queryKey: queryKeys.dashboard.attendance(societyId),
+    queryKey: [...queryKeys.dashboard.attendance(societyId), season],
     queryFn: async () => {
       const [aRes, attRes] = await Promise.all([
         supabase.from('athletes').select('id, last_name, first_name').eq('society_id', societyId),
-        supabase.from('attendances').select('athlete_id, status').eq('society_id', societyId),
+        fetchAttendanceSummary(societyId, season),
       ]);
       if (aRes.error) throw aRes.error;
-      if (attRes.error) throw attRes.error;
-      const by = new Map<string, { presente: number; total: number }>();
-      (attRes.data ?? []).forEach((a) => {
-        const cur = by.get(a.athlete_id) ?? { presente: 0, total: 0 };
-        cur.total += 1;
-        if (a.status === 'presente') cur.presente += 1;
-        by.set(a.athlete_id, cur);
-      });
+      const by = new Map(attRes.map((r) => [r.athlete_id, { presente: r.presenti, total: r.totale }]));
       return (aRes.data ?? [])
         .map((ath) => {
           const st = by.get(ath.id);
