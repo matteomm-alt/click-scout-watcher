@@ -205,16 +205,16 @@ export function MagazzinoView() {
 
   return (
     <div className="container py-8 space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Gestionale Società</p>
           <div className="flex items-center gap-3 mb-1">
             <Package className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-black italic uppercase leading-none">Magazzino</h1>
+            <h1 className="text-3xl sm:text-4xl font-black italic uppercase leading-none">Magazzino</h1>
           </div>
           <p className="text-muted-foreground">Divise, palloni e attrezzatura. Assegnazioni e taglie.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setAssignDialogOpen(true)} className="gap-2">
             <UserCheck className="w-4 h-4" /> Consegna
           </Button>
@@ -225,7 +225,7 @@ export function MagazzinoView() {
       </div>
 
       {/* Tab */}
-      <div className="flex gap-1">
+      <div className="flex flex-wrap gap-1">
         {([['inventario', 'Inventario'], ['consegne', 'Consegne'], ['atleta', 'Per Atleta'], ['storico', 'Storico']] as const).map(([id, label]) => (
           <Button key={id} size="sm" variant={tab === id ? 'default' : 'outline'} onClick={() => setTab(id)}>
             {label}

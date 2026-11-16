@@ -359,7 +359,7 @@ export default function GuidaTecnica() {
           </p>
         </div>
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
               <Upload className="w-4 h-4" /> Importa guide da JSON
             </Button>

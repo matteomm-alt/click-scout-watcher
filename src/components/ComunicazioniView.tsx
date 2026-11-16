@@ -102,12 +102,12 @@ export function ComunicazioniView() {
 
   return (
     <div className="container py-8 space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-2">Gestionale Società</p>
           <div className="flex items-center gap-3 mb-1">
             <Megaphone className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-black italic uppercase leading-none">Comunicazioni</h1>
+            <h1 className="text-3xl sm:text-4xl font-black italic uppercase leading-none">Comunicazioni</h1>
           </div>
           <p className="text-muted-foreground">Bacheca interna: avvisi e comunicazioni urgenti.</p>
         </div>
