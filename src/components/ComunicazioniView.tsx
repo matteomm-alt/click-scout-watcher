@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
+import { deleteRow } from '@/lib/deleteRow';
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 
 type Priority = 'bassa' | 'normale' | 'alta' | 'urgente';
 
@@ -31,6 +33,7 @@ export function ComunicazioniView() {
   const { societyId, isAdmin } = useActiveSociety();
   const [comms, setComms] = useState<Communication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [removeId, setRemoveId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<{ title: string; content: string; priority: Priority; pinned: boolean }>({ title: '', content: '', priority: 'normale', pinned: false });
   const [readBy, setReadBy] = useState<Record<string, boolean>>({}); // commId -> mio
@@ -91,7 +94,8 @@ export function ComunicazioniView() {
   };
 
   const remove = async (id: string) => {
-    await supabase.from('communications').delete().eq('id', id);
+    const res = await deleteRow('communications', id);
+    if (!res.ok) { toast.error(res.message ?? 'Errore eliminazione'); return; }
     setComms(prev => prev.filter(c => c.id !== id));
     toast.success('Comunicazione rimossa');
   };
@@ -159,7 +163,7 @@ export function ComunicazioniView() {
                     <Button size="icon" variant={c.pinned ? 'secondary' : 'ghost'} className="h-8 w-8" onClick={() => togglePin(c.id, c.pinned)}>
                       <Pin className="w-3.5 h-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => remove(c.id)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setRemoveId(c.id)}>
                       <X className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -199,6 +203,13 @@ export function ComunicazioniView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog
+        open={!!removeId}
+        title="Eliminare la comunicazione?"
+        description="Sparisce per tutti i membri della società e non si può recuperare."
+        onCancel={() => setRemoveId(null)}
+        onConfirm={() => { if (removeId) remove(removeId); setRemoveId(null); }}
+      />
     </div>
   );
 }

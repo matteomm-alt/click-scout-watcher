@@ -1,5 +1,6 @@
 import { safeUUID } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { deleteRow } from '@/lib/deleteRow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -454,12 +455,13 @@ export default function Allenamenti() {
         .select('id')
         .filter('description', 'eq', `training:${id}`)
         .maybeSingle();
+      // Prima l'allenamento (i blocchi seguono a cascata): se fallisce, evento e blocchi restano al loro posto.
+      const res = await deleteRow('trainings', id);
+      if (!res.ok) throw new Error(res.message);
       if (linkedEvent) {
-        await supabase.from('events').delete().eq('id', linkedEvent.id);
+        const ev = await supabase.from('events').delete().eq('id', linkedEvent.id);
+        if (ev.error) toast({ title: 'Allenamento eliminato, evento di calendario rimasto', description: ev.error.message, variant: 'destructive' });
       }
-      await supabase.from('training_blocks').delete().eq('training_id', id);
-      const { error } = await supabase.from('trainings').delete().eq('id', id);
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trainings.all(societyId ?? '') });

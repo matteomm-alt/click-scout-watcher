@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { toast } from 'sonner';
+import { deleteRow } from '@/lib/deleteRow';
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 
 // ── Costanti dalla nostra app HTML ────────────────────────────────────
 const TAGLIE = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unica'];
@@ -59,6 +61,7 @@ export function MagazzinoView() {
   const [storico, setStorico] = useState<StoricoRow[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [selectedAthlete, setSelectedAthlete] = useState<string>('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -161,7 +164,8 @@ export function MagazzinoView() {
   };
 
   const deleteItem = async (id: string) => {
-    await supabase.from('inventory_items').delete().eq('id', id);
+    const res = await deleteRow('inventory_items', id);
+    if (!res.ok) { toast.error(res.message ?? 'Errore eliminazione'); return; }
     if (selectedItem?.id === id) setSelectedItem(null);
     toast.success('Articolo rimosso');
     load();
@@ -261,7 +265,7 @@ export function MagazzinoView() {
                               )}
                               <Badge variant="outline">×{item.quantity}</Badge>
                               <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
-                                onClick={e => { e.stopPropagation(); deleteItem(item.id); }}>
+                                onClick={e => { e.stopPropagation(); setDeleteItemId(item.id); }}>
                                 <X className="w-3.5 h-3.5" />
                               </Button>
                             </button>
@@ -518,6 +522,13 @@ export function MagazzinoView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog
+        open={!!deleteItemId}
+        title="Eliminare l'articolo?"
+        description="Vengono eliminate anche le assegnazioni collegate. Non si può recuperare."
+        onCancel={() => setDeleteItemId(null)}
+        onConfirm={() => { if (deleteItemId) deleteItem(deleteItemId); setDeleteItemId(null); }}
+      />
     </div>
   );
 }

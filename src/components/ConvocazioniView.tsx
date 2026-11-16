@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { deleteRow } from '@/lib/deleteRow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -111,10 +112,12 @@ export function ConvocazioniView() {
     if (!selectedId) return;
     const existing = players.find(p => p.athlete_id === athleteId);
     if (existing) {
-      await supabase.from('convocation_players').delete().eq('id', existing.id);
+      const res = await deleteRow('convocation_players', existing.id);
+      if (!res.ok) { toast.error(res.message ?? 'Errore'); return; }
       setPlayers(prev => prev.filter(p => p.id !== existing.id));
     } else {
-      const { data } = await supabase.from('convocation_players').insert({ convocation_id: selectedId, athlete_id: athleteId, role: 'titolare' }).select().single();
+      const { data, error } = await supabase.from('convocation_players').insert({ convocation_id: selectedId, athlete_id: athleteId, role: 'titolare' }).select().single();
+      if (error) { toast.error('Errore convocazione'); return; }
       if (data) {
         const row = data as unknown as ConvocationPlayer & { role: string };
         setPlayers(prev => [...prev, { ...row, role_in_match: row.role }]);

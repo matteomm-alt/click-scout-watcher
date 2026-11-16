@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { deleteRow } from '@/lib/deleteRow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -99,6 +100,7 @@ export default function Esercizi() {
 
   // Delete
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLinked, setDeleteLinked] = useState<number | null>(null);
 
   // Import
   const [importing, setImporting] = useState(false);
@@ -236,11 +238,18 @@ export default function Esercizi() {
     load();
   };
 
+  // Quanti blocchi di allenamento usano l'esercizio: cancellandolo perdono il collegamento.
+  const askLinkedBlocks = async (exerciseId: string) => {
+    const { count } = await supabase
+      .from('training_blocks').select('id', { count: 'exact', head: true }).eq('exercise_id', exerciseId);
+    setDeleteLinked(count ?? 0);
+  };
+
   const confirmDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from('exercises').delete().eq('id', deleteId);
-    if (error) {
-      toast({ title: 'Errore eliminazione', description: error.message, variant: 'destructive' });
+    const res = await deleteRow('exercises', deleteId);
+    if (!res.ok) {
+      toast({ title: 'Errore eliminazione', description: res.message, variant: 'destructive' });
     } else {
       toast({ title: 'Esercizio eliminato' });
       load();
@@ -510,7 +519,7 @@ export default function Esercizi() {
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteId(ex.id)}
+                        onClick={() => { setDeleteLinked(null); setDeleteId(ex.id); void askLinkedBlocks(ex.id); }}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -685,7 +694,11 @@ export default function Esercizi() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminare l'esercizio?</AlertDialogTitle>
-            <AlertDialogDescription>L'azione è irreversibile.</AlertDialogDescription>
+            <AlertDialogDescription>
+              {deleteLinked && deleteLinked > 0
+                ? `Usato in ${deleteLinked} blocchi di allenamento: i blocchi restano ma perdono l'esercizio, e il Volume li conterà in base ai fondamentali pianificati. L'azione è irreversibile.`
+                : "L'azione è irreversibile."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>

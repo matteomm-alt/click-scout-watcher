@@ -8,6 +8,7 @@ import {
 } from '@dnd-kit/sortable';
 import { toast } from 'sonner';
 
+import { deleteRow } from '@/lib/deleteRow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
@@ -166,9 +167,9 @@ export default function ProgrammazioneStagionale() {
 
   const handleDeletePlan = async () => {
     if (!deletingPlanId) return;
-    await supabase.from('season_phases').delete().eq('plan_id', deletingPlanId);
-    const { error } = await supabase.from('season_plans').delete().eq('id', deletingPlanId);
-    if (error) { toast.error(error.message); return; }
+    // Le fasi si cancellano a cascata con il piano: un solo passo, senza lasciare piani a metà.
+    const res = await deleteRow('season_plans', deletingPlanId);
+    if (!res.ok) { toast.error(res.message ?? 'Errore eliminazione'); return; }
     toast.success('Piano eliminato');
     setDeletingPlanId(null);
     setPlanId(null);
@@ -271,7 +272,8 @@ export default function ProgrammazioneStagionale() {
   };
 
   const deleteMacrociclo = async (id: string) => {
-    await supabase.from('season_phases').delete().eq('id', id);
+    const res = await deleteRow('season_phases', id);
+    if (!res.ok) { toast.error(res.message ?? 'Errore eliminazione'); return; }
     if (planId) await loadPhases(planId);
     if (selectedPhaseId === id) setSelectedPhaseId(null);
   };

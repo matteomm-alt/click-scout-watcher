@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { deleteRow } from '@/lib/deleteRow';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
@@ -228,9 +229,10 @@ export function StrutturaSettimanaleView() {
 
   const deleteSt = async () => {
     if (!deleteId) return;
-    await supabase.from('training_skeletons').delete().eq('id', deleteId);
-    toast.success('Struttura rimossa');
+    const res = await deleteRow('training_skeletons', deleteId);
     setDeleteId(null);
+    if (!res.ok) { toast.error(res.message ?? 'Errore eliminazione'); return; }
+    toast.success('Struttura rimossa');
     load();
   };
 
@@ -354,7 +356,11 @@ export function StrutturaSettimanaleView() {
           roles: b.fondamentali ?? [],
         }));
         const { error: blkErr } = await supabase.from('training_blocks').insert(blocks);
-        if (blkErr) { toast.error(blkErr.message); return; }
+        if (blkErr) {
+          await supabase.from('trainings').delete().eq('id', training.id);
+          toast.error(`Allenamento non creato: ${blkErr.message}`);
+          return;
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ['trainings'] });

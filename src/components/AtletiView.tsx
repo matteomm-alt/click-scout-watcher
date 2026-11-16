@@ -174,6 +174,14 @@ export function AtletiView() {
     setDialogOpen(true);
   };
 
+  // Stessa maglia nella stessa squadra: avviso, non blocco (due squadre diverse possono ripetere i numeri).
+  const duplicateNumber = form.number
+    ? athletes.find(a =>
+        a.id !== editing?.id &&
+        a.number === parseInt(form.number) &&
+        (a.team_id ?? '') === (form.team_id ?? ''))
+    : undefined;
+
   const save = () => {
     if (!form.last_name || !societyId || !user) return;
     const payload = {
@@ -450,7 +458,13 @@ export function AtletiView() {
               <div><Label>Nome</Label><Input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} placeholder="Nome" /></div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><Label>Numero maglia</Label><Input type="number" value={form.number} onChange={e => setForm(f => ({ ...f, number: e.target.value }))} placeholder="es. 7" /></div>
+              <div><Label>Numero maglia</Label><Input type="number" value={form.number} onChange={e => setForm(f => ({ ...f, number: e.target.value }))} placeholder="es. 7" />
+                {duplicateNumber && (
+                  <p className="text-xs text-warning mt-1">
+                    Il numero {duplicateNumber.number} è già di {duplicateNumber.last_name}{duplicateNumber.first_name ? ` ${duplicateNumber.first_name}` : ''} nella stessa squadra.
+                  </p>
+                )}
+              </div>
               <div><Label>Data di nascita</Label><Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} /></div>
             </div>
             <div><Label>Squadra</Label>
