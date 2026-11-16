@@ -1,5 +1,6 @@
 import { safeUUID } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { fetchAll } from '@/lib/fetchAll';
 import { deleteRow } from '@/lib/deleteRow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -142,12 +143,13 @@ export default function Allenamenti() {
   const { data: trainings = [], isLoading: loading } = useQuery({
     queryKey: [...queryKeys.trainings.all(societyId ?? ''), currentSeason],
     queryFn: async () => {
-      const trRes = await supabase
+      const trRes = await fetchAll<TrainingRow>((from, to) => supabase
         .from('trainings').select('*')
         .eq('society_id', societyId!)
         .eq('season', currentSeason)
         .order('scheduled_date', { ascending: false, nullsFirst: false })
-        .limit(500);
+        .order('id')
+        .range(from, to) as unknown as PromiseLike<{ data: TrainingRow[] | null; error: { message: string } | null }>);
       if (trRes.error) { handleSupabaseError(trRes.error, 'caricamento allenamenti'); return []; }
       const trList = (trRes.data ?? []) as TrainingRow[];
       // Aggiorna automaticamente lo status degli allenamenti passati
@@ -162,11 +164,14 @@ export default function Allenamenti() {
         if (!upd.error) toUpdate.forEach((t) => { t.status = 'completato'; });
       }
       if (trList.length > 0) {
-        const ids = trList.map(t => t.id);
-        const blRes = await supabase
+        // Un'unica richiesta paginata con join: niente elenco di id nell'indirizzo.
+        const blRes = await fetchAll<{ training_id: string; duration_min: number | null }>((from, to) => supabase
           .from('training_blocks')
-          .select('training_id, duration_min')
-          .in('training_id', ids);
+          .select('training_id, duration_min, trainings!inner(society_id, season)')
+          .eq('trainings.society_id', societyId!)
+          .eq('trainings.season', currentSeason)
+          .order('id')
+          .range(from, to) as unknown as PromiseLike<{ data: { training_id: string; duration_min: number | null }[] | null; error: { message: string } | null }>);
         if (!blRes.error) {
           const byTraining = new Map<string, { count: number; minutes: number }>();
           for (const b of blRes.data || []) {

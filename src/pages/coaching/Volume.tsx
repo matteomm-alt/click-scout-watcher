@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fetchAll } from '@/lib/fetchAll';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveSociety } from '@/hooks/useActiveSociety';
 import { useCurrentSeason } from '@/hooks/useCurrentSeason';
@@ -104,7 +105,7 @@ export default function Volume() {
     setLoading(true);
     const [exRes, trRes, teamRes] = await Promise.all([
       supabase.from('exercises').select('id, name, fundamental, tags').eq('society_id', societyId),
-      supabase
+      fetchAll<TrainingRow>((from, to) => supabase
         .from('trainings')
         .select('id, scheduled_date, duration_min, title, status, is_template, team_id')
         .eq('society_id', societyId)
@@ -112,7 +113,8 @@ export default function Volume() {
         .eq('is_template', false)
         .in('status', ['completato', 'programmato'])
         .order('scheduled_date', { ascending: false })
-        .limit(1000),
+        .order('id')
+        .range(from, to) as unknown as PromiseLike<{ data: TrainingRow[] | null; error: { message: string } | null }>),
       supabase.from('teams').select('id, name').eq('society_id', societyId).order('name'),
     ]);
     setTeams((teamRes.data || []) as { id: string; name: string }[]);
@@ -122,11 +124,17 @@ export default function Volume() {
     const trainingsList = (trRes.data || []) as TrainingRow[];
     let blocksList: BlockRow[] = [];
     if (trainingsList.length > 0) {
-      const ids = trainingsList.map((t) => t.id);
-      const blRes = await supabase
+      // Blocchi della stagione in un'unica richiesta paginata, filtrati con un join:
+      // niente elenco di centinaia di id nell'indirizzo, che supererebbe il limite di lunghezza.
+      const blRes = await fetchAll<BlockRow>((from, to) => supabase
         .from('training_blocks')
-        .select('id, training_id, exercise_id, duration_min, title, roles')
-        .in('training_id', ids);
+        .select('id, training_id, exercise_id, duration_min, title, roles, trainings!inner(society_id, season, is_template, status)')
+        .eq('trainings.society_id', societyId)
+        .eq('trainings.season', currentSeason)
+        .eq('trainings.is_template', false)
+        .in('trainings.status', ['completato', 'programmato'])
+        .order('id')
+        .range(from, to) as unknown as PromiseLike<{ data: BlockRow[] | null; error: { message: string } | null }>);
       if (blRes.error) toast({ title: 'Errore blocchi', description: blRes.error.message, variant: 'destructive' });
       blocksList = (blRes.data || []) as BlockRow[];
     }
